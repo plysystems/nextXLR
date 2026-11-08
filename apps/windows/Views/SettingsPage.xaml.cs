@@ -24,6 +24,7 @@ public sealed partial class SettingsPage : Page
         ViewModel = (MainViewModel)e.Parameter;
         AutostartToggle.IsOn = Autostart.IsEnabled;
         TrayToggle.IsOn = _settings.MinimizeToTray;
+        MuteOnStartupToggle.IsOn = _settings.MuteOnStartup;
         AutoUpdateToggle.IsOn = _settings.CheckForUpdatesOnStart;
         AppVersionText.Text = Loc.Format("SetAppVersion", AppSettings.AppVersion);
         EngineVersionText.Text = Loc.Format("SetEngineVersion", ViewModel.EngineVersion);
@@ -67,6 +68,13 @@ public sealed partial class SettingsPage : Page
     {
         if (_loading) return;
         _settings.MinimizeToTray = TrayToggle.IsOn;
+        _settings.Save();
+    }
+
+    private void MuteOnStartup_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_loading) return;
+        _settings.MuteOnStartup = MuteOnStartupToggle.IsOn;
         _settings.Save();
     }
 
@@ -511,29 +519,44 @@ public sealed partial class SettingsPage : Page
     {
         try
         {
-            var selector = Windows.Media.Devices.MediaDevice.GetAudioRenderSelector();
-            var devices = await Windows.Devices.Enumeration.DeviceInformation.FindAllAsync(selector);
-
-            var items = new List<AudioEndpointItem>();
-            foreach (var dev in devices)
+            var items = await Task.Run(() =>
             {
-                if (!dev.IsEnabled || string.IsNullOrWhiteSpace(dev.Name)) continue;
+                using var enumerator = new NAudio.CoreAudioApi.MMDeviceEnumerator();
+                var devices = enumerator.EnumerateAudioEndPoints(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.DeviceState.Active);
 
-                var lowerName = dev.Name.ToLowerInvariant();
-                var lowerId = dev.Id.ToLowerInvariant();
-                var isBt = lowerId.Contains("bth") || lowerId.Contains("bluetooth")
-                           || lowerName.Contains("bluetooth") || lowerName.Contains("wireless")
-                           || lowerName.Contains("buds") || lowerName.Contains("airpods")
-                           || lowerName.Contains("headset") || lowerName.Contains("hands-free")
-                           || lowerName.Contains("wh-") || lowerName.Contains("wf-");
-
-                items.Add(new AudioEndpointItem
+                var list = new List<AudioEndpointItem>();
+                foreach (var dev in devices)
                 {
-                    Id = dev.Id,
-                    Name = dev.Name,
-                    IsBluetooth = isBt
-                });
-            }
+                    var name = dev.FriendlyName;
+                    if (string.IsNullOrWhiteSpace(name)) continue;
+
+                    var lowerName = name.ToLowerInvariant();
+                    var lowerId = dev.ID.ToLowerInvariant();
+
+                    // TC-Helicon GoXLR-Kanäle nicht als Ziel-Headsets auflisten
+                    if (lowerName.Contains("tc-helicon") || (lowerName.Contains("goxlr") && !lowerName.Contains("bluetooth")))
+                    {
+                        continue;
+                    }
+
+                    var isBt = lowerId.Contains("bth") || lowerId.Contains("bluetooth")
+                               || lowerName.Contains("bluetooth") || lowerName.Contains("wireless")
+                               || lowerName.Contains("buds") || lowerName.Contains("airpods")
+                               || lowerName.Contains("headset") || lowerName.Contains("hands-free")
+                               || lowerName.Contains("wh-") || lowerName.Contains("wf-")
+                               || lowerName.Contains("bose") || lowerName.Contains("jabra")
+                               || lowerName.Contains("sennheiser") || lowerName.Contains("soundcore")
+                               || lowerName.Contains("funk") || lowerName.Contains("kopfhörer");
+
+                    list.Add(new AudioEndpointItem
+                    {
+                        Id = dev.ID,
+                        Name = name,
+                        IsBluetooth = isBt
+                    });
+                }
+                return list;
+            });
 
             // Bluetooth/Wireless Geräte nach oben sortieren
             var ordered = items.OrderByDescending(x => x.IsBluetooth).ThenBy(x => x.Name).ToList();
@@ -542,8 +565,8 @@ public sealed partial class SettingsPage : Page
             if (ordered.Count > 0)
             {
                 var match = ordered.FirstOrDefault(x =>
-                    (!string.IsNullOrEmpty(_settings.BluetoothHeadsetDeviceId) && x.Id == _settings.BluetoothHeadsetDeviceId) ||
-                    (!string.IsNullOrEmpty(_settings.BluetoothHeadsetDeviceName) && x.Name == _settings.BluetoothHeadsetDeviceName));
+                    (!string.IsNullOrEmpty(_settings.BluetoothHeadsetDeviceId) && x.Id.Equals(_settings.BluetoothHeadsetDeviceId, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(_settings.BluetoothHeadsetDeviceName) && x.Name.Equals(_settings.BluetoothHeadsetDeviceName, StringComparison.OrdinalIgnoreCase)));
 
                 if (match != null)
                 {

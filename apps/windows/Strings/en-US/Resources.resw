@@ -132,7 +132,7 @@
   <data name="FxTuneWindow.Header" xml:space="preserve"><value>Detection window</value></data>
   <data name="SamplerPage" xml:space="preserve"><value>Page {0}</value></data>
   <data name="SamplerPagesHeader.Text" xml:space="preserve"><value>PAGES</value></data>
-  <data name="SamplerPadTitle" xml:space="preserve"><value>Play {0} · Page {1}</value></data>
+  <data name="SamplerPadTitle" xml:space="preserve"><value>Button {0} · Page {1}</value></data>
   <data name="SamplerPadSettings.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Pad settings</value></data>
   <data name="SamplerPadSettings.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Pad settings</value></data>
   <data name="SamplerCloseSettings.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Close</value></data>
@@ -164,7 +164,7 @@
   <data name="SamplerAssign.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Assign to a pad</value></data>
   <data name="SamplerDelete.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Remove from library</value></data>
   <data name="SamplerDelete.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Remove from library</value></data>
-  <data name="SamplerAssigned" xml:space="preserve"><value>“{0}” → Page {1}, Play {2}</value></data>
+  <data name="SamplerAssigned" xml:space="preserve"><value>“{0}” → Page {1}, Button {2}</value></data>
   <data name="SamplerImportFailed" xml:space="preserve"><value>Couldn't read: {0}</value></data>
   <data name="SamplerUnsupported" xml:space="preserve"><value>format not supported</value></data>
   <data name="SamplerTitle.Text" xml:space="preserve"><value>Sampler</value></data>
@@ -175,12 +175,12 @@
   <data name="SamplerClearToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Clear</value></data>
   <data name="SamplerClearLabel.Text" xml:space="preserve"><value>Clear</value></data>
   <data name="SamplerAddSample.Text" xml:space="preserve"><value>Add sample</value></data>
-  <data name="SamplerPlay" xml:space="preserve"><value>Play {0}</value></data>
+  <data name="SamplerPlay" xml:space="preserve"><value>Button {0}</value></data>
   <data name="SamplerNoSamples" xml:space="preserve"><value>No samples</value></data>
   <data name="SamplerSampleCount" xml:space="preserve"><value>{0} (+{1} more)</value></data>
-  <data name="SamplerCleared" xml:space="preserve"><value>Page {0}, Play {1} cleared.</value></data>
+  <data name="SamplerCleared" xml:space="preserve"><value>Page {0}, Button {1} cleared.</value></data>
   <data name="SamplerWouldPlay" xml:space="preserve"><value>“{0}”: playback arrives with the sampler engine.</value></data>
-  <data name="SamplerPadEmpty" xml:space="preserve"><value>Play {0} is empty: drop a sample on it or use “Load file…”.</value></data>
+  <data name="SamplerPadEmpty" xml:space="preserve"><value>Button {0} is empty: drop a sample on it or use “Load file…”.</value></data>
   <data name="SamplerClearArmed" xml:space="preserve"><value>Clear is armed: press a pad to empty it.</value></data>
   <data name="LightTitle.Text" xml:space="preserve"><value>Lighting</value></data>
   <data name="PreviewLighting.Title" xml:space="preserve"><value>Preview</value></data>
@@ -209,6 +209,7 @@
   <data name="LightLiveInfo.Title" xml:space="preserve"><value>Live on your GoXLR</value></data>
   <data name="LightLiveInfo.Message" xml:space="preserve"><value>Colour changes are sent to the device immediately. Your first change applies the whole scheme shown here, replacing the colours currently on the device.</value></data>
   <data name="LightThemesHeader.Text" xml:space="preserve"><value>Themes</value></data>
+  <data name="ThemeWardogs" xml:space="preserve"><value>WARDOGS</value></data>
   <data name="ThemeTeal" xml:space="preserve"><value>Teal</value></data>
   <data name="ThemeOcean" xml:space="preserve"><value>Ocean</value></data>
   <data name="ThemeViolet" xml:space="preserve"><value>Violet</value></data>
@@ -229,6 +230,8 @@
   <data name="SetAutostartDesc.Text" xml:space="preserve"><value>Start NEXT : XLR minimised when you sign in to Windows.</value></data>
   <data name="SetTrayTitle.Text" xml:space="preserve"><value>Minimise to tray</value></data>
   <data name="SetTrayDesc.Text" xml:space="preserve"><value>Keep running in the notification area when the window is closed. The preference is saved; the tray icon itself arrives in a coming update.</value></data>
+  <data name="SetMuteOnStartupTitle.Text" xml:space="preserve"><value>Mute on Startup</value></data>
+  <data name="SetMuteOnStartupDesc.Text" xml:space="preserve"><value>Automatically engages microphone mute when NEXT : XLR starts up.</value></data>
   <data name="SetLanguageTitle.Text" xml:space="preserve"><value>Language</value></data>
   <data name="SetLanguageDesc.Text" xml:space="preserve"><value>The app follows your Windows display language (English and German available).</value></data>
   <data name="SetLanguageLink.Content" xml:space="preserve"><value>Windows language settings</value></data>

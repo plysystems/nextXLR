@@ -96,8 +96,9 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Selected pad: playback mode + trim -->
-                <Border x:Name="PadEditorCard" Style="{StaticResource Card}" Visibility="{x:Bind Shown(Sampler.SelectedPad), Mode=OneWay}">
+                <!-- Selected pad: playback mode + trim (supports drag & drop from browser or explorer) -->
+                <Border x:Name="PadEditorCard" Style="{StaticResource Card}" Visibility="{x:Bind Shown(Sampler.SelectedPad), Mode=OneWay}"
+                        AllowDrop="True" DragOver="PadEditor_DragOver" Drop="PadEditor_Drop">
                     <StackPanel Spacing="16">
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>

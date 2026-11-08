@@ -326,7 +326,21 @@ public partial class MainViewModel : ObservableObject
             }
         }
         MicChannel = Find(0);
+        if (!_muteOnStartupApplied && MicChannel != null)
+        {
+            _muteOnStartupApplied = true;
+            try
+            {
+                if (AppSettings.Load().MuteOnStartup)
+                {
+                    MicChannel.Muted = true;
+                }
+            }
+            catch { }
+        }
     }
+
+    private bool _muteOnStartupApplied;
 
     private void ReconcileRouting(StateMessage s)
     {

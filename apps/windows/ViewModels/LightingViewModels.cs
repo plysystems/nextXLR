@@ -30,6 +30,7 @@ public sealed class LightingViewModel
     /// <summary>One-click single-colour and multi-colour game schemes for the whole device.</summary>
     public IReadOnlyList<LightingTheme> Themes { get; } =
     [
+        LightingTheme.Wardogs(),
         LightingTheme.GtaVi(),
         LightingTheme.GtaV(),
         LightingTheme.LeagueOfLegends(),
@@ -101,6 +102,48 @@ public sealed record LightingTheme(string NameKey, string Active, string Inactiv
         }
         return new LightingZone(z, Active, Inactive, z.StartsWith("fader_"));
     }).ToList();
+
+    // ---- WARDOGS: Tactical Military / Combat Warzone palette ----
+    public const string TacticalOlive = "#4B6B38";
+    public const string WarBloodRed = "#C62828";
+    public const string BrassBulletGold = "#E5A93C";
+    public const string CarbonSlate = "#2C3539";
+    public const string MuzzleFlashOrange = "#FF6F00";
+    public const string HazardGreen = "#8BC34A";
+
+    public static LightingTheme Wardogs() => new("ThemeWardogs", WarBloodRed, Dim(TacticalOlive))
+    {
+        Palette =
+        [
+            new("Tactical Olive", TacticalOlive),
+            new("Blood Red", WarBloodRed),
+            new("Brass Bullet Gold", BrassBulletGold),
+            new("Muzzle Flash", MuzzleFlashOrange),
+            new("Carbon Slate", CarbonSlate),
+            new("Hazard Green", HazardGreen),
+        ],
+        PerZone = zone => zone switch
+        {
+            "fader_a" => (WarBloodRed, CarbonSlate, true),
+            "fader_b" => (MuzzleFlashOrange, TacticalOlive, true),
+            "fader_c" => (BrassBulletGold, CarbonSlate, true),
+            "fader_d" => (TacticalOlive, WarBloodRed, true),
+            "mute_a" or "mute_b" or "mute_c" or "mute_d" => (WarBloodRed, Dim(WarBloodRed), false),
+            "cough" => (WarBloodRed, Dim(CarbonSlate), false),
+            "bleep" => (MuzzleFlashOrange, Dim(MuzzleFlashOrange), false),
+            "global" => (TacticalOlive, Dim(TacticalOlive), false),
+            "accent" => (BrassBulletGold, Dim(BrassBulletGold), false),
+            "effect_presets" => (TacticalOlive, Dim(CarbonSlate), false),
+            "effect_megaphone" => (MuzzleFlashOrange, Dim(MuzzleFlashOrange), false),
+            "effect_robot" => (HazardGreen, Dim(HazardGreen), false),
+            "effect_hardtune" => (BrassBulletGold, Dim(BrassBulletGold), false),
+            "effect_fx" => (WarBloodRed, Dim(WarBloodRed), false),
+            "encoders" => (TacticalOlive, BrassBulletGold, false),
+            "sampler_banks" => (BrassBulletGold, Dim(BrassBulletGold), false),
+            "sampler_pads" => (WarBloodRed, Dim(CarbonSlate), false),
+            _ => (WarBloodRed, Dim(TacticalOlive), false),
+        },
+    };
 
     // ---- GTA VI: Miami / Vice City palette ----
     public const string MiamiBlue = "#1ACDFF";    // hsl(195, 100%, 55%)

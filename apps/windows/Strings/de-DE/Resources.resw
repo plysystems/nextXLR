@@ -132,7 +132,7 @@
   <data name="FxTuneWindow.Header" xml:space="preserve"><value>Erkennungsfenster</value></data>
   <data name="SamplerPage" xml:space="preserve"><value>Seite {0}</value></data>
   <data name="SamplerPagesHeader.Text" xml:space="preserve"><value>SEITEN</value></data>
-  <data name="SamplerPadTitle" xml:space="preserve"><value>Play {0} · Seite {1}</value></data>
+  <data name="SamplerPadTitle" xml:space="preserve"><value>Button {0} · Seite {1}</value></data>
   <data name="SamplerPadSettings.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Pad-Einstellungen</value></data>
   <data name="SamplerPadSettings.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Pad-Einstellungen</value></data>
   <data name="SamplerCloseSettings.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Schließen</value></data>
@@ -164,7 +164,7 @@
   <data name="SamplerAssign.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Einem Pad zuweisen</value></data>
   <data name="SamplerDelete.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Aus der Bibliothek entfernen</value></data>
   <data name="SamplerDelete.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Aus der Bibliothek entfernen</value></data>
-  <data name="SamplerAssigned" xml:space="preserve"><value>„{0}“ → Seite {1}, Play {2}</value></data>
+  <data name="SamplerAssigned" xml:space="preserve"><value>„{0}“ → Seite {1}, Button {2}</value></data>
   <data name="SamplerImportFailed" xml:space="preserve"><value>Nicht lesbar: {0}</value></data>
   <data name="SamplerUnsupported" xml:space="preserve"><value>Format nicht unterstützt</value></data>
   <data name="SamplerTitle.Text" xml:space="preserve"><value>Sampler</value></data>
@@ -175,12 +175,12 @@
   <data name="SamplerClearToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Leeren</value></data>
   <data name="SamplerClearLabel.Text" xml:space="preserve"><value>Clear</value></data>
   <data name="SamplerAddSample.Text" xml:space="preserve"><value>Sample hinzufügen</value></data>
-  <data name="SamplerPlay" xml:space="preserve"><value>Play {0}</value></data>
+  <data name="SamplerPlay" xml:space="preserve"><value>Button {0}</value></data>
   <data name="SamplerNoSamples" xml:space="preserve"><value>Keine Samples</value></data>
   <data name="SamplerSampleCount" xml:space="preserve"><value>{0} (+{1} weitere)</value></data>
-  <data name="SamplerCleared" xml:space="preserve"><value>Seite {0}, Play {1} geleert.</value></data>
+  <data name="SamplerCleared" xml:space="preserve"><value>Seite {0}, Button {1} geleert.</value></data>
   <data name="SamplerWouldPlay" xml:space="preserve"><value>„{0}“: Wiedergabe kommt mit der Sampler-Engine.</value></data>
-  <data name="SamplerPadEmpty" xml:space="preserve"><value>Play {0} ist leer: Sample darauf ziehen oder „Datei laden…“ nutzen.</value></data>
+  <data name="SamplerPadEmpty" xml:space="preserve"><value>Button {0} ist leer: Sample darauf ziehen oder „Datei laden…“ nutzen.</value></data>
   <data name="SamplerClearArmed" xml:space="preserve"><value>Clear ist aktiv: Drücke ein Pad, um es zu leeren.</value></data>
   <data name="LightTitle.Text" xml:space="preserve"><value>Beleuchtung</value></data>
   <data name="PreviewLighting.Title" xml:space="preserve"><value>Vorschau</value></data>
@@ -209,6 +209,7 @@
   <data name="LightLiveInfo.Title" xml:space="preserve"><value>Live auf deinem GoXLR</value></data>
   <data name="LightLiveInfo.Message" xml:space="preserve"><value>Farbänderungen gehen sofort an das Gerät. Die erste Änderung überträgt das komplette hier gezeigte Schema und ersetzt die aktuellen Farben am Gerät.</value></data>
   <data name="LightThemesHeader.Text" xml:space="preserve"><value>Themes</value></data>
+  <data name="ThemeWardogs" xml:space="preserve"><value>WARDOGS</value></data>
   <data name="ThemeTeal" xml:space="preserve"><value>Türkis</value></data>
   <data name="ThemeOcean" xml:space="preserve"><value>Ozean</value></data>
   <data name="ThemeViolet" xml:space="preserve"><value>Violett</value></data>
@@ -229,6 +230,8 @@
   <data name="SetAutostartDesc.Text" xml:space="preserve"><value>NEXT : XLR beim Anmelden an Windows minimiert starten.</value></data>
   <data name="SetTrayTitle.Text" xml:space="preserve"><value>In den Infobereich minimieren</value></data>
   <data name="SetTrayDesc.Text" xml:space="preserve"><value>Beim Schließen im Infobereich weiterlaufen. Die Einstellung wird gespeichert; das Tray-Symbol selbst folgt in einem kommenden Update.</value></data>
+  <data name="SetMuteOnStartupTitle.Text" xml:space="preserve"><value>Beim Start stummschalten (Mute on Startup)</value></data>
+  <data name="SetMuteOnStartupDesc.Text" xml:space="preserve"><value>Aktiviert die Mute-Taste für das Mikrofon automatisch direkt beim Start der Software.</value></data>
   <data name="SetLanguageTitle.Text" xml:space="preserve"><value>Sprache</value></data>
   <data name="SetLanguageDesc.Text" xml:space="preserve"><value>Die App folgt der Windows-Anzeigesprache (Englisch und Deutsch verfügbar).</value></data>
   <data name="SetLanguageLink.Content" xml:space="preserve"><value>Windows-Spracheinstellungen</value></data>

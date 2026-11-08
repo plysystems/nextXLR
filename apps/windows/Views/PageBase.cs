@@ -408,6 +408,8 @@ public partial class EffectsPage : Page
     public EffectsViewModel Fx => ViewModel.Effects;
     public EffectsPage() => InitializeComponent();
     protected override void OnNavigatedTo(NavigationEventArgs e) => ViewModel = (MainViewModel)e.Parameter;
+
+    private Visibility BoolToVisibility(bool active) => active ? Visibility.Visible : Visibility.Collapsed;
 }
 
 public partial class SamplerPage : Page
@@ -510,6 +512,38 @@ public partial class SamplerPage : Page
         if (!e.DataView.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.StorageItems)) return;
         var items = await e.DataView.GetStorageItemsAsync();
         await Sampler.ImportAsync(items.Select(i => i.Path));
+    }
+
+    private void PadEditor_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Text) ||
+            e.DataView.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = Windows.ApplicationModel.DataTransfer.DataPackageOperation.Copy;
+            if (Sampler.SelectedPad != null)
+            {
+                e.DragUIOverride.Caption = $"{Sampler.SelectedPad.Label} zuweisen";
+                e.DragUIOverride.IsCaptionVisible = true;
+            }
+        }
+    }
+
+    private async void PadEditor_Drop(object sender, DragEventArgs e)
+    {
+        if (Sampler.SelectedPad == null) return;
+        var pad = Sampler.SelectedPad;
+
+        if (e.DataView.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Text)
+            && await e.DataView.GetTextAsync() is { } text && text.StartsWith("sample:")
+            && Sampler.Store.Find(text[7..]) is { } sample)
+        {
+            Sampler.Assign(sample, Sampler.ActivePage, pad.Index);
+        }
+        else if (e.DataView.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.StorageItems))
+        {
+            var items = await e.DataView.GetStorageItemsAsync();
+            await Sampler.ImportAsync(items.Select(i => i.Path), assignTo: pad);
+        }
     }
 
     // ---- pad settings ----

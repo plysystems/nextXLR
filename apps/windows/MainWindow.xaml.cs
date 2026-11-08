@@ -179,9 +179,44 @@ public sealed partial class MainWindow : Window
             {
                 ContentFrame.Navigate(page, ViewModel);
                 if (tag == "mixer") Nav.SelectedItem = MixerItem;
+                else if (tag == "sampler") Nav.SelectedItem = SamplerItem;
                 else if (tag == "settings") Nav.SelectedItem = Nav.SettingsItem;
             }
         });
+    }
+
+    private void App_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = Windows.ApplicationModel.DataTransfer.DataPackageOperation.Copy;
+            e.DragUIOverride.Caption = "In Sampler importieren";
+            e.DragUIOverride.IsCaptionVisible = true;
+            e.DragUIOverride.IsContentVisible = true;
+
+            // Automatisch zu Sampler wechseln
+            if (!ReferenceEquals(Nav.SelectedItem, SamplerItem))
+            {
+                NavigateToPage("sampler");
+            }
+        }
+    }
+
+    private async void App_Drop(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.StorageItems))
+        {
+            var items = await e.DataView.GetStorageItemsAsync();
+            var audioPaths = items.Select(i => i.Path)
+                .Where(p => Services.SamplerStore.Extensions.Any(ext => p.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            if (audioPaths.Count > 0)
+            {
+                NavigateToPage("sampler");
+                await ViewModel.Sampler.ImportAsync(audioPaths);
+            }
+        }
     }
 
     public void ExitApplication()

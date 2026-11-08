@@ -596,24 +596,11 @@ LIZENZBEDINGUNGEN:
                 bool isExisting = File.Exists(Path.Combine(installDir, "NextXLR.exe"));
                 if (isExisting)
                 {
-                    Log("Bestehende NEXT : XLR Installation erkannt. Führe Update-Installation durch (Drüberinstallieren)...");
+                    Log("Bestehende NEXT : XLR Installation erkannt. Führe vollständiges Überschreiben und Bereinigung durch...");
                 }
 
-                // Terminate running instances to release file locks
-                Log("Beende laufende Instanzen von NextXLR und mixforge...");
-                foreach (var procName in new[] { "NextXLR", "mixforged", "mixforge" })
-                {
-                    try
-                    {
-                        foreach (var p in Process.GetProcessesByName(procName))
-                        {
-                            Log($"Beende Prozess {p.ProcessName} (PID {p.Id})...");
-                            p.Kill();
-                            p.WaitForExit(3000);
-                        }
-                    }
-                    catch { }
-                }
+                // Gründliche Bereinigung voriger Instanzen, Autostart-Einträge und alter Dateien
+                CleanupPreviousInstallation(installDir);
 
                 Log("Bestehende Konfiguration und Benutzerprofile in %LOCALAPPDATA%\\NextXLR bleiben erhalten.");
                 Directory.CreateDirectory(installDir);
@@ -814,6 +801,115 @@ LIZENZBEDINGUNGEN:
             }
         }
         catch { }
+    }
+
+    private void CleanupPreviousInstallation(string dir)
+    {
+        Log("Führe gründliche Bereinigung voriger Versionen und Autostart-Einträge durch...");
+
+        // 1. Terminate all running processes
+        foreach (var procName in new[] { "NextXLR", "mixforged", "mixforge", "GoXLRApp", "GoXLRAudioCplApp" })
+        {
+            try
+            {
+                foreach (var p in Process.GetProcessesByName(procName))
+                {
+                    Log($"Beende laufenden Prozess {p.ProcessName} (PID {p.Id})...");
+                    p.Kill();
+                    p.WaitForExit(3000);
+                }
+            }
+            catch { }
+        }
+
+        // 2. Cleanup old Windows Services if any existed
+        try
+        {
+            RunElevatedCommand("sc.exe", "stop mixforge");
+            RunElevatedCommand("sc.exe", "delete mixforge");
+            RunElevatedCommand("sc.exe", "stop NextXLRService");
+            RunElevatedCommand("sc.exe", "delete NextXLRService");
+        }
+        catch { }
+
+        // 3. Autostart cleanup (Registry HKCU and HKLM)
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
+            if (key != null)
+            {
+                foreach (var name in new[] { "NextXLR", "NextXLR_BackgroundService", "mixforge", "mixforged", "GoXLR" })
+                {
+                    if (key.GetValue(name) != null)
+                    {
+                        key.DeleteValue(name, false);
+                        Log($"Alter Autostart-Eintrag (HKCU) bereinigt: {name}");
+                    }
+                }
+            }
+        }
+        catch { }
+
+        try
+        {
+            using var keyHklm = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
+            if (keyHklm != null)
+            {
+                foreach (var name in new[] { "NextXLR", "NextXLR_BackgroundService", "mixforge", "mixforged" })
+                {
+                    if (keyHklm.GetValue(name) != null)
+                    {
+                        keyHklm.DeleteValue(name, false);
+                        Log($"Alter Autostart-Eintrag (HKLM) bereinigt: {name}");
+                    }
+                }
+            }
+        }
+        catch { }
+
+        // 4. Startup folder cleanup
+        try
+        {
+            var startupFolders = new[]
+            {
+                Environment.GetFolderPath(Environment.SpecialFolder.Startup),
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonStartup)
+            };
+            foreach (var sf in startupFolders)
+            {
+                if (!Directory.Exists(sf)) continue;
+                foreach (var shortcut in new[] { "NEXT XLR.lnk", "NextXLR.lnk", "mixforge.lnk" })
+                {
+                    var file = Path.Combine(sf, shortcut);
+                    if (File.Exists(file))
+                    {
+                        File.Delete(file);
+                        Log($"Alte Autostart-Verknüpfung entfernt: {shortcut}");
+                    }
+                }
+            }
+        }
+        catch { }
+
+        // 5. Clean up old installation directory files (overwrite cleanly)
+        if (Directory.Exists(dir))
+        {
+            try
+            {
+                foreach (var file in Directory.GetFiles(dir))
+                {
+                    var name = Path.GetFileName(file);
+                    if (name.EndsWith(".log", StringComparison.OrdinalIgnoreCase)) continue;
+                    try
+                    {
+                        File.SetAttributes(file, FileAttributes.Normal);
+                        File.Delete(file);
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+        }
     }
 
     private void RunElevatedCommand(string file, string args)

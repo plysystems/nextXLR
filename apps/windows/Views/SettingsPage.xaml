@@ -74,6 +74,15 @@
                         </Grid>
                         <Grid Style="{StaticResource SettingRow}">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <FontIcon Glyph="&#xE74F;" Foreground="{StaticResource WarningBrush}" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock x:Uid="SetMuteOnStartupTitle" FontWeight="SemiBold" />
+                                <TextBlock x:Uid="SetMuteOnStartupDesc" Style="{StaticResource Caption}" />
+                            </StackPanel>
+                            <ToggleSwitch x:Name="MuteOnStartupToggle" Grid.Column="2" OnContent="" OffContent="" MinWidth="0" Toggled="MuteOnStartup_Toggled" />
+                        </Grid>
+                        <Grid Style="{StaticResource SettingRow}">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                             <FontIcon Glyph="&#xE775;" />
                             <StackPanel Grid.Column="1"><TextBlock x:Uid="SetLanguageTitle" FontWeight="SemiBold" /></StackPanel>
                             <HyperlinkButton x:Uid="SetLanguageLink" Grid.Column="2" NavigateUri="ms-settings:regionlanguage" />

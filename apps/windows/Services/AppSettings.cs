@@ -16,6 +16,7 @@ public sealed class AppSettings
 
     public bool MinimizeToTray { get; set; } = true;
     public bool StartMinimized { get; set; }
+    public bool MuteOnStartup { get; set; } = false;
     public bool CheckForUpdatesOnStart { get; set; } = true;
     public double BleepVolume { get; set; } = 100.0;
     public bool HasCompletedTour { get; set; }

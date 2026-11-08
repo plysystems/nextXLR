@@ -86,9 +86,8 @@
                 </StackPanel>
             </Border>
 
-            <!-- Character effects: the three hardware buttons, each with its detail settings -->
+            <!-- Hardware FX toggles, each with its detail settings (collapsed when off) -->
             <StackPanel Spacing="12">
-                <TextBlock x:Uid="FxCharacterHeader" Style="{StaticResource SectionTitle}" />
                 <Grid ColumnSpacing="16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -106,10 +105,12 @@
                                     <TextBlock x:Uid="FxMegaphoneLabel" HorizontalAlignment="Center" />
                                 </StackPanel>
                             </ToggleButton>
-                            <Slider x:Uid="FxMegAmount" Minimum="0" Maximum="100" StepFrequency="1"
-                                    Value="{x:Bind Fx.MegaphoneAmount, Mode=TwoWay}" />
-                            <Slider x:Uid="FxMegPostGain" Minimum="-20" Maximum="20" StepFrequency="1"
-                                    Value="{x:Bind Fx.MegaphonePostGain, Mode=TwoWay}" />
+                            <StackPanel Spacing="14" Visibility="{x:Bind BoolToVisibility(Fx.Megaphone), Mode=OneWay}">
+                                <Slider x:Uid="FxMegAmount" Minimum="0" Maximum="100" StepFrequency="1"
+                                        Value="{x:Bind Fx.MegaphoneAmount, Mode=TwoWay}" />
+                                <Slider x:Uid="FxMegPostGain" Minimum="-20" Maximum="20" StepFrequency="1"
+                                        Value="{x:Bind Fx.MegaphonePostGain, Mode=TwoWay}" />
+                            </StackPanel>
                         </StackPanel>
                     </Border>
 
@@ -123,28 +124,30 @@
                                     <TextBlock x:Uid="FxRobotLabel" HorizontalAlignment="Center" />
                                 </StackPanel>
                             </ToggleButton>
-                            <ComboBox x:Uid="FxRobotWave" HorizontalAlignment="Stretch" ItemsSource="{x:Bind Fx.RobotWaveforms}"
-                                      SelectedIndex="{x:Bind Fx.RobotWaveform, Mode=TwoWay}" />
-                            <Slider x:Uid="FxRobotPulse" Minimum="0" Maximum="100" StepFrequency="1"
-                                    Value="{x:Bind Fx.RobotPulseWidth, Mode=TwoWay}" />
-                            <Slider x:Uid="FxRobotThreshold" Minimum="-36" Maximum="0" StepFrequency="1"
-                                    Value="{x:Bind Fx.RobotThreshold, Mode=TwoWay}" />
-                            <Slider x:Uid="FxRobotDry" Minimum="-36" Maximum="0" StepFrequency="1"
-                                    Value="{x:Bind Fx.RobotDryMix, Mode=TwoWay}" />
-                            <TextBlock x:Uid="FxRobotBands" Style="{StaticResource Caption}" />
-                            <Grid ColumnSpacing="10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Slider x:Uid="FxRobotLow" Minimum="-12" Maximum="12" StepFrequency="1"
-                                        Value="{x:Bind Fx.RobotLowGain, Mode=TwoWay}" />
-                                <Slider x:Uid="FxRobotMid" Grid.Column="1" Minimum="-12" Maximum="12" StepFrequency="1"
-                                        Value="{x:Bind Fx.RobotMidGain, Mode=TwoWay}" />
-                                <Slider x:Uid="FxRobotHigh" Grid.Column="2" Minimum="-12" Maximum="12" StepFrequency="1"
-                                        Value="{x:Bind Fx.RobotHighGain, Mode=TwoWay}" />
-                            </Grid>
+                            <StackPanel Spacing="14" Visibility="{x:Bind BoolToVisibility(Fx.Robot), Mode=OneWay}">
+                                <ComboBox x:Uid="FxRobotWave" HorizontalAlignment="Stretch" ItemsSource="{x:Bind Fx.RobotWaveforms}"
+                                          SelectedIndex="{x:Bind Fx.RobotWaveform, Mode=TwoWay}" />
+                                <Slider x:Uid="FxRobotPulse" Minimum="0" Maximum="100" StepFrequency="1"
+                                        Value="{x:Bind Fx.RobotPulseWidth, Mode=TwoWay}" />
+                                <Slider x:Uid="FxRobotThreshold" Minimum="-36" Maximum="0" StepFrequency="1"
+                                        Value="{x:Bind Fx.RobotThreshold, Mode=TwoWay}" />
+                                <Slider x:Uid="FxRobotDry" Minimum="-36" Maximum="0" StepFrequency="1"
+                                        Value="{x:Bind Fx.RobotDryMix, Mode=TwoWay}" />
+                                <TextBlock x:Uid="FxRobotBands" Style="{StaticResource Caption}" />
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Slider x:Uid="FxRobotLow" Minimum="-12" Maximum="12" StepFrequency="1"
+                                            Value="{x:Bind Fx.RobotLowGain, Mode=TwoWay}" />
+                                    <Slider x:Uid="FxRobotMid" Grid.Column="1" Minimum="-12" Maximum="12" StepFrequency="1"
+                                            Value="{x:Bind Fx.RobotMidGain, Mode=TwoWay}" />
+                                    <Slider x:Uid="FxRobotHigh" Grid.Column="2" Minimum="-12" Maximum="12" StepFrequency="1"
+                                            Value="{x:Bind Fx.RobotHighGain, Mode=TwoWay}" />
+                                </Grid>
+                            </StackPanel>
                         </StackPanel>
                     </Border>
 
@@ -158,12 +161,14 @@
                                     <TextBlock x:Uid="FxHardtuneLabel" HorizontalAlignment="Center" />
                                 </StackPanel>
                             </ToggleButton>
-                            <Slider x:Uid="FxTuneAmount" Minimum="0" Maximum="100" StepFrequency="1"
-                                    Value="{x:Bind Fx.HardtuneAmount, Mode=TwoWay}" />
-                            <Slider x:Uid="FxTuneRate" Minimum="0" Maximum="100" StepFrequency="1"
-                                    Value="{x:Bind Fx.HardtuneRate, Mode=TwoWay}" />
-                            <Slider x:Uid="FxTuneWindow" Minimum="0" Maximum="600" StepFrequency="1"
-                                    Value="{x:Bind Fx.HardtuneWindow, Mode=TwoWay}" />
+                            <StackPanel Spacing="14" Visibility="{x:Bind BoolToVisibility(Fx.Hardtune), Mode=OneWay}">
+                                <Slider x:Uid="FxTuneAmount" Minimum="0" Maximum="100" StepFrequency="1"
+                                        Value="{x:Bind Fx.HardtuneAmount, Mode=TwoWay}" />
+                                <Slider x:Uid="FxTuneRate" Minimum="0" Maximum="100" StepFrequency="1"
+                                        Value="{x:Bind Fx.HardtuneRate, Mode=TwoWay}" />
+                                <Slider x:Uid="FxTuneWindow" Minimum="0" Maximum="600" StepFrequency="1"
+                                        Value="{x:Bind Fx.HardtuneWindow, Mode=TwoWay}" />
+                            </StackPanel>
                         </StackPanel>
                     </Border>
                 </Grid>
