@@ -173,6 +173,10 @@ public partial class ChannelViewModel : ObservableObject
                 BluetoothAudioRouter.Instance.Volume = (float)c.Volume;
                 BluetoothAudioRouter.Instance.IsMuted = c.Muted;
             }
+            else
+            {
+                BluetoothAudioRouter.Instance.SetChannelLevelById(Id, (float)c.Volume, c.Muted);
+            }
         }
         finally { _applyingServer = false; }
     }
@@ -182,6 +186,10 @@ public partial class ChannelViewModel : ObservableObject
         if (Id == 8)
         {
             BluetoothAudioRouter.Instance.Volume = (float)value;
+        }
+        else
+        {
+            BluetoothAudioRouter.Instance.SetChannelLevelById(Id, (float)value, Muted);
         }
         if (!IsSubmixActive)
         {
@@ -223,6 +231,10 @@ public partial class ChannelViewModel : ObservableObject
         if (Id == 8)
         {
             BluetoothAudioRouter.Instance.IsMuted = value;
+        }
+        else
+        {
+            BluetoothAudioRouter.Instance.SetChannelLevelById(Id, (float)Volume, value);
         }
         if (!IsSubmixActive)
         {

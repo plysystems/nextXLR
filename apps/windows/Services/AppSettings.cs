@@ -50,7 +50,11 @@ public sealed class AppSettings
 
     public static string AppVersion =>
         Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion?.Split('+')[0]
-        ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
+        ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.1.0";
+
+    public static string BuildCommitHash => GitBuildInfo.CommitHash;
+    public static string FullBuildCommitHash => GitBuildInfo.FullCommitHash;
+    public static string VersionDisplay => $"v{AppVersion} (Build {BuildCommitHash})";
 }
 
 /// <summary>

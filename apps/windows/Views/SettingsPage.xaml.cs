@@ -26,7 +26,7 @@ public sealed partial class SettingsPage : Page
         TrayToggle.IsOn = _settings.MinimizeToTray;
         MuteOnStartupToggle.IsOn = _settings.MuteOnStartup;
         AutoUpdateToggle.IsOn = _settings.CheckForUpdatesOnStart;
-        AppVersionText.Text = Loc.Format("SetAppVersion", AppSettings.AppVersion);
+        AppVersionText.Text = Loc.Format("SetAppVersion", AppSettings.VersionDisplay);
         EngineVersionText.Text = Loc.Format("SetEngineVersion", ViewModel.EngineVersion);
         UpdateDriverStatus();
 
@@ -229,9 +229,70 @@ public sealed partial class SettingsPage : Page
 
         try
         {
-            using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(6) };
+            using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(8) };
             client.DefaultRequestHeaders.UserAgent.ParseAdd("NextXLR-App/" + AppSettings.AppVersion);
 
+            // 1. Primary update check: GitHub Commit Hash comparison
+            var commitUrl = "https://api.github.com/repos/plysystems/nextXLR/commits/main";
+            var commitResp = await client.GetAsync(commitUrl);
+
+            if (commitResp.IsSuccessStatusCode)
+            {
+                var json = await commitResp.Content.ReadAsStringAsync();
+                using var doc = System.Text.Json.JsonDocument.Parse(json);
+                var root = doc.RootElement;
+                var remoteSha = root.TryGetProperty("sha", out var shaElem) ? shaElem.GetString() ?? "" : "";
+                var remoteShort = remoteSha.Length >= 7 ? remoteSha.Substring(0, 7) : remoteSha;
+
+                string commitMsg = "";
+                if (root.TryGetProperty("commit", out var commitElem) &&
+                    commitElem.TryGetProperty("message", out var msgElem))
+                {
+                    commitMsg = msgElem.GetString() ?? "";
+                    var firstLine = commitMsg.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+                    if (!string.IsNullOrEmpty(firstLine)) commitMsg = firstLine;
+                }
+
+                var localHash = AppSettings.BuildCommitHash;
+
+                if (!string.IsNullOrEmpty(remoteShort) &&
+                    !remoteShort.Equals(localHash, StringComparison.OrdinalIgnoreCase) &&
+                    !remoteSha.Equals(AppSettings.FullBuildCommitHash, StringComparison.OrdinalIgnoreCase))
+                {
+                    // New build available!
+                    UpdateResult.Severity = InfoBarSeverity.Success;
+                    UpdateResult.Title = $"Neues Update verfügbar: Build {remoteShort}";
+                    UpdateResult.Message = $"Ein neueres Build steht auf GitHub bereit:\n" +
+                        $"• Neuestes Build: {remoteShort} ({commitMsg})\n" +
+                        $"• Installiertes Build: {localHash} (v{AppSettings.AppVersion})\n\n" +
+                        $"Klicke unten, um das Installationsprogramm herunterzuladen und direkt über die bestehende Version zu installieren.";
+
+                    var exeDownloadUrl = "https://github.com/plysystems/nextXLR/raw/main/dist/NextXLR-Setup-0.1.0-alpha.exe";
+                    var repoUrl = "https://github.com/plysystems/nextXLR";
+
+                    var btnAuto = new Button
+                    {
+                        Content = "Update automatisch installieren",
+                        Style = (Style)Application.Current.Resources["AccentButtonStyle"]
+                    };
+                    btnAuto.Click += async (_, _) =>
+                    {
+                        await DownloadAndInstallUpdateAsync(exeDownloadUrl, repoUrl);
+                    };
+                    UpdateResult.ActionButton = btnAuto;
+                    return;
+                }
+                else
+                {
+                    UpdateResult.Severity = InfoBarSeverity.Success;
+                    UpdateResult.Title = "NextXLR ist auf dem neuesten Stand!";
+                    UpdateResult.Message = $"Version v{AppSettings.AppVersion} (Build {localHash}) ist aktuell. Es liegen keine neueren Commits auf GitHub vor.";
+                    UpdateResult.ActionButton = null;
+                    return;
+                }
+            }
+
+            // 2. Secondary check: GitHub Releases fallback
             var url = "https://api.github.com/repos/plysystems/nextXLR/releases/latest";
             var response = await client.GetAsync(url);
 
@@ -265,7 +326,7 @@ public sealed partial class SettingsPage : Page
 
                     UpdateResult.Severity = InfoBarSeverity.Success;
                     UpdateResult.Title = $"Neues Update verfügbar: {tagName}";
-                    UpdateResult.Message = $"{releaseNotes}\nInstalliert: v{AppSettings.AppVersion}. Klicke unten, um das Update herunterzuladen und direkt über die bestehende Version zu installieren.";
+                    UpdateResult.Message = $"{releaseNotes}\nInstalliert: v{AppSettings.AppVersion} (Build {AppSettings.BuildCommitHash}). Klicke unten, um das Update herunterzuladen und direkt über die bestehende Version zu installieren.";
 
                     var btnAuto = new Button
                     {
@@ -289,7 +350,7 @@ public sealed partial class SettingsPage : Page
                 {
                     UpdateResult.Severity = InfoBarSeverity.Success;
                     UpdateResult.Title = "NextXLR ist auf dem neuesten Stand!";
-                    UpdateResult.Message = $"Version v{AppSettings.AppVersion} ist aktuell. Es liegen keine neueren Releases auf GitHub vor.";
+                    UpdateResult.Message = $"Version v{AppSettings.AppVersion} (Build {AppSettings.BuildCommitHash}) ist aktuell. Es liegen keine neueren Releases auf GitHub vor.";
                     UpdateResult.ActionButton = null;
                 }
             }
@@ -297,7 +358,7 @@ public sealed partial class SettingsPage : Page
             {
                 UpdateResult.Severity = InfoBarSeverity.Informational;
                 UpdateResult.Title = "GitHub Repository geprüft";
-                UpdateResult.Message = $"Aktuelle Version: v{AppSettings.AppVersion}. Besuche GitHub für die neuesten Releases, Commits und Downloads.";
+                UpdateResult.Message = $"Aktuelle Version: v{AppSettings.AppVersion} (Build {AppSettings.BuildCommitHash}). Besuche GitHub für die neuesten Releases, Commits und Downloads.";
                 var btn = new Button { Content = "Releases auf GitHub öffnen" };
                 btn.Click += (_, _) => _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/plysystems/nextXLR/releases"));
                 UpdateResult.ActionButton = btn;
@@ -307,7 +368,7 @@ public sealed partial class SettingsPage : Page
         {
             UpdateResult.Severity = InfoBarSeverity.Informational;
             UpdateResult.Title = "GitHub Releases prüfen";
-            UpdateResult.Message = $"Installierte Version: v{AppSettings.AppVersion}. Du kannst Releases direkt auf GitHub aufrufen ({ex.Message}).";
+            UpdateResult.Message = $"Installierte Version: v{AppSettings.AppVersion} (Build {AppSettings.BuildCommitHash}). Du kannst Releases direkt auf GitHub aufrufen ({ex.Message}).";
             var btn = new Button { Content = "GitHub öffnen" };
             btn.Click += (_, _) => _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/plysystems/nextXLR"));
             UpdateResult.ActionButton = btn;

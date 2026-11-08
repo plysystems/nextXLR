@@ -5,6 +5,91 @@ $distDir = Join-Path $root "dist"
 $releaseDir = Join-Path $distDir "NextXLR-v0.1.0-alpha"
 $appDir = Join-Path $releaseDir "app"
 
+# 0. Update GitBuildInfo.cs with current Git commit hash
+try {
+    $commitShort = (git -C $root rev-parse --short HEAD).Trim()
+    $commitFull = (git -C $root rev-parse HEAD).Trim()
+    Write-Host "Embedding Git Commit $commitShort into build info..."
+    $buildInfoFile = Join-Path $root "apps\windows\Services\GitBuildInfo.cs"
+    $buildInfoContent = @"
+using System;
+using System.IO;
+
+namespace NextXLR.Services;
+
+/// <summary>
+/// Provides Git commit metadata embedded at build time or resolved dynamically from the repository.
+/// </summary>
+public static class GitBuildInfo
+{
+    private static string _commitHash = "$commitShort";
+    private static string _fullCommitHash = "$commitFull";
+
+    public static string CommitHash => _commitHash;
+    public static string FullCommitHash => _fullCommitHash;
+
+    static GitBuildInfo()
+    {
+        try
+        {
+            var baseDir = AppContext.BaseDirectory;
+            var dir = new DirectoryInfo(baseDir);
+            DirectoryInfo? repoDir = null;
+            while (dir != null)
+            {
+                if (Directory.Exists(Path.Combine(dir.FullName, ".git")))
+                {
+                    repoDir = dir;
+                    break;
+                }
+                dir = dir.Parent;
+            }
+
+            if (repoDir != null)
+            {
+                var headFile = Path.Combine(repoDir.FullName, ".git", "HEAD");
+                if (File.Exists(headFile))
+                {
+                    var headContent = File.ReadAllText(headFile).Trim();
+                    if (headContent.StartsWith("ref: ", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var refPath = headContent.Substring(5).Trim();
+                        var refFile = Path.Combine(repoDir.FullName, ".git", refPath.Replace('/', Path.DirectorySeparatorChar));
+                        if (File.Exists(refFile))
+                        {
+                            var sha = File.ReadAllText(refFile).Trim();
+                            if (sha.Length >= 7)
+                            {
+                                _fullCommitHash = sha;
+                                _commitHash = sha.Substring(0, 7);
+                            }
+                        }
+                    }
+                    else if (headContent.Length >= 7)
+                    {
+                        _fullCommitHash = headContent;
+                        _commitHash = headContent.Substring(0, 7);
+                    }
+                }
+            }
+        }
+        catch
+        {
+        }
+    }
+}
+"@
+    Set-Content -Path $buildInfoFile -Value $buildInfoContent -Encoding UTF8
+} catch {
+    Write-Warning "Could not update GitBuildInfo from git: $_"
+}
+
+# 0b. Compile projects to ensure latest binaries
+Write-Host "Building Windows Application..."
+dotnet build (Join-Path $root "apps\windows\NextXLR.csproj") -c Debug
+Write-Host "Building Installer Setup..."
+dotnet build (Join-Path $root "installer\NextXLR.Installer.csproj") -c Debug
+
 Write-Host "Creating release package directory structure..."
 if (Test-Path $releaseDir) { Remove-Item $releaseDir -Recurse -Force }
 New-Item -ItemType Directory -Path $appDir -Force | Out-Null

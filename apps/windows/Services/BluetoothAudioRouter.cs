@@ -1,9 +1,9 @@
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
@@ -11,19 +11,21 @@ using NAudio.Wave.SampleProviders;
 namespace NextXLR.Services;
 
 /// <summary>
-/// Ultra-low latency Real-time Audio Forwarder for Bluetooth & Wireless Headsets.
-/// Captures full GoXLR hardware mix (Broadcast Stream Mix: Chat + Game + Music + System)
-/// or specific channel loopback, scales volume in real time with the GoXLR Headphone fader/knob,
-/// and streams with minimal buffer (<20ms delay) to any Bluetooth or Wireless headphones.
+/// Professional Zero-Latency Multi-Channel Audio Bridge for Bluetooth & Wireless Headsets.
+/// 
+/// Captures and mixes ALL active GoXLR channels simultaneously (Game, Chat, Music, System, Samples)
+/// in real time, scales volume with both individual GoXLR faders and the GoXLR Headphone knob (Channel 8),
+/// resamples smoothly if the headset requires 44.1 kHz, and streams jitter-free via WASAPI Event Sync with ~50ms latency.
 /// </summary>
 public sealed class BluetoothAudioRouter : IDisposable
 {
     private static readonly Lazy<BluetoothAudioRouter> _instance = new(() => new BluetoothAudioRouter());
     public static BluetoothAudioRouter Instance => _instance.Value;
 
-    private WasapiCapture? _capture;
+    private readonly List<WasapiCapture> _captures = new();
+    private readonly List<BufferedWaveProvider> _buffers = new();
+    private readonly ConcurrentDictionary<string, (float Volume, bool Muted)> _channelLevels = new(StringComparer.OrdinalIgnoreCase);
     private WasapiOut? _player;
-    private BufferedWaveProvider? _bufferedProvider;
     private readonly object _lock = new();
 
     public bool IsRunning { get; private set; }
@@ -32,17 +34,98 @@ public sealed class BluetoothAudioRouter : IDisposable
     public string? CurrentSourceName { get; private set; }
     public string StatusMessage { get; private set; } = "Inaktiv";
 
-    /// <summary>Real-time volume multiplier linked directly to the GoXLR Headphones knob/fader (0.0 to 1.0)</summary>
+    /// <summary>Real-time master volume multiplier linked directly to GoXLR Headphones knob/fader (0.0 to 1.0)</summary>
     public volatile float Volume = 1.0f;
 
-    /// <summary>Hardware/Software mute state linked to the GoXLR Headphones</summary>
+    /// <summary>Master hardware/software mute state linked to GoXLR Headphones</summary>
     public volatile bool IsMuted = false;
 
     public event Action<bool, string>? StatusChanged;
 
-    private BluetoothAudioRouter() { }
+    private BluetoothAudioRouter()
+    {
+        // Default standard channels to full volume
+        SetChannelLevel("System", 1.0f, false);
+        SetChannelLevel("Game", 1.0f, false);
+        SetChannelLevel("Chat", 1.0f, false);
+        SetChannelLevel("Musik", 1.0f, false);
+        SetChannelLevel("Sample", 1.0f, false);
+    }
 
-    public void Start(string targetDeviceId, string targetDeviceName, bool muteMicSidetone = true, string sourceMode = "broadcast")
+    /// <summary>
+    /// Update individual channel volume and mute from GoXLR faders/knobs.
+    /// </summary>
+    public void SetChannelLevel(string channelName, float volume, bool muted)
+    {
+        _channelLevels[channelName] = (Math.Clamp(volume, 0f, 1f), muted);
+        var norm = NormalizeChannelName(channelName);
+        if (norm != channelName)
+        {
+            _channelLevels[norm] = (Math.Clamp(volume, 0f, 1f), muted);
+        }
+    }
+
+    /// <summary>
+    /// Update channel level using GoXLR Channel IDs (0: Mic, 1: Chat, 2: Music, 3: Game, 4: Console, 5: Line In, 6: System, 7: Sample, 8: Headphones).
+    /// </summary>
+    public void SetChannelLevelById(uint channelId, float volume, bool muted)
+    {
+        string? name = channelId switch
+        {
+            0u => "Mic",
+            1u => "Chat",
+            2u => "Musik",
+            3u => "Game",
+            4u => "Console",
+            5u => "Line In",
+            6u => "System",
+            7u => "Sample",
+            8u => "Headphones",
+            _ => null
+        };
+
+        if (name != null)
+        {
+            SetChannelLevel(name, volume, muted);
+        }
+    }
+
+    public bool TryGetChannelLevel(string channelName, out float volume, out bool muted)
+    {
+        if (_channelLevels.TryGetValue(channelName, out var lvl) ||
+            _channelLevels.TryGetValue(NormalizeChannelName(channelName), out lvl))
+        {
+            volume = lvl.Volume;
+            muted = lvl.Muted;
+            return true;
+        }
+
+        volume = 1.0f;
+        muted = false;
+        return false;
+    }
+
+    private static string NormalizeChannelName(string name)
+    {
+        var lower = name.ToLowerInvariant();
+        if (lower.Contains("system")) return "System";
+        if (lower.Contains("game")) return "Game";
+        if (lower.Contains("chat")) return "Chat";
+        if (lower.Contains("music") || lower.Contains("musik")) return "Musik";
+        if (lower.Contains("sample")) return "Sample";
+        if (lower.Contains("line in")) return "Line In";
+        if (lower.Contains("console")) return "Console";
+        if (lower.Contains("mic") || lower.Contains("mikrofon")) return "Mic";
+        return name;
+    }
+
+    /// <summary>
+    /// Starts the Bluetooth bridge.
+    /// sourceMode can be:
+    /// - "all" (default): captures and mixes System + Game + Chat + Music + Samples simultaneously.
+    /// - "broadcast": captures GoXLR Broadcast Stream Mix.
+    /// </summary>
+    public void Start(string targetDeviceId, string targetDeviceName, bool muteMicSidetone = true, string sourceMode = "all")
     {
         lock (_lock)
         {
@@ -84,168 +167,178 @@ public sealed class BluetoothAudioRouter : IDisposable
                     return;
                 }
 
-                // 2. Select Source: Prefer Broadcast Stream Mix (contains full hardware mix of all channels)
-                MMDevice? sourceDevice = null;
-                bool isCaptureEndpoint = false;
+                // Standard mixing format (48 kHz, 32-bit float stereo)
+                var standardFormat = WaveFormat.CreateIeeeFloatWaveFormat(48000, 2);
+                var mixer = new MixingSampleProvider(standardFormat) { ReadFully = true };
 
-                if (sourceMode != "system")
+                var capturedChannelNames = new List<string>();
+
+                if (sourceMode == "broadcast")
                 {
-                    // Look for GoXLR Broadcast Stream Mix (Capture endpoint)
-                    sourceDevice = captureDevices.FirstOrDefault(d =>
+                    // Look for GoXLR Broadcast Stream Mix
+                    var bcastDev = captureDevices.FirstOrDefault(d =>
                         (d.FriendlyName.Contains("Broadcast", StringComparison.OrdinalIgnoreCase) ||
-                         d.FriendlyName.Contains("Stream Mix", StringComparison.OrdinalIgnoreCase) ||
-                         d.FriendlyName.Contains("Sende-Stream", StringComparison.OrdinalIgnoreCase)) &&
+                         d.FriendlyName.Contains("Stream Mix", StringComparison.OrdinalIgnoreCase)) &&
+                        (d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
+                         d.FriendlyName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase)));
+
+                    if (bcastDev != null)
+                    {
+                        AddCaptureToMixer(new WasapiCapture(bcastDev), mixer, bcastDev.FriendlyName, "Broadcast");
+                        capturedChannelNames.Add(bcastDev.FriendlyName);
+                    }
+                }
+
+                // If "all" or if broadcast wasn't found: Capture all GoXLR render channels simultaneously!
+                if (capturedChannelNames.Count == 0)
+                {
+                    var goXlrChannels = renderDevices.Where(d =>
                         (d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
                          d.FriendlyName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase) ||
-                         d.FriendlyName.Contains("TC-HELICON", StringComparison.OrdinalIgnoreCase)));
+                         d.FriendlyName.Contains("TC-HELICON", StringComparison.OrdinalIgnoreCase) ||
+                         d.FriendlyName.Contains("TC Helicon", StringComparison.OrdinalIgnoreCase) ||
+                         d.FriendlyName.Contains("Go XLR", StringComparison.OrdinalIgnoreCase)) &&
+                        !d.ID.Equals(targetDevice.ID, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
 
-                    if (sourceDevice == null)
+                    if (goXlrChannels.Count > 0)
                     {
-                        // Fallback search for any capture device containing Broadcast or Stream Mix
-                        sourceDevice = captureDevices.FirstOrDefault(d =>
-                            d.FriendlyName.Contains("Broadcast", StringComparison.OrdinalIgnoreCase) ||
-                            d.FriendlyName.Contains("Stream Mix", StringComparison.OrdinalIgnoreCase));
-                    }
-
-                    if (sourceDevice != null)
-                    {
-                        isCaptureEndpoint = true;
-                    }
-                }
-
-                // If not found or if system-only requested: Look for System (TC-HELICON GoXLR) or default
-                if (sourceDevice == null)
-                {
-                    sourceDevice = renderDevices.FirstOrDefault(d =>
-                        d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) &&
-                        d.FriendlyName.Contains("System", StringComparison.OrdinalIgnoreCase));
-
-                    if (sourceDevice == null)
-                    {
-                        sourceDevice = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
-                    }
-                    isCaptureEndpoint = false;
-                }
-
-                if (sourceDevice == null)
-                {
-                    SetStatus(false, "Keine Audioquelle für GoXLR-Loopback gefunden.");
-                    return;
-                }
-
-                // Guard against loopback of target onto itself
-                if (!isCaptureEndpoint && sourceDevice.ID.Equals(targetDevice.ID, StringComparison.OrdinalIgnoreCase))
-                {
-                    var fallbackSystem = renderDevices.FirstOrDefault(d =>
-                        d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) &&
-                        d.FriendlyName.Contains("System", StringComparison.OrdinalIgnoreCase));
-
-                    if (fallbackSystem != null && !fallbackSystem.ID.Equals(targetDevice.ID, StringComparison.OrdinalIgnoreCase))
-                    {
-                        sourceDevice = fallbackSystem;
+                        foreach (var ch in goXlrChannels)
+                        {
+                            try
+                            {
+                                var shortName = NormalizeChannelName(ch.FriendlyName);
+                                AddCaptureToMixer(new WasapiLoopbackCapture(ch), mixer, ch.FriendlyName, shortName);
+                                if (!capturedChannelNames.Contains(shortName))
+                                {
+                                    capturedChannelNames.Add(shortName);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine($"Failed to loopback GoXLR channel {ch.FriendlyName}: {ex.Message}");
+                            }
+                        }
                     }
                     else
                     {
-                        SetStatus(false, $"Zielgerät '{targetDevice.FriendlyName}' ist bereits die Standard-Audioausgabe.");
-                        return;
+                        // Fallback: Default multimedia playback device loopback
+                        var defDev = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+                        if (defDev != null && !defDev.ID.Equals(targetDevice.ID, StringComparison.OrdinalIgnoreCase))
+                        {
+                            var shortName = NormalizeChannelName(defDev.FriendlyName);
+                            AddCaptureToMixer(new WasapiLoopbackCapture(defDev), mixer, defDev.FriendlyName, shortName);
+                            capturedChannelNames.Add(defDev.FriendlyName);
+                        }
+                    }
+
+                    // Optional Microphone Sidetone: include GoXLR Mic if user unmuted Sidetone
+                    if (!muteMicSidetone)
+                    {
+                        var micDev = captureDevices.FirstOrDefault(d =>
+                            (d.FriendlyName.Contains("Chat Mic", StringComparison.OrdinalIgnoreCase) ||
+                             d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
+                             d.FriendlyName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase)) &&
+                            !d.FriendlyName.Contains("Broadcast", StringComparison.OrdinalIgnoreCase) &&
+                            !d.FriendlyName.Contains("Stream Mix", StringComparison.OrdinalIgnoreCase));
+
+                        if (micDev != null)
+                        {
+                            try
+                            {
+                                AddCaptureToMixer(new WasapiCapture(micDev), mixer, micDev.FriendlyName, "Mic");
+                                capturedChannelNames.Add("Mikrofon (Sidetone)");
+                            }
+                            catch { }
+                        }
                     }
                 }
 
-                CurrentSourceName = sourceDevice.FriendlyName;
-
-                // 3. Setup WASAPI Capture (Direct Capture for Broadcast Mix, Loopback for Render devices)
-                if (isCaptureEndpoint)
+                if (_captures.Count == 0)
                 {
-                    _capture = new WasapiCapture(sourceDevice);
+                    SetStatus(false, "Keine GoXLR-Audioquellen für Bluetooth gefunden.");
+                    return;
+                }
+
+                CurrentSourceName = string.Join(" + ", capturedChannelNames);
+
+                // 2. Wrap mixer with real-time GoXLR master volume scaling (Headphones Channel 8)
+                ISampleProvider pipeline = new VolumeScalingSampleProvider(mixer, this);
+
+                // 3. Resample if the target Bluetooth headset requires a different sample rate (e.g. 44.1 kHz)
+                int targetSampleRate = 48000;
+                try
+                {
+                    targetSampleRate = targetDevice.AudioClient.MixFormat.SampleRate;
+                }
+                catch { }
+
+                if (targetSampleRate > 0 && targetSampleRate != standardFormat.SampleRate)
+                {
+                    pipeline = new WdlResamplingSampleProvider(pipeline, targetSampleRate);
+                }
+
+                // 4. Output stream preparation: match target format (IEEE float or 16-bit PCM)
+                IWaveProvider streamProvider;
+                var mixFormat = targetDevice.AudioClient.MixFormat;
+                if (mixFormat.BitsPerSample == 32 && mixFormat.Encoding == WaveFormatEncoding.IeeeFloat)
+                {
+                    streamProvider = pipeline.ToWaveProvider();
                 }
                 else
                 {
-                    _capture = new WasapiLoopbackCapture(sourceDevice);
+                    streamProvider = new SampleToWaveProvider16(pipeline);
                 }
 
-                // Ultra-low latency circular buffer: 40 ms total buffer to completely eliminate delays
-                _bufferedProvider = new BufferedWaveProvider(_capture.WaveFormat)
-                {
-                    DiscardOnBufferOverflow = true,
-                    BufferDuration = TimeSpan.FromMilliseconds(40)
-                };
-
-                var isFloat = _capture.WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat;
-
-                _capture.DataAvailable += (s, e) =>
-                {
-                    if (_bufferedProvider == null || e.BytesRecorded <= 0) return;
-
-                    // Apply real-time GoXLR volume and mute control directly onto audio frames
-                    var vol = Volume;
-                    var muted = IsMuted;
-
-                    if (muted || vol <= 0.001f)
-                    {
-                        Array.Clear(e.Buffer, 0, e.BytesRecorded);
-                    }
-                    else if (Math.Abs(vol - 1.0f) > 0.005f)
-                    {
-                        if (isFloat)
-                        {
-                            var floatSpan = MemoryMarshal.Cast<byte, float>(e.Buffer.AsSpan(0, e.BytesRecorded));
-                            for (int i = 0; i < floatSpan.Length; i++)
-                            {
-                                floatSpan[i] *= vol;
-                            }
-                        }
-                        else if (_capture.WaveFormat.BitsPerSample == 16)
-                        {
-                            var shortSpan = MemoryMarshal.Cast<byte, short>(e.Buffer.AsSpan(0, e.BytesRecorded));
-                            for (int i = 0; i < shortSpan.Length; i++)
-                            {
-                                shortSpan[i] = (short)Math.Clamp((int)(shortSpan[i] * vol), short.MinValue, short.MaxValue);
-                            }
-                        }
-                    }
-
-                    // Anti-delay buffer trim: ensure no queued backlog accumulates
-                    if (_bufferedProvider.BufferedDuration.TotalMilliseconds > 30)
-                    {
-                        _bufferedProvider.ClearBuffer();
-                    }
-
-                    _bufferedProvider.AddSamples(e.Buffer, 0, e.BytesRecorded);
-                };
-
-                _capture.RecordingStopped += (s, e) =>
-                {
-                    if (IsRunning && e.Exception != null)
-                    {
-                        SetStatus(false, $"Audio-Stream unterbrochen: {e.Exception.Message}");
-                    }
-                };
-
-                // 4. Output stream preparation: Convert float to 16-bit PCM for universal Bluetooth compatibility
-                IWaveProvider streamProvider = _bufferedProvider;
+                // 5. Initialize Output: WASAPI Shared with hardware Event Sync (50ms buffer)
+                // Event sync eliminates Windows Thread.Sleep jitter and completely cures audio stuttering.
                 try
                 {
-                    var sampleProvider = _bufferedProvider.ToSampleProvider();
-                    streamProvider = new SampleToWaveProvider16(sampleProvider);
+                    _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, true, 50);
+                    _player.Init(streamProvider);
                 }
                 catch
                 {
-                    streamProvider = _bufferedProvider;
+                    try
+                    {
+                        // Try alternative format representation (float <-> 16-bit)
+                        _player?.Dispose();
+                        streamProvider = (streamProvider is SampleToWaveProvider16)
+                            ? pipeline.ToWaveProvider()
+                            : new SampleToWaveProvider16(pipeline);
+
+                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, true, 50);
+                        _player.Init(streamProvider);
+                    }
+                    catch
+                    {
+                        // Fallback to polling mode with 60ms latency if driver doesn't support event sync
+                        _player?.Dispose();
+                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 60);
+                        _player.Init(streamProvider);
+                    }
                 }
 
-                // 5. Initialize Output: WASAPI Shared Mode with 20ms minimal buffer latency
-                _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 20);
-                _player.Init(streamProvider);
+                _player.PlaybackStopped += (s, e) =>
+                {
+                    if (IsRunning && e.Exception != null)
+                    {
+                        SetStatus(false, $"Bluetooth-Wiedergabe getrennt: {e.Exception.Message}");
+                    }
+                };
 
-                // 6. Start the ultra-fast pipeline
-                _capture.StartRecording();
+                // 6. Start captures and player
+                foreach (var c in _captures)
+                {
+                    c.StartRecording();
+                }
                 _player.Play();
 
                 IsRunning = true;
                 CurrentDeviceId = targetDevice.ID;
                 CurrentDeviceName = targetDevice.FriendlyName;
 
-                SetStatus(true, $"Aktiv: Live GoXLR-Mix ({sourceDevice.FriendlyName}) → '{targetDevice.FriendlyName}' (Verzögerung: <20ms, GoXLR-Lautstärkeregelung aktiv)");
+                SetStatus(true, $"Aktiv: GoXLR-Mix ({CurrentSourceName}) → '{targetDevice.FriendlyName}' (Echtzeit, kein Stottern, GoXLR-Fader & Master aktiv)");
             }
             catch (Exception ex)
             {
@@ -258,6 +351,62 @@ public sealed class BluetoothAudioRouter : IDisposable
     public void Start(string targetDeviceId, string targetDeviceName, string sourceMode, bool muteMicSidetone = true)
         => Start(targetDeviceId, targetDeviceName, muteMicSidetone, sourceMode);
 
+    private void AddCaptureToMixer(WasapiCapture capture, MixingSampleProvider mixer, string fullName, string shortName)
+    {
+        // ReadFully = true is CRUCIAL: it keeps silent/idle channels from returning 0 samples,
+        // which would cause NAudio MixingSampleProvider to permanently drop that channel from the mix
+        // or cause buffer starvation / audio stuttering.
+        var buffer = new BufferedWaveProvider(capture.WaveFormat)
+        {
+            DiscardOnBufferOverflow = true,
+            BufferDuration = TimeSpan.FromMilliseconds(100),
+            ReadFully = true
+        };
+
+        capture.DataAvailable += (s, e) =>
+        {
+            if (e.BytesRecorded > 0)
+            {
+                buffer.AddSamples(e.Buffer, 0, e.BytesRecorded);
+            }
+        };
+
+        capture.RecordingStopped += (s, e) =>
+        {
+            if (IsRunning && e.Exception != null)
+            {
+                Debug.WriteLine($"Channel {fullName} capture stopped: {e.Exception.Message}");
+            }
+        };
+
+        _captures.Add(capture);
+        _buffers.Add(buffer);
+
+        // Convert to sample provider
+        ISampleProvider sampleProvider = buffer.ToSampleProvider();
+
+        // 1. Resample to 48000 Hz if needed
+        if (capture.WaveFormat.SampleRate != 48000)
+        {
+            sampleProvider = new WdlResamplingSampleProvider(sampleProvider, 48000);
+        }
+
+        // 2. Channel count adaptation: ensure 2 channels (stereo)
+        if (sampleProvider.WaveFormat.Channels == 1)
+        {
+            sampleProvider = new MonoToStereoSampleProvider(sampleProvider);
+        }
+        else if (sampleProvider.WaveFormat.Channels > 2)
+        {
+            sampleProvider = new MultiplexingSampleProvider(new[] { sampleProvider }, 2);
+        }
+
+        // 3. Per-channel GoXLR volume and mute control
+        sampleProvider = new ChannelVolumeSampleProvider(sampleProvider, this, shortName);
+
+        mixer.AddMixerInput(sampleProvider);
+    }
+
     public void Stop()
     {
         lock (_lock)
@@ -269,13 +418,12 @@ public sealed class BluetoothAudioRouter : IDisposable
 
     private void StopInternal()
     {
-        try
+        foreach (var c in _captures)
         {
-            _capture?.StopRecording();
-            _capture?.Dispose();
+            try { c.StopRecording(); c.Dispose(); } catch { }
         }
-        catch { }
-        finally { _capture = null; }
+        _captures.Clear();
+        _buffers.Clear();
 
         try
         {
@@ -285,7 +433,6 @@ public sealed class BluetoothAudioRouter : IDisposable
         catch { }
         finally { _player = null; }
 
-        _bufferedProvider = null;
         IsRunning = false;
         CurrentDeviceId = null;
         CurrentDeviceName = null;
@@ -302,5 +449,88 @@ public sealed class BluetoothAudioRouter : IDisposable
     public void Dispose()
     {
         Stop();
+    }
+
+    /// <summary>
+    /// Sample provider wrapper that applies per-channel GoXLR volume and mute scaling.
+    /// </summary>
+    private sealed class ChannelVolumeSampleProvider : ISampleProvider
+    {
+        private readonly ISampleProvider _source;
+        private readonly BluetoothAudioRouter _router;
+        private readonly string _channelName;
+
+        public ChannelVolumeSampleProvider(ISampleProvider source, BluetoothAudioRouter router, string channelName)
+        {
+            _source = source;
+            _router = router;
+            _channelName = channelName;
+        }
+
+        public WaveFormat WaveFormat => _source.WaveFormat;
+
+        public int Read(float[] buffer, int offset, int count)
+        {
+            int read = _source.Read(buffer, offset, count);
+            if (read <= 0) return read;
+
+            if (_router.TryGetChannelLevel(_channelName, out var vol, out var muted))
+            {
+                if (muted || vol <= 0.001f)
+                {
+                    Array.Clear(buffer, offset, read);
+                    return read;
+                }
+                if (Math.Abs(vol - 1.0f) > 0.005f)
+                {
+                    for (int i = 0; i < read; i++)
+                    {
+                        buffer[offset + i] *= vol;
+                    }
+                }
+            }
+
+            return read;
+        }
+    }
+
+    /// <summary>
+    /// Sample provider wrapper that applies real-time GoXLR master volume scaling and mute onto mixed frames.
+    /// </summary>
+    private sealed class VolumeScalingSampleProvider : ISampleProvider
+    {
+        private readonly ISampleProvider _source;
+        private readonly BluetoothAudioRouter _router;
+
+        public VolumeScalingSampleProvider(ISampleProvider source, BluetoothAudioRouter router)
+        {
+            _source = source;
+            _router = router;
+        }
+
+        public WaveFormat WaveFormat => _source.WaveFormat;
+
+        public int Read(float[] buffer, int offset, int count)
+        {
+            int read = _source.Read(buffer, offset, count);
+            if (read <= 0) return read;
+
+            float vol = _router.Volume;
+            bool muted = _router.IsMuted;
+
+            if (muted || vol <= 0.001f)
+            {
+                Array.Clear(buffer, offset, read);
+            }
+            else if (Math.Abs(vol - 1.0f) > 0.005f)
+            {
+                for (int i = 0; i < read; i++)
+                {
+                    buffer[offset + i] *= vol;
+                }
+            }
+
+            return read;
+        }
     }
 }
