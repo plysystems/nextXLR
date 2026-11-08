@@ -57,7 +57,23 @@ public sealed class PipeTransport : IAsyncDisposable
                 batch = _pending.Values.ToArray();
                 _pending.Clear();
             }
-            foreach (var m in batch) await WriteAsync(m).ConfigureAwait(false);
+
+            var writer = _writer;
+            if (writer is null) continue;
+
+            await _writeLock.WaitAsync(ct).ConfigureAwait(false);
+            try
+            {
+                foreach (var m in batch)
+                {
+                    var line = JsonSerializer.Serialize(m, Json.Options);
+                    await writer.WriteLineAsync(line.AsMemory(), ct).ConfigureAwait(false);
+                }
+            }
+            catch (IOException) { }
+            catch (ObjectDisposedException) { }
+            catch (OperationCanceledException) { }
+            finally { _writeLock.Release(); }
         }
     }
 

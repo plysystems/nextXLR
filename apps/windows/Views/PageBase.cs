@@ -241,6 +241,7 @@ public partial class MicPage : Page
 
     public MainViewModel ViewModel { get; private set; } = null!;
     public MicSettingsViewModel Mic => ViewModel.Mic;
+    public VstPluginService Vst => VstPluginService.Instance;
     public Visibility Visible(bool b) => b ? Visibility.Visible : Visibility.Collapsed;
     public MicPage() => InitializeComponent();
 
@@ -414,11 +415,37 @@ public partial class MicPage : Page
         }
     }
 
+    private void OpenVstEditor_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: VstPluginItem plugin })
+        {
+            VstPluginService.OpenEditor(App.MainWindowInstance ?? new Window(), plugin);
+        }
+    }
+
+    private void RemoveVst_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: VstPluginItem plugin })
+        {
+            VstPluginService.Instance.RemovePlugin(plugin);
+            Show(InfoBarSeverity.Informational, $"Plugin '{plugin.Name}' aus Rack entfernt.");
+        }
+    }
+
     private async void ScanVst_Click(object sender, RoutedEventArgs e)
     {
-        Show(InfoBarSeverity.Informational, "Scanne System nach VST3 & CLAP Audio-Plugins (C:\\Program Files\\Common Files\\VST3)...");
-        await Task.Delay(400);
-        Show(InfoBarSeverity.Success, "Plugin-Scan abgeschlossen: VST3 & CLAP Audio-Engine bereit!");
+        Show(InfoBarSeverity.Informational, "Scanne System nach VST3 & CLAP Audio-Plugins...");
+        var plugins = await Task.Run(() => VstPluginService.ScanInstalledPlugins());
+        int added = 0;
+        foreach (var p in plugins)
+        {
+            if (!VstPluginService.Instance.RackPlugins.Any(r => r.Path.Equals(p.Path, StringComparison.OrdinalIgnoreCase)))
+            {
+                VstPluginService.Instance.AddPlugin(p);
+                added++;
+            }
+        }
+        Show(InfoBarSeverity.Success, $"Scan abgeschlossen: {plugins.Count} VST3/CLAP Plugins im System gefunden ({added} neu zum Rack hinzugefügt).");
     }
 
     private async void AddVst_Click(object sender, RoutedEventArgs e)
@@ -430,7 +457,19 @@ public partial class MicPage : Page
         WinRT.Interop.InitializeWithWindow.Initialize(picker, MainWindow.Handle);
         var file = await picker.PickSingleFileAsync();
         if (file is null) return;
-        Show(InfoBarSeverity.Success, $"Plugin hinzugefügt: {file.Name} (Slot 1 aktiv)");
+
+        string format = file.FileType.ToLowerInvariant() == ".clap" ? "CLAP" : "VST3";
+        var item = new VstPluginItem
+        {
+            Name = file.DisplayName,
+            Vendor = "Benutzer-Plugin",
+            Format = format,
+            Path = file.Path,
+            IsEnabled = true
+        };
+        VstPluginService.Instance.AddPlugin(item);
+        Show(InfoBarSeverity.Success, $"Plugin hinzugefügt: {item.Name} ({format})");
+        VstPluginService.OpenEditor(App.MainWindowInstance ?? new Window(), item);
     }
 }
 

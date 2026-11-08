@@ -11,10 +11,12 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
+        Services.CrashHandler.Initialize();
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
+        Services.CrashHandler.Initialize();
         Services.Rebrand.MigrateFromGoXlrNext();
         EnsureDaemonRunning();
         _window = new MainWindow();

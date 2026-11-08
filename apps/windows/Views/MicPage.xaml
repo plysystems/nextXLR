@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="using:NextXLR.ViewModels"
+    xmlns:services="using:NextXLR.Services"
     Background="Transparent">
 
     <Page.Resources>
@@ -430,7 +431,7 @@
                         <FontIcon Glyph="&#xE99A;" Foreground="{StaticResource BrandBrush}" />
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                             <TextBlock Text="VST3-Plugins" Style="{StaticResource CardTitle}" />
-                            <TextBlock Text="Binde externe VST3-Audio-Effekte direkt in den Signalweg ein" Style="{StaticResource Caption}" />
+                            <TextBlock Text="Binde externe VST3- und CLAP-Audio-Effekte direkt in das Mikrofon-Signal ein" Style="{StaticResource Caption}" />
                         </StackPanel>
                     </Grid>
                 </Expander.Header>
@@ -451,23 +452,54 @@
                     </StackPanel>
 
                     <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="10" Padding="14">
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Aktives Effekt-Rack (Mikrofon-DSP-Kanal):" FontWeight="SemiBold" />
-                            <Grid Background="{StaticResource SurfaceL1Brush}" CornerRadius="8" Padding="12,8">
+                        <StackPanel Spacing="10">
+                            <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <FontIcon Glyph="&#xE8B9;" Foreground="{StaticResource BrandBrush}" VerticalAlignment="Center" Margin="0,0,12,0" />
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="FabFilter Pro-Q 3 / ReaEQ (VST3 Rack Slot 1)" FontWeight="SemiBold" />
-                                    <TextBlock Text="Common Files\VST3\FabFilter Pro-Q 3.vst3 • 64-Bit Studio EQ" Style="{StaticResource Caption}" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <ToggleSwitch IsOn="True" OnContent="Aktiv" OffContent="Bypass" MinWidth="0" />
-                                </StackPanel>
+                                <TextBlock Text="Aktives Effekt-Rack (Mikrofon-DSP-Kanal):" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="Klicke 'Editor öffnen' um EQ, Dynamik &amp; Presets einzustellen" Style="{StaticResource Caption}" VerticalAlignment="Center" />
                             </Grid>
+
+                            <ItemsControl ItemsSource="{x:Bind Vst.RackPlugins, Mode=OneWay}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="services:VstPluginItem">
+                                        <Grid Background="{StaticResource SurfaceL1Brush}" CornerRadius="8" Padding="14,10" Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <FontIcon Glyph="&#xE99A;" Foreground="{StaticResource BrandBrush}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                    <TextBlock Text="{x:Bind Name, Mode=OneWay}" FontWeight="SemiBold" FontSize="14" />
+                                                    <Border Background="{StaticResource SurfaceL2Brush}" BorderBrush="{StaticResource BrandBrush}" BorderThickness="1" CornerRadius="4" Padding="6,1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{x:Bind Format, Mode=OneWay}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                                                    </Border>
+                                                    <TextBlock Text="{x:Bind PresetName, Mode=OneWay}" Style="{StaticResource Caption}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" />
+                                                    <TextBlock Text="•" Foreground="{StaticResource TextMutedBrush}" />
+                                                    <TextBlock Text="{x:Bind StatusText, Mode=OneWay}" FontSize="11" FontWeight="SemiBold" Foreground="{x:Bind StatusBrush, Mode=OneWay}" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <TextBlock Text="{x:Bind Path, Mode=OneWay}" Style="{StaticResource Caption}" MaxLines="1" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                                <Button Style="{StaticResource AccentButtonStyle}" Tag="{x:Bind}" Click="OpenVstEditor_Click" Padding="12,6">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <FontIcon Glyph="&#xE70F;" FontSize="13" />
+                                                        <TextBlock Text="Editor öffnen" FontWeight="SemiBold" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <ToggleSwitch IsOn="{x:Bind IsBypassed, Mode=TwoWay}" OnContent="Bypass" OffContent="Aktiv" MinWidth="0" VerticalAlignment="Center" />
+                                                <Button Style="{StaticResource SmoothButton}" Tag="{x:Bind}" Click="RemoveVst_Click" ToolTipService.ToolTip="Aus Rack entfernen" Padding="8,6">
+                                                    <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="#FF453A" />
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </StackPanel>
                     </Border>
                 </StackPanel>

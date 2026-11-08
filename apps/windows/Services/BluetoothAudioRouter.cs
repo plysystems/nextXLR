@@ -581,24 +581,28 @@ public sealed class BluetoothAudioRouter : IDisposable
             lock (_lock)
             {
                 int samplesToAdd;
+                ReadOnlySpan<byte> byteSpan = buffer.AsSpan(offset, count);
+
                 if (inputFormat.Encoding == WaveFormatEncoding.IeeeFloat && inputFormat.BitsPerSample == 32)
                 {
-                    samplesToAdd = count / 4;
+                    ReadOnlySpan<float> floatSpan = MemoryMarshal.Cast<byte, float>(byteSpan);
+                    samplesToAdd = floatSpan.Length;
                     PruneExcess(samplesToAdd);
                     for (int i = 0; i < samplesToAdd; i++)
                     {
-                        _ringBuffer[_writePos] = BitConverter.ToSingle(buffer, offset + i * 4);
+                        _ringBuffer[_writePos] = floatSpan[i];
                         _writePos = (_writePos + 1) % _capacity;
                     }
                 }
                 else if (inputFormat.BitsPerSample == 16)
                 {
-                    samplesToAdd = count / 2;
+                    ReadOnlySpan<short> shortSpan = MemoryMarshal.Cast<byte, short>(byteSpan);
+                    samplesToAdd = shortSpan.Length;
                     PruneExcess(samplesToAdd);
+                    const float inv32768 = 1.0f / 32768.0f;
                     for (int i = 0; i < samplesToAdd; i++)
                     {
-                        short s = BitConverter.ToInt16(buffer, offset + i * 2);
-                        _ringBuffer[_writePos] = s / 32768.0f;
+                        _ringBuffer[_writePos] = shortSpan[i] * inv32768;
                         _writePos = (_writePos + 1) % _capacity;
                     }
                 }
