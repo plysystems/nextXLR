@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="NextXLR.Controls.Fader"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    IsTabStop="True" UseSystemFocusVisuals="True" Width="60" MinHeight="140">
+
+    <Grid x:Name="Root" Background="Transparent">
+        <!-- Level Meter on the left (runs parallel to the fader track) -->
+        <Grid x:Name="MeterHost" Width="6" HorizontalAlignment="Left" Margin="3,18,0,18" VerticalAlignment="Stretch">
+            <!-- Meter background track -->
+            <Border CornerRadius="3" Background="#0C0F14" BorderBrush="#1C212B" BorderThickness="1" />
+            <!-- Gradient level fill -->
+            <Border x:Name="MeterGradient" CornerRadius="3" Background="{StaticResource MeterBrush}" Opacity="0.0" />
+            <!-- Top mask to hide gradient down to current audio level -->
+            <Border x:Name="MeterMask" VerticalAlignment="Top" CornerRadius="3,3,0,0" Background="#0C0F14" />
+            <!-- Peak hold line -->
+            <Border x:Name="MeterHold" VerticalAlignment="Top" Height="2" CornerRadius="1"
+                    Background="#FFFFFF" Opacity="0.0">
+                <Border.RenderTransform>
+                    <TranslateTransform x:Name="MeterHoldOffset" />
+                </Border.RenderTransform>
+            </Border>
+            <!-- When not metered (outputs / unmetered inputs): subtle dark groove guide -->
+            <Border x:Name="NoMeterGuide" Width="2" HorizontalAlignment="Center" CornerRadius="1"
+                    Background="#181D26" Visibility="Collapsed" />
+        </Grid>
+
+        <!-- Scale ticks on the right (0 / 25 / 50 / 75 / 100 %) -->
+        <Canvas x:Name="Ticks" IsHitTestVisible="False" />
+
+        <!-- Central recessed studio fader track slot -->
+        <Border x:Name="Track" Width="4" CornerRadius="2" HorizontalAlignment="Center"
+                Margin="0,18,0,18" VerticalAlignment="Stretch"
+                Background="#0A0D13" BorderBrush="#1D222B" BorderThickness="1" />
+
+        <!-- Tactile hardware studio fader cap -->
+        <Grid x:Name="Cap" Width="34" Height="36" VerticalAlignment="Top" HorizontalAlignment="Center">
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="CapOffset" />
+            </Grid.RenderTransform>
+
+            <!-- Subtle soft drop shadow under the fader knob -->
+            <Border CornerRadius="4" Margin="0,2,0,-2" Background="#000000" Opacity="0.45" />
+
+            <!-- Main sculpted knob body with metallic studio bevel -->
+            <Border CornerRadius="4" BorderThickness="1" BorderBrush="#424B5C">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#545E70" Offset="0.0" />
+                        <GradientStop Color="#383F4E" Offset="0.14" />
+                        <GradientStop Color="#252A34" Offset="0.46" />
+                        <GradientStop Color="#1C2027" Offset="0.54" />
+                        <GradientStop Color="#2B313D" Offset="0.86" />
+                        <GradientStop Color="#1A1D23" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+
+            <!-- Tactile finger grip ridges (top) -->
+            <Border Height="1" Margin="5,6,5,0" VerticalAlignment="Top" Background="#161920" />
+            <Border Height="1" Margin="5,8,5,0" VerticalAlignment="Top" Background="#4A5466" />
+
+            <!-- Tactile finger grip ridges (bottom) -->
+            <Border Height="1" Margin="5,0,5,8" VerticalAlignment="Bottom" Background="#161920" />
+            <Border Height="1" Margin="5,0,5,6" VerticalAlignment="Bottom" Background="#4A5466" />
+
+            <!-- Center indicator index mark (high-contrast illuminated bar) -->
+            <Grid Height="3" Margin="3,0" VerticalAlignment="Center">
+                <Border Height="3" CornerRadius="1.5" Background="#101319" />
+                <Border x:Name="IndicatorLine" Height="2" CornerRadius="1" Margin="0,0.5" />
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

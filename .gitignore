@@ -1,0 +1,32 @@
+# Rust build outputs
+/target
+Cargo.lock
+
+# Node.js
+node_modules/
+dist/
+
+# WinUI / .NET build outputs
+bin/
+obj/
+*.user
+*.suo
+*.old
+*.pri.old
+*.dll.old
+*.exe.old
+apps/windows/bin/
+apps/windows/obj/
+apps/installer/bin/
+apps/installer/obj/
+installer/bin/
+installer/obj/
+apps/ui/src-tauri/target
+
+# Logs & temp
+*.log
+.DS_Store
+.vs/
+.idea/
+.vscode/
+.claude/

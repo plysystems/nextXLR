@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="NextXLR.PadTile"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:NextXLR.Controls"
+    AllowDrop="True" DragOver="Pad_DragOver" Drop="Pad_Drop">
+
+    <!--
+      One sampler pad. The content hugs the pad's OUTER side, so the round Clear button that sits
+      in the middle of the four pads never covers anything (Mirror = right-hand column).
+    -->
+    <Border x:Name="Body" CornerRadius="20" BorderThickness="2" Padding="18,16"
+            Background="{x:Bind PadBackground(ViewModel.IsPlaying, ViewModel.HasSample), Mode=OneWay}"
+            BorderBrush="{x:Bind PadBorder(ViewModel.IsSelected, ViewModel.IsPlaying), Mode=OneWay}"
+            AutomationProperties.Name="{x:Bind ViewModel.Label}">
+        <Border.BackgroundTransition><BrushTransition Duration="0:0:0.2" /></Border.BackgroundTransition>
+        <Border.ContextFlyout>
+            <MenuFlyout>
+                <MenuFlyoutItem Text="Pad bearbeiten" Click="EditPad_Click">
+                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE70F;" /></MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Sound ersetzen..." Click="ReplaceSample_Click">
+                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8E5;" /></MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Pad leeren" Click="ClearPad_Click">
+                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+            </MenuFlyout>
+        </Border.ContextFlyout>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Header: label + mode, settings at the outer corner -->
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Button x:Name="SettingsButton" x:Uid="SamplerPadSettings" Grid.Column="{x:Bind GearColumn}" Padding="6"
+                        ToolTipService.ToolTip="Pad bearbeiten"
+                        Background="Transparent" BorderThickness="0" Click="Settings_Click">
+                    <FontIcon Glyph="&#xE70F;" FontSize="14" />
+                </Button>
+                <StackPanel Grid.Column="1" Spacing="0" HorizontalAlignment="{x:Bind Side}">
+                    <TextBlock Text="{x:Bind ViewModel.Label}" FontSize="18" FontWeight="SemiBold"
+                               FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="{x:Bind Side}" />
+                    <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="{x:Bind Side}" Opacity="0.75">
+                        <FontIcon Glyph="{x:Bind ViewModel.ModeGlyph, Mode=OneWay}" FontSize="11" />
+                        <TextBlock Text="{x:Bind ViewModel.ModeText, Mode=OneWay}" FontSize="11" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="{x:Bind Side}" Spacing="6">
+                <TextBlock Text="{x:Bind ViewModel.SampleName, Mode=OneWay}" FontSize="13"
+                           TextTrimming="CharacterEllipsis" MaxWidth="200"
+                           HorizontalAlignment="{x:Bind Side}" Opacity="0.85" />
+                <Button x:Name="EditPadButton" Click="EditPad_Click" Padding="8,4" CornerRadius="6"
+                        Background="{StaticResource SurfaceL3Brush}" BorderThickness="0"
+                        Visibility="{x:Bind ViewModel.HasSample, Mode=OneWay}"
+                        HorizontalAlignment="{x:Bind Side}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE70F;" FontSize="11" />
+                        <TextBlock Text="Bearbeiten" FontSize="11" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <controls:WaveformView Grid.Row="2" Height="34" Width="170" HorizontalAlignment="{x:Bind Side}"
+                                   Peaks="{x:Bind ViewModel.Peaks, Mode=OneWay}"
+                                   Start="{x:Bind ViewModel.TrimStart, Mode=OneWay}" End="{x:Bind ViewModel.TrimEnd, Mode=OneWay}"
+                                   Cursor="{x:Bind ViewModel.Cursor, Mode=OneWay}" IsHitTestVisible="False" />
+        </Grid>
+    </Border>
+</UserControl>

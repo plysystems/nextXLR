@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SetupFX FormatVersionMajor="3" FormatVersionMinor="6">
+    <Task Id="PrepareInstall">
+        <Action Id="CreateProcess" File="apps.app1" AbortOnExitCode="No" UseTargetPath="False" Arguments="apps.app1.ExitAll" Hide="True" TimeoutInMs="30000" AbortOnError="False"/>
+    </Task>
+    <Task Id="Install">
+        <Action Id="ShellExecute" File="apps.app1" AbortOnError="True" UseTargetPath="True" NonElevated="True" Arguments="apps.app1.StartInSystray"/>
+    </Task>
+    <Task Id="Uninstall">
+        <Action Id="CreateProcess" File="apps.app1" AbortOnExitCode="No" UseTargetPath="True" Arguments="apps.app1.ExitAll" Hide="True" TimeoutInMs="30000" AbortOnError="False"/>
+    </Task>
+    <Component Id="apps">
+        <File Id="app1">
+            <FileName>GoXLRAudioCplApp.exe</FileName>
+            <ExecutionArguments Id="ExitAll"><![CDATA[-exitall]]></ExecutionArguments>
+            <ExecutionArguments Id="StartInSystray"><![CDATA[-hide]]></ExecutionArguments>
+        </File>
+    </Component>
+</SetupFX>

@@ -1,0 +1,25 @@
+[package]
+name = "mixforge-engine"
+description = "Real-time audio graph for Mixforge"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+mixforge-protocol.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+cpal.workspace = true
+rtrb.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = [
+    "Win32_Devices_FunctionDiscovery",
+    "Win32_Foundation",
+    "Win32_Media_Audio",
+    "Win32_Media_Audio_Endpoints",
+    "Win32_System_Com",
+    "Win32_System_Com_StructuredStorage",
+    "Win32_System_Variant",
+    "Win32_UI_Shell_PropertiesSystem",
+] }

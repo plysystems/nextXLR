@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="NextXLR.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid x:Name="RootWindowGrid" Background="{StaticResource SurfaceL1Brush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Title bar: the NEXT : XLR logo. Draggable; caption buttons on the right. -->
+        <Grid x:Name="AppTitleBar" Padding="16,0,150,0">
+            <Image Source="Assets/nextXLR_logo.png" Height="40" HorizontalAlignment="Left"
+                   VerticalAlignment="Center" Stretch="Uniform" AutomationProperties.Name="NEXT : XLR" />
+        </Grid>
+
+        <NavigationView x:Name="Nav" Grid.Row="1"
+                        PaneDisplayMode="Auto" OpenPaneLength="248"
+                        ExpandedModeThresholdWidth="1180" CompactModeThresholdWidth="720"
+                        IsBackButtonVisible="Collapsed" IsSettingsVisible="False"
+                        SelectionChanged="Nav_SelectionChanged">
+            <NavigationView.Resources>
+                <!-- Content area sits on the darkest surface; the pane blends into the title bar. -->
+                <SolidColorBrush x:Key="NavigationViewContentBackground" Color="#111318" />
+                <Thickness x:Key="NavigationViewContentGridBorderThickness">1,1,0,0</Thickness>
+                <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="#20252E" />
+                <CornerRadius x:Key="NavigationViewContentGridCornerRadius">12,0,0,0</CornerRadius>
+                <!-- The pane is solid in every mode. In compact/minimal mode it opens as an overlay
+                     over the content; a transparent pane made the page show through it. -->
+                <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#15181E" />
+                <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#15181E" />
+                <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="#15181E" />
+                <SolidColorBrush x:Key="NavigationViewMinimalHeaderBackground" Color="#15181E" />
+            </NavigationView.Resources>
+
+            <NavigationView.MenuItems>
+                <NavigationViewItem x:Uid="NavMixer" Tag="mixer" x:Name="MixerItem">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE9E9;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="NavMic" Tag="mic" x:Name="MicItem">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE720;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="NavRouting" Tag="routing" x:Name="RoutingItem">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE8AB;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="NavEffects" Tag="effects" x:Name="EffectsItem"
+                                    Visibility="{x:Bind ViewModel.Hardware.HasEffects, Mode=OneWay}">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE945;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="NavSampler" Tag="sampler" x:Name="SamplerItem"
+                                    Visibility="{x:Bind ViewModel.Hardware.HasSampler, Mode=OneWay}">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE93C;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="NavLighting" Tag="lighting" x:Name="LightingItem">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE781;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="NavSettings" Tag="settings" x:Name="SettingsItem">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE713;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <NavigationView.PaneFooter>
+                <StackPanel Spacing="6" Margin="0,0,0,8">
+                    <!-- Connection status: always visible. Pill when the pane is open, dot when compact. -->
+                    <Border Margin="10,0" Padding="12,8" CornerRadius="10"
+                            Background="{StaticResource SurfaceL2Brush}" BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}"
+                            BorderThickness="1" Visibility="{x:Bind Nav.IsPaneOpen, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Grid Width="10" Height="10" VerticalAlignment="Center">
+                                <Ellipse Fill="{x:Bind StatusBrush(ViewModel.IsConnected), Mode=OneWay}" Opacity="0.35" Width="10" Height="10" />
+                                <Ellipse Fill="{x:Bind StatusBrush(ViewModel.IsConnected), Mode=OneWay}" Width="6" Height="6" />
+                            </Grid>
+                            <TextBlock Text="{x:Bind ViewModel.ConnectionText, Mode=OneWay}" FontSize="13" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Border>
+                    <Grid Width="40" Height="28" HorizontalAlignment="Left" Margin="4,0,0,0"
+                          Visibility="{x:Bind VisibleIfNot(Nav.IsPaneOpen), Mode=OneWay}"
+                          ToolTipService.ToolTip="{x:Bind ViewModel.ConnectionText, Mode=OneWay}">
+                        <Ellipse Fill="{x:Bind StatusBrush(ViewModel.IsConnected), Mode=OneWay}" Opacity="0.35" Width="12" Height="12" />
+                        <Ellipse Fill="{x:Bind StatusBrush(ViewModel.IsConnected), Mode=OneWay}" Width="7" Height="7" />
+                    </Grid>
+
+                    <!-- Detected device (USB PID → GoXLR / GoXLR Mini); only when the pane is open. -->
+                    <Border Margin="10,0" Padding="14,12" CornerRadius="12"
+                            Visibility="{x:Bind Nav.IsPaneOpen, Mode=OneWay}"
+                            Background="{StaticResource SurfaceL2Brush}"
+                            BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Width="34" Height="34" CornerRadius="10" Background="{StaticResource SurfaceL3Brush}">
+                                <FontIcon Glyph="&#xE88E;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="{x:Bind ViewModel.Hardware.DeviceName, Mode=OneWay}"
+                                           FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{x:Bind ViewModel.Hardware.DeviceDetail, Mode=OneWay}"
+                                           Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </NavigationView.PaneFooter>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <StackPanel Margin="{StaticResource InfoBarMargin}" Spacing="8">
+                    <InfoBar x:Uid="EngineOffline" IsOpen="{x:Bind Not(ViewModel.IsConnected), Mode=OneWay}"
+                             Severity="Warning" IsClosable="False" />
+                    <InfoBar x:Uid="EngineError" IsOpen="{x:Bind HasText(ViewModel.LastError), Mode=OneWay}"
+                             Severity="Error" Message="{x:Bind ViewModel.LastError, Mode=OneWay}" />
+                    <InfoBar x:Name="DriverMissingBar" IsOpen="False" Severity="Warning"
+                             Title="GoXLR Audiotreiber nicht eingerichtet"
+                             Message="Damit Windows alle Kanäle (System, Chat, Musik, Game) anbietet, muss der GoXLR Treiber installiert werden."
+                             IsClosable="True">
+                        <InfoBar.ActionButton>
+                            <Button Content="Treiber jetzt installieren" Click="InstallDriver_Click" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+                </StackPanel>
+                <Frame x:Name="ContentFrame" Grid.Row="1" />
+            </Grid>
+        </NavigationView>
+
+        <!-- Interactive Welcome & Guided Tour Modal Overlay -->
+        <Grid x:Name="TourOverlay" Visibility="Collapsed"
+              Grid.Row="0" Grid.RowSpan="2" Canvas.ZIndex="1000"
+              Background="#C00A0C10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Border Style="{StaticResource Card}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Width="620" Padding="32" CornerRadius="20"
+                    BorderBrush="{StaticResource BrandBrush}" BorderThickness="1.5"
+                    Background="{StaticResource SurfaceL1Brush}">
+                <StackPanel Spacing="20">
+                    <!-- Header with Icon & Step Count -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="48" Height="48" CornerRadius="14" Background="{StaticResource SurfaceL2Brush}">
+                            <FontIcon x:Name="TourIcon" Glyph="&#xE735;" FontSize="22" Foreground="{StaticResource BrandBrush}" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock x:Name="TourTitle" Text="Willkommen bei NextXLR" FontSize="20" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}" />
+                            <TextBlock x:Name="TourStepLabel" Text="Schritt 1 von 7" Style="{StaticResource Caption}" Foreground="{StaticResource BrandBrush}" />
+                        </StackPanel>
+                        <Button Grid.Column="2" Padding="8" Background="Transparent" BorderThickness="0"
+                                ToolTipService.ToolTip="Tour überspringen" Click="TourSkip_Click">
+                            <FontIcon Glyph="&#xE711;" FontSize="14" />
+                        </Button>
+                    </Grid>
+
+                    <ProgressBar x:Name="TourProgressBar" Maximum="7" Value="1" Height="4" CornerRadius="2" Foreground="{StaticResource BrandBrush}" />
+
+                    <!-- Content Text -->
+                    <Border CornerRadius="12" Background="{StaticResource SurfaceL2Brush}" Padding="18">
+                        <TextBlock x:Name="TourDescription" FontSize="14" LineHeight="22" TextWrapping="Wrap" />
+                    </Border>
+
+                    <!-- Footer with Buttons -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="TourBackButton" Content="Zurück" Click="TourBack_Click" Visibility="Collapsed" />
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+                            <Button x:Name="TourSkipButton" Content="Überspringen" Click="TourSkip_Click" />
+                            <Button x:Name="TourNextButton" Style="{StaticResource AccentButtonStyle}" Content="Weiter" Click="TourNext_Click" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

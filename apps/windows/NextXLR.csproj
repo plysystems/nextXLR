@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>NextXLR</RootNamespace>
+    <AssemblyName>NextXLR</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Exe / taskbar / Alt-Tab icon. The window title bar uses the same file (MainWindow). -->
+    <ApplicationIcon>Assets\nextXLR_icon.ico</ApplicationIcon>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <UseWinUI>true</UseWinUI>
+    <!-- Unpackaged, Windows App SDK bundled with the app: runs without an MSIX install. -->
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <!-- Use the PRI/MSIX build tasks shipped in the Windows App SDK package, so plain
+         `dotnet build` works without Visual Studio. -->
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <!-- i18n: English is the fallback; translations live in Strings/<lang>/Resources.resw. -->
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <Product>NEXT : XLR</Product>
+    <Version>0.1.0-alpha</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <InformationalVersion>0.1.0-alpha</InformationalVersion>
+    <Company>plysystems</Company>
+    <Copyright>© plysystems. All rights reserved.</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250108002" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\nextXLR_icon.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\nextXLR_logo.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Driver\**" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
