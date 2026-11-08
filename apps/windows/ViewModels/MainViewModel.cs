@@ -101,8 +101,8 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     private void ApplyAccents(IReadOnlyList<FaderAssignment> faders, IReadOnlyList<LightingZone> lighting)
     {
-        var faderMap = faders.ToDictionary(f => f.Channel, f => f.Fader);
-        var lightingMap = lighting.ToDictionary(z => z.Zone, z => z.Active);
+        var faderMap = faders.GroupBy(f => f.Channel).ToDictionary(g => g.Key, g => g.Last().Fader);
+        var lightingMap = lighting.GroupBy(z => z.Zone).ToDictionary(g => g.Key, g => g.Last().Active);
 
         foreach (var ch in Channels)
         {
@@ -147,8 +147,9 @@ public partial class MainViewModel : ObservableObject
 
     private void UpdateDevice(StateMessage s)
     {
-        var zones = (s.Lighting ?? []).ToDictionary(z => z.Zone,
-            z => new NextXLR.Controls.ZoneColors(ColorHex.Parse(z.Active), ColorHex.Parse(z.Inactive), z.Gradient));
+        var zones = (s.Lighting ?? []).GroupBy(z => z.Zone).ToDictionary(
+            g => g.Key,
+            g => new NextXLR.Controls.ZoneColors(ColorHex.Parse(g.Last().Active), ColorHex.Parse(g.Last().Inactive), g.Last().Gradient));
         var faders = (s.Faders ?? []);
         Channel? On(int i) => faders.FirstOrDefault(f => f.Fader == ((char)('A' + i)).ToString()) is { } f
             ? s.Channels.FirstOrDefault(c => c.Id == f.Channel) : null;

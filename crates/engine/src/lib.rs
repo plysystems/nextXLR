@@ -77,10 +77,10 @@ impl Engine {
     pub fn start() -> Self {
         let mut engine = Self::headless();
 
-        match audio::AudioThread::spawn(engine.params.clone(), engine.meters.clone()) {
-            Ok(a) => engine._audio = Some(a),
-            Err(e) => tracing::warn!("audio disabled, running headless: {e:#}"),
-        }
+        // AudioThread is permanently disabled: GoXLR hardware DSP handles all routing
+        // and mixing directly. An obsolete software cpal loopback between default input and
+        // default output caused microphone audio to loop directly into wireless headsets (e.g. AirPods)
+        // and echo during screen sharing. Endpoint metering is handled below via EndpointMeters.
 
         #[cfg(windows)]
         {

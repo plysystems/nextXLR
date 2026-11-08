@@ -120,13 +120,15 @@ public sealed class DeviceView : UserControl
 
     public void Update(DeviceSnapshot? s)
     {
-        _currentSnapshot = s;
-        bool isMini = ForceMini || (s?.IsMini == true);
-
-        if (_builtMini != isMini)
+        try
         {
-            Build(isMini);
-        }
+            _currentSnapshot = s;
+            bool isMini = ForceMini || (s?.IsMini == true);
+
+            if (_builtMini != isMini)
+            {
+                Build(isMini);
+            }
 
         ZoneColors Z(string zone, Color fallbackActive, Color fallbackInactive)
         {
@@ -300,6 +302,11 @@ public sealed class DeviceView : UserControl
 
         LightButton(_bleepButton, Z("bleep", DefaultMagenta, Color.FromArgb(255, 0x60, 0x10, 0x50)), s?.Bleep ?? true);
         LightButton(_muteButton, Z("cough", DefaultMagenta, Color.FromArgb(255, 0x60, 0x10, 0x50)), s?.Cough ?? true);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"DeviceView.Update failed: {ex}");
+        }
     }
 
     private static double Luma(Color c) => (0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B) / 255.0;

@@ -169,7 +169,7 @@
                                 </Grid>
 
                                 <CheckBox x:Name="BluetoothSidetoneCheck" IsChecked="True"
-                                          Content="Mikrofon-Monitoring bei Bluetooth stummschalten (verhindert Echo durch Bluetooth-Latenz)"
+                                          Content="Mikrofon-Monitoring bei Bluetooth stummschalten (verhindert Echo durch Bluetooth-Latenz &amp; in Bildschirmübertragungen)"
                                           Checked="BluetoothSidetone_Changed" Unchecked="BluetoothSidetone_Changed" />
 
                                 <InfoBar x:Name="BluetoothStatusInfo" IsOpen="True" IsClosable="False" Severity="Informational"

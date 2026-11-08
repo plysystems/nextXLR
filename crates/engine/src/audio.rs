@@ -4,6 +4,7 @@
 //! Known limitations here: input and output are independent cpal streams, so sample-rate
 //! mismatch and clock drift are not handled yet.
 
+#![allow(dead_code)]
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread::JoinHandle;

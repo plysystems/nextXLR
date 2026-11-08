@@ -127,7 +127,26 @@ public sealed class LightingViewModel
     }
 
     /// <summary>Applies a preset to every zone this device has, as one colour-map update.</summary>
-    public void ApplyTheme(LightingTheme t) => _transport.Send(new SetLightingScheme(t.Build(_zoneIds)));
+    public void ApplyTheme(LightingTheme t)
+    {
+        var ids = _zoneIds.Count > 0
+            ? _zoneIds
+            : (MainViewModel.IsCurrentMini
+                ? new[] { "fader_a", "fader_b", "fader_c", "fader_d", "mute_a", "mute_b", "mute_c", "mute_d", "bleep", "cough" }
+                : new[] { "fader_a", "fader_b", "fader_c", "fader_d", "mute_a", "mute_b", "mute_c", "mute_d", "bleep", "cough", "effects", "sampler_top", "sampler_bottom" });
+
+        var zones = t.Build(ids);
+        _transport.Send(new SetLightingScheme(zones));
+
+        // Immediately update local controls for instant responsive visual feedback
+        foreach (var z in Faders.Concat(Groups.SelectMany(g => g.Zones)))
+        {
+            if (zones.FirstOrDefault(c => c.Zone == z.Id) is { } c)
+            {
+                z.ApplyFromServer(c);
+            }
+        }
+    }
 
     /// <summary>Called on every state message: rebuild when the device's zone set changes, then sync colours.</summary>
     public void Apply(IReadOnlyList<string> zoneIds, IReadOnlyList<LightingZone>? colours)

@@ -682,19 +682,33 @@ public partial class LightingPage : Page
 
     private void Theme_Click(object sender, RoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.Tag is LightingTheme t)
+        try
         {
-            ViewModel.Lighting.ApplyTheme(t);
-            ShowThemeResult(InfoBarSeverity.Informational, $"Design '{t.Name}' wurde angewendet.");
+            if ((sender as FrameworkElement)?.Tag is LightingTheme t)
+            {
+                ViewModel.Lighting.ApplyTheme(t);
+                ShowThemeResult(InfoBarSeverity.Informational, $"Design '{t.Name}' wurde angewendet.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowThemeResult(InfoBarSeverity.Error, $"Fehler beim Anwenden des Designs: {ex.Message}");
         }
     }
 
     private void CustomTheme_Click(object sender, RoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.Tag is CustomLightingTheme t)
+        try
         {
-            ViewModel.Lighting.ApplyCustomTheme(t);
-            ShowThemeResult(InfoBarSeverity.Success, $"Eigenes Theme '{t.Name}' wurde auf das GoXLR angewendet.");
+            if ((sender as FrameworkElement)?.Tag is CustomLightingTheme t)
+            {
+                ViewModel.Lighting.ApplyCustomTheme(t);
+                ShowThemeResult(InfoBarSeverity.Success, $"Eigenes Theme '{t.Name}' wurde auf das GoXLR angewendet.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowThemeResult(InfoBarSeverity.Error, $"Fehler beim Anwenden des Designs: {ex.Message}");
         }
     }
 

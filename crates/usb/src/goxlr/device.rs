@@ -323,6 +323,9 @@ impl HardwareDevice for GoXlrDevice {
                 self.push_leds()?;
             }
             HardwareCommand::FaderGradient { fader, gradient } => {
+                if self.model == Model::Mini {
+                    return Ok(()); // GoXLR Mini has manual faders without display mode registers
+                }
                 // [gradient, meter]: the level meter on the fader LEDs stays off.
                 self.request(Command::SetFaderDisplayMode(*fader), &[u8::from(*gradient), 0])?;
             }

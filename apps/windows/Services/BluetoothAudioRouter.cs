@@ -108,6 +108,7 @@ public sealed class BluetoothAudioRouter : IDisposable
     private static string NormalizeChannelName(string name)
     {
         var lower = name.ToLowerInvariant();
+        if (lower.Contains("mic") || lower.Contains("mikrofon")) return "Mic";
         if (lower.Contains("system")) return "System";
         if (lower.Contains("game")) return "Game";
         if (lower.Contains("chat")) return "Chat";
@@ -115,7 +116,6 @@ public sealed class BluetoothAudioRouter : IDisposable
         if (lower.Contains("sample")) return "Sample";
         if (lower.Contains("line in")) return "Line In";
         if (lower.Contains("console")) return "Console";
-        if (lower.Contains("mic") || lower.Contains("mikrofon")) return "Mic";
         return name;
     }
 
@@ -198,6 +198,10 @@ public sealed class BluetoothAudioRouter : IDisposable
                          d.FriendlyName.Contains("TC-HELICON", StringComparison.OrdinalIgnoreCase) ||
                          d.FriendlyName.Contains("TC Helicon", StringComparison.OrdinalIgnoreCase) ||
                          d.FriendlyName.Contains("Go XLR", StringComparison.OrdinalIgnoreCase)) &&
+                        !d.FriendlyName.Contains("Broadcast", StringComparison.OrdinalIgnoreCase) &&
+                        !d.FriendlyName.Contains("Stream Mix", StringComparison.OrdinalIgnoreCase) &&
+                        !d.FriendlyName.Contains("Mic", StringComparison.OrdinalIgnoreCase) &&
+                        !d.FriendlyName.Contains("Mikrofon", StringComparison.OrdinalIgnoreCase) &&
                         !d.ID.Equals(targetDevice.ID, StringComparison.OrdinalIgnoreCase))
                         .ToList();
 
