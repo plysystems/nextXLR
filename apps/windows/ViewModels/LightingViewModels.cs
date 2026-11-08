@@ -24,6 +24,9 @@ public sealed class LightingViewModel
     /// <summary>Fader A–D, shown in their own gradient section.</summary>
     public ObservableCollection<LightingZoneViewModel> Faders { get; } = new();
 
+    /// <summary>User-created custom lighting themes saved on disk.</summary>
+    public ObservableCollection<CustomLightingTheme> CustomThemes { get; } = new();
+
     /// <summary>Featured multi-colour preset.</summary>
     public LightingTheme GtaVi { get; } = LightingTheme.GtaVi();
 
@@ -46,7 +49,82 @@ public sealed class LightingViewModel
         new("ThemeOff", "#000000", "#000000"),
     ];
 
-    public LightingViewModel(PipeTransport transport) => _transport = transport;
+    public LightingViewModel(PipeTransport transport)
+    {
+        _transport = transport;
+        RefreshCustomThemes();
+    }
+
+    public void RefreshCustomThemes()
+    {
+        CustomThemes.Clear();
+        foreach (var t in CustomThemeService.List())
+        {
+            CustomThemes.Add(t);
+        }
+    }
+
+    public CustomLightingTheme SaveCurrentAsTheme(string name)
+    {
+        var theme = new CustomLightingTheme
+        {
+            Name = name.Trim(),
+            Author = Environment.UserName,
+            CreatedAt = DateTime.Now
+        };
+
+        var allZones = Faders.Concat(Groups.SelectMany(g => g.Zones)).ToList();
+        var swatches = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var z in allZones)
+        {
+            theme.Zones[z.Id] = new ZoneColorData
+            {
+                Active = z.ActiveHex,
+                Inactive = z.InactiveHex,
+                Gradient = z.IsFader && z.Gradient
+            };
+
+            if (!string.IsNullOrEmpty(z.ActiveHex)) swatches.Add(z.ActiveHex);
+        }
+
+        theme.Swatches = swatches.Take(5).ToList();
+        CustomThemeService.Save(theme);
+        RefreshCustomThemes();
+        return theme;
+    }
+
+    public void ApplyCustomTheme(CustomLightingTheme t)
+    {
+        var zones = new List<LightingZone>();
+        foreach (var zid in _zoneIds)
+        {
+            if (t.Zones.TryGetValue(zid, out var zd))
+            {
+                zones.Add(new LightingZone(zid, zd.Active, zd.Inactive, zd.Gradient));
+            }
+            else
+            {
+                zones.Add(new LightingZone(zid, "#FFFFFF", "#202020", zid.StartsWith("fader_")));
+            }
+        }
+
+        _transport.Send(new SetLightingScheme(zones));
+
+        foreach (var z in Faders.Concat(Groups.SelectMany(g => g.Zones)))
+        {
+            if (t.Zones.TryGetValue(z.Id, out var zd))
+            {
+                z.ApplyFromServer(new LightingZone(z.Id, zd.Active, zd.Inactive, zd.Gradient));
+            }
+        }
+    }
+
+    public void DeleteCustomTheme(CustomLightingTheme t)
+    {
+        CustomThemeService.Delete(t.Name);
+        CustomThemes.Remove(t);
+    }
 
     /// <summary>Applies a preset to every zone this device has, as one colour-map update.</summary>
     public void ApplyTheme(LightingTheme t) => _transport.Send(new SetLightingScheme(t.Build(_zoneIds)));

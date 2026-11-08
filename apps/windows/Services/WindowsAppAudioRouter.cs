@@ -34,7 +34,7 @@ public sealed class AppAudioSessionInfo
     public uint ProcessId { get; set; }
     public string ProcessName { get; set; } = "";
     public string DisplayName { get; set; } = "";
-    public string Glyph { get; set; } = "";
+    public string Glyph { get; set; } = "\uE7F6";
     public string CurrentOutputDeviceId { get; set; } = "";
     public string CurrentOutputName { get; set; } = "";
     public string CurrentInputDeviceId { get; set; } = "";
@@ -49,7 +49,7 @@ public sealed class AppAudioSessionInfo
 /// </summary>
 public static class WindowsAppAudioRouter
 {
-    [DllImport("api-ms-win-core-winrt-l1-1-0.dll", PreserveSig = true)]
+    [DllImport("combase.dll", PreserveSig = true)]
     private static extern int RoGetActivationFactory(
         [MarshalAs(UnmanagedType.HString)] string activatableClassId,
         ref Guid iid,
@@ -59,7 +59,7 @@ public static class WindowsAppAudioRouter
     {
         try
         {
-            // Windows 11 / Windows 10 21H2+
+            // Windows 11 / Windows 10 20H1+
             Guid iid = new("ab3d4648-e242-459f-b02f-541c70306324");
             if (RoGetActivationFactory("Windows.Media.Internal.AudioPolicyConfig", ref iid, out var factory) == 0 && factory != null)
             {
@@ -75,7 +75,7 @@ public static class WindowsAppAudioRouter
     {
         var list = new List<AudioEndpointChoice>
         {
-            new("", "Windows-Standard (Default)", "Standard", "")
+            new("", "Windows-Standard (Default)", "Standard", "\uE774") // Globe / Default
         };
 
         try
@@ -88,30 +88,32 @@ public static class WindowsAppAudioRouter
             foreach (var pref in preferred)
             {
                 var dev = renderDevices.FirstOrDefault(d =>
-                    d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) &&
+                    (d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
+                     d.FriendlyName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase) ||
+                     d.FriendlyName.Contains("TC Helicon", StringComparison.OrdinalIgnoreCase)) &&
                     d.FriendlyName.Contains(pref, StringComparison.OrdinalIgnoreCase));
 
                 if (dev != null)
                 {
                     var glyph = pref switch
                     {
-                        "System" => "💻",
-                        "Game" => "🎮",
-                        "Chat" => "💬",
-                        "Music" => "🎵",
-                        "Sample" => "🔊",
-                        _ => ""
+                        "System" => "\uE7F8",  // PC
+                        "Game" => "\uE7FC",    // Game controller
+                        "Chat" => "\uE8BD",    // Chat bubble
+                        "Music" => "\uEC4F",   // Music note
+                        "Sample" => "\uEA38",  // Audio waveform
+                        _ => "\uE7F6"
                     };
                     list.Add(new AudioEndpointChoice(dev.ID, $"{pref} (TC-Helicon GoXLR)", pref, glyph));
                 }
             }
 
-            // Also add any other active render devices if GoXLR is not connected
+            // Fallback: If no GoXLR channels detected, add active render devices
             if (list.Count == 1)
             {
                 foreach (var d in renderDevices)
                 {
-                    list.Add(new AudioEndpointChoice(d.ID, d.FriendlyName, d.FriendlyName, ""));
+                    list.Add(new AudioEndpointChoice(d.ID, d.FriendlyName, d.FriendlyName, "\uE7F6"));
                 }
             }
         }
@@ -125,7 +127,7 @@ public static class WindowsAppAudioRouter
     {
         var list = new List<AudioEndpointChoice>
         {
-            new("", "Windows-Standard (Default)", "Standard", "")
+            new("", "Windows-Standard (Default)", "Standard", "\uE774")
         };
 
         try
@@ -134,34 +136,40 @@ public static class WindowsAppAudioRouter
             var captureDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active).ToList();
 
             var chatMic = captureDevices.FirstOrDefault(d =>
-                d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) &&
+                (d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
+                 d.FriendlyName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase) ||
+                 d.FriendlyName.Contains("TC Helicon", StringComparison.OrdinalIgnoreCase)) &&
                 d.FriendlyName.Contains("Chat", StringComparison.OrdinalIgnoreCase));
             if (chatMic != null)
             {
-                list.Add(new AudioEndpointChoice(chatMic.ID, "Chat Mic (TC-Helicon GoXLR) — Voice-Chat", "Chat Mic", "🎙️"));
+                list.Add(new AudioEndpointChoice(chatMic.ID, "Chat Mic (TC-Helicon GoXLR) — Voice-Chat", "Chat Mic", "\uE720")); // Microphone
             }
 
             var broadcast = captureDevices.FirstOrDefault(d =>
-                d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) &&
+                (d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
+                 d.FriendlyName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase) ||
+                 d.FriendlyName.Contains("TC Helicon", StringComparison.OrdinalIgnoreCase)) &&
                 (d.FriendlyName.Contains("Broadcast", StringComparison.OrdinalIgnoreCase) || d.FriendlyName.Contains("Stream", StringComparison.OrdinalIgnoreCase)));
             if (broadcast != null)
             {
-                list.Add(new AudioEndpointChoice(broadcast.ID, "Broadcast Stream Mix (TC-Helicon GoXLR) — OBS / Stream", "Broadcast Mix", "📻"));
+                list.Add(new AudioEndpointChoice(broadcast.ID, "Broadcast Stream Mix (TC-Helicon GoXLR) — OBS / Stream", "Broadcast Mix", "\uE93C")); // Broadcast radio
             }
 
             var sample = captureDevices.FirstOrDefault(d =>
-                d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) &&
+                (d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
+                 d.FriendlyName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase) ||
+                 d.FriendlyName.Contains("TC Helicon", StringComparison.OrdinalIgnoreCase)) &&
                 d.FriendlyName.Contains("Sample", StringComparison.OrdinalIgnoreCase));
             if (sample != null)
             {
-                list.Add(new AudioEndpointChoice(sample.ID, "Sample (TC-Helicon GoXLR)", "Sample", "🔊"));
+                list.Add(new AudioEndpointChoice(sample.ID, "Sample (TC-Helicon GoXLR)", "Sample", "\uEA38"));
             }
 
             if (list.Count == 1)
             {
                 foreach (var d in captureDevices)
                 {
-                    list.Add(new AudioEndpointChoice(d.ID, d.FriendlyName, d.FriendlyName, "🎤"));
+                    list.Add(new AudioEndpointChoice(d.ID, d.FriendlyName, d.FriendlyName, "\uE720"));
                 }
             }
         }
@@ -183,11 +191,26 @@ public static class WindowsAppAudioRouter
 
             foreach (var dev in renderDevices)
             {
-                var mgr = dev.AudioSessionManager;
-                for (int i = 0; i < mgr.Sessions.Count; i++)
+                AudioSessionManager? mgr = null;
+                try
                 {
-                    var s = mgr.Sessions[i];
-                    var pid = s.GetProcessID;
+                    mgr = dev.AudioSessionManager;
+                }
+                catch { continue; }
+
+                if (mgr == null) continue;
+
+                int sessionCount = 0;
+                try { sessionCount = mgr.Sessions.Count; } catch { }
+
+                for (int i = 0; i < sessionCount; i++)
+                {
+                    AudioSessionControl? s = null;
+                    try { s = mgr.Sessions[i]; } catch { continue; }
+                    if (s == null) continue;
+
+                    uint pid = 0;
+                    try { pid = s.GetProcessID; } catch { continue; }
                     if (pid == 0) continue; // system sound session
                     if (results.ContainsKey(pid)) continue;
 
@@ -201,13 +224,22 @@ public static class WindowsAppAudioRouter
                     }
                     catch { procName = $"App (PID {pid})"; }
 
-                    // Skip our own app
+                    // Skip our own app processes
                     if (procName.Equals("NextXLR", StringComparison.OrdinalIgnoreCase) ||
                         procName.Equals("mixforged", StringComparison.OrdinalIgnoreCase) ||
                         procName.Equals("mixforge", StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
+
+                    float vol = 1.0f;
+                    bool muted = false;
+                    try
+                    {
+                        vol = s.SimpleAudioVolume.Volume;
+                        muted = s.SimpleAudioVolume.Mute;
+                    }
+                    catch { }
 
                     var info = new AppAudioSessionInfo
                     {
@@ -217,8 +249,8 @@ public static class WindowsAppAudioRouter
                         Glyph = DetectGlyph(procName),
                         CurrentOutputDeviceId = dev.ID,
                         CurrentOutputName = dev.FriendlyName,
-                        Volume = s.SimpleAudioVolume.Volume,
-                        IsMuted = s.SimpleAudioVolume.Mute,
+                        Volume = vol,
+                        IsMuted = muted,
                         VolumeControl = s.SimpleAudioVolume
                     };
 
@@ -249,9 +281,9 @@ public static class WindowsAppAudioRouter
     }
 
     /// <summary>
-    /// Routes an application to a specific audio output or microphone endpoint.
+    /// Routes an application (and all of its child/sibling processes) to a specific audio output or microphone endpoint.
     /// </summary>
-    public static bool SetAppEndpoint(uint processId, bool isCapture, string? endpointDeviceId)
+    public static bool SetAppEndpoint(uint processId, string processName, bool isCapture, string? endpointDeviceId)
     {
         var factory = GetPolicyFactory();
         if (factory == null) return false;
@@ -263,18 +295,41 @@ public static class WindowsAppAudioRouter
         {
             if (!string.IsNullOrWhiteSpace(endpointDeviceId))
             {
-                pStr = Marshal.StringToHGlobalUni(endpointDeviceId);
+                pStr = Marshal.StringToCoTaskMemUni(endpointDeviceId);
             }
 
-            // Assign Console, Multimedia, and Communications roles
-            factory.SetPersistedDefaultAudioEndpoint(processId, flow, 0, pStr);
-            if (!isCapture)
+            // Gather all process IDs related to this application (audio helper processes like Spotify, Chrome, Discord)
+            var pids = new HashSet<uint>();
+            if (processId > 0) pids.Add(processId);
+
+            if (!string.IsNullOrWhiteSpace(processName))
             {
-                factory.SetPersistedDefaultAudioEndpoint(processId, flow, 1, pStr);
+                try
+                {
+                    foreach (var p in Process.GetProcessesByName(processName))
+                    {
+                        pids.Add((uint)p.Id);
+                    }
+                }
+                catch { }
             }
-            else
+
+            foreach (var pid in pids)
             {
-                factory.SetPersistedDefaultAudioEndpoint(processId, flow, 2, pStr);
+                try
+                {
+                    // Assign Console (0), Multimedia (1), and Communications (2) roles
+                    factory.SetPersistedDefaultAudioEndpoint(pid, flow, 0, pStr);
+                    if (!isCapture)
+                    {
+                        factory.SetPersistedDefaultAudioEndpoint(pid, flow, 1, pStr);
+                    }
+                    else
+                    {
+                        factory.SetPersistedDefaultAudioEndpoint(pid, flow, 2, pStr);
+                    }
+                }
+                catch { }
             }
 
             return true;
@@ -288,7 +343,7 @@ public static class WindowsAppAudioRouter
         {
             if (pStr != IntPtr.Zero)
             {
-                Marshal.FreeHGlobal(pStr);
+                Marshal.FreeCoTaskMem(pStr);
             }
         }
     }
@@ -296,12 +351,11 @@ public static class WindowsAppAudioRouter
     private static string DetectGlyph(string procName)
     {
         var p = procName.ToLowerInvariant();
-        if (p.Contains("spotify") || p.Contains("music") || p.Contains("itunes") || p.Contains("vlc") || p.Contains("aimp")) return "🎵";
-        if (p.Contains("discord") || p.Contains("teamspeak") || p.Contains("ts3") || p.Contains("skype") || p.Contains("zoom") || p.Contains("teams") || p.Contains("slack")) return "💬";
-        if (p.Contains("chrome") || p.Contains("edge") || p.Contains("firefox") || p.Contains("opera") || p.Contains("brave")) return "🌐";
-        if (p.Contains("steam") || p.Contains("cs2") || p.Contains("valorant") || p.Contains("apex") || p.Contains("game") || p.Contains("overwatch")) return "🎮";
-        if (p.Contains("obs") || p.Contains("streamlabs") || p.Contains("twitch") || p.Contains("broadcast")) return "📻";
-        return "";
+        if (p.Contains("spotify") || p.Contains("music") || p.Contains("itunes") || p.Contains("vlc") || p.Contains("aimp")) return "\uEC4F"; // Music note
+        if (p.Contains("discord") || p.Contains("teamspeak") || p.Contains("ts3") || p.Contains("skype") || p.Contains("zoom") || p.Contains("teams") || p.Contains("slack")) return "\uE8BD"; // Chat
+        if (p.Contains("chrome") || p.Contains("edge") || p.Contains("firefox") || p.Contains("opera") || p.Contains("brave")) return "\uE774"; // Web / Globe
+        if (p.Contains("steam") || p.Contains("cs2") || p.Contains("valorant") || p.Contains("apex") || p.Contains("game") || p.Contains("overwatch") || p.Contains("league")) return "\uE7FC"; // Controller
+        if (p.Contains("obs") || p.Contains("streamlabs") || p.Contains("twitch") || p.Contains("broadcast")) return "\uE93C"; // Broadcast
+        return "\uE7F6"; // Default audio device
     }
 }
-

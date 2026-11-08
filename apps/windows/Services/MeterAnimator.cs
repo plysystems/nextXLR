@@ -8,12 +8,28 @@ namespace NextXLR.Services;
 /// <summary>
 /// Drives every channel meter from the compositor's frame clock (CompositionTarget.Rendering),
 /// so meters animate at display rate (60–144 Hz) regardless of the daemon's ~30 Hz telemetry.
+/// Automatically pauses when minimized or navigating away from MixerPage to save CPU cycles.
 /// </summary>
 public sealed class MeterAnimator : IDisposable
 {
     private readonly IList<ChannelViewModel> _channels;
     private readonly Stopwatch _clock = Stopwatch.StartNew();
     private double _last;
+    private bool _isActive = true;
+
+    public bool IsActive
+    {
+        get => _isActive;
+        set
+        {
+            if (_isActive == value) return;
+            _isActive = value;
+            if (_isActive)
+            {
+                _last = _clock.Elapsed.TotalSeconds;
+            }
+        }
+    }
 
     public MeterAnimator(IList<ChannelViewModel> channels)
     {
@@ -23,6 +39,8 @@ public sealed class MeterAnimator : IDisposable
 
     private void OnRendering(object? sender, object e)
     {
+        if (!_isActive) return;
+
         var now = _clock.Elapsed.TotalSeconds;
         var dt = Math.Min(now - _last, 0.1);
         if (dt <= 0) return;
@@ -37,6 +55,9 @@ public sealed class MeterAnimator : IDisposable
             }
         }
     }
+
+    public void Pause() => IsActive = false;
+    public void Resume() => IsActive = true;
 
     public void Dispose() => CompositionTarget.Rendering -= OnRendering;
 }

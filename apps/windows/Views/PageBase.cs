@@ -623,6 +623,7 @@ public partial class LightingPage : Page
         DevicePreview.ForceMini = ViewModel.Hardware.IsMini;
         UpdateModelBadge();
         ViewModel.Hardware.PropertyChanged += Hardware_PropertyChanged;
+        ViewModel.Lighting.RefreshCustomThemes();
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -659,10 +660,124 @@ public partial class LightingPage : Page
         Loc.Get(!hasDevice ? "LightLayoutNone" : isMini ? "LightLayoutMini" : "LightLayoutFull");
 
     public Visibility VisibleIfNot(bool b) => b ? Visibility.Collapsed : Visibility.Visible;
+    public Visibility VisibleIfHasCustom(int count) => count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+    private void ShowThemeResult(InfoBarSeverity severity, string message)
+    {
+        ThemeResultInfo.Severity = severity;
+        ThemeResultInfo.Message = message;
+        ThemeResultInfo.IsOpen = true;
+    }
 
     private void Theme_Click(object sender, RoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.Tag is LightingTheme t) ViewModel.Lighting.ApplyTheme(t);
+        if ((sender as FrameworkElement)?.Tag is LightingTheme t)
+        {
+            ViewModel.Lighting.ApplyTheme(t);
+            ShowThemeResult(InfoBarSeverity.Informational, $"Design '{t.Name}' wurde angewendet.");
+        }
+    }
+
+    private void CustomTheme_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is CustomLightingTheme t)
+        {
+            ViewModel.Lighting.ApplyCustomTheme(t);
+            ShowThemeResult(InfoBarSeverity.Success, $"Eigenes Theme '{t.Name}' wurde auf das GoXLR angewendet.");
+        }
+    }
+
+    private void SaveThemeConfirm_Click(object sender, RoutedEventArgs e)
+    {
+        var name = ThemeNameInput.Text?.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            ShowThemeResult(InfoBarSeverity.Warning, "Bitte gib einen Namen für dein Theme ein.");
+            return;
+        }
+
+        if (CustomThemeService.IsReservedName(name))
+        {
+            ShowThemeResult(InfoBarSeverity.Error, $"Der Name '{name}' ist für ein integriertes Standard-Design reserviert. Bitte wähle einen anderen Namen.");
+            return;
+        }
+
+        try
+        {
+            var theme = ViewModel.Lighting.SaveCurrentAsTheme(name);
+            SaveThemeFlyout.Hide();
+            ThemeNameInput.Text = "";
+            ShowThemeResult(InfoBarSeverity.Success, $"Theme '{theme.Name}' wurde erfolgreich gespeichert!");
+        }
+        catch (Exception ex)
+        {
+            ShowThemeResult(InfoBarSeverity.Error, $"Fehler beim Speichern des Themes: {ex.Message}");
+        }
+    }
+
+    private void ThemeNameInput_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Enter)
+        {
+            SaveThemeConfirm_Click(sender, e);
+        }
+    }
+
+    private async void ExportCustomTheme_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is not CustomLightingTheme t) return;
+
+        try
+        {
+            var picker = new Windows.Storage.Pickers.FileSavePicker { SuggestedFileName = $"{t.Name}.nextxlr-theme" };
+            picker.FileTypeChoices.Add("NEXT : XLR Theme", [".json"]);
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, MainWindow.Handle);
+            var file = await picker.PickSaveFileAsync();
+            if (file is null) return;
+
+            CustomThemeService.Export(t, file.Path);
+            ShowThemeResult(InfoBarSeverity.Success, $"Theme '{t.Name}' wurde erfolgreich nach '{file.Name}' exportiert!");
+        }
+        catch (Exception ex)
+        {
+            ShowThemeResult(InfoBarSeverity.Error, $"Export fehlgeschlagen: {ex.Message}");
+        }
+    }
+
+    private void DeleteCustomTheme_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is not CustomLightingTheme t) return;
+
+        try
+        {
+            ViewModel.Lighting.DeleteCustomTheme(t);
+            ShowThemeResult(InfoBarSeverity.Informational, $"Theme '{t.Name}' wurde gelöscht.");
+        }
+        catch (Exception ex)
+        {
+            ShowThemeResult(InfoBarSeverity.Error, $"Löschen fehlgeschlagen: {ex.Message}");
+        }
+    }
+
+    private async void ImportTheme_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var picker = new Windows.Storage.Pickers.FileOpenPicker();
+            picker.FileTypeFilter.Add(".json");
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, MainWindow.Handle);
+            var file = await picker.PickSingleFileAsync();
+            if (file is null) return;
+
+            var imported = CustomThemeService.Import(file.Path);
+            ViewModel.Lighting.RefreshCustomThemes();
+            ViewModel.Lighting.ApplyCustomTheme(imported);
+            ShowThemeResult(InfoBarSeverity.Success, $"Theme '{imported.Name}' wurde erfolgreich importiert und angewendet!");
+        }
+        catch (Exception ex)
+        {
+            ShowThemeResult(InfoBarSeverity.Error, $"Import fehlgeschlagen: {ex.Message}");
+        }
     }
 
     private void GtaVi_Click(object sender, RoutedEventArgs e) => ViewModel.Lighting.ApplyTheme(ViewModel.Lighting.GtaVi);

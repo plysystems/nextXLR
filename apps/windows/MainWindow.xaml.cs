@@ -16,7 +16,6 @@ namespace NextXLR;
 public sealed partial class MainWindow : Window
 {
     private readonly PipeTransport _transport = new();
-    private readonly MeterAnimator _meters;
     private static readonly SolidColorBrush Online = new(ColorHelper.FromArgb(255, 0x22, 0xD3, 0xA6));
     private static readonly SolidColorBrush Offline = new(ColorHelper.FromArgb(255, 0xEF, 0x44, 0x58));
 
@@ -56,7 +55,6 @@ public sealed partial class MainWindow : Window
         AppWindow.Resize(new SizeInt32(1440, 920));
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "nextXLR_icon.ico"));
 
-        _meters = new MeterAnimator(ViewModel.Channels);
         ViewModel.Hardware.PropertyChanged += OnHardwareChanged;
         Nav.SelectedItem = MixerItem;
 
@@ -75,6 +73,7 @@ public sealed partial class MainWindow : Window
             if (settings.MinimizeToTray && !_isExplicitExit)
             {
                 args.Cancel = true;
+                ViewModel.SetMetersActive(false);
                 AppWindow.Hide();
                 return;
             }
@@ -97,6 +96,7 @@ public sealed partial class MainWindow : Window
                 var settings = AppSettings.Load();
                 if (settings.MinimizeToTray && presenter.State == Microsoft.UI.Windowing.OverlappedPresenterState.Minimized)
                 {
+                    ViewModel.SetMetersActive(false);
                     AppWindow.Hide();
                 }
             }
@@ -135,7 +135,7 @@ public sealed partial class MainWindow : Window
         {
             BluetoothAudioRouter.Instance.Dispose();
             _trayService?.Dispose();
-            _meters.Dispose();
+            ViewModel.Dispose();
             await _transport.DisposeAsync();
         };
         _transport.Start();
@@ -172,6 +172,7 @@ public sealed partial class MainWindow : Window
                 }
                 AppWindow.MoveInZOrderAtTop();
                 SetForegroundWindow(Handle);
+                ViewModel.SetMetersActive(ContentFrame.CurrentSourcePageType == typeof(MixerPage));
             }
             catch { }
         });
@@ -313,17 +314,25 @@ public sealed partial class MainWindow : Window
 
     private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
+        Type targetPage = typeof(MixerPage);
         if (args.IsSettingsSelected || (args.SelectedItem is NavigationViewItem { Tag: "settings" }))
         {
-            if (ContentFrame.CurrentSourcePageType != typeof(SettingsPage))
-                ContentFrame.Navigate(typeof(SettingsPage), ViewModel, new EntranceNavigationTransitionInfo());
-            return;
+            targetPage = typeof(SettingsPage);
         }
-        if (args.SelectedItem is NavigationViewItem { Tag: string tag } && Pages.TryGetValue(tag, out var page)
-            && ContentFrame.CurrentSourcePageType != page)
+        else if (args.SelectedItem is NavigationViewItem { Tag: string tag } && Pages.TryGetValue(tag, out var page))
         {
-            ContentFrame.Navigate(page, ViewModel, new EntranceNavigationTransitionInfo());
+            targetPage = page;
         }
+
+        if (ContentFrame.CurrentSourcePageType != targetPage)
+        {
+            // Silky smooth, modern Windows 11 Fluent Slide transition
+            var transition = new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromBottom };
+            ContentFrame.Navigate(targetPage, ViewModel, transition);
+        }
+
+        // Performance: Only run MeterAnimator when MixerPage is on screen
+        ViewModel.SetMetersActive(targetPage == typeof(MixerPage));
     }
 
     /// <summary>If the device changes (e.g. a Mini is plugged in) while a now-hidden tab is open, go to Mixer.</summary>

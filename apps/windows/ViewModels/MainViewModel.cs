@@ -28,6 +28,10 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<BusView> Buses { get; } = new();
     public ObservableCollection<RouteRowViewModel> RouteRows { get; } = new();
     public AppRoutingManagerViewModel AppRouting { get; } = new();
+
+    public void SetMetersActive(bool active) => _meterAnimator.IsActive = active;
+
+    public void Dispose() => _meterAnimator.Dispose();
     [ObservableProperty] private string _samplerBusName = "";
 
     private RouteCellViewModel Cell(Channel c, Bus b)

@@ -116,7 +116,7 @@ public partial class AppSessionItemViewModel : ObservableObject
         if (value >= 0 && value < _outputChoices.Count)
         {
             var choice = _outputChoices[value];
-            WindowsAppAudioRouter.SetAppEndpoint(ProcessId, false, string.IsNullOrEmpty(choice.Id) ? null : choice.Id);
+            WindowsAppAudioRouter.SetAppEndpoint(ProcessId, ProcessName, false, string.IsNullOrEmpty(choice.Id) ? null : choice.Id);
         }
     }
 
@@ -125,7 +125,7 @@ public partial class AppSessionItemViewModel : ObservableObject
         if (value >= 0 && value < _inputChoices.Count)
         {
             var choice = _inputChoices[value];
-            WindowsAppAudioRouter.SetAppEndpoint(ProcessId, true, string.IsNullOrEmpty(choice.Id) ? null : choice.Id);
+            WindowsAppAudioRouter.SetAppEndpoint(ProcessId, ProcessName, true, string.IsNullOrEmpty(choice.Id) ? null : choice.Id);
         }
     }
 
@@ -155,14 +155,21 @@ public partial class AppRoutingManagerViewModel : ObservableObject
     [ObservableProperty] private bool _hasApps;
     [ObservableProperty] private string _statusMessage = "";
 
-    public void Refresh()
+    public async void Refresh()
     {
-        OutputChoices = WindowsAppAudioRouter.GetOutputChoices();
-        InputChoices = WindowsAppAudioRouter.GetInputChoices();
+        await RefreshAsync();
+    }
 
-        var sessions = WindowsAppAudioRouter.GetActiveAppSessions();
+    public async Task RefreshAsync()
+    {
+        var outChoices = await Task.Run(WindowsAppAudioRouter.GetOutputChoices);
+        var inChoices = await Task.Run(WindowsAppAudioRouter.GetInputChoices);
+        var sessions = await Task.Run(WindowsAppAudioRouter.GetActiveAppSessions);
+
+        OutputChoices = outChoices;
+        InputChoices = inChoices;
+
         AppSessions.Clear();
-
         foreach (var s in sessions)
         {
             AppSessions.Add(new AppSessionItemViewModel(s, OutputChoices, InputChoices));
@@ -181,10 +188,10 @@ public partial class AppRoutingManagerViewModel : ObservableObject
         {
             var name = app.ProcessName.ToLowerInvariant();
 
-            // 1. Music apps -> Music
+            // 1. Music apps -> Music / Musik
             if (name.Contains("spotify") || name.Contains("music") || name.Contains("itunes") || name.Contains("vlc") || name.Contains("aimp"))
             {
-                var musicIdx = app.OutputChoices.FindIndex(c => c.ShortName == "Music");
+                var musicIdx = app.OutputChoices.FindIndex(c => c.ShortName == "Music" || c.ShortName == "Musik");
                 if (musicIdx >= 0) { app.SelectedOutputIndex = musicIdx; count++; }
             }
             // 2. Voice / Chat apps -> Chat (Output) & Chat Mic (Input)
@@ -193,7 +200,7 @@ public partial class AppRoutingManagerViewModel : ObservableObject
                 var chatIdx = app.OutputChoices.FindIndex(c => c.ShortName == "Chat");
                 if (chatIdx >= 0) { app.SelectedOutputIndex = chatIdx; count++; }
 
-                var micIdx = app.InputChoices.FindIndex(c => c.ShortName == "Chat Mic");
+                var micIdx = app.InputChoices.FindIndex(c => c.ShortName == "Chat Mic" || c.ShortName.Contains("Chat"));
                 if (micIdx >= 0) { app.SelectedInputIndex = micIdx; }
             }
             // 3. Game apps -> Game
@@ -211,7 +218,7 @@ public partial class AppRoutingManagerViewModel : ObservableObject
             // 5. OBS / Stream -> Broadcast Mix (Input)
             else if (name.Contains("obs") || name.Contains("streamlabs"))
             {
-                var bcastIdx = app.InputChoices.FindIndex(c => c.ShortName == "Broadcast Mix");
+                var bcastIdx = app.InputChoices.FindIndex(c => c.ShortName == "Broadcast Mix" || c.ShortName.Contains("Broadcast"));
                 if (bcastIdx >= 0) { app.SelectedInputIndex = bcastIdx; count++; }
             }
         }
