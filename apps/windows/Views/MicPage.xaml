@@ -280,8 +280,8 @@
                         HorizontalAlignment="Stretch" />
             </Expander>
 
-            <!-- Neuronale Echtzeit-Rauschunterdrückung (RNNoise / DeepFilterNet) -->
-            <Expander IsExpanded="True">
+            <!-- KI-Rauschunterdrückung -->
+            <Expander IsExpanded="False">
                 <Expander.Header>
                     <Grid Padding="0,10" ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
@@ -290,15 +290,22 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <FontIcon Glyph="&#xE9F5;" Foreground="{StaticResource BrandBrush}" />
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="Neuronale KI-Rauschunterdrückung (RNNoise / DeepFilterNet)" Style="{StaticResource CardTitle}" />
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="KI-Rauschunterdrückung" Style="{StaticResource CardTitle}" />
+                                <Border Background="{StaticResource SurfaceL3Brush}" BorderBrush="{StaticResource BrandBrush}" BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+                                    <TextBlock Text="Upcoming" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                                </Border>
+                            </StackPanel>
                             <TextBlock Text="Entfernt mechanische Tastaturgeräusche, Mausklicks und Lüfterlärm in Echtzeit" Style="{StaticResource Caption}" />
                         </StackPanel>
-                        <ToggleSwitch Grid.Column="2" IsOn="{x:Bind Mic.RnnoiseEnabled, Mode=TwoWay}"
+                        <ToggleSwitch Grid.Column="2" IsOn="False" IsEnabled="False"
                                       OnContent="Aktiv" OffContent="Bypass" MinWidth="0" VerticalAlignment="Center" />
                     </Grid>
                 </Expander.Header>
-                <StackPanel Spacing="16" Padding="4">
+                <StackPanel Spacing="16" Padding="4" IsHitTestVisible="False" Opacity="0.6">
+                    <InfoBar Severity="Informational" IsOpen="True" IsClosable="False"
+                             Message="Upcoming: Die KI-Rauschunterdrückung (RNNoise / DeepFilterNet) wird in einem kommenden Update freigeschaltet." />
                     <Grid ColumnSpacing="24">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -319,8 +326,8 @@
                 </StackPanel>
             </Expander>
 
-            <!-- Neural Voice-Morphing & Personas -->
-            <Expander IsExpanded="True">
+            <!-- Voice-Morphing -->
+            <Expander IsExpanded="False">
                 <Expander.Header>
                     <Grid Padding="0,10" ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
@@ -329,15 +336,22 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <FontIcon Glyph="&#xED35;" Foreground="{StaticResource BrandBrush}" />
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="Neural Voice-Morphing (Personas &amp; Stimmenmodulation)" Style="{StaticResource CardTitle}" />
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="Voice-Morphing" Style="{StaticResource CardTitle}" />
+                                <Border Background="{StaticResource SurfaceL3Brush}" BorderBrush="{StaticResource BrandBrush}" BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+                                    <TextBlock Text="Upcoming" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                                </Border>
+                            </StackPanel>
                             <TextBlock Text="Echtzeit-Formant- und Tonhöhenverschiebung mit Charakter-Filtern" Style="{StaticResource Caption}" />
                         </StackPanel>
-                        <ToggleSwitch Grid.Column="2" IsOn="{x:Bind Mic.VoiceMorphEnabled, Mode=TwoWay}"
+                        <ToggleSwitch Grid.Column="2" IsOn="False" IsEnabled="False"
                                       OnContent="Aktiv" OffContent="Bypass" MinWidth="0" VerticalAlignment="Center" />
                     </Grid>
                 </Expander.Header>
-                <StackPanel Spacing="16" Padding="4">
+                <StackPanel Spacing="16" Padding="4" IsHitTestVisible="False" Opacity="0.6">
+                    <InfoBar Severity="Informational" IsOpen="True" IsClosable="False"
+                             Message="Upcoming: Voice-Morphing (Personas &amp; Stimmenmodulation) wird in einem kommenden Update freigeschaltet." />
                     <!-- Quick Personas -->
                     <StackPanel Spacing="8">
                         <TextBlock Text="Schnellauswahl Stimme &amp; Charakter-Persona:" Style="{StaticResource Caption}" />
@@ -405,7 +419,7 @@
                 </StackPanel>
             </Expander>
 
-            <!-- VST3- & CLAP-Plugin-Hosting -->
+            <!-- VST3-Plugins -->
             <Expander>
                 <Expander.Header>
                     <Grid Padding="0,10" ColumnSpacing="12">
@@ -415,8 +429,8 @@
                         </Grid.ColumnDefinitions>
                         <FontIcon Glyph="&#xE99A;" Foreground="{StaticResource BrandBrush}" />
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="VST3- &amp; CLAP-Plugin-Hosting (Audio-Rack)" Style="{StaticResource CardTitle}" />
-                            <TextBlock Text="Binde externe VST3- und CLAP-Audio-Effekte direkt in den Signalweg ein" Style="{StaticResource Caption}" />
+                            <TextBlock Text="VST3-Plugins" Style="{StaticResource CardTitle}" />
+                            <TextBlock Text="Binde externe VST3-Audio-Effekte direkt in den Signalweg ein" Style="{StaticResource Caption}" />
                         </StackPanel>
                     </Grid>
                 </Expander.Header>

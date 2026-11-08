@@ -624,6 +624,17 @@ public partial class LightingPage : Page
         UpdateModelBadge();
         ViewModel.Hardware.PropertyChanged += Hardware_PropertyChanged;
         ViewModel.Lighting.RefreshCustomThemes();
+        UpdateCustomThemesVisibility();
+    }
+
+    private void UpdateCustomThemesVisibility()
+    {
+        if (CustomThemesSection != null && ViewModel?.Lighting?.CustomThemes != null)
+        {
+            CustomThemesSection.Visibility = ViewModel.Lighting.CustomThemes.Count > 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -707,6 +718,7 @@ public partial class LightingPage : Page
             var theme = ViewModel.Lighting.SaveCurrentAsTheme(name);
             SaveThemeFlyout.Hide();
             ThemeNameInput.Text = "";
+            UpdateCustomThemesVisibility();
             ShowThemeResult(InfoBarSeverity.Success, $"Theme '{theme.Name}' wurde erfolgreich gespeichert!");
         }
         catch (Exception ex)
@@ -751,6 +763,7 @@ public partial class LightingPage : Page
         try
         {
             ViewModel.Lighting.DeleteCustomTheme(t);
+            UpdateCustomThemesVisibility();
             ShowThemeResult(InfoBarSeverity.Informational, $"Theme '{t.Name}' wurde gelöscht.");
         }
         catch (Exception ex)
@@ -772,6 +785,7 @@ public partial class LightingPage : Page
             var imported = CustomThemeService.Import(file.Path);
             ViewModel.Lighting.RefreshCustomThemes();
             ViewModel.Lighting.ApplyCustomTheme(imported);
+            UpdateCustomThemesVisibility();
             ShowThemeResult(InfoBarSeverity.Success, $"Theme '{imported.Name}' wurde erfolgreich importiert und angewendet!");
         }
         catch (Exception ex)

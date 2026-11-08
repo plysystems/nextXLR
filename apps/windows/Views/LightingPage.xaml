@@ -104,7 +104,7 @@
                     <InfoBar x:Name="ThemeResultInfo" IsOpen="False" IsClosable="True" Margin="0,0,0,4" />
 
                     <!-- Section 1: Eigene Themes (if any) -->
-                    <StackPanel Spacing="10" Visibility="{x:Bind VisibleIfHasCustom(ViewModel.Lighting.CustomThemes.Count), Mode=OneWay}">
+                    <StackPanel x:Name="CustomThemesSection" Spacing="10" Visibility="Collapsed">
                         <TextBlock Text="Eigene Themes" Style="{StaticResource Overline}" FontSize="11" />
                         <ItemsRepeater ItemsSource="{x:Bind ViewModel.Lighting.CustomThemes}">
                             <ItemsRepeater.Layout>
@@ -144,7 +144,8 @@
                                             </Button>
 
                                             <!-- Delete button -->
-                                            <Button Grid.Column="2" Style="{StaticResource SmoothDangerButton}" Padding="8,6" CornerRadius="8"
+                                            <Button Grid.Column="2" Style="{StaticResource SmoothButton}" Foreground="{StaticResource DangerBrush}"
+                                                    Padding="8,6" CornerRadius="8"
                                                     Click="DeleteCustomTheme_Click" Tag="{x:Bind}"
                                                     ToolTipService.ToolTip="Theme löschen">
                                                 <FontIcon Glyph="&#xE74D;" FontSize="13" />
