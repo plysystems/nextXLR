@@ -789,6 +789,7 @@ public sealed partial class SettingsPage : Page
         if (_loading) return;
         _settings.EnableBluetoothHeadset = BluetoothToggle.IsOn;
         _settings.Save();
+        ViewModel?.RefreshRouting();
 
         if (BluetoothToggle.IsOn && BluetoothDeviceBox.SelectedItem is AudioEndpointItem selected)
         {

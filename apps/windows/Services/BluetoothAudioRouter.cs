@@ -23,8 +23,10 @@ public sealed class BluetoothAudioRouter : IDisposable
     public static BluetoothAudioRouter Instance => _instance.Value;
 
     private readonly List<WasapiCapture> _captures = new();
-    private readonly List<BufferedWaveProvider> _buffers = new();
+    private readonly List<RealtimeJitterBuffer> _jitterBuffers = new();
     private readonly ConcurrentDictionary<string, (float Volume, bool Muted)> _channelLevels = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, bool> _channelRouting = new(StringComparer.OrdinalIgnoreCase);
+    private volatile bool _muteMicSidetone = true;
     private WasapiOut? _player;
     private readonly object _lock = new();
 
@@ -105,6 +107,43 @@ public sealed class BluetoothAudioRouter : IDisposable
         return false;
     }
 
+    /// <summary>
+    /// Checks whether this channel is enabled in the Wireless Kopfhörer routing matrix.
+    /// </summary>
+    public bool IsChannelRouted(string channelName)
+    {
+        var norm = NormalizeChannelName(channelName);
+        if (norm.Equals("Mic", StringComparison.OrdinalIgnoreCase) ||
+            norm.Equals("Mikrofon", StringComparison.OrdinalIgnoreCase))
+        {
+            if (_muteMicSidetone)
+            {
+                return false;
+            }
+        }
+
+        if (_channelRouting.TryGetValue(norm, out var routed))
+        {
+            return routed;
+        }
+        if (_channelRouting.TryGetValue(channelName, out routed))
+        {
+            return routed;
+        }
+
+        return AppSettings.Load().IsWirelessChannelRouted(norm);
+    }
+
+    /// <summary>
+    /// Updates the routing state for a channel on the Wireless Kopfhörer output.
+    /// </summary>
+    public void SetChannelRouted(string channelName, bool isRouted)
+    {
+        var norm = NormalizeChannelName(channelName);
+        _channelRouting[norm] = isRouted;
+        _channelRouting[channelName] = isRouted;
+    }
+
     private static string NormalizeChannelName(string name)
     {
         var lower = name.ToLowerInvariant();
@@ -130,6 +169,16 @@ public sealed class BluetoothAudioRouter : IDisposable
         lock (_lock)
         {
             StopInternal();
+            _muteMicSidetone = muteMicSidetone;
+
+            var settings = AppSettings.Load();
+            if (settings.WirelessRouting != null)
+            {
+                foreach (var kvp in settings.WirelessRouting)
+                {
+                    SetChannelRouted(kvp.Key, kvp.Value);
+                }
+            }
 
             if (string.IsNullOrWhiteSpace(targetDeviceId) && string.IsNullOrWhiteSpace(targetDeviceName))
             {
@@ -294,11 +343,10 @@ public sealed class BluetoothAudioRouter : IDisposable
                     streamProvider = new SampleToWaveProvider16(pipeline);
                 }
 
-                // 5. Initialize Output: WASAPI Shared with hardware Event Sync (50ms buffer)
-                // Event sync eliminates Windows Thread.Sleep jitter and completely cures audio stuttering.
+                // 5. Initialize Output: WASAPI Shared with hardware Event Sync (25ms buffer for near-zero latency)
                 try
                 {
-                    _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, true, 50);
+                    _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, true, 25);
                     _player.Init(streamProvider);
                 }
                 catch
@@ -311,14 +359,14 @@ public sealed class BluetoothAudioRouter : IDisposable
                             ? pipeline.ToWaveProvider()
                             : new SampleToWaveProvider16(pipeline);
 
-                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, true, 50);
+                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, true, 25);
                         _player.Init(streamProvider);
                     }
                     catch
                     {
-                        // Fallback to polling mode with 60ms latency if driver doesn't support event sync
+                        // Fallback to polling mode with 25ms latency if driver doesn't support event sync
                         _player?.Dispose();
-                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 60);
+                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 25);
                         _player.Init(streamProvider);
                     }
                 }
@@ -357,21 +405,16 @@ public sealed class BluetoothAudioRouter : IDisposable
 
     private void AddCaptureToMixer(WasapiCapture capture, MixingSampleProvider mixer, string fullName, string shortName)
     {
-        // ReadFully = true is CRUCIAL: it keeps silent/idle channels from returning 0 samples,
-        // which would cause NAudio MixingSampleProvider to permanently drop that channel from the mix
-        // or cause buffer starvation / audio stuttering.
-        var buffer = new BufferedWaveProvider(capture.WaveFormat)
-        {
-            DiscardOnBufferOverflow = true,
-            BufferDuration = TimeSpan.FromMilliseconds(100),
-            ReadFully = true
-        };
+        // Real-time jitter buffer with active max-latency pruning (30ms)
+        // Discards excess stale frames if buffering occurs during Bluetooth connection,
+        // completely eliminating the ~1s delay while guaranteeing stutter-free streaming.
+        var jitterBuffer = new RealtimeJitterBuffer(capture.WaveFormat, maxLatencyMs: 30);
 
         capture.DataAvailable += (s, e) =>
         {
             if (e.BytesRecorded > 0)
             {
-                buffer.AddSamples(e.Buffer, 0, e.BytesRecorded);
+                jitterBuffer.AddSamples(e.Buffer, 0, e.BytesRecorded, capture.WaveFormat);
             }
         };
 
@@ -384,10 +427,9 @@ public sealed class BluetoothAudioRouter : IDisposable
         };
 
         _captures.Add(capture);
-        _buffers.Add(buffer);
+        _jitterBuffers.Add(jitterBuffer);
 
-        // Convert to sample provider
-        ISampleProvider sampleProvider = buffer.ToSampleProvider();
+        ISampleProvider sampleProvider = jitterBuffer;
 
         // 1. Resample to 48000 Hz if needed
         if (capture.WaveFormat.SampleRate != 48000)
@@ -405,7 +447,7 @@ public sealed class BluetoothAudioRouter : IDisposable
             sampleProvider = new MultiplexingSampleProvider(new[] { sampleProvider }, 2);
         }
 
-        // 3. Per-channel GoXLR volume and mute control
+        // 3. Per-channel GoXLR volume, mute, and Wireless Routing control
         sampleProvider = new ChannelVolumeSampleProvider(sampleProvider, this, shortName);
 
         mixer.AddMixerInput(sampleProvider);
@@ -427,7 +469,7 @@ public sealed class BluetoothAudioRouter : IDisposable
             try { c.StopRecording(); c.Dispose(); } catch { }
         }
         _captures.Clear();
-        _buffers.Clear();
+        _jitterBuffers.Clear();
 
         try
         {
@@ -456,7 +498,7 @@ public sealed class BluetoothAudioRouter : IDisposable
     }
 
     /// <summary>
-    /// Sample provider wrapper that applies per-channel GoXLR volume and mute scaling.
+    /// Sample provider wrapper that applies per-channel GoXLR volume, mute, and Routing matrix state.
     /// </summary>
     private sealed class ChannelVolumeSampleProvider : ISampleProvider
     {
@@ -478,6 +520,14 @@ public sealed class BluetoothAudioRouter : IDisposable
             int read = _source.Read(buffer, offset, count);
             if (read <= 0) return read;
 
+            // 1. Check if this channel is routed to Wireless Kopfhörer in the Routing Matrix
+            if (!_router.IsChannelRouted(_channelName))
+            {
+                Array.Clear(buffer, offset, read);
+                return read;
+            }
+
+            // 2. Scale with individual GoXLR channel fader volume and mute
             if (_router.TryGetChannelLevel(_channelName, out var vol, out var muted))
             {
                 if (muted || vol <= 0.001f)
@@ -495,6 +545,109 @@ public sealed class BluetoothAudioRouter : IDisposable
             }
 
             return read;
+        }
+    }
+
+    /// <summary>
+    /// Ultra-low-latency real-time ring buffer that strictly caps buffer lag to ~30ms.
+    /// Automatically purges stale frames if startup or thread pauses cause buffering,
+    /// eliminating the ~1s delay on wireless/Bluetooth devices without audio stutter.
+    /// </summary>
+    public sealed class RealtimeJitterBuffer : ISampleProvider
+    {
+        private readonly float[] _ringBuffer;
+        private readonly int _capacity;
+        private readonly int _maxTargetLatencySamples;
+        private int _writePos;
+        private int _readPos;
+        private int _bufferedSamples;
+        private readonly object _lock = new();
+
+        public WaveFormat WaveFormat { get; }
+
+        public RealtimeJitterBuffer(WaveFormat format, int maxLatencyMs = 30)
+        {
+            WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(format.SampleRate, format.Channels);
+            int samplesPerMs = Math.Max((format.SampleRate * format.Channels) / 1000, 1);
+            _maxTargetLatencySamples = Math.Max(samplesPerMs * maxLatencyMs, 480);
+            _capacity = samplesPerMs * 300; // 300ms total capacity
+            _ringBuffer = new float[_capacity];
+        }
+
+        public void AddSamples(byte[] buffer, int offset, int count, WaveFormat inputFormat)
+        {
+            if (count <= 0) return;
+
+            lock (_lock)
+            {
+                int samplesToAdd;
+                if (inputFormat.Encoding == WaveFormatEncoding.IeeeFloat && inputFormat.BitsPerSample == 32)
+                {
+                    samplesToAdd = count / 4;
+                    PruneExcess(samplesToAdd);
+                    for (int i = 0; i < samplesToAdd; i++)
+                    {
+                        _ringBuffer[_writePos] = BitConverter.ToSingle(buffer, offset + i * 4);
+                        _writePos = (_writePos + 1) % _capacity;
+                    }
+                }
+                else if (inputFormat.BitsPerSample == 16)
+                {
+                    samplesToAdd = count / 2;
+                    PruneExcess(samplesToAdd);
+                    for (int i = 0; i < samplesToAdd; i++)
+                    {
+                        short s = BitConverter.ToInt16(buffer, offset + i * 2);
+                        _ringBuffer[_writePos] = s / 32768.0f;
+                        _writePos = (_writePos + 1) % _capacity;
+                    }
+                }
+                else
+                {
+                    return;
+                }
+
+                _bufferedSamples += samplesToAdd;
+            }
+        }
+
+        private void PruneExcess(int incoming)
+        {
+            // If buffered samples + incoming exceed our real-time latency target (30ms),
+            // instantly discard the oldest samples! This eliminates any accumulated delay.
+            if (_bufferedSamples + incoming > _maxTargetLatencySamples)
+            {
+                int excess = (_bufferedSamples + incoming) - _maxTargetLatencySamples;
+                _readPos = (_readPos + excess) % _capacity;
+                _bufferedSamples -= excess;
+            }
+        }
+
+        public int Read(float[] buffer, int offset, int count)
+        {
+            lock (_lock)
+            {
+                if (_bufferedSamples <= 0)
+                {
+                    Array.Clear(buffer, offset, count);
+                    return count;
+                }
+
+                int toRead = Math.Min(count, _bufferedSamples);
+                for (int i = 0; i < toRead; i++)
+                {
+                    buffer[offset + i] = _ringBuffer[_readPos];
+                    _readPos = (_readPos + 1) % _capacity;
+                }
+                _bufferedSamples -= toRead;
+
+                if (toRead < count)
+                {
+                    Array.Clear(buffer, offset + toRead, count - toRead);
+                }
+
+                return count;
+            }
         }
     }
 

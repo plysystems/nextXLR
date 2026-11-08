@@ -33,7 +33,7 @@
                         <ItemsRepeater Grid.Column="1" ItemsSource="{x:Bind ViewModel.Buses}">
                             <ItemsRepeater.Layout>
                                 <UniformGridLayout MinItemWidth="64" MinItemHeight="74" MinColumnSpacing="10"
-                                                   MaximumRowsOrColumns="4" ItemsStretch="Fill" />
+                                                   MaximumRowsOrColumns="{x:Bind ViewModel.RoutingColumnCount, Mode=OneWay}" ItemsStretch="Fill" />
                             </ItemsRepeater.Layout>
                             <ItemsRepeater.ItemTemplate>
                                 <DataTemplate x:DataType="vm:BusView">
@@ -86,7 +86,7 @@
                                     <ItemsRepeater Grid.Column="1" ItemsSource="{x:Bind Cells}" Margin="0,5">
                                         <ItemsRepeater.Layout>
                                             <UniformGridLayout MinItemWidth="64" MinItemHeight="44" MinColumnSpacing="10"
-                                                               MaximumRowsOrColumns="4" ItemsStretch="Fill" />
+                                                               MaximumRowsOrColumns="{x:Bind Cells.Count}" ItemsStretch="Fill" />
                                         </ItemsRepeater.Layout>
                                         <ItemsRepeater.ItemTemplate>
                                             <DataTemplate x:DataType="vm:RouteCellViewModel">

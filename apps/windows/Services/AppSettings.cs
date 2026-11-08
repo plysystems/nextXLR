@@ -26,6 +26,31 @@ public sealed class AppSettings
     public string? BluetoothHeadsetDeviceId { get; set; }
     public string? BluetoothHeadsetDeviceName { get; set; }
     public bool BluetoothMuteMicSidetone { get; set; } = true;
+    public Dictionary<string, bool> WirelessRouting { get; set; } = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Mic"] = false,
+        ["Chat"] = true,
+        ["Musik"] = true,
+        ["Game"] = true,
+        ["Console"] = true,
+        ["Line In"] = true,
+        ["System"] = true,
+        ["Sample"] = true,
+        ["!@#$?*"] = false
+    };
+
+    public bool IsWirelessChannelRouted(string channelName)
+    {
+        if (WirelessRouting != null && WirelessRouting.TryGetValue(channelName, out var routed))
+        {
+            return routed;
+        }
+
+        // Default: everything except Mic and Bleep is routed
+        return !channelName.Equals("Mic", StringComparison.OrdinalIgnoreCase) &&
+               !channelName.Equals("Mikrofon", StringComparison.OrdinalIgnoreCase) &&
+               !channelName.Equals("!@#$?*", StringComparison.OrdinalIgnoreCase);
+    }
 
     public static AppSettings Load()
     {

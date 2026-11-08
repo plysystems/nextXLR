@@ -8,6 +8,7 @@ namespace NextXLR.ViewModels;
 public partial class RouteCellViewModel : ObservableObject
 {
     private readonly PipeTransport _transport;
+    private readonly string? _customChannelName;
     private bool _applyingServer;
 
     public uint ChannelId { get; }
@@ -21,12 +22,13 @@ public partial class RouteCellViewModel : ObservableObject
 
     [ObservableProperty] private bool _isRouted;
 
-    public RouteCellViewModel(uint channel, uint bus, string tooltip, PipeTransport transport)
+    public RouteCellViewModel(uint channel, uint bus, string tooltip, PipeTransport transport, string? customChannelName = null)
     {
         ChannelId = channel;
         BusId = bus;
         Tooltip = tooltip;
         _transport = transport;
+        _customChannelName = customChannelName;
     }
 
     public void ApplyFromServer(bool routed)
@@ -42,6 +44,24 @@ public partial class RouteCellViewModel : ObservableObject
             if (!value) IsRouted = true;
             return;
         }
+
+        if (BusId == 888)
+        {
+            if (!_applyingServer)
+            {
+                var channelKey = _customChannelName ?? ChannelId.ToString();
+                var settings = AppSettings.Load();
+                if (settings.WirelessRouting == null)
+                {
+                    settings.WirelessRouting = new(StringComparer.OrdinalIgnoreCase);
+                }
+                settings.WirelessRouting[channelKey] = value;
+                settings.Save();
+                BluetoothAudioRouter.Instance.SetChannelRouted(channelKey, value);
+            }
+            return;
+        }
+
         if (!_applyingServer) _transport.Send(new SetRoute(ChannelId, BusId, value ? 1.0 : 0.0));
     }
 }
@@ -52,8 +72,9 @@ public sealed class RouteRowViewModel
     public required string ChannelName { get; init; }
     public string Glyph { get; init; } = "\uE767";
     public Microsoft.UI.Xaml.Media.Brush? Accent { get; init; }
-    /// <summary>Headphones, Broadcast Stream Mix, Line Out, Chat Mic.</summary>
+    /// <summary>Headphones, (Wireless Headphones), Broadcast Stream Mix, Line Out, Chat Mic.</summary>
     public ObservableCollection<RouteCellViewModel> Cells { get; } = new();
+    public int ColumnCount => Cells.Count;
     /// <summary>The Sampler recording input, shown in its own highlighted column.</summary>
     public RouteCellViewModel? SamplerCell { get; set; }
 }

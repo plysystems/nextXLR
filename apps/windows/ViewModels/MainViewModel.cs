@@ -33,12 +33,20 @@ public partial class MainViewModel : ObservableObject
 
     public void Dispose() => _meterAnimator.Dispose();
     [ObservableProperty] private string _samplerBusName = "";
+    public int RoutingColumnCount => Buses.Count > 0 ? Buses.Count : 4;
 
     private RouteCellViewModel Cell(Channel c, Bus b)
     {
+        if (b.Id == 888)
+        {
+            var wirelessTip = $"{c.Name} → Wireless Kopfhörer";
+            var wirelessCell = new RouteCellViewModel(c.Id, 888, wirelessTip, _transport, c.Name);
+            wirelessCell.ApplyFromServer(AppSettings.Load().IsWirelessChannelRouted(c.Name));
+            return wirelessCell;
+        }
         var blocked = IsBlocked(c.Id, b.Id);
         var tip = blocked ? Loc.Get("RoutingBlocked") : $"{c.Name} → {BusView.Localize(b.Id, b.Name)}";
-        return new RouteCellViewModel(c.Id, b.Id, tip, _transport) { IsBlocked = blocked };
+        return new RouteCellViewModel(c.Id, b.Id, tip, _transport, c.Name) { IsBlocked = blocked };
     }
 
     [ObservableProperty] private string _connectionText = Loc.Get("StatusConnecting");
@@ -356,13 +364,32 @@ public partial class MainViewModel : ObservableObject
 
     private bool _muteOnStartupApplied;
 
+    private StateMessage? _lastState;
+
+    public void RefreshRouting()
+    {
+        if (_lastState != null)
+        {
+            ReconcileRouting(_lastState);
+        }
+    }
+
     private void ReconcileRouting(StateMessage s)
     {
+        _lastState = s;
         var routed = s.Routes.Select(r => (r.Channel, r.Bus)).ToHashSet();
         var inputs = RoutingOrder.Select(id => s.Channels.FirstOrDefault(c => c.Id == id))
             .OfType<Channel>().ToList();
         var columns = s.Buses.Where(b => b.Id != SamplerBus).ToList();
         var sampler = s.Buses.FirstOrDefault(b => b.Id == SamplerBus);
+
+        var settings = AppSettings.Load();
+        if (settings.EnableBluetoothHeadset)
+        {
+            // Insert Wireless Kopfhörer column right after standard Kopfhörer
+            columns.Insert(1, new Bus(888, "Wireless Kopfhörer"));
+        }
+
         bool shapeChanged =
             Buses.Count != columns.Count || !Buses.Select(b => b.Id).SequenceEqual(columns.Select(b => b.Id)) ||
             RouteRows.Count != (inputs.Count + 1) || !RouteRows.Take(inputs.Count).Select(r => r.ChannelId).SequenceEqual(inputs.Select(c => c.Id)) ||
@@ -406,9 +433,21 @@ public partial class MainViewModel : ObservableObject
             };
             foreach (var b in columns)
             {
+                if (b.Id == 888)
+                {
+                    var wirelessTip = "!@#$?* → Wireless Kopfhörer";
+                    var wirelessCell = new RouteCellViewModel(999, 888, wirelessTip, _transport, "!@#$?*")
+                    {
+                        IsBlocked = false,
+                        IsLocked = false,
+                    };
+                    wirelessCell.ApplyFromServer(settings.IsWirelessChannelRouted("!@#$?*"));
+                    bleepRow.Cells.Add(wirelessCell);
+                    continue;
+                }
                 bool isBleepDest = b.Id is 0 or 1 or 3;
                 var tip = isBleepDest ? Loc.Format("RoutingBleepActive", BusView.Localize(b.Id, b.Name)) : Loc.Get("RoutingBlocked");
-                var cell = new RouteCellViewModel(999, b.Id, tip, _transport)
+                var cell = new RouteCellViewModel(999, b.Id, tip, _transport, "!@#$?*")
                 {
                     IsBlocked = !isBleepDest,
                     IsLocked = isBleepDest,
@@ -418,7 +457,7 @@ public partial class MainViewModel : ObservableObject
             }
             if (sampler is not null)
             {
-                var samplerCell = new RouteCellViewModel(999, sampler.Id, Loc.Get("RoutingBlocked"), _transport)
+                var samplerCell = new RouteCellViewModel(999, sampler.Id, Loc.Get("RoutingBlocked"), _transport, "!@#$?*")
                 {
                     IsBlocked = true,
                 };
@@ -431,7 +470,16 @@ public partial class MainViewModel : ObservableObject
         {
             if (row.ChannelId == 999) continue;
             foreach (var cell in row.Cells.Append(row.SamplerCell).OfType<RouteCellViewModel>())
-                cell.ApplyFromServer(routed.Contains((cell.ChannelId, cell.BusId)));
+            {
+                if (cell.BusId == 888)
+                {
+                    cell.ApplyFromServer(settings.IsWirelessChannelRouted(row.ChannelName));
+                }
+                else
+                {
+                    cell.ApplyFromServer(routed.Contains((cell.ChannelId, cell.BusId)));
+                }
+            }
         }
     }
 }
@@ -444,6 +492,7 @@ public sealed class BusView(uint id, string fallbackName)
     public string Glyph { get; } = id switch
     {
         0 => "",   // headphones
+        888 => "", // wireless headphones
         1 => "",   // broadcast
         2 => "",   // line out (speakers)
         3 => "",   // chat mic
@@ -453,6 +502,7 @@ public sealed class BusView(uint id, string fallbackName)
 
     public static string Localize(uint id, string fallback)
     {
+        if (id == 888) return "Wireless Kopfhörer";
         var s = NextXLR.Services.Loc.Get($"Bus{id}");
         return s == $"Bus{id}" ? fallback : s;
     }
