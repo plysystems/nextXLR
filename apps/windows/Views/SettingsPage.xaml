@@ -113,7 +113,7 @@
                         </Grid>
                         <Grid Style="{StaticResource SettingRow}">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE7E8;" Foreground="{StaticResource ErrorBrush}" />
+                            <FontIcon Glyph="&#xE7E8;" Foreground="{StaticResource DangerBrush}" />
                             <StackPanel Grid.Column="1">
                                 <TextBlock Text="Software &amp; Hintergrunddienst beenden" FontWeight="SemiBold" />
                                 <TextBlock Text="Beendet NEXT : XLR und stoppt den mixforged Hintergrunddienst vollständig." Style="{StaticResource Caption}" />

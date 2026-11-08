@@ -27,6 +27,7 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<ChannelViewModel> OutputStrips { get; } = new();
     public ObservableCollection<BusView> Buses { get; } = new();
     public ObservableCollection<RouteRowViewModel> RouteRows { get; } = new();
+    public AppRoutingManagerViewModel AppRouting { get; } = new();
     [ObservableProperty] private string _samplerBusName = "";
 
     private RouteCellViewModel Cell(Channel c, Bus b)
@@ -334,14 +335,14 @@ public partial class MainViewModel : ObservableObject
             BluetoothAudioRouter.Instance.Volume = (float)hpChannel.Volume;
             BluetoothAudioRouter.Instance.IsMuted = hpChannel.Muted;
         }
-        if (!_muteOnStartupApplied && MicChannel != null)
+        if (!_muteOnStartupApplied)
         {
             _muteOnStartupApplied = true;
             try
             {
                 if (AppSettings.Load().MuteOnStartup)
                 {
-                    MicChannel.Muted = true;
+                    MicMuted = true;
                 }
             }
             catch { }

@@ -63,6 +63,18 @@ public partial class MixerPage : Page
                 ViewModel.SetBleep(false);
             }
         };
+
+        BleepSlider.PointerWheelChanged += (s, e) =>
+        {
+            var hasModifier = (e.KeyModifiers & (Windows.System.VirtualKeyModifiers.Control | Windows.System.VirtualKeyModifiers.Shift)) != 0;
+            if (!hasModifier && BleepSlider.FocusState == FocusState.Unfocused)
+            {
+                return;
+            }
+            var delta = e.GetCurrentPoint(BleepSlider).Properties.MouseWheelDelta;
+            ViewModel.BleepVolume = Math.Clamp(ViewModel.BleepVolume + Math.Sign(delta), 0, 100);
+            e.Handled = true;
+        };
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -194,7 +206,27 @@ public partial class RoutingPage : Page
 
     public MainViewModel ViewModel { get; private set; } = null!;
     public RoutingPage() => InitializeComponent();
-    protected override void OnNavigatedTo(NavigationEventArgs e) => ViewModel = (MainViewModel)e.Parameter;
+
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        ViewModel = (MainViewModel)e.Parameter;
+        ViewModel.AppRouting.Refresh();
+    }
+
+    private void RefreshAppRouting_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.AppRouting.Refresh();
+    }
+
+    private void AutoAssignApps_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.AppRouting.AutoAssignAll();
+    }
+
+    private void OpenWindowsMixer_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.AppRouting.OpenWindowsMixer();
+    }
 
     // Row highlight; the Border's BrushTransition makes it a 200 ms fade.
     private void Row_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e) =>

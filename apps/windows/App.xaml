@@ -25,6 +25,7 @@
             <!-- Surfaces: elevation is expressed by lightness, not heavy shadows. -->
             <SolidColorBrush x:Key="BrandBrush" Color="#4FE0B8" />
             <SolidColorBrush x:Key="DangerBrush" Color="#F0506A" />
+            <SolidColorBrush x:Key="ErrorBrush" Color="#F0506A" />
             <SolidColorBrush x:Key="WarningBrush" Color="#F5B942" />
             <SolidColorBrush x:Key="SurfaceL1Brush" Color="#15181E" />
             <SolidColorBrush x:Key="SurfaceL2Brush" Color="#1B1F27" />

@@ -160,6 +160,13 @@ public sealed partial class Knob : UserControl
 
     private void OnWheel(object sender, PointerRoutedEventArgs e)
     {
+        var hasModifier = (e.KeyModifiers & (VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift)) != 0;
+        var isFocused = FocusState != FocusState.Unfocused;
+        if (!hasModifier && !isFocused)
+        {
+            return;
+        }
+
         var delta = e.GetCurrentPoint(this).Properties.MouseWheelDelta;
         Value += Math.Sign(delta) * Step;
         e.Handled = true;

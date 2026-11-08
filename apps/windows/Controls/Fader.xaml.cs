@@ -345,6 +345,14 @@ public sealed partial class Fader : UserControl
 
     private void OnWheel(object sender, PointerRoutedEventArgs e)
     {
+        var hasModifier = (e.KeyModifiers & (VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift)) != 0;
+        var isFocused = FocusState != FocusState.Unfocused;
+        if (!hasModifier && !isFocused)
+        {
+            // Scrolling on page: do not change slider and let parent ScrollViewer handle wheel
+            return;
+        }
+
         var delta = e.GetCurrentPoint(this).Properties.MouseWheelDelta;
         var step = (e.KeyModifiers & VirtualKeyModifiers.Control) != 0 ? 0.1 : 1;
         Value += Math.Sign(delta) * step;
