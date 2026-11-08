@@ -58,7 +58,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(MixModeDescription));
     }
 
-    public string MixModeTitle => IsSubmixActive ? "🎧 Kopfhörer-Submix" : "🌐 Stream-Mix (Broadcast)";
+    public string MixModeTitle => IsSubmixActive ? "Kopfhörer-Submix" : "Stream-Mix (Broadcast)";
     public string MixModeDescription => IsSubmixActive
         ? "Unabhängiger Kopfhörer-Submix (dein persönlicher Monitor-Mix)."
         : "Haupt-Broadcast-Mix (das, was Stream & Zuschauer hören).";

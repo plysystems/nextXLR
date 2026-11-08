@@ -181,6 +181,12 @@ public sealed class TrayIconService : IDisposable
 
     private nint SubclassProc(nint hWnd, uint uMsg, nuint wParam, nint lParam, nuint uIdSubclass, nuint dwRefData)
     {
+        if (uMsg == Program.WM_SHOW_NEXTXLR)
+        {
+            _onRestore?.Invoke();
+            return nint.Zero;
+        }
+
         if (uMsg == WM_TRAY)
         {
             int eventId = (int)(lParam.ToInt64() & 0xFFFF);

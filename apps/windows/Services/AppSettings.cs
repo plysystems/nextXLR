@@ -20,6 +20,12 @@ public sealed class AppSettings
     public double BleepVolume { get; set; } = 100.0;
     public bool HasCompletedTour { get; set; }
 
+    // Bluetooth / Wireless Headset Monitoring
+    public bool EnableBluetoothHeadset { get; set; } = false;
+    public string? BluetoothHeadsetDeviceId { get; set; }
+    public string? BluetoothHeadsetDeviceName { get; set; }
+    public bool BluetoothMuteMicSidetone { get; set; } = true;
+
     public static AppSettings Load()
     {
         try

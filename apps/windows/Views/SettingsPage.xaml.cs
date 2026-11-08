@@ -28,6 +28,11 @@ public sealed partial class SettingsPage : Page
         AppVersionText.Text = Loc.Format("SetAppVersion", AppSettings.AppVersion);
         EngineVersionText.Text = Loc.Format("SetEngineVersion", ViewModel.EngineVersion);
         UpdateDriverStatus();
+
+        BluetoothToggle.IsOn = _settings.EnableBluetoothHeadset;
+        BluetoothSidetoneCheck.IsChecked = _settings.BluetoothMuteMicSidetone;
+        _ = LoadAudioEndpointsAsync();
+
         _loading = false;
     }
 
@@ -490,4 +495,129 @@ public sealed partial class SettingsPage : Page
         }
         _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/plysystems/nextXLR/blob/main/LICENSE"));
     }
+
+    #region Bluetooth & Wireless Headset Routing
+
+    private async Task LoadAudioEndpointsAsync()
+    {
+        try
+        {
+            var selector = Windows.Media.Devices.MediaDevice.GetAudioRenderSelector();
+            var devices = await Windows.Devices.Enumeration.DeviceInformation.FindAllAsync(selector);
+
+            var items = new List<AudioEndpointItem>();
+            foreach (var dev in devices)
+            {
+                if (!dev.IsEnabled || string.IsNullOrWhiteSpace(dev.Name)) continue;
+
+                var lowerName = dev.Name.ToLowerInvariant();
+                var lowerId = dev.Id.ToLowerInvariant();
+                var isBt = lowerId.Contains("bth") || lowerId.Contains("bluetooth")
+                           || lowerName.Contains("bluetooth") || lowerName.Contains("wireless")
+                           || lowerName.Contains("buds") || lowerName.Contains("airpods")
+                           || lowerName.Contains("headset") || lowerName.Contains("hands-free")
+                           || lowerName.Contains("wh-") || lowerName.Contains("wf-");
+
+                items.Add(new AudioEndpointItem
+                {
+                    Id = dev.Id,
+                    Name = dev.Name,
+                    IsBluetooth = isBt
+                });
+            }
+
+            // Bluetooth/Wireless Geräte nach oben sortieren
+            var ordered = items.OrderByDescending(x => x.IsBluetooth).ThenBy(x => x.Name).ToList();
+            BluetoothDeviceBox.ItemsSource = ordered;
+
+            if (ordered.Count > 0)
+            {
+                var match = ordered.FirstOrDefault(x =>
+                    (!string.IsNullOrEmpty(_settings.BluetoothHeadsetDeviceId) && x.Id == _settings.BluetoothHeadsetDeviceId) ||
+                    (!string.IsNullOrEmpty(_settings.BluetoothHeadsetDeviceName) && x.Name == _settings.BluetoothHeadsetDeviceName));
+
+                if (match != null)
+                {
+                    BluetoothDeviceBox.SelectedItem = match;
+                }
+                else if (_settings.EnableBluetoothHeadset)
+                {
+                    // Fallback zum ersten erkannten Bluetooth-Gerät oder ersten Gerät
+                    var firstBt = ordered.FirstOrDefault(x => x.IsBluetooth) ?? ordered.First();
+                    BluetoothDeviceBox.SelectedItem = firstBt;
+                }
+            }
+
+            UpdateBluetoothStatus();
+        }
+        catch (Exception ex)
+        {
+            BluetoothStatusInfo.Severity = InfoBarSeverity.Warning;
+            BluetoothStatusInfo.Message = $"Audiogeräte konnten nicht vollständig enumeriert werden: {ex.Message}";
+        }
+    }
+
+    private void BluetoothToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_loading) return;
+        _settings.EnableBluetoothHeadset = BluetoothToggle.IsOn;
+        _settings.Save();
+        UpdateBluetoothStatus();
+    }
+
+    private void BluetoothDeviceBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading) return;
+        if (BluetoothDeviceBox.SelectedItem is AudioEndpointItem selected)
+        {
+            _settings.BluetoothHeadsetDeviceId = selected.Id;
+            _settings.BluetoothHeadsetDeviceName = selected.Name;
+            _settings.Save();
+        }
+        UpdateBluetoothStatus();
+    }
+
+    private void BluetoothSidetone_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_loading) return;
+        _settings.BluetoothMuteMicSidetone = BluetoothSidetoneCheck.IsChecked == true;
+        _settings.Save();
+    }
+
+    private async void RefreshAudioDevices_Click(object sender, RoutedEventArgs e)
+    {
+        await LoadAudioEndpointsAsync();
+    }
+
+    private void UpdateBluetoothStatus()
+    {
+        if (!BluetoothToggle.IsOn)
+        {
+            BluetoothStatusInfo.Severity = InfoBarSeverity.Informational;
+            BluetoothStatusInfo.Message = "Bluetooth-Routing inaktiv. Kopfhörer-Signal wird direkt über die GoXLR 3,5 mm Klinkenbuchse ausgegeben.";
+            return;
+        }
+
+        if (BluetoothDeviceBox.SelectedItem is AudioEndpointItem selected)
+        {
+            BluetoothStatusInfo.Severity = InfoBarSeverity.Success;
+            BluetoothStatusInfo.Message = $"Kopfhörer-Signal wird aktiv an '{selected.Name}' weitergeleitet. GoXLR Routing bleibt synchron.";
+        }
+        else
+        {
+            BluetoothStatusInfo.Severity = InfoBarSeverity.Warning;
+            BluetoothStatusInfo.Message = "Bitte wähle oben dein Bluetooth- oder Wireless-Headset aus der Liste.";
+        }
+    }
+
+    #endregion
+}
+
+public sealed class AudioEndpointItem
+{
+    public string Id { get; set; } = "";
+    public string Name { get; set; } = "";
+    public bool IsBluetooth { get; set; }
+    public string Glyph => IsBluetooth ? "\uE702" : "\uE7F6";
+    public string DisplayName => IsBluetooth ? $"[Bluetooth / Funk] {Name}" : Name;
 }

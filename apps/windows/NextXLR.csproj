@@ -23,6 +23,7 @@
     <LangVersion>latest</LangVersion>
     <!-- i18n: English is the fallback; translations live in Strings/<lang>/Resources.resw. -->
     <DefaultLanguage>en-US</DefaultLanguage>
+    <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <Product>NEXT : XLR</Product>
     <Version>0.1.0-alpha</Version>
     <AssemblyVersion>0.1.0.0</AssemblyVersion>

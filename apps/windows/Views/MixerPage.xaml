@@ -36,7 +36,7 @@
                             Background="{x:Bind StreamMixBackground(ViewModel.IsSubmixActive), Mode=OneWay}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon Glyph="&#xE774;" FontSize="14" Foreground="{x:Bind StreamMixForeground(ViewModel.IsSubmixActive), Mode=OneWay}" />
-                            <TextBlock Text="🌐 Stream-Mix" FontWeight="SemiBold" FontSize="13"
+                            <TextBlock Text="Stream-Mix" FontWeight="SemiBold" FontSize="13"
                                        Foreground="{x:Bind StreamMixForeground(ViewModel.IsSubmixActive), Mode=OneWay}" />
                         </StackPanel>
                     </Button>
@@ -45,7 +45,7 @@
                             Background="{x:Bind HeadphonesMixBackground(ViewModel.IsSubmixActive), Mode=OneWay}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon Glyph="&#xE7F6;" FontSize="14" Foreground="{x:Bind HeadphonesMixForeground(ViewModel.IsSubmixActive), Mode=OneWay}" />
-                            <TextBlock Text="🎧 Kopfhörer-Mix" FontWeight="SemiBold" FontSize="13"
+                            <TextBlock Text="Kopfhörer-Mix" FontWeight="SemiBold" FontSize="13"
                                        Foreground="{x:Bind HeadphonesMixForeground(ViewModel.IsSubmixActive), Mode=OneWay}" />
                         </StackPanel>
                     </Button>
