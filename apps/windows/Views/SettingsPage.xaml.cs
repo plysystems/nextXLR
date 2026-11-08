@@ -93,12 +93,41 @@ public sealed partial class SettingsPage : Page
 
                 if (Version.TryParse(cleanTag, out var remoteVer) && Version.TryParse(currentVer, out var localVer) && remoteVer > localVer)
                 {
+                    string? exeDownloadUrl = null;
+                    if (root.TryGetProperty("assets", out var assetsElem) && assetsElem.ValueKind == System.Text.Json.JsonValueKind.Array)
+                    {
+                        foreach (var asset in assetsElem.EnumerateArray())
+                        {
+                            var name = asset.TryGetProperty("name", out var an) ? an.GetString() ?? "" : "";
+                            if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                            {
+                                exeDownloadUrl = asset.TryGetProperty("browser_download_url", out var bu) ? bu.GetString() : null;
+                                break;
+                            }
+                        }
+                    }
+
                     UpdateResult.Severity = InfoBarSeverity.Success;
                     UpdateResult.Title = $"Neues Update verfügbar: {tagName}";
-                    UpdateResult.Message = $"{releaseNotes}\nInstalliert: v{AppSettings.AppVersion}. Klicke unten, um das Update von GitHub herunterzuladen.";
-                    var btn = new Button { Content = "Update herunterladen (GitHub)", Style = (Style)Application.Current.Resources["AccentButtonStyle"] };
-                    btn.Click += (_, _) => _ = Windows.System.Launcher.LaunchUriAsync(new Uri(releaseUrl));
-                    UpdateResult.ActionButton = btn;
+                    UpdateResult.Message = $"{releaseNotes}\nInstalliert: v{AppSettings.AppVersion}. Klicke unten, um das Update herunterzuladen und direkt über die bestehende Version zu installieren.";
+
+                    var btnAuto = new Button
+                    {
+                        Content = "Update automatisch installieren",
+                        Style = (Style)Application.Current.Resources["AccentButtonStyle"]
+                    };
+                    btnAuto.Click += async (_, _) =>
+                    {
+                        if (!string.IsNullOrEmpty(exeDownloadUrl))
+                        {
+                            await DownloadAndInstallUpdateAsync(exeDownloadUrl, releaseUrl);
+                        }
+                        else
+                        {
+                            _ = Windows.System.Launcher.LaunchUriAsync(new Uri(releaseUrl));
+                        }
+                    };
+                    UpdateResult.ActionButton = btnAuto;
                 }
                 else
                 {
@@ -125,6 +154,84 @@ public sealed partial class SettingsPage : Page
             UpdateResult.Message = $"Installierte Version: v{AppSettings.AppVersion}. Du kannst Releases direkt auf GitHub aufrufen ({ex.Message}).";
             var btn = new Button { Content = "GitHub öffnen" };
             btn.Click += (_, _) => _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/plysystems/nextXLR"));
+            UpdateResult.ActionButton = btn;
+        }
+    }
+
+    private async Task DownloadAndInstallUpdateAsync(string downloadUrl, string fallbackUrl)
+    {
+        UpdateResult.Severity = InfoBarSeverity.Informational;
+        UpdateResult.Title = "Update wird heruntergeladen...";
+        UpdateResult.Message = "Verbindung wird hergestellt...";
+        UpdateResult.ActionButton = null;
+
+        try
+        {
+            using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("NextXLR-App/" + AppSettings.AppVersion);
+
+            using var response = await client.GetAsync(downloadUrl, System.Net.Http.HttpCompletionOption.ResponseHeadersRead);
+            if (!response.IsSuccessStatusCode)
+            {
+                _ = Windows.System.Launcher.LaunchUriAsync(new Uri(fallbackUrl));
+                return;
+            }
+
+            var totalBytes = response.Content.Headers.ContentLength ?? -1L;
+            var tempExe = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "NextXLR-Setup-Update.exe");
+
+            await using (var contentStream = await response.Content.ReadAsStreamAsync())
+            await using (var fileStream = new System.IO.FileStream(tempExe, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None, 81920, true))
+            {
+                var buffer = new byte[81920];
+                long totalRead = 0;
+                int bytesRead;
+                var lastReport = DateTime.UtcNow;
+
+                while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                {
+                    await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead));
+                    totalRead += bytesRead;
+
+                    if ((DateTime.UtcNow - lastReport).TotalMilliseconds > 300)
+                    {
+                        lastReport = DateTime.UtcNow;
+                        var mbRead = totalRead / (1024.0 * 1024.0);
+                        if (totalBytes > 0)
+                        {
+                            var totalMb = totalBytes / (1024.0 * 1024.0);
+                            var percent = (int)(totalRead * 100 / totalBytes);
+                            UpdateResult.Message = $"Herunterladen: {percent}% ({mbRead:F1} MB von {totalMb:F1} MB)...";
+                        }
+                        else
+                        {
+                            UpdateResult.Message = $"Herunterladen: {mbRead:F1} MB...";
+                        }
+                    }
+                }
+            }
+
+            UpdateResult.Severity = InfoBarSeverity.Success;
+            UpdateResult.Title = "Download abgeschlossen!";
+            UpdateResult.Message = "Starte Installationsprogramm und schließe NEXT : XLR...";
+
+            await Task.Delay(800);
+
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = tempExe,
+                UseShellExecute = true,
+            });
+
+            Microsoft.UI.Xaml.Application.Current.Exit();
+        }
+        catch (Exception ex)
+        {
+            UpdateResult.Severity = InfoBarSeverity.Error;
+            UpdateResult.Title = "Fehler beim Herunterladen des Updates";
+            UpdateResult.Message = $"{ex.Message}. Du kannst das Update alternativ manuell von GitHub herunterladen.";
+            var btn = new Button { Content = "GitHub Release öffnen" };
+            btn.Click += (_, _) => _ = Windows.System.Launcher.LaunchUriAsync(new Uri(fallbackUrl));
             UpdateResult.ActionButton = btn;
         }
     }

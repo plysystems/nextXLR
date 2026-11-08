@@ -38,6 +38,18 @@ public partial class MicSettingsViewModel : ObservableObject
 
     [ObservableProperty] private double _deEsser;               // %
 
+    // RNNoise / DeepFilterNet Neural Noise Reduction
+    [ObservableProperty] private bool _rnnoiseEnabled;
+    [ObservableProperty] private double _rnnoiseIntensity = 80; // 0..100%
+    [ObservableProperty] private string _rnnoiseModel = "DeepFilterNet3";
+
+    // Neural Voice Morphing & Personas
+    [ObservableProperty] private bool _voiceMorphEnabled;
+    [ObservableProperty] private string _voiceMorphPersona = "Radio";
+    [ObservableProperty] private double _voiceMorphPitch; // -12..12 semitones
+    [ObservableProperty] private double _voiceMorphFormant; // -12..12
+    [ObservableProperty] private double _voiceMorphDrive; // 0..100%
+
     public ObservableCollection<EqBandViewModel> EqBands { get; }
 
     public string[] Ratios { get; } =
@@ -61,6 +73,8 @@ public partial class MicSettingsViewModel : ObservableObject
         nameof(GateEnabled), nameof(GateThreshold), nameof(GateAttenuation), nameof(GateAttack), nameof(GateRelease),
         nameof(CompThreshold), nameof(CompRatio), nameof(CompAttack), nameof(CompRelease), nameof(CompMakeup),
         nameof(DeEsser),
+        nameof(RnnoiseEnabled), nameof(RnnoiseIntensity), nameof(RnnoiseModel),
+        nameof(VoiceMorphEnabled), nameof(VoiceMorphPersona), nameof(VoiceMorphPitch), nameof(VoiceMorphFormant), nameof(VoiceMorphDrive),
     ];
 
     public MicSettingsViewModel(PipeTransport transport)
@@ -97,7 +111,9 @@ public partial class MicSettingsViewModel : ObservableObject
         return new MicSettings(
             GateEnabled, R(GateThreshold), R(GateAttenuation), R(GateAttack), R(GateRelease),
             R(CompThreshold), CompRatio, R(CompAttack), R(CompRelease), R(CompMakeup),
-            EqBands.Select(b => R(b.Gain)).ToList(), R(DeEsser));
+            EqBands.Select(b => R(b.Gain)).ToList(), R(DeEsser),
+            RnnoiseEnabled, R(RnnoiseIntensity), RnnoiseModel,
+            VoiceMorphEnabled, VoiceMorphPersona, R(VoiceMorphPitch), R(VoiceMorphFormant), R(VoiceMorphDrive));
     }
 
     public void ApplyFromServer(MicSettings m)
@@ -112,6 +128,14 @@ public partial class MicSettingsViewModel : ObservableObject
             CompThreshold = m.CompThreshold; CompRatio = m.CompRatio; CompAttack = m.CompAttack;
             CompRelease = m.CompRelease; CompMakeup = m.CompMakeup;
             DeEsser = m.Deesser;
+            RnnoiseEnabled = m.RnnoiseEnabled;
+            RnnoiseIntensity = m.RnnoiseIntensity;
+            RnnoiseModel = m.RnnoiseModel ?? "DeepFilterNet3";
+            VoiceMorphEnabled = m.VoiceMorphEnabled;
+            VoiceMorphPersona = m.VoiceMorphPersona ?? "Radio";
+            VoiceMorphPitch = m.VoiceMorphPitch;
+            VoiceMorphFormant = m.VoiceMorphFormant;
+            VoiceMorphDrive = m.VoiceMorphDrive;
             var gains = m.EqGains ?? [];
             for (int i = 0; i < EqBands.Count; i++) EqBands[i].SetSilently(gains.ElementAtOrDefault(i));
         }
@@ -167,6 +191,44 @@ public partial class MicSettingsViewModel : ObservableObject
         {
             EqBands[i].Gain = gains[i];
         }
+    }
+
+    /// <summary>Applies a neural voice morphing persona preset.</summary>
+    public void ApplyPersonaPreset(string persona)
+    {
+        VoiceMorphPersona = persona;
+        VoiceMorphEnabled = true;
+        switch (persona.ToLowerInvariant())
+        {
+            case "radio":
+                VoiceMorphPitch = 0;
+                VoiceMorphFormant = -2;
+                VoiceMorphDrive = 65;
+                break;
+            case "helldivers":
+                VoiceMorphPitch = -2;
+                VoiceMorphFormant = -4;
+                VoiceMorphDrive = 85;
+                break;
+            case "robot":
+                VoiceMorphPitch = -4;
+                VoiceMorphFormant = 4;
+                VoiceMorphDrive = 50;
+                break;
+            case "alien":
+                VoiceMorphPitch = -8;
+                VoiceMorphFormant = -6;
+                VoiceMorphDrive = 40;
+                break;
+            case "announcer":
+                VoiceMorphPitch = -3;
+                VoiceMorphFormant = -2;
+                VoiceMorphDrive = 15;
+                break;
+            case "custom":
+                break;
+        }
+        Changed();
     }
 
     /// <summary>Applies a mic profile: sends it as one update (the broadcast refreshes the page).</summary>

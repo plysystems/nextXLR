@@ -117,10 +117,10 @@
             <ToggleButton Grid.Row="4" Height="32" Width="40" Padding="0" HorizontalAlignment="Center"
                           Style="{StaticResource SmoothDangerToggle}"
                           Visibility="{x:Bind HideIf(ViewModel.IsFixed), Mode=OneWay}"
-                          IsChecked="{x:Bind ViewModel.Muted, Mode=TwoWay}"
-                          ToolTipService.ToolTip="{x:Bind MuteText(ViewModel.Muted), Mode=OneWay}"
+                          IsChecked="{x:Bind ViewModel.ActiveMuted, Mode=TwoWay}"
+                          ToolTipService.ToolTip="{x:Bind ViewModel.ActiveMuteTooltip, Mode=OneWay}"
                           AutomationProperties.Name="{x:Bind MuteName(ViewModel.Name), Mode=OneWay}">
-                <FontIcon Glyph="{x:Bind MuteGlyph(ViewModel.Muted), Mode=OneWay}" FontSize="13" />
+                <FontIcon Glyph="{x:Bind MuteGlyph(ViewModel.ActiveMuted), Mode=OneWay}" FontSize="13" />
             </ToggleButton>
         </Grid>
     </Border>

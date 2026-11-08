@@ -48,6 +48,9 @@ public partial class ChannelViewModel : ObservableObject
     [ObservableProperty] private string _glyph = "";
     [ObservableProperty] private double _volume;      // 0..1 fader position
     [ObservableProperty] private bool _muted;
+    [ObservableProperty] private double _submixVolume = 0.8; // Dual-mix submix fader
+    [ObservableProperty] private bool _submixMuted;
+    [ObservableProperty] private bool _isSubmixActive;
     [ObservableProperty] private double? _restoreVolume;
     [ObservableProperty] private bool _metered = true;
     /// <summary>Meter-only (no level control on the GoXLR): Broadcast Stream Mix, Chat Mic.</summary>
@@ -65,8 +68,8 @@ public partial class ChannelViewModel : ObservableObject
         ApplyFromServer(c);
     }
 
-    /// <summary>Monitor channel (Id 9) is 50-100% like in the original GoXLR software.</summary>
-    public double MinVolumePercent => Id == 9 ? 50.0 : 0.0;
+    /// <summary>Faders can always drop to 0%.</summary>
+    public double MinVolumePercent => 0.0;
     public double MaxVolumePercent => 100.0;
 
     /// <summary>
@@ -75,17 +78,45 @@ public partial class ChannelViewModel : ObservableObject
     /// </summary>
     public bool CanEdit => Id is 0 or 1 or 2 or 3 or 4;
 
+    partial void OnIsSubmixActiveChanged(bool value)
+    {
+        OnPropertyChanged(nameof(VolumePercent));
+        OnPropertyChanged(nameof(VolumeLabel));
+        OnPropertyChanged(nameof(ActiveMuted));
+        OnPropertyChanged(nameof(ActiveMuteTooltip));
+    }
+
     public double VolumePercent
     {
-        get => Math.Round(Volume * 100, 1);
+        get => Math.Round((IsSubmixActive ? SubmixVolume : Volume) * 100, 1);
         set
         {
             var clamped = Math.Clamp(value, MinVolumePercent, MaxVolumePercent);
-            Volume = Math.Clamp(clamped / 100.0, MinVolumePercent / 100.0, 1.0);
+            var normalized = Math.Clamp(clamped / 100.0, 0.0, 1.0);
+            if (IsSubmixActive)
+                SubmixVolume = normalized;
+            else
+                Volume = normalized;
         }
     }
 
-    public string VolumeLabel => $"{Math.Round(Volume * 100)}";
+    public string VolumeLabel => $"{Math.Round((IsSubmixActive ? SubmixVolume : Volume) * 100)}";
+
+    public bool ActiveMuted
+    {
+        get => IsSubmixActive ? SubmixMuted : Muted;
+        set
+        {
+            if (IsSubmixActive)
+                SubmixMuted = value;
+            else
+                Muted = value;
+        }
+    }
+
+    public string ActiveMuteTooltip => IsSubmixActive
+        ? (SubmixMuted ? "Kopfhörer-Submix stummschalten (aufheben)" : "Kopfhörer-Submix stummschalten")
+        : (Muted ? "Stummschaltung aufheben" : "Stummschalten");
 
     /// <summary>Smart mute hint shown while muted: where the fader will return to.</summary>
     public string RestoreLabel => RestoreVolume is { } r ? Loc.Format("MixerRestoreTo", Math.Round(r * 100)) : "";
@@ -131,6 +162,8 @@ public partial class ChannelViewModel : ObservableObject
             }
             Volume = c.Volume;
             Muted = c.Muted;
+            SubmixVolume = c.SubmixVolume;
+            SubmixMuted = c.SubmixMuted;
             RestoreVolume = c.RestoreVolume;
             Metered = c.Metered;
             IsFixed = c.Fixed;
@@ -140,8 +173,11 @@ public partial class ChannelViewModel : ObservableObject
 
     partial void OnVolumeChanged(double value)
     {
-        OnPropertyChanged(nameof(VolumePercent));
-        OnPropertyChanged(nameof(VolumeLabel));
+        if (!IsSubmixActive)
+        {
+            OnPropertyChanged(nameof(VolumePercent));
+            OnPropertyChanged(nameof(VolumeLabel));
+        }
         if (value <= 0.001)
         {
             _targetDb = FloorDb;
@@ -154,13 +190,23 @@ public partial class ChannelViewModel : ObservableObject
         if (!_applyingServer) _transport.SendCoalesced($"vol:{Id}", new SetVolume(Id, value));
     }
 
-    /// <summary>
-    /// Smart mute is decided by the daemon (single source of truth, so the hardware mute button
-    /// behaves identically): mute drops the fader to 0 and remembers the position; unmute
-    /// restores it exactly. The new volume/restore point arrive with the next state broadcast.
-    /// </summary>
+    partial void OnSubmixVolumeChanged(double value)
+    {
+        if (IsSubmixActive)
+        {
+            OnPropertyChanged(nameof(VolumePercent));
+            OnPropertyChanged(nameof(VolumeLabel));
+        }
+        if (!_applyingServer) _transport.SendCoalesced($"subvol:{Id}", new SetSubmixVolume(Id, value));
+    }
+
     partial void OnMutedChanged(bool value)
     {
+        if (!IsSubmixActive)
+        {
+            OnPropertyChanged(nameof(ActiveMuted));
+            OnPropertyChanged(nameof(ActiveMuteTooltip));
+        }
         if (value)
         {
             _targetDb = FloorDb;
@@ -171,6 +217,16 @@ public partial class ChannelViewModel : ObservableObject
             PeakLabel = "-∞";
         }
         if (!_applyingServer) _transport.Send(new SetMute(Id, value));
+    }
+
+    partial void OnSubmixMutedChanged(bool value)
+    {
+        if (IsSubmixActive)
+        {
+            OnPropertyChanged(nameof(ActiveMuted));
+            OnPropertyChanged(nameof(ActiveMuteTooltip));
+        }
+        if (!_applyingServer) _transport.Send(new SetSubmixMute(Id, value));
     }
 
     partial void OnRestoreVolumeChanged(double? value) => OnPropertyChanged(nameof(RestoreLabel));

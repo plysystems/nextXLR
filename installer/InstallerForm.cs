@@ -590,14 +590,38 @@ LIZENZBEDINGUNGEN:
         {
             try
             {
-                SetProgress(5, "Verzeichnis wird vorbereitet...");
+                SetProgress(5, "Verzeichnis und Prozesse werden vorbereitet...");
                 Log($"Zielverzeichnis: {installDir}");
+
+                bool isExisting = File.Exists(Path.Combine(installDir, "NextXLR.exe"));
+                if (isExisting)
+                {
+                    Log("Bestehende NEXT : XLR Installation erkannt. Führe Update-Installation durch (Drüberinstallieren)...");
+                }
+
+                // Terminate running instances to release file locks
+                Log("Beende laufende Instanzen von NextXLR und mixforge...");
+                foreach (var procName in new[] { "NextXLR", "mixforged", "mixforge" })
+                {
+                    try
+                    {
+                        foreach (var p in Process.GetProcessesByName(procName))
+                        {
+                            Log($"Beende Prozess {p.ProcessName} (PID {p.Id})...");
+                            p.Kill();
+                            p.WaitForExit(3000);
+                        }
+                    }
+                    catch { }
+                }
+
+                Log("Bestehende Konfiguration und Benutzerprofile in %LOCALAPPDATA%\\NextXLR bleiben erhalten.");
                 Directory.CreateDirectory(installDir);
 
                 var srcDir = FindSourcePayloadDirectory();
                 Log($"Quellverzeichnis: {srcDir}");
 
-                SetProgress(15, "Kopiere Anwendungsdateien...");
+                SetProgress(15, isExisting ? "Aktualisiere Anwendungsdateien (drüber installieren)..." : "Kopiere Anwendungsdateien...");
                 CopyDirectory(srcDir, installDir);
 
                 // Setup mixforge alias
@@ -694,12 +718,20 @@ LIZENZBEDINGUNGEN:
             var name = Path.GetFileName(file);
             if (name.EndsWith(".pdb") || name.EndsWith(".old")) continue;
             var dest = Path.Combine(targetDir, name);
-            try
+            bool copied = false;
+            for (int r = 0; r < 5 && !copied; r++)
             {
-                File.Copy(file, dest, true);
-                Log($"Kopiert: {name}");
+                try
+                {
+                    File.Copy(file, dest, true);
+                    copied = true;
+                    Log($"Kopiert: {name}");
+                }
+                catch
+                {
+                    Thread.Sleep(200);
+                }
             }
-            catch { }
         }
 
         foreach (var sub in Directory.GetDirectories(sourceDir))

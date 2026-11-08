@@ -593,3 +593,4 @@ public partial class UninstallerForm : Form
         catch { }
     }
 }
+

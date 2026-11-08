@@ -161,6 +161,42 @@ impl Engine {
         Ok(())
     }
 
+    /// Sets the dual-mix submix volume for Headphones/Monitor bus.
+    pub fn set_submix_volume(&mut self, id: ChannelId, volume: f32) -> Result<()> {
+        let ch = self.channel_mut(id)?;
+        if ch.fixed {
+            bail!("{} has no level control", ch.name);
+        }
+        ch.submix_volume = volume.clamp(0.0, 1.0);
+        if ch.submix_muted && ch.submix_volume > 0.0 {
+            ch.submix_muted = false;
+        }
+        self.sync_channel(id);
+        Ok(())
+    }
+
+    /// Dual-mix submix mute for Headphones/Monitor bus.
+    pub fn set_submix_mute(&mut self, id: ChannelId, muted: bool) -> Result<()> {
+        let ch = self.channel_mut(id)?;
+        if ch.fixed {
+            bail!("{} can't be muted here", ch.name);
+        }
+        ch.submix_muted = muted;
+        self.sync_channel(id);
+        Ok(())
+    }
+
+    pub fn set_vst_plugin(&mut self, plugin: mixforge_protocol::VstPluginSlot) -> Result<()> {
+        self.state.vst_plugins.retain(|p| p.id != plugin.id);
+        self.state.vst_plugins.push(plugin);
+        Ok(())
+    }
+
+    pub fn remove_vst_plugin(&mut self, id: &str) -> Result<()> {
+        self.state.vst_plugins.retain(|p| p.id != id);
+        Ok(())
+    }
+
     /// Smart mute: muting drops the fader to 0 and remembers the position; unmuting returns to
     /// exactly that position. Repeated mute/unmute calls are idempotent.
     pub fn set_mute(&mut self, id: ChannelId, muted: bool) -> Result<()> {
@@ -235,6 +271,8 @@ impl Engine {
                     icon: c.icon.clone(),
                     volume: c.volume,
                     muted: c.muted,
+                    submix_volume: c.submix_volume,
+                    submix_muted: c.submix_muted,
                     restore_volume: c.restore_volume,
                 })
                 .collect(),
@@ -243,6 +281,7 @@ impl Engine {
             faders: self.state.faders.clone(),
             effects: Some(self.state.effects.clone()),
             mic: Some(self.state.mic.clone()),
+            vst_plugins: Some(self.state.vst_plugins.clone()),
         }
     }
 
@@ -266,6 +305,8 @@ impl Engine {
             c.icon = pc.icon.clone().filter(|i| i.len() <= 32 && i.chars().all(|ch| ch.is_ascii_alphanumeric() || ch == '_' || ch == '-'));
             c.volume = pc.volume;
             c.muted = pc.muted;
+            c.submix_volume = pc.submix_volume;
+            c.submix_muted = pc.submix_muted;
             c.restore_volume = if pc.muted { pc.restore_volume.or(Some(pc.volume.max(0.0))) } else { None };
             if c.muted {
                 c.volume = 0.0;
@@ -324,6 +365,9 @@ impl Engine {
                 bail!("profile: invalid mic settings");
             }
             next.mic = m.clone();
+        }
+        if let Some(vst) = &p.vst_plugins {
+            next.vst_plugins = vst.clone();
         }
         self.state = next;
         // Reset every route gain, then apply the profile's routes and channel gains.
@@ -540,7 +584,20 @@ impl Engine {
     fn sync_channel(&self, id: ChannelId) {
         if let Some(c) = self.state.channels.iter().find(|c| c.id == id) {
             let gain = if c.muted { 0.0 } else { fader_to_gain(c.volume) };
+            let submix_gain = if c.submix_muted { 0.0 } else { fader_to_gain(c.submix_volume) };
             self.params.set_channel_gain(id.0 as usize, gain);
+            for r in &self.state.routes {
+                if r.channel == id {
+                    let effective = if r.bus.0 == 0 {
+                        // Headphones / Monitor bus scales by submix_volume
+                        r.gain * submix_gain
+                    } else {
+                        // Broadcast Stream Mix and other buses scale by main fader volume
+                        r.gain * gain
+                    };
+                    self.params.set_route_gain(id.0 as usize, r.bus.0 as usize, effective);
+                }
+            }
         }
     }
 
@@ -563,6 +620,8 @@ fn default_state() -> MixerState {
         kind,
         volume: 0.8,
         muted: false,
+        submix_volume: 0.8,
+        submix_muted: false,
         metered,
         icon: None,
         restore_volume: None,
@@ -625,5 +684,6 @@ fn default_state() -> MixerState {
     MixerState {
         channels, buses, routes, hardware: Vec::new(), lighting, faders,
         bleep: false, mic_muted: false, effects, mic: MicSettings::default(),
+        vst_plugins: Vec::new(),
     }
 }

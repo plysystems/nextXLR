@@ -50,6 +50,8 @@ enum Origin {
 enum Change {
     Volume(ChannelId, f32),
     Mute(ChannelId, bool),
+    SubmixVolume(ChannelId, f32),
+    SubmixMute(ChannelId, bool),
     Route(ChannelId, BusId, f32),
     Name(ChannelId, String),
     Icon(ChannelId, Option<String>),
@@ -59,6 +61,7 @@ impl Change {
     fn channel(&self) -> ChannelId {
         match self {
             Change::Volume(id, _) | Change::Mute(id, _) | Change::Route(id, _, _) => *id,
+            Change::SubmixVolume(id, _) | Change::SubmixMute(id, _) => *id,
             Change::Name(id, _) | Change::Icon(id, _) => *id,
         }
     }
@@ -366,6 +369,23 @@ impl Hub {
             }
             ClientMessage::SetVolume { channel, volume } => Change::Volume(channel, volume),
             ClientMessage::SetMute { channel, muted } => Change::Mute(channel, muted),
+            ClientMessage::SetSubmixVolume { channel, volume } => Change::SubmixVolume(channel, volume),
+            ClientMessage::SetSubmixMute { channel, muted } => Change::SubmixMute(channel, muted),
+            ClientMessage::SetVstPlugin { plugin } => {
+                return match self.engine.set_vst_plugin(plugin) {
+                    Ok(()) => vec![Effect::Broadcast(self.state_message())],
+                    Err(e) => vec![Effect::Reply(ServerMessage::Error { message: e.to_string() })],
+                };
+            }
+            ClientMessage::RemoveVstPlugin { id } => {
+                return match self.engine.remove_vst_plugin(&id) {
+                    Ok(()) => vec![Effect::Broadcast(self.state_message())],
+                    Err(e) => vec![Effect::Reply(ServerMessage::Error { message: e.to_string() })],
+                };
+            }
+            ClientMessage::ScanVstPlugins => {
+                return vec![Effect::Broadcast(self.state_message())];
+            }
             ClientMessage::SetRoute { channel, bus, gain } => Change::Route(channel, bus, gain),
             ClientMessage::SetChannelName { channel, name } => Change::Name(channel, name),
             ClientMessage::SetChannelIcon { channel, icon } => Change::Icon(channel, icon),
@@ -473,6 +493,8 @@ impl Hub {
         match change {
             Change::Volume(id, v) => self.engine.set_volume(id, v)?,
             Change::Mute(id, muted) => self.engine.set_mute(id, muted)?,
+            Change::SubmixVolume(id, v) => self.engine.set_submix_volume(id, v)?,
+            Change::SubmixMute(id, muted) => self.engine.set_submix_mute(id, muted)?,
             Change::Name(id, ref name) => self.engine.set_name(id, name)?,
             Change::Icon(id, ref icon) => self.engine.set_icon(id, icon.as_deref())?,
             Change::Route(ch, bus, gain) => {

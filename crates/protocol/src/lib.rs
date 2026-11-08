@@ -44,6 +44,12 @@ pub struct Channel {
     /// Fader position 0.0..=1.0 (not linear gain — see engine taper).
     pub volume: f32,
     pub muted: bool,
+    /// Dual-Mix Submix volume (Headphones / Monitor bus), 0.0..=1.0.
+    #[serde(default = "default_submix_volume")]
+    pub submix_volume: f32,
+    /// Dual-Mix Submix mute for Headphones.
+    #[serde(default)]
+    pub submix_muted: bool,
     /// Meter-only channel without a level control (Broadcast Stream Mix, Chat Mic: mixes the
     /// GoXLR doesn't expose a volume for).
     #[serde(default)]
@@ -62,6 +68,10 @@ pub struct Channel {
 
 fn default_true() -> bool {
     true
+}
+
+fn default_submix_volume() -> f32 {
+    0.8
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -133,6 +143,8 @@ pub struct Profile {
     pub effects: Option<EffectsState>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mic: Option<MicSettings>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vst_plugins: Option<Vec<VstPluginSlot>>,
 }
 
 pub const PROFILE_FORMAT: u32 = 1;
@@ -145,6 +157,10 @@ pub struct ProfileChannel {
     pub icon: Option<String>,
     pub volume: f32,
     pub muted: bool,
+    #[serde(default = "default_submix_volume")]
+    pub submix_volume: f32,
+    #[serde(default)]
+    pub submix_muted: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub restore_volume: Option<f32>,
 }
@@ -154,6 +170,18 @@ pub struct ProfileChannel {
 pub struct FaderAssignment {
     /// "A", "B", "C" or "D".
     pub fader: String,
+    pub channel: ChannelId,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct VstPluginSlot {
+    pub id: String,
+    pub name: String,
+    pub vendor: String,
+    pub format: String,
+    pub path: String,
+    pub enabled: bool,
+    pub bypass: bool,
     pub channel: ChannelId,
 }
 
@@ -177,6 +205,8 @@ pub struct MixerState {
     pub effects: EffectsState,
     #[serde(default)]
     pub mic: MicSettings,
+    #[serde(default)]
+    pub vst_plugins: Vec<VstPluginSlot>,
 }
 
 /// One effect preset (GoXLR buttons 1–6). Knob positions as on the device:
@@ -270,6 +300,42 @@ pub struct MicSettings {
     pub eq_gains: Vec<i8>,
     /// 0..=100 %.
     pub deesser: u8,
+    /// Neural noise reduction (RNNoise / DeepFilterNet) enabled.
+    #[serde(default)]
+    pub rnnoise_enabled: bool,
+    /// Neural noise reduction intensity 0..=100 %.
+    #[serde(default = "default_rnnoise_intensity")]
+    pub rnnoise_intensity: u8,
+    /// Neural noise model ("DeepFilterNet3", "RNNoise", "VoiceIsolation").
+    #[serde(default = "default_rnnoise_model")]
+    pub rnnoise_model: String,
+    /// Neural voice morphing & persona filters enabled.
+    #[serde(default)]
+    pub voice_morph_enabled: bool,
+    /// Voice persona ("Radio", "Helldivers", "Robot", "Alien", "Announcer", "Custom").
+    #[serde(default = "default_persona")]
+    pub voice_morph_persona: String,
+    /// Pitch shift in semitones (-12..=12).
+    #[serde(default)]
+    pub voice_morph_pitch: i8,
+    /// Formant shift (-12..=12).
+    #[serde(default)]
+    pub voice_morph_formant: i8,
+    /// Drive / saturation 0..=100 %.
+    #[serde(default)]
+    pub voice_morph_drive: u8,
+}
+
+fn default_rnnoise_intensity() -> u8 {
+    80
+}
+
+fn default_rnnoise_model() -> String {
+    "DeepFilterNet3".into()
+}
+
+fn default_persona() -> String {
+    "Radio".into()
 }
 
 impl Default for MicSettings {
@@ -278,6 +344,14 @@ impl Default for MicSettings {
             gate_enabled: true, gate_threshold: -40, gate_attenuation: 100, gate_attack: 0, gate_release: 19,
             comp_threshold: -20, comp_ratio: 6, comp_attack: 6, comp_release: 8, comp_makeup: 0,
             eq_gains: vec![0; 10], deesser: 0,
+            rnnoise_enabled: false,
+            rnnoise_intensity: 80,
+            rnnoise_model: "DeepFilterNet3".into(),
+            voice_morph_enabled: false,
+            voice_morph_persona: "Radio".into(),
+            voice_morph_pitch: 0,
+            voice_morph_formant: 0,
+            voice_morph_drive: 0,
         }
     }
 }
@@ -290,6 +364,10 @@ impl MicSettings {
             && self.comp_attack <= 19 && self.comp_release <= 19 && (-6..=24).contains(&self.comp_makeup)
             && self.eq_gains.len() == 10 && self.eq_gains.iter().all(|g| (-9..=9).contains(g))
             && self.deesser <= 100
+            && self.rnnoise_intensity <= 100
+            && (-12..=12).contains(&self.voice_morph_pitch)
+            && (-12..=12).contains(&self.voice_morph_formant)
+            && self.voice_morph_drive <= 100
     }
 }
 
@@ -316,6 +394,11 @@ pub enum ClientMessage {
     GetState,
     SetVolume { channel: ChannelId, volume: f32 },
     SetMute { channel: ChannelId, muted: bool },
+    SetSubmixVolume { channel: ChannelId, volume: f32 },
+    SetSubmixMute { channel: ChannelId, muted: bool },
+    SetVstPlugin { plugin: VstPluginSlot },
+    RemoveVstPlugin { id: String },
+    ScanVstPlugins,
     /// `gain <= 0` removes the route.
     SetRoute { channel: ChannelId, bus: BusId, gain: f32 },
     /// Custom fader label (1–24 characters after trimming).
@@ -412,6 +495,8 @@ mod tests {
             kind: ChannelKind::Application { process: "Discord.exe".into() },
             volume: 1.0,
             muted: false,
+            submix_volume: 0.8,
+            submix_muted: false,
             metered: true,
             icon: None,
             restore_volume: None,

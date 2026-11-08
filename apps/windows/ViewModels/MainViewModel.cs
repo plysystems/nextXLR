@@ -43,6 +43,26 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private double _bleepVolume = 100;
     public string BleepVolumeText => $"{Math.Round(BleepVolume)} %";
 
+    /// <summary>Dual-Mix Submix: 0 = Stream-Mix (Broadcast), 1 = Kopfhörer-Mix (Headphones Submix).</summary>
+    [ObservableProperty] private int _activeMixIndex = 0;
+    [ObservableProperty] private bool _isSubmixActive;
+
+    partial void OnActiveMixIndexChanged(int value)
+    {
+        IsSubmixActive = (value == 1);
+        foreach (var ch in Channels)
+        {
+            ch.IsSubmixActive = IsSubmixActive;
+        }
+        OnPropertyChanged(nameof(MixModeTitle));
+        OnPropertyChanged(nameof(MixModeDescription));
+    }
+
+    public string MixModeTitle => IsSubmixActive ? "🎧 Kopfhörer-Submix" : "🌐 Stream-Mix (Broadcast)";
+    public string MixModeDescription => IsSubmixActive
+        ? "Unabhängiger Kopfhörer-Submix (dein persönlicher Monitor-Mix)."
+        : "Haupt-Broadcast-Mix (das, was Stream & Zuschauer hören).";
+
     partial void OnBleepVolumeChanged(double value)
     {
         OnPropertyChanged(nameof(BleepVolumeText));
@@ -294,8 +314,16 @@ public partial class MainViewModel : ObservableObject
             if (channels.All(c => c.Id != Channels[i].Id)) Channels.RemoveAt(i);
         foreach (var c in channels)
         {
-            if (Find(c.Id) is { } vm) vm.ApplyFromServer(c);
-            else Channels.Add(new ChannelViewModel(c, _transport));
+            if (Find(c.Id) is { } vm)
+            {
+                vm.IsSubmixActive = IsSubmixActive;
+                vm.ApplyFromServer(c);
+            }
+            else
+            {
+                var newVm = new ChannelViewModel(c, _transport) { IsSubmixActive = IsSubmixActive };
+                Channels.Add(newVm);
+            }
         }
         MicChannel = Find(0);
     }

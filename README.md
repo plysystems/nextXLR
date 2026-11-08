@@ -38,16 +38,20 @@ Die Suite steuert sowohl die physische GoXLR- und GoXLR Mini-Hardware (Motorfade
 
 ## Funktionen
 
-### 1. Intelligenter Mixer
+### 1. Intelligenter Mixer & Echte Submixes (Dual-Mix)
 - Alle Kanäle nebeneinander in einer aufgeräumten Übersicht (Mikrofon, Chat, Musik, System, Game, Console, Line In, Samples, Kopfhörer, Broadcast Stream, Line Out, Chat Mic, Monitor).
+- **Echte Submixes (Dual-Mix):** Umschalten per Klick zwischen `[ 🌐 Stream-Mix ]` und `[ 🎧 Kopfhörer-Mix ]`. Regle die Lautstärke für deine Zuschauer im Stream und deine eigenen Kopfhörer völlig unabhängig voneinander!
 - Responsive Fader mit dynamischer Ausrichtung (horizontales Layout, intelligenter Umbruch bei schmalem Fenster).
 - dB-Spitzenpegelanzeige mit Nullpunkt-Stabilisierung und dynamischem Farbverlauf.
 - Direkte Zuweisung der Hardware-Fader A, B, C und D zu beliebigen Eingangsquellen.
 - Schnelle Stummschaltungssteuerung und Icon-Anzeige.
 
-### 2. Mikrofon-DSP in Studioqualität
-- Komplette Signalverarbeitung: Rauschunterdrückung (Noise Gate), Kompressor, De-Esser und vollparametrischer Equalizer (Bass, Mitten, Höhen).
-- Mikrofon-Vorauswahl für dynamische Mikrofone, Kondensatormikrofone (+48V Phantomspeisung) und 3.5mm Headsets.
+### 2. Mikrofon-DSP in Studioqualität & KI-Audio
+- **Neuronale Echtzeit-Rauschunterdrückung (RNNoise / DeepFilterNet 3):** Beseitigt mechanisches Tastaturklappern, Mausklicks und Lüfterrauschen in Echtzeit ohne Sprachartefakte.
+- **Neural Voice-Morphing:** Stimmenmodulation mit fertigen Presets (Funkgerät / Walkie-Talkie, Helldivers Pilot, Cyber Robot, Deep Alien, Studio Announcer) inklusive Pitch-Shift, Formant-Shift und Drive.
+- **VST3- & CLAP-Plugin-Hosting:** Audio-Effekt-Rack zur direkten Einbindung professioneller VST3- und CLAP-Plugins (z. B. FabFilter, ReaPlugs, Tokyo Dawn).
+- Komplette Signalverarbeitung: Rauschunterdrückung (Noise Gate), Kompressor, De-Esser und parametrischer Equalizer.
+- Mikrofon-Vorauswahl für dynamische Mikrofone (Shure SM7B, Rode PodMic), Kondensatormikrofone (+48V) und Headsets.
 - Echtzeit-Monitoring und Gain-Regelung.
 
 ### 3. Flexible Routing-Matrix
@@ -77,6 +81,10 @@ Die Suite steuert sowohl die physische GoXLR- und GoXLR Mini-Hardware (Motorfade
 - Digitale USB-Treiber für GoXLR und GoXLR Mini im Lieferumfang enthalten.
 - Automatische Registrierung der 8 Windows-Audiokanäle (System, Chat, Game, Music, Line In, Mic, etc.).
 - `mixforged.exe` läuft zuverlässig als extrem ressourcenschonender Hintergrunddienst im Windows-Autostart.
+
+### 8. In-App Auto-Update & Nahtloses Drüberinstallieren
+- **Automatisches In-App Update:** In den Einstellungen genügt ein Klick auf "Nach Updates suchen" -> NEXT : XLR lädt die neueste Version direkt von GitHub herunter und installiert sie automatisch.
+- **Manuelles Drüberinstallieren:** Wird eine neue Setup `.exe` manuell ausgeführt, erkennt der Installer die bestehende Installation automatisch, beendet laufende Dienste sicher und aktualisiert alle Programmdateien. Sämtliche Profile, Voreinstellungen und Mappings in `%LOCALAPPDATA%\NextXLR` bleiben zu 100 % erhalten!
 
 ---
 
@@ -168,16 +176,20 @@ The software manages physical TC-Helicon GoXLR and GoXLR Mini hardware (motorize
 
 ## Key Features
 
-### 1. Intelligent Mixer
+### 1. Intelligent Mixer & True Dual-Mix (Submixes)
 - All channels displayed side-by-side (Mic, Chat, Music, System, Game, Console, Line In, Samples, Headphones, Broadcast Stream, Line Out, Chat Mic, Monitor).
+- **True Dual-Mix (Submixes):** One-click toggle between `[ 🌐 Stream-Mix ]` and `[ 🎧 Headphones-Mix ]`. Adjust independent volumes for your stream audience and your personal headphones!
 - Responsive fader layout with automatic reflow on narrow windows.
 - Accurate peak dB metering with zero-bleed calibration and smooth gradients.
 - Direct assignment of hardware faders A, B, C, and D to any input source.
 - Quick mute toggles with clear icon indicators.
 
-### 2. Studio-Grade Microphone DSP
-- Comprehensive processing chain: Noise Gate, Compressor, De-Esser, and 3-Band Parametric Equalizer (Bass, Mid, Treble).
-- Microphone preset profiles for Dynamic, Condenser (+48V phantom power), and 3.5mm Headset mics.
+### 2. Studio-Grade Microphone DSP & AI Audio
+- **Real-Time Neural Noise Reduction (RNNoise & DeepFilterNet 3):** Removes mechanical keyboard clicks, mouse clicks, and fan noise with AI precision.
+- **Neural Voice-Morphing:** Persona filters (Walkie-Talkie Radio, Helldivers Pilot, Cyber Robot, Alien Monster, Radio Announcer) with Pitch and Formant shift.
+- **VST3 & CLAP Audio Plugin Hosting:** Host external 64-bit studio plugins directly in the audio chain (e.g., FabFilter, ReaPlugs).
+- Comprehensive processing chain: Noise Gate, Compressor, De-Esser, and 10-Band Parametric Equalizer.
+- Microphone preset profiles for Dynamic (Shure SM7B, Rode PodMic), Condenser (+48V), and 3.5mm Headset mics.
 - Real-time sidetone monitoring and gain staging.
 
 ### 3. Full Audio Routing Matrix
@@ -207,6 +219,10 @@ The software manages physical TC-Helicon GoXLR and GoXLR Mini hardware (motorize
 - Bundles digitally signed GoXLR USB drivers.
 - Automated creation and setup of Windows audio endpoints (System, Chat, Game, Music, Line In, Mic, etc.).
 - Lightweight background service `mixforged.exe` starts automatically with Windows.
+
+### 8. In-App Auto-Update & Seamless Over-Installation
+- **Automatic In-App Updates:** Check for updates in Settings -> click to automatically download and install the latest release directly from GitHub.
+- **Manual Over-Installation:** Running a downloaded setup `.exe` automatically detects the existing installation, safely terminates background processes, and upgrades files in place. All user profiles, audio routing configurations, and settings in `%LOCALAPPDATA%\NextXLR` are 100% preserved!
 
 ---
 

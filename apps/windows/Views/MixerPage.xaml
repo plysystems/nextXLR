@@ -14,7 +14,44 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock x:Uid="MixerTitle" Style="{StaticResource PageTitle}" />
+        <!-- Header: Title and Dual-Mix (Submix) Selector -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Spacing="3">
+                <TextBlock x:Uid="MixerTitle" Style="{StaticResource PageTitle}" />
+                <TextBlock Text="{x:Bind ViewModel.MixModeDescription, Mode=OneWay}"
+                           Style="{StaticResource Caption}" Foreground="{StaticResource TextMutedBrush}" />
+            </StackPanel>
+
+            <!-- Dual-Mix Selector -->
+            <Border Grid.Column="1" Background="{StaticResource SurfaceL2Brush}" CornerRadius="12"
+                    Padding="4" BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1"
+                    VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Button x:Name="BtnStreamMix" Click="StreamMix_Click"
+                            Padding="14,8" CornerRadius="8" BorderThickness="0"
+                            Background="{x:Bind StreamMixBackground(ViewModel.IsSubmixActive), Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE774;" FontSize="14" Foreground="{x:Bind StreamMixForeground(ViewModel.IsSubmixActive), Mode=OneWay}" />
+                            <TextBlock Text="🌐 Stream-Mix" FontWeight="SemiBold" FontSize="13"
+                                       Foreground="{x:Bind StreamMixForeground(ViewModel.IsSubmixActive), Mode=OneWay}" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="BtnHeadphonesMix" Click="HeadphonesMix_Click"
+                            Padding="14,8" CornerRadius="8" BorderThickness="0"
+                            Background="{x:Bind HeadphonesMixBackground(ViewModel.IsSubmixActive), Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE7F6;" FontSize="14" Foreground="{x:Bind HeadphonesMixForeground(ViewModel.IsSubmixActive), Mode=OneWay}" />
+                            <TextBlock Text="🎧 Kopfhörer-Mix" FontWeight="SemiBold" FontSize="13"
+                                       Foreground="{x:Bind HeadphonesMixForeground(ViewModel.IsSubmixActive), Mode=OneWay}" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
 
         <!-- Hardware faders A–D: which channel each physical fader controls -->
         <Border Grid.Row="1" Style="{StaticResource Card}" Padding="16,12">

@@ -22,9 +22,17 @@ public sealed record Channel(
     /// <summary>Smart mute: position the fader returns to on unmute (set while muted).</summary>
     double? RestoreVolume = null,
     /// <summary>Meter-only channel (Broadcast Stream Mix, Chat Mic): no level, mute or fader.</summary>
-    bool Fixed = false);
+    bool Fixed = false,
+    /// <summary>Dual-Mix submix volume for Headphones/Monitor (0.0..1.0).</summary>
+    double SubmixVolume = 0.8,
+    /// <summary>Dual-Mix submix mute for Headphones/Monitor.</summary>
+    bool SubmixMuted = false);
 public sealed record Bus(uint Id, string Name);
 public sealed record Route(uint Channel, uint Bus, double Gain);
+
+public sealed record VstPluginSlot(
+    string Id, string Name, string Vendor, string Format, string Path,
+    bool Enabled, bool Bypass, uint Channel);
 
 /// <summary>"full" (USB PID 0x8FE0) or "mini" (0x8FE4) — detected by the daemon.</summary>
 public sealed record Capabilities(
@@ -61,7 +69,8 @@ public sealed record StateMessage(
     bool Bleep = false,
     bool MicMuted = false,
     EffectsState? Effects = null,
-    MicSettings? Mic = null) : ServerMessage;
+    MicSettings? Mic = null,
+    IReadOnlyList<VstPluginSlot>? VstPlugins = null) : ServerMessage;
 
 /// <summary>Knob positions as on the device: reverb/echo 0..24, pitch/gender -24..24.</summary>
 public sealed record EffectPreset(int Reverb, int Echo, int Pitch, int Gender, bool Megaphone, bool Robot, bool Hardtune,
@@ -78,7 +87,10 @@ public sealed record EffectDetails(
 public sealed record MicSettings(
     bool GateEnabled = true, int GateThreshold = -40, int GateAttenuation = 100, int GateAttack = 0, int GateRelease = 19,
     int CompThreshold = -20, int CompRatio = 6, int CompAttack = 6, int CompRelease = 8, int CompMakeup = 0,
-    IReadOnlyList<int>? EqGains = null, int Deesser = 0);
+    IReadOnlyList<int>? EqGains = null, int Deesser = 0,
+    bool RnnoiseEnabled = false, int RnnoiseIntensity = 80, string RnnoiseModel = "DeepFilterNet3",
+    bool VoiceMorphEnabled = false, string VoiceMorphPersona = "Radio",
+    int VoiceMorphPitch = 0, int VoiceMorphFormant = 0, int VoiceMorphDrive = 0);
 public sealed record EffectsState(bool Enabled, int Preset, IReadOnlyList<EffectPreset> Presets);
 
 /// <summary>Which channel a physical fader ("A"–"D") controls.</summary>
@@ -119,11 +131,21 @@ public sealed record ProfileMessage(System.Text.Json.Nodes.JsonNode Profile) : S
 [JsonDerivedType(typeof(SetEffectDetails), "set_effect_details")]
 [JsonDerivedType(typeof(SetMicSettings), "set_mic_settings")]
 [JsonDerivedType(typeof(SetButtonLeds), "set_button_leds")]
+[JsonDerivedType(typeof(SetSubmixVolume), "set_submix_volume")]
+[JsonDerivedType(typeof(SetSubmixMute), "set_submix_mute")]
+[JsonDerivedType(typeof(SetVstPlugin), "set_vst_plugin")]
+[JsonDerivedType(typeof(RemoveVstPlugin), "remove_vst_plugin")]
+[JsonDerivedType(typeof(ScanVstPlugins), "scan_vst_plugins")]
 public abstract record ClientMessage;
 
 public sealed record GetState : ClientMessage;
 public sealed record SetVolume(uint Channel, double Volume) : ClientMessage;
 public sealed record SetMute(uint Channel, bool Muted) : ClientMessage;
+public sealed record SetSubmixVolume(uint Channel, double Volume) : ClientMessage;
+public sealed record SetSubmixMute(uint Channel, bool Muted) : ClientMessage;
+public sealed record SetVstPlugin(VstPluginSlot Plugin) : ClientMessage;
+public sealed record RemoveVstPlugin(string Id) : ClientMessage;
+public sealed record ScanVstPlugins : ClientMessage;
 public sealed record SetRoute(uint Channel, uint Bus, double Gain) : ClientMessage;
 public sealed record SetChannelName(uint Channel, string Name) : ClientMessage;
 /// <summary>Icon id from <c>IconCatalog</c>; null resets to the channel default.</summary>

@@ -279,6 +279,185 @@
                 <Slider x:Uid="MicDeEsser" Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind Mic.DeEsser, Mode=TwoWay}"
                         HorizontalAlignment="Stretch" />
             </Expander>
+
+            <!-- Neuronale Echtzeit-Rauschunterdrückung (RNNoise / DeepFilterNet) -->
+            <Expander IsExpanded="True">
+                <Expander.Header>
+                    <Grid Padding="0,10" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon Glyph="&#xE9F5;" Foreground="{StaticResource BrandBrush}" />
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Neuronale KI-Rauschunterdrückung (RNNoise / DeepFilterNet)" Style="{StaticResource CardTitle}" />
+                            <TextBlock Text="Entfernt mechanische Tastaturgeräusche, Mausklicks und Lüfterlärm in Echtzeit" Style="{StaticResource Caption}" />
+                        </StackPanel>
+                        <ToggleSwitch Grid.Column="2" IsOn="{x:Bind Mic.RnnoiseEnabled, Mode=TwoWay}"
+                                      OnContent="Aktiv" OffContent="Bypass" MinWidth="0" VerticalAlignment="Center" />
+                    </Grid>
+                </Expander.Header>
+                <StackPanel Spacing="16" Padding="4">
+                    <Grid ColumnSpacing="24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="220" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="KI-Entrauschungs-Intensität (0% - 100%)" FontWeight="SemiBold" />
+                            <Slider Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind Mic.RnnoiseIntensity, Mode=TwoWay}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <TextBlock Text="Neuronales KI-Modell" FontWeight="SemiBold" />
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button Content="DeepFilterNet 3" Style="{StaticResource SmoothButton}" Tag="DeepFilterNet3" Click="RnnoiseModel_Click" />
+                                <Button Content="RNNoise" Style="{StaticResource SmoothButton}" Tag="RNNoise" Click="RnnoiseModel_Click" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Expander>
+
+            <!-- Neural Voice-Morphing & Personas -->
+            <Expander IsExpanded="True">
+                <Expander.Header>
+                    <Grid Padding="0,10" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon Glyph="&#xED35;" Foreground="{StaticResource BrandBrush}" />
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Neural Voice-Morphing (Personas &amp; Stimmenmodulation)" Style="{StaticResource CardTitle}" />
+                            <TextBlock Text="Echtzeit-Formant- und Tonhöhenverschiebung mit Charakter-Filtern" Style="{StaticResource Caption}" />
+                        </StackPanel>
+                        <ToggleSwitch Grid.Column="2" IsOn="{x:Bind Mic.VoiceMorphEnabled, Mode=TwoWay}"
+                                      OnContent="Aktiv" OffContent="Bypass" MinWidth="0" VerticalAlignment="Center" />
+                    </Grid>
+                </Expander.Header>
+                <StackPanel Spacing="16" Padding="4">
+                    <!-- Quick Personas -->
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Schnellauswahl Stimme &amp; Charakter-Persona:" Style="{StaticResource Caption}" />
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="radio" Click="PersonaPreset_Click" Padding="6,8">
+                                <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                    <TextBlock Text="📻 Funkgerät" FontWeight="Bold" FontSize="11" />
+                                    <TextBlock Text="Walkie-Talkie" Style="{StaticResource Caption}" FontSize="9" />
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="1" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="helldivers" Click="PersonaPreset_Click" Padding="6,8">
+                                <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                    <TextBlock Text="🚀 Helldivers" FontWeight="Bold" FontSize="11" />
+                                    <TextBlock Text="Helm-Comms" Style="{StaticResource Caption}" FontSize="9" />
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="2" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="robot" Click="PersonaPreset_Click" Padding="6,8">
+                                <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                    <TextBlock Text="🤖 Cyber Robot" FontWeight="Bold" FontSize="11" />
+                                    <TextBlock Text="Vocoder Synth" Style="{StaticResource Caption}" FontSize="9" />
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="3" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="alien" Click="PersonaPreset_Click" Padding="6,8">
+                                <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                    <TextBlock Text="👾 Deep Alien" FontWeight="Bold" FontSize="11" />
+                                    <TextBlock Text="Monster Pitch" Style="{StaticResource Caption}" FontSize="9" />
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="4" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="announcer" Click="PersonaPreset_Click" Padding="6,8">
+                                <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                    <TextBlock Text="🎙️ Announcer" FontWeight="Bold" FontSize="11" />
+                                    <TextBlock Text="Deep Radio Voice" Style="{StaticResource Caption}" FontSize="9" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Pitch, Formant, Drive Sliders -->
+                    <Grid ColumnSpacing="24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Pitch Shift (-12 bis +12 Halbtöne)" FontWeight="SemiBold" />
+                            <Slider Minimum="-12" Maximum="12" StepFrequency="1" Value="{x:Bind Mic.VoiceMorphPitch, Mode=TwoWay}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <TextBlock Text="Formant Shift (-12 bis +12)" FontWeight="SemiBold" />
+                            <Slider Minimum="-12" Maximum="12" StepFrequency="1" Value="{x:Bind Mic.VoiceMorphFormant, Mode=TwoWay}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Spacing="6">
+                            <TextBlock Text="Drive / Verzerrung (0 - 100%)" FontWeight="SemiBold" />
+                            <Slider Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind Mic.VoiceMorphDrive, Mode=TwoWay}" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Expander>
+
+            <!-- VST3- & CLAP-Plugin-Hosting -->
+            <Expander>
+                <Expander.Header>
+                    <Grid Padding="0,10" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon Glyph="&#xE99A;" Foreground="{StaticResource BrandBrush}" />
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="VST3- &amp; CLAP-Plugin-Hosting (Audio-Rack)" Style="{StaticResource CardTitle}" />
+                            <TextBlock Text="Binde externe VST3- und CLAP-Audio-Effekte direkt in den Signalweg ein" Style="{StaticResource Caption}" />
+                        </StackPanel>
+                    </Grid>
+                </Expander.Header>
+                <StackPanel Spacing="14" Padding="4">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Style="{StaticResource AccentButtonStyle}" Click="ScanVst_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE895;" FontSize="14" />
+                                <TextBlock Text="Plugins im System scannen (VST3 &amp; CLAP)" />
+                            </StackPanel>
+                        </Button>
+                        <Button Click="AddVst_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE710;" FontSize="14" />
+                                <TextBlock Text="Plugin-Datei laden (.vst3 / .clap)..." />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="10" Padding="14">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Aktives Effekt-Rack (Mikrofon-DSP-Kanal):" FontWeight="SemiBold" />
+                            <Grid Background="{StaticResource SurfaceL1Brush}" CornerRadius="8" Padding="12,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="&#xE8B9;" Foreground="{StaticResource BrandBrush}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="FabFilter Pro-Q 3 / ReaEQ (VST3 Rack Slot 1)" FontWeight="SemiBold" />
+                                    <TextBlock Text="Common Files\VST3\FabFilter Pro-Q 3.vst3 • 64-Bit Studio EQ" Style="{StaticResource Caption}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <ToggleSwitch IsOn="True" OnContent="Aktiv" OffContent="Bypass" MinWidth="0" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Expander>
         </StackPanel>
     </ScrollViewer>
 </Page>
