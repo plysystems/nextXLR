@@ -34,6 +34,9 @@ public sealed partial class MainWindow : Window
     /// <summary>HWND for pickers in an unpackaged app (FileOpenPicker needs an owner window).</summary>
     public static nint Handle { get; private set; }
 
+    private TrayIconService? _trayService;
+    private bool _isExplicitExit = false;
+
     public MainWindow()
     {
         ViewModel = new MainViewModel(Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread(), _transport);
@@ -50,6 +53,37 @@ public sealed partial class MainWindow : Window
         _meters = new MeterAnimator(ViewModel.Channels);
         ViewModel.Hardware.PropertyChanged += OnHardwareChanged;
         Nav.SelectedItem = MixerItem;
+
+        // Tray Icon Service
+        _trayService = new TrayIconService(
+            Handle,
+            onRestore: RestoreWindow,
+            onNavigate: NavigateToPage,
+            onExit: ExitApplication
+        );
+
+        // Minimize / Close to Tray
+        AppWindow.Closing += (sender, args) =>
+        {
+            var settings = AppSettings.Load();
+            if (settings.MinimizeToTray && !_isExplicitExit)
+            {
+                args.Cancel = true;
+                AppWindow.Hide();
+            }
+        };
+
+        AppWindow.Changed += (sender, args) =>
+        {
+            if (args.DidPresenterChange && AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
+            {
+                var settings = AppSettings.Load();
+                if (settings.MinimizeToTray && presenter.State == Microsoft.UI.Windowing.OverlappedPresenterState.Minimized)
+                {
+                    AppWindow.Hide();
+                }
+            }
+        };
 
         RootWindowGrid.Loaded += (_, _) =>
         {
@@ -72,15 +106,64 @@ public sealed partial class MainWindow : Window
 
         Closed += async (_, _) =>
         {
+            _trayService?.Dispose();
             _meters.Dispose();
             await _transport.DisposeAsync();
         };
         _transport.Start();
 
         // Started from "Run on startup": begin minimised.
-        if (Environment.GetCommandLineArgs().Contains("--minimized") &&
-            AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
-            presenter.Minimize();
+        if (Environment.GetCommandLineArgs().Contains("--minimized"))
+        {
+            var settings = AppSettings.Load();
+            if (settings.MinimizeToTray)
+            {
+                AppWindow.Hide();
+            }
+            else if (AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
+            {
+                presenter.Minimize();
+            }
+        }
+    }
+
+    public void RestoreWindow()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            AppWindow.Show();
+            if (AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
+            {
+                if (presenter.State == Microsoft.UI.Windowing.OverlappedPresenterState.Minimized)
+                {
+                    presenter.Restore();
+                }
+            }
+            AppWindow.MoveInZOrderAtTop();
+        });
+    }
+
+    public void NavigateToPage(string tag)
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (Pages.TryGetValue(tag, out var page))
+            {
+                ContentFrame.Navigate(page, ViewModel);
+                if (tag == "mixer") Nav.SelectedItem = MixerItem;
+                else if (tag == "settings") Nav.SelectedItem = Nav.SettingsItem;
+            }
+        });
+    }
+
+    public void ExitApplication()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _isExplicitExit = true;
+            _trayService?.Dispose();
+            Close();
+        });
     }
 
     private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)

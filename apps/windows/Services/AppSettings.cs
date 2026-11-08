@@ -14,7 +14,7 @@ public sealed class AppSettings
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NextXLR");
     private static readonly string FilePath = Path.Combine(Dir, "settings.json");
 
-    public bool MinimizeToTray { get; set; }
+    public bool MinimizeToTray { get; set; } = true;
     public bool StartMinimized { get; set; }
     public bool CheckForUpdatesOnStart { get; set; } = true;
     public double BleepVolume { get; set; } = 100.0;
