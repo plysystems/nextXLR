@@ -437,13 +437,19 @@
                 </Expander.Header>
                 <StackPanel Spacing="14" Padding="4">
                     <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Button Style="{StaticResource AccentButtonStyle}" Click="ScanVst_Click">
+                        <Button Style="{StaticResource AccentButtonStyle}" Click="AddIntegratedPlugins_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE99A;" FontSize="14" />
+                                <TextBlock Text="Studio-DSPs hinzufügen (6 Plugins)" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource SmoothButton}" Click="ScanVst_Click">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xE895;" FontSize="14" />
                                 <TextBlock Text="Plugins im System scannen (VST3 &amp; CLAP)" />
                             </StackPanel>
                         </Button>
-                        <Button Click="AddVst_Click">
+                        <Button Style="{StaticResource SmoothButton}" Click="AddVst_Click">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xE710;" FontSize="14" />
                                 <TextBlock Text="Plugin-Datei laden (.vst3 / .clap)..." />
@@ -471,12 +477,14 @@
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <FontIcon Glyph="&#xE99A;" Foreground="{StaticResource BrandBrush}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                            <Border Background="{StaticResource SurfaceL2Brush}" BorderBrush="{x:Bind TagBrush, Mode=OneWay}" BorderThickness="1.5" CornerRadius="8" Width="40" Height="40" Margin="0,0,12,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind TagCode, Mode=OneWay}" FontSize="10" FontWeight="Bold" Foreground="{x:Bind TagBrush, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
                                                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                                     <TextBlock Text="{x:Bind Name, Mode=OneWay}" FontWeight="SemiBold" FontSize="14" />
-                                                    <Border Background="{StaticResource SurfaceL2Brush}" BorderBrush="{StaticResource BrandBrush}" BorderThickness="1" CornerRadius="4" Padding="6,1" VerticalAlignment="Center">
-                                                        <TextBlock Text="{x:Bind Format, Mode=OneWay}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                                                    <Border Background="{StaticResource SurfaceL2Brush}" BorderBrush="{x:Bind TagBrush, Mode=OneWay}" BorderThickness="1" CornerRadius="4" Padding="6,1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{x:Bind Format, Mode=OneWay}" FontSize="10" FontWeight="Bold" Foreground="{x:Bind TagBrush, Mode=OneWay}" />
                                                     </Border>
                                                     <TextBlock Text="{x:Bind PresetName, Mode=OneWay}" Style="{StaticResource Caption}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" />
                                                     <TextBlock Text="•" Foreground="{StaticResource TextMutedBrush}" />
@@ -484,7 +492,13 @@
                                                 </StackPanel>
                                                 <TextBlock Text="{x:Bind Path, Mode=OneWay}" Style="{StaticResource Caption}" MaxLines="1" TextTrimming="CharacterEllipsis" />
                                             </StackPanel>
-                                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <Button Style="{StaticResource SmoothButton}" Tag="{x:Bind}" Click="MoveVstUp_Click" ToolTipService.ToolTip="Im Signalweg nach oben" Padding="6,6">
+                                                    <FontIcon Glyph="&#xE70E;" FontSize="11" />
+                                                </Button>
+                                                <Button Style="{StaticResource SmoothButton}" Tag="{x:Bind}" Click="MoveVstDown_Click" ToolTipService.ToolTip="Im Signalweg nach unten" Padding="6,6">
+                                                    <FontIcon Glyph="&#xE70D;" FontSize="11" />
+                                                </Button>
                                                 <Button Style="{StaticResource AccentButtonStyle}" Tag="{x:Bind}" Click="OpenVstEditor_Click" Padding="12,6">
                                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                                         <FontIcon Glyph="&#xE70F;" FontSize="13" />

@@ -253,6 +253,78 @@ public sealed partial class MainWindow : Window
 
         try { AppWindow.Show(); } catch { }
 
+        if (Content?.XamlRoot != null)
+        {
+            var dialog = new ContentDialog
+            {
+                XamlRoot = Content.XamlRoot,
+                Title = "NEXT : XLR — Ungespeicherte Änderungen",
+                PrimaryButtonText = "Speichern & Beenden",
+                SecondaryButtonText = "Nicht speichern",
+                CloseButtonText = "Abbrechen",
+                DefaultButton = ContentDialogButton.Primary
+            };
+
+            var stack = new StackPanel { Spacing = 12 };
+            var headerRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 4, 0, 8) };
+            headerRow.Children.Add(new FontIcon { Glyph = "\uE7BA", Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["BrandBrush"], FontSize = 22 });
+            headerRow.Children.Add(new TextBlock
+            {
+                Text = "Profil- & Mikrofoneinstellungen sichern",
+                FontWeight = Microsoft.UI.Text.FontWeights.Bold,
+                FontSize = 15,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            stack.Children.Add(headerRow);
+
+            stack.Children.Add(new TextBlock
+            {
+                Text = "Sie haben nicht gespeicherte Änderungen an Ihren Mixer-Profilen oder Mikrofoneinstellungen vorgenommen.\n\nMöchten Sie Ihre Änderungen vor dem Beenden von NEXT : XLR speichern?",
+                FontSize = 13,
+                TextWrapping = TextWrapping.Wrap,
+                LineHeight = 19
+            });
+
+            dialog.Content = stack;
+
+            var res = await dialog.ShowAsync();
+            if (res == ContentDialogResult.None)
+            {
+                // Abbrechen
+                return false;
+            }
+
+            if (res == ContentDialogResult.Primary)
+            {
+                // Speichern
+                try
+                {
+                    var prof = await ViewModel.GetProfileAsync();
+                    var setupName = ProfileService.Setups.DefaultName ?? "Standard";
+                    ProfileService.Setups.Save(setupName, prof);
+
+                    var micName = ProfileService.Mic.DefaultName ?? "Standard";
+                    var micNode = System.Text.Json.JsonSerializer.SerializeToNode(ViewModel.Mic.Build(), Protocol.Json.Options);
+                    if (micNode != null)
+                    {
+                        ProfileService.Mic.Save(micName, micNode);
+                    }
+
+                    MainViewModel.HasPendingChanges = false;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Failed to save changes on exit: {ex}");
+                }
+            }
+            else if (res == ContentDialogResult.Secondary)
+            {
+                MainViewModel.HasPendingChanges = false;
+            }
+
+            return true;
+        }
+
         int result = MessageBoxW(
             Handle,
             "Sie haben nicht gespeicherte Änderungen an Profil- oder Mikrofoneinstellungen vorgenommen.\n\nMöchten Sie Ihre Änderungen vor dem Beenden speichern?",

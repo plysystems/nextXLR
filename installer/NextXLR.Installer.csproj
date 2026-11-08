@@ -24,6 +24,8 @@
 
   <ItemGroup>
     <EmbeddedResource Include="payload.zip" Condition="Exists('payload.zip')" />
+    <EmbeddedResource Include="..\nextXLR_logo.png" Link="nextXLR_logo.png" />
+    <EmbeddedResource Include="..\nextXLR_icon.ico" Link="nextXLR_icon.ico" />
   </ItemGroup>
 
 </Project>

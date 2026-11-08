@@ -30,11 +30,59 @@ public static class NextXLRTheme
     public static readonly Color Warning = Color.FromArgb(245, 185, 66);        // #F5B942
     public static readonly Color Success = Color.FromArgb(31, 199, 154);        // #1FC79A
 
-    public static readonly Font TitleFont = new Font("Segoe UI Variable Display", 14f, FontStyle.Bold);
+    public static readonly Font TitleFont = new Font("Segoe UI Variable Display", 15f, FontStyle.Bold);
     public static readonly Font SubtitleFont = new Font("Segoe UI", 9.5f, FontStyle.Regular);
     public static readonly Font BodyFont = new Font("Segoe UI", 9.5f, FontStyle.Regular);
     public static readonly Font BoldFont = new Font("Segoe UI", 9.5f, FontStyle.Bold);
     public static readonly Font MonospaceFont = new Font("Consolas", 8.5f, FontStyle.Regular);
+
+    public static Image? GetLogoImage()
+    {
+        try
+        {
+            var asm = typeof(NextXLRTheme).Assembly;
+            var stream = asm.GetManifestResourceStream("NextXLR.Installer.nextXLR_logo.png")
+                      ?? asm.GetManifestResourceStream("nextXLR_logo.png");
+            if (stream != null) return Image.FromStream(stream);
+
+            var candidates = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, "nextXLR_logo.png"),
+                Path.Combine(AppContext.BaseDirectory, "Assets", "nextXLR_logo.png"),
+                Path.Combine(AppContext.BaseDirectory, "..", "nextXLR_logo.png")
+            };
+            foreach (var path in candidates)
+            {
+                if (File.Exists(path)) return Image.FromFile(path);
+            }
+        }
+        catch { }
+        return null;
+    }
+
+    public static Icon? GetAppIcon()
+    {
+        try
+        {
+            var asm = typeof(NextXLRTheme).Assembly;
+            var stream = asm.GetManifestResourceStream("NextXLR.Installer.nextXLR_icon.ico")
+                      ?? asm.GetManifestResourceStream("nextXLR_icon.ico");
+            if (stream != null) return new Icon(stream);
+
+            var candidates = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, "nextXLR_icon.ico"),
+                Path.Combine(AppContext.BaseDirectory, "Assets", "nextXLR_icon.ico"),
+                Path.Combine(AppContext.BaseDirectory, "..", "nextXLR_icon.ico")
+            };
+            foreach (var path in candidates)
+            {
+                if (File.Exists(path)) return new Icon(path);
+            }
+        }
+        catch { }
+        return null;
+    }
 
     public static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius)
     {

@@ -423,6 +423,35 @@ public partial class MicPage : Page
         }
     }
 
+    private void AddIntegratedPlugins_Click(object sender, RoutedEventArgs e)
+    {
+        int added = VstPluginService.Instance.AddIntegratedPlugins();
+        if (added > 0)
+        {
+            Show(InfoBarSeverity.Success, $"{added} integrierte NEXT : XLR Studio-DSPs zum Effekt-Rack hinzugefügt!");
+        }
+        else
+        {
+            Show(InfoBarSeverity.Informational, "Alle 6 integrierten Studio-DSPs befinden sich bereits im Effekt-Rack.");
+        }
+    }
+
+    private void MoveVstUp_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: VstPluginItem plugin })
+        {
+            VstPluginService.Instance.MovePluginUp(plugin);
+        }
+    }
+
+    private void MoveVstDown_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: VstPluginItem plugin })
+        {
+            VstPluginService.Instance.MovePluginDown(plugin);
+        }
+    }
+
     private void RemoveVst_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement { Tag: VstPluginItem plugin })

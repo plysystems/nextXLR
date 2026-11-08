@@ -183,7 +183,21 @@ public static class CrashHandler
             };
 
             var appWin = win.AppWindow;
-            appWin.Resize(new SizeInt32(760, 580));
+            appWin.Resize(new SizeInt32(780, 600));
+
+            // Set official NEXT : XLR app icon on window titlebar
+            try
+            {
+                var iconCandidates = new[]
+                {
+                    Path.Combine(AppContext.BaseDirectory, "Assets", "nextXLR_icon.ico"),
+                    Path.Combine(AppContext.BaseDirectory, "nextXLR_icon.ico"),
+                    Path.Combine(AppContext.BaseDirectory, @"..\..\..\Assets\nextXLR_icon.ico")
+                };
+                var iconPath = iconCandidates.FirstOrDefault(File.Exists);
+                if (iconPath != null) appWin.SetIcon(iconPath);
+            }
+            catch { }
 
             var root = new Grid
             {
@@ -197,13 +211,23 @@ public static class CrashHandler
                 }
             };
 
-            // 1. Header with Warning Icon
-            var headerPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 14, Margin = new Thickness(0, 0, 0, 16) };
+            // 1. Header with Warning Icon and Official Logo
+            var headerGrid = new Grid
+            {
+                Margin = new Thickness(0, 0, 0, 16),
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
+                    new ColumnDefinition { Width = GridLength.Auto }
+                }
+            };
+
+            var headerPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 14 };
             var iconBorder = new Border
             {
                 Width = 44,
                 Height = 44,
-                CornerRadius = new CornerRadius(22),
+                CornerRadius = new CornerRadius(10),
                 Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xE5, 0x39, 0x35)),
                 Child = new FontIcon
                 {
@@ -223,15 +247,43 @@ public static class CrashHandler
             {
                 Text = "Ein Ausnahmefehler ist aufgetreten. Ein detaillierter Crashlog wurde automatisch erstellt.",
                 FontSize = 13,
-                Foreground = new SolidColorBrush(ColorHelper.FromArgb(255, 0xAA, 0xAA, 0xAA)),
+                Foreground = new SolidColorBrush(ColorHelper.FromArgb(255, 0x88, 0x90, 0x9C)),
                 Margin = new Thickness(0, 2, 0, 0)
             };
             titleStack.Children.Add(titleText);
             titleStack.Children.Add(subtitleText);
             headerPanel.Children.Add(iconBorder);
             headerPanel.Children.Add(titleStack);
-            Grid.SetRow(headerPanel, 0);
-            root.Children.Add(headerPanel);
+            Grid.SetColumn(headerPanel, 0);
+            headerGrid.Children.Add(headerPanel);
+
+            // Add official logo on the right
+            try
+            {
+                var logoCandidates = new[]
+                {
+                    Path.Combine(AppContext.BaseDirectory, "Assets", "nextXLR_logo.png"),
+                    Path.Combine(AppContext.BaseDirectory, "nextXLR_logo.png"),
+                    Path.Combine(AppContext.BaseDirectory, @"..\..\..\Assets\nextXLR_logo.png")
+                };
+                var logoPath = logoCandidates.FirstOrDefault(File.Exists);
+                if (logoPath != null)
+                {
+                    var logoImg = new Image
+                    {
+                        Source = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(Path.GetFullPath(logoPath))),
+                        Height = 36,
+                        HorizontalAlignment = HorizontalAlignment.Right,
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    Grid.SetColumn(logoImg, 1);
+                    headerGrid.Children.Add(logoImg);
+                }
+            }
+            catch { }
+
+            Grid.SetRow(headerGrid, 0);
+            root.Children.Add(headerGrid);
 
             // 2. Info Banner with Exception Message & Path
             var infoBorder = new Border
@@ -292,14 +344,15 @@ public static class CrashHandler
             // Save As Text button
             var saveAsBtn = new Button
             {
+                Style = Application.Current?.Resources["AccentButtonStyle"] as Style,
                 Content = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
-                    Spacing = 6,
+                    Spacing = 8,
                     Children =
                     {
                         new FontIcon { Glyph = "\uE792", FontSize = 14 }, // Save
-                        new TextBlock { Text = "Crashlog als Text speichern..." }
+                        new TextBlock { Text = "Crashlog als Text speichern...", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold }
                     }
                 }
             };
@@ -331,6 +384,7 @@ public static class CrashHandler
             // Copy to Clipboard button
             var copyBtn = new Button
             {
+                Style = Application.Current?.Resources["SmoothButton"] as Style,
                 Content = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
@@ -357,6 +411,7 @@ public static class CrashHandler
             // Open Folder button
             var openFolderBtn = new Button
             {
+                Style = Application.Current?.Resources["SmoothButton"] as Style,
                 Content = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
@@ -389,7 +444,7 @@ public static class CrashHandler
             var restartBtn = new Button
             {
                 Content = "App neu starten",
-                Style = Application.Current.Resources["AccentButtonStyle"] as Style
+                Style = Application.Current?.Resources?["AccentButtonStyle"] as Style
             };
             restartBtn.Click += (_, _) =>
             {
@@ -406,7 +461,11 @@ public static class CrashHandler
             };
 
             // Close button
-            var closeBtn = new Button { Content = "Beenden" };
+            var closeBtn = new Button
+            {
+                Content = "Beenden",
+                Style = Application.Current?.Resources["SmoothButton"] as Style
+            };
             closeBtn.Click += (_, _) => Environment.Exit(1);
 
             rightActions.Children.Add(restartBtn);

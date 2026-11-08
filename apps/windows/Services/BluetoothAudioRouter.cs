@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
@@ -537,10 +539,7 @@ public sealed class BluetoothAudioRouter : IDisposable
                 }
                 if (Math.Abs(vol - 1.0f) > 0.005f)
                 {
-                    for (int i = 0; i < read; i++)
-                    {
-                        buffer[offset + i] *= vol;
-                    }
+                    ScaleSamples(buffer.AsSpan(offset, read), vol);
                 }
             }
 
@@ -685,13 +684,32 @@ public sealed class BluetoothAudioRouter : IDisposable
             }
             else if (Math.Abs(vol - 1.0f) > 0.005f)
             {
-                for (int i = 0; i < read; i++)
-                {
-                    buffer[offset + i] *= vol;
-                }
+                ScaleSamples(buffer.AsSpan(offset, read), vol);
             }
 
             return read;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void ScaleSamples(Span<float> span, float vol)
+    {
+        if (Vector.IsHardwareAccelerated && span.Length >= Vector<float>.Count)
+        {
+            var vVol = new Vector<float>(vol);
+            int i = 0;
+            int limit = span.Length - Vector<float>.Count;
+            while (i <= limit)
+            {
+                var v = new Vector<float>(span.Slice(i));
+                (v * vVol).CopyTo(span.Slice(i));
+                i += Vector<float>.Count;
+            }
+            for (; i < span.Length; i++) span[i] *= vol;
+        }
+        else
+        {
+            for (int i = 0; i < span.Length; i++) span[i] *= vol;
         }
     }
 }

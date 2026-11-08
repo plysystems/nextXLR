@@ -74,6 +74,9 @@ public partial class UninstallerForm : Form
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;
 
+        var appIcon = NextXLRTheme.GetAppIcon();
+        if (appIcon != null) this.Icon = appIcon;
+
         // Header
         headerPanel = new Panel
         {
@@ -82,6 +85,21 @@ public partial class UninstallerForm : Form
             BackColor = NextXLRTheme.SurfaceL1,
             Padding = new Padding(28, 14, 28, 14)
         };
+
+        var logoImg = NextXLRTheme.GetLogoImage();
+        if (logoImg != null)
+        {
+            var logoBox = new PictureBox
+            {
+                Image = logoImg,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Size = new Size(160, 48),
+                Location = new Point(this.ClientSize.Width - 190, 14),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                BackColor = Color.Transparent
+            };
+            headerPanel.Controls.Add(logoBox);
+        }
 
         lblTitle = new Label
         {

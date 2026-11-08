@@ -66,14 +66,32 @@ public partial class InstallerForm : Form
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;
 
+        var appIcon = NextXLRTheme.GetAppIcon();
+        if (appIcon != null) this.Icon = appIcon;
+
         // Header Panel
         headerPanel = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 74,
+            Height = 76,
             BackColor = NextXLRTheme.SurfaceL1,
             Padding = new Padding(28, 12, 28, 12)
         };
+
+        var logoImg = NextXLRTheme.GetLogoImage();
+        if (logoImg != null)
+        {
+            var logoBox = new PictureBox
+            {
+                Image = logoImg,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Size = new Size(160, 48),
+                Location = new Point(this.ClientSize.Width - 190, 14),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                BackColor = Color.Transparent
+            };
+            headerPanel.Controls.Add(logoBox);
+        }
 
         lblTitle = new Label
         {
@@ -81,7 +99,7 @@ public partial class InstallerForm : Form
             Font = NextXLRTheme.TitleFont,
             ForeColor = NextXLRTheme.Brand,
             AutoSize = true,
-            Location = new Point(28, 12)
+            Location = new Point(28, 14)
         };
 
         lblSubtitle = new Label
@@ -90,7 +108,7 @@ public partial class InstallerForm : Form
             Font = NextXLRTheme.SubtitleFont,
             ForeColor = NextXLRTheme.TextMuted,
             AutoSize = true,
-            Location = new Point(28, 40)
+            Location = new Point(28, 42)
         };
 
         headerPanel.Controls.Add(lblTitle);
