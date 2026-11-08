@@ -30,13 +30,18 @@ if (-not (Test-Path $drvDir)) {
     Copy-Item (Join-Path $root "apps\windows\Assets\Driver\*") $drvDir -Recurse -Force
 }
 
-# 4. Copy Installer setup executable
+# 4. Copy Installer setup executable & Uninstaller
 $installerSrc = Join-Path $root "installer\bin\Debug\net8.0-windows\NextXLR-Setup-0.1.0-alpha.exe"
 $installerDst = Join-Path $releaseDir "NextXLR-Setup-0.1.0-alpha.exe"
 Write-Host "Copying installer setup..."
 Copy-Item $installerSrc $installerDst -Force
 Copy-Item (Join-Path $root "installer\bin\Debug\net8.0-windows\*.dll") $releaseDir -Force -ErrorAction SilentlyContinue
 Copy-Item (Join-Path $root "installer\bin\Debug\net8.0-windows\*.json") $releaseDir -Force -ErrorAction SilentlyContinue
+
+# Place uninstaller in app folder
+Copy-Item $installerSrc (Join-Path $appDir "NextXLR-Uninstall.exe") -Force
+Copy-Item (Join-Path $root "installer\bin\Debug\net8.0-windows\*.dll") $appDir -Force -ErrorAction SilentlyContinue
+Copy-Item (Join-Path $root "installer\bin\Debug\net8.0-windows\*.json") $appDir -Force -ErrorAction SilentlyContinue
 
 # 5. Copy Scripts and Meta
 Copy-Item (Join-Path $root "install.bat") $releaseDir -Force

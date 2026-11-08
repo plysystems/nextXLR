@@ -263,3 +263,4 @@ public sealed class TrayIconService : IDisposable
         }
     }
 }
+
