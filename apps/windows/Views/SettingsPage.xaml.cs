@@ -31,9 +31,16 @@ public sealed partial class SettingsPage : Page
 
         BluetoothToggle.IsOn = _settings.EnableBluetoothHeadset;
         BluetoothSidetoneCheck.IsChecked = _settings.BluetoothMuteMicSidetone;
+        BluetoothAudioRouter.Instance.StatusChanged -= OnBluetoothRouterStatusChanged;
+        BluetoothAudioRouter.Instance.StatusChanged += OnBluetoothRouterStatusChanged;
         _ = LoadAudioEndpointsAsync();
 
         _loading = false;
+    }
+
+    private void OnBluetoothRouterStatusChanged(bool running, string msg)
+    {
+        DispatcherQueue.TryEnqueue(UpdateBluetoothStatus);
     }
 
     private void SectionList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -41,6 +48,8 @@ public sealed partial class SettingsPage : Page
         if (GeneralPanel is null) return;
         var tag = (SectionList.SelectedItem as ListViewItem)?.Tag as string ?? "general";
         GeneralPanel.Visibility = tag == "general" ? Visibility.Visible : Visibility.Collapsed;
+        AudioPanel.Visibility = tag == "audio" ? Visibility.Visible : Visibility.Collapsed;
+        if (tag == "audio") UpdateDriverStatus();
         ProfilesPanel.Visibility = tag == "profiles" ? Visibility.Visible : Visibility.Collapsed;
         if (tag == "profiles") RefreshProfiles();
         UpdatesPanel.Visibility = tag == "updates" ? Visibility.Visible : Visibility.Collapsed;
@@ -562,6 +571,16 @@ public sealed partial class SettingsPage : Page
         if (_loading) return;
         _settings.EnableBluetoothHeadset = BluetoothToggle.IsOn;
         _settings.Save();
+
+        if (BluetoothToggle.IsOn && BluetoothDeviceBox.SelectedItem is AudioEndpointItem selected)
+        {
+            BluetoothAudioRouter.Instance.Start(selected.Id, selected.Name, _settings.BluetoothMuteMicSidetone);
+        }
+        else
+        {
+            BluetoothAudioRouter.Instance.Stop();
+        }
+
         UpdateBluetoothStatus();
     }
 
@@ -573,6 +592,11 @@ public sealed partial class SettingsPage : Page
             _settings.BluetoothHeadsetDeviceId = selected.Id;
             _settings.BluetoothHeadsetDeviceName = selected.Name;
             _settings.Save();
+
+            if (BluetoothToggle.IsOn)
+            {
+                BluetoothAudioRouter.Instance.Start(selected.Id, selected.Name, _settings.BluetoothMuteMicSidetone);
+            }
         }
         UpdateBluetoothStatus();
     }
@@ -582,6 +606,11 @@ public sealed partial class SettingsPage : Page
         if (_loading) return;
         _settings.BluetoothMuteMicSidetone = BluetoothSidetoneCheck.IsChecked == true;
         _settings.Save();
+
+        if (BluetoothToggle.IsOn && BluetoothDeviceBox.SelectedItem is AudioEndpointItem selected)
+        {
+            BluetoothAudioRouter.Instance.Start(selected.Id, selected.Name, _settings.BluetoothMuteMicSidetone);
+        }
     }
 
     private async void RefreshAudioDevices_Click(object sender, RoutedEventArgs e)
@@ -598,10 +627,17 @@ public sealed partial class SettingsPage : Page
             return;
         }
 
-        if (BluetoothDeviceBox.SelectedItem is AudioEndpointItem selected)
+        if (BluetoothAudioRouter.Instance.IsRunning)
         {
             BluetoothStatusInfo.Severity = InfoBarSeverity.Success;
-            BluetoothStatusInfo.Message = $"Kopfhörer-Signal wird aktiv an '{selected.Name}' weitergeleitet. GoXLR Routing bleibt synchron.";
+            BluetoothStatusInfo.Message = BluetoothAudioRouter.Instance.StatusMessage;
+        }
+        else if (BluetoothDeviceBox.SelectedItem is AudioEndpointItem selected)
+        {
+            BluetoothStatusInfo.Severity = InfoBarSeverity.Warning;
+            BluetoothStatusInfo.Message = string.IsNullOrWhiteSpace(BluetoothAudioRouter.Instance.StatusMessage)
+                ? $"Verbinde mit '{selected.Name}'..."
+                : BluetoothAudioRouter.Instance.StatusMessage;
         }
         else
         {

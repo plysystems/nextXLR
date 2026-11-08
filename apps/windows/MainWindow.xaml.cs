@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -31,6 +32,9 @@ public sealed partial class MainWindow : Window
 
     public MainViewModel ViewModel { get; }
 
+    /// <summary>Global reference for single-instance wake-up</summary>
+    public static MainWindow? CurrentInstance { get; private set; }
+
     /// <summary>HWND for pickers in an unpackaged app (FileOpenPicker needs an owner window).</summary>
     public static nint Handle { get; private set; }
 
@@ -39,6 +43,7 @@ public sealed partial class MainWindow : Window
 
     public MainWindow()
     {
+        CurrentInstance = this;
         ViewModel = new MainViewModel(Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread(), _transport);
         InitializeComponent();
 
@@ -100,12 +105,23 @@ public sealed partial class MainWindow : Window
                 {
                     DriverMissingBar.IsOpen = true;
                 }
+
+                // Autostart Bluetooth / Wireless Headset routing if enabled
+                if (settings.EnableBluetoothHeadset && !string.IsNullOrWhiteSpace(settings.BluetoothHeadsetDeviceId))
+                {
+                    BluetoothAudioRouter.Instance.Start(
+                        settings.BluetoothHeadsetDeviceId,
+                        settings.BluetoothHeadsetDeviceName ?? "",
+                        settings.BluetoothMuteMicSidetone
+                    );
+                }
             }
             catch { }
         };
 
         Closed += async (_, _) =>
         {
+            BluetoothAudioRouter.Instance.Dispose();
             _trayService?.Dispose();
             _meters.Dispose();
             await _transport.DisposeAsync();
@@ -131,17 +147,29 @@ public sealed partial class MainWindow : Window
     {
         DispatcherQueue.TryEnqueue(() =>
         {
-            AppWindow.Show();
-            if (AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
+            try
             {
-                if (presenter.State == Microsoft.UI.Windowing.OverlappedPresenterState.Minimized)
+                ShowWindow(Handle, 9); // SW_RESTORE
+                AppWindow.Show();
+                if (AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
                 {
-                    presenter.Restore();
+                    if (presenter.State == Microsoft.UI.Windowing.OverlappedPresenterState.Minimized)
+                    {
+                        presenter.Restore();
+                    }
                 }
+                AppWindow.MoveInZOrderAtTop();
+                SetForegroundWindow(Handle);
             }
-            AppWindow.MoveInZOrderAtTop();
+            catch { }
         });
     }
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(nint hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(nint hWnd);
 
     public void NavigateToPage(string tag)
     {

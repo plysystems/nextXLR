@@ -51,7 +51,20 @@ Copy-Item (Join-Path $root "README.md") $releaseDir -Force
 # 6. Create Zip archive
 $zipPath = Join-Path $distDir "NextXLR-v0.1.0-alpha.zip"
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+Start-Sleep -Milliseconds 800
 Write-Host "Compressing to $zipPath..."
-Compress-Archive -Path "$releaseDir\*" -DestinationPath $zipPath -Force
+$compressed = $false
+for ($attempt = 1; $attempt -le 5 -and -not $compressed; $attempt++) {
+    try {
+        Compress-Archive -Path "$releaseDir\*" -DestinationPath $zipPath -Force
+        $compressed = $true
+    } catch {
+        Write-Host "Waiting for file unlock (attempt $attempt)..."
+        Start-Sleep -Seconds 1
+    }
+}
+if (-not $compressed) {
+    Compress-Archive -Path "$releaseDir\*" -DestinationPath $zipPath -Force
+}
 
 Write-Host "Release package created successfully at: $zipPath"

@@ -41,6 +41,9 @@
                 <ListViewItem Tag="general" IsSelected="True">
                     <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE713;" FontSize="16" /><TextBlock x:Uid="SettingsNavGeneralText" /></StackPanel>
                 </ListViewItem>
+                <ListViewItem Tag="audio">
+                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE7F6;" FontSize="16" /><TextBlock Text="Audio &amp; Treiber" /></StackPanel>
+                </ListViewItem>
                 <ListViewItem Tag="profiles">
                     <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE77B;" FontSize="16" /><TextBlock x:Uid="SettingsNavProfilesText" /></StackPanel>
                 </ListViewItem>
@@ -90,9 +93,14 @@
                             </StackPanel>
                             <HyperlinkButton Content="Öffnen" Grid.Column="2" NavigateUri="ms-settings:privacy-microphone" />
                         </Grid>
+                    </StackPanel>
 
-                        <!-- ===== Bluetooth & Wireless Headset Card ===== -->
-                        <Border Style="{StaticResource Card}" Padding="20,16" Margin="0,4,0,0">
+                    <!-- ===== Audio & Treiber (Dedicated Tab) ===== -->
+                    <StackPanel x:Name="AudioPanel" Spacing="14" Visibility="Collapsed">
+                        <TextBlock Text="Audio-Ausgabe, Headset &amp; GoXLR Treiber" Style="{StaticResource SectionTitle}" Margin="0,0,0,6" />
+
+                        <!-- Bluetooth & Wireless Headset Card -->
+                        <Border Style="{StaticResource Card}" Padding="20,16">
                             <StackPanel Spacing="14">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -104,7 +112,7 @@
                                             <FontIcon Glyph="&#xE702;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
                                             <TextBlock Text="Bluetooth &amp; Wireless Headset (Kopfhörer-Ausgang)" FontWeight="SemiBold" FontSize="16" />
                                         </StackPanel>
-                                        <TextBlock Text="Leitet den Kopfhörer-Mix kabellos an dein Headset weiter – ohne Kabel an die GoXLR-Klinkenbuchse." Style="{StaticResource Caption}" />
+                                        <TextBlock Text="Streamt das Kopfhörer-Signal in Echtzeit kabellos an dein Headset – ganz ohne Kabel an die GoXLR-Klinkenbuchse." Style="{StaticResource Caption}" />
                                     </StackPanel>
                                     <ToggleSwitch x:Name="BluetoothToggle" Grid.Column="1" OnContent="Aktiv" OffContent="Aus"
                                                   MinWidth="0" VerticalAlignment="Center" Toggled="BluetoothToggle_Toggled" />
@@ -141,8 +149,8 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- ===== GoXLR Audio Treiber Card ===== -->
-                        <Border Style="{StaticResource Card}" Padding="20,16" Margin="0,4,0,0">
+                        <!-- GoXLR Audio Treiber Card -->
+                        <Border Style="{StaticResource Card}" Padding="20,16">
                             <StackPanel Spacing="14">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
