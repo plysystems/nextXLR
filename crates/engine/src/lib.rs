@@ -152,8 +152,7 @@ impl Engine {
         if ch.fixed {
             bail!("{} has no level control", ch.name);
         }
-        let min_vol = if id == ChannelId(9) { 0.5 } else { 0.0 };
-        ch.volume = volume.clamp(min_vol, 1.0);
+        ch.volume = volume.clamp(0.0, 1.0);
         if ch.muted && ch.volume > 0.0 {
             ch.muted = false;
             ch.restore_volume = None;
@@ -174,8 +173,8 @@ impl Engine {
             ch.volume = 0.0;
         } else if !muted && ch.muted {
             if let Some(v) = ch.restore_volume.take() {
-                ch.volume = if id == ChannelId(9) { v.clamp(0.5, 1.0) } else { v };
-            } else if id == ChannelId(9) {
+                ch.volume = v;
+            } else {
                 ch.volume = 0.8;
             }
         }
@@ -270,8 +269,6 @@ impl Engine {
             c.restore_volume = if pc.muted { pc.restore_volume.or(Some(pc.volume.max(0.0))) } else { None };
             if c.muted {
                 c.volume = 0.0;
-            } else if c.id == ChannelId(9) && c.volume < 0.5 {
-                c.volume = 0.5;
             }
         }
         let mut routes = Vec::new();
@@ -516,12 +513,20 @@ impl Engine {
         Ok(())
     }
 
-    /// Peaks since the last call, one entry per channel.
+    /// Peaks since the last call, one entry per channel, attenuated by channel volume and mute.
     pub fn take_meters(&self) -> Vec<ChannelMeter> {
         self.state
             .channels
             .iter()
-            .map(|c| ChannelMeter { channel: c.id, peak: self.meters.take_peak(c.id.0 as usize) })
+            .map(|c| {
+                let raw = self.meters.take_peak(c.id.0 as usize);
+                let peak = if c.muted || c.volume <= 0.001 {
+                    0.0
+                } else {
+                    raw * c.volume
+                };
+                ChannelMeter { channel: c.id, peak }
+            })
             .collect()
     }
 

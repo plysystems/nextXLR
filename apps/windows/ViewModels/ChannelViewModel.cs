@@ -129,7 +129,7 @@ public partial class ChannelViewModel : ObservableObject
                 IconId = null;
                 Glyph = IconCatalog.Glyph(IconCatalog.DefaultFor(c.Id, c.Kind));
             }
-            Volume = (c.Id == 9 && !c.Muted && c.Volume < 0.5) ? 0.5 : c.Volume;
+            Volume = c.Volume;
             Muted = c.Muted;
             RestoreVolume = c.RestoreVolume;
             Metered = c.Metered;
@@ -142,6 +142,15 @@ public partial class ChannelViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(VolumePercent));
         OnPropertyChanged(nameof(VolumeLabel));
+        if (value <= 0.001)
+        {
+            _targetDb = FloorDb;
+            _displayDb = FloorDb;
+            _holdDb = FloorDb;
+            Meter = 0;
+            PeakHold = 0;
+            PeakLabel = "-∞";
+        }
         if (!_applyingServer) _transport.SendCoalesced($"vol:{Id}", new SetVolume(Id, value));
     }
 
@@ -152,6 +161,15 @@ public partial class ChannelViewModel : ObservableObject
     /// </summary>
     partial void OnMutedChanged(bool value)
     {
+        if (value)
+        {
+            _targetDb = FloorDb;
+            _displayDb = FloorDb;
+            _holdDb = FloorDb;
+            Meter = 0;
+            PeakHold = 0;
+            PeakLabel = "-∞";
+        }
         if (!_applyingServer) _transport.Send(new SetMute(Id, value));
     }
 
@@ -194,6 +212,11 @@ public partial class ChannelViewModel : ObservableObject
     /// <summary>Daemon meter frame (linear peak). Keeps the max until the next display frame.</summary>
     public void PushPeak(double peak)
     {
+        if (Muted || Volume <= 0.001)
+        {
+            _targetDb = FloorDb;
+            return;
+        }
         var db = peak > 0 ? 20 * Math.Log10(peak) : FloorDb;
         if (db > _targetDb) _targetDb = db;
     }

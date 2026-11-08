@@ -483,9 +483,6 @@ impl Hub {
                 if ch == ChannelId(0) && bus == BusId(0) {
                     if gain > 0.0 {
                         let _ = self.engine.set_mute(MIC_MONITOR, false);
-                        if self.engine.state().channels.iter().find(|c| c.id == MIC_MONITOR).map_or(0.0, |c| c.volume) < 0.5 {
-                            let _ = self.engine.set_volume(MIC_MONITOR, 0.8);
-                        }
                     } else {
                         let _ = self.engine.set_mute(MIC_MONITOR, true);
                     }
@@ -1950,6 +1947,7 @@ mod tests {
     #[test]
     fn mic_level_feeds_meter_without_state_broadcast() {
         let mut hub = hub();
+        let _ = hub.engine.set_volume(ChannelId(0), 1.0);
         let fx = hub.handle(Input::Hardware(HardwareEvent::MicLevel(0.5)));
         assert!(fx.is_empty());
         let ServerMessage::Meters { levels } = hub.meters_message() else {

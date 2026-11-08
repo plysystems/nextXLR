@@ -74,3 +74,4 @@ if /i "%STARTNOW%"=="J" (
     start "" "%TARGET_DIR%\NextXLR.exe"
 )
 pause
+
