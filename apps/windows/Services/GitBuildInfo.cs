@@ -8,8 +8,8 @@ namespace NextXLR.Services;
 /// </summary>
 public static class GitBuildInfo
 {
-    private static string _commitHash = "5c18ec0";
-    private static string _fullCommitHash = "5c18ec0ea9c8ad7db5fba8cead256d39b0bc1eb8";
+    private static string _commitHash = "21901cf";
+    private static string _fullCommitHash = "21901cfe7866a92692446f2d52d9277fa6cc1cf6";
 
     public static string CommitHash => _commitHash;
     public static string FullCommitHash => _fullCommitHash;
