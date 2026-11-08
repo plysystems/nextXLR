@@ -85,10 +85,8 @@ public static class GitBuildInfo
 }
 
 # 0b. Compile projects to ensure latest binaries
-Write-Host "Building Windows Application..."
-dotnet build (Join-Path $root "apps\windows\NextXLR.csproj") -c Debug
-Write-Host "Building Installer Setup..."
-dotnet build (Join-Path $root "installer\NextXLR.Installer.csproj") -c Debug
+Write-Host "Building Windows Application (Self-Contained)..."
+dotnet build (Join-Path $root "apps\windows\NextXLR.csproj") -c Debug -p:SelfContained=true --no-restore
 
 Write-Host "Creating release package directory structure..."
 if (Test-Path $releaseDir) { Remove-Item $releaseDir -Recurse -Force }
@@ -115,25 +113,44 @@ if (-not (Test-Path $drvDir)) {
     Copy-Item (Join-Path $root "apps\windows\Assets\Driver\*") $drvDir -Recurse -Force
 }
 
-# 4. Copy Installer setup executable & Uninstaller
-$installerSrc = Join-Path $root "installer\bin\Debug\net8.0-windows\NextXLR-Setup-0.1.0-alpha.exe"
+# 3b. Copy LICENSE to app folder
+Copy-Item (Join-Path $root "LICENSE") (Join-Path $appDir "LICENSE") -Force -ErrorAction SilentlyContinue
+
+# 4. Create embedded payload.zip for standalone installer
+$payloadZip = Join-Path $root "installer\payload.zip"
+Write-Host "Packaging payload for embedded standalone installer..."
+if (Test-Path $payloadZip) { Remove-Item $payloadZip -Force }
+Compress-Archive -Path "$appDir\*" -DestinationPath $payloadZip -Force
+Write-Host "Payload archive created ($([math]::Round((Get-Item $payloadZip).Length / 1MB, 2)) MB)."
+
+# 5. Build & Publish Standalone Single-File Installer with embedded payload
+Write-Host "Building & Publishing Standalone Self-Contained Installer..."
+$installerPublishDir = Join-Path $root "installer\bin\Publish"
+if (Test-Path $installerPublishDir) { Remove-Item $installerPublishDir -Recurse -Force }
+dotnet publish (Join-Path $root "installer\NextXLR.Installer.csproj") -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true --no-restore -o $installerPublishDir
+
+$standaloneInstaller = Join-Path $installerPublishDir "NextXLR-Setup-0.1.0-alpha.exe"
+if (-not (Test-Path $standaloneInstaller)) {
+    throw "Standalone installer executable was not found at $standaloneInstaller"
+}
+
+# Copy standalone installer to dist and release dir
 $installerDst = Join-Path $releaseDir "NextXLR-Setup-0.1.0-alpha.exe"
-Write-Host "Copying installer setup..."
-Copy-Item $installerSrc $installerDst -Force
-Copy-Item (Join-Path $root "installer\bin\Debug\net8.0-windows\*.dll") $releaseDir -Force -ErrorAction SilentlyContinue
-Copy-Item (Join-Path $root "installer\bin\Debug\net8.0-windows\*.json") $releaseDir -Force -ErrorAction SilentlyContinue
+Copy-Item $standaloneInstaller $installerDst -Force
+Copy-Item $standaloneInstaller (Join-Path $distDir "NextXLR-Setup-0.1.0-alpha.exe") -Force
 
-# Place uninstaller in app folder
-Copy-Item $installerSrc (Join-Path $appDir "NextXLR-Uninstall.exe") -Force
-Copy-Item (Join-Path $root "installer\bin\Debug\net8.0-windows\*.dll") $appDir -Force -ErrorAction SilentlyContinue
-Copy-Item (Join-Path $root "installer\bin\Debug\net8.0-windows\*.json") $appDir -Force -ErrorAction SilentlyContinue
+# Place standalone uninstaller in app folder
+Copy-Item $standaloneInstaller (Join-Path $appDir "NextXLR-Uninstall.exe") -Force
 
-# 5. Copy Scripts and Meta
+# Cleanup temporary payload.zip
+if (Test-Path $payloadZip) { Remove-Item $payloadZip -Force }
+
+# 6. Copy Scripts and Meta
 Copy-Item (Join-Path $root "install.bat") $releaseDir -Force
 Copy-Item (Join-Path $root "LICENSE") $releaseDir -Force
 Copy-Item (Join-Path $root "README.md") $releaseDir -Force
 
-# 6. Create Zip archive
+# 7. Create Zip archive
 $zipPath = Join-Path $distDir "NextXLR-v0.1.0-alpha.zip"
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 Start-Sleep -Milliseconds 800

@@ -2,6 +2,9 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -605,11 +608,25 @@ LIZENZBEDINGUNGEN:
                 Log("Bestehende Konfiguration und Benutzerprofile in %LOCALAPPDATA%\\NextXLR bleiben erhalten.");
                 Directory.CreateDirectory(installDir);
 
-                var srcDir = FindSourcePayloadDirectory();
-                Log($"Quellverzeichnis: {srcDir}");
+                SetProgress(15, isExisting ? "Aktualisiere Anwendungsdateien..." : "Installiere Anwendungsdateien...");
 
-                SetProgress(15, isExisting ? "Aktualisiere Anwendungsdateien (drüber installieren)..." : "Kopiere Anwendungsdateien...");
-                CopyDirectory(srcDir, installDir);
+                bool installed = TryExtractEmbeddedPayload(installDir, isExisting);
+                if (!installed)
+                {
+                    var srcDir = FindSourcePayloadDirectory();
+                    if (Directory.Exists(srcDir) && File.Exists(Path.Combine(srcDir, "NextXLR.exe")))
+                    {
+                        Log($"Lokales Quellverzeichnis gefunden: {srcDir}");
+                        CopyDirectory(srcDir, installDir);
+                        installed = true;
+                    }
+                }
+
+                if (!installed)
+                {
+                    Log("Kein lokales Anwendungsverzeichnis gefunden. Lade Release-Paket von GitHub herunter...");
+                    DownloadAndExtractFromGitHub(installDir);
+                }
 
                 // Setup mixforge alias
                 var mixforgedPath = Path.Combine(installDir, "mixforged.exe");
@@ -624,8 +641,12 @@ LIZENZBEDINGUNGEN:
                 try
                 {
                     var uninstallDest = Path.Combine(installDir, "NextXLR-Uninstall.exe");
-                    File.Copy(Application.ExecutablePath, uninstallDest, true);
-                    Log("Deinstallationsprogramm (NextXLR-Uninstall.exe) bereitgestellt.");
+                    var currentExe = Environment.ProcessPath ?? Application.ExecutablePath;
+                    if (File.Exists(currentExe) && !string.Equals(currentExe, uninstallDest, StringComparison.OrdinalIgnoreCase))
+                    {
+                        File.Copy(currentExe, uninstallDest, true);
+                        Log("Deinstallationsprogramm (NextXLR-Uninstall.exe) bereitgestellt.");
+                    }
                 }
                 catch { }
 
@@ -682,6 +703,137 @@ LIZENZBEDINGUNGEN:
                 }));
             }
         });
+    }
+
+    private bool TryExtractEmbeddedPayload(string targetDir, bool isExisting)
+    {
+        try
+        {
+            var asm = typeof(InstallerForm).Assembly;
+            var resNames = asm.GetManifestResourceNames();
+            var payloadRes = resNames.FirstOrDefault(n => n.EndsWith("payload.zip", StringComparison.OrdinalIgnoreCase));
+            if (payloadRes == null)
+            {
+                return false;
+            }
+
+            Log($"Eingebettetes Software-Paket gefunden ({payloadRes}). Starte Entpacken...");
+            using var stream = asm.GetManifestResourceStream(payloadRes);
+            if (stream == null)
+            {
+                Log("Fehler: Konnte Ressourcenstream für payload.zip nicht öffnen.");
+                return false;
+            }
+
+            using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
+            int totalEntries = archive.Entries.Count;
+            int currentEntry = 0;
+
+            SetProgress(15, isExisting ? "Aktualisiere Anwendungsdateien aus Paket..." : "Installiere Anwendungsdateien aus Paket...");
+
+            foreach (var entry in archive.Entries)
+            {
+                currentEntry++;
+                if (string.IsNullOrEmpty(entry.Name) && (entry.FullName.EndsWith("/") || entry.FullName.EndsWith("\\")))
+                {
+                    var dir = Path.Combine(targetDir, entry.FullName.Replace('/', Path.DirectorySeparatorChar));
+                    Directory.CreateDirectory(dir);
+                    continue;
+                }
+
+                var dest = Path.Combine(targetDir, entry.FullName.Replace('/', Path.DirectorySeparatorChar));
+                var parent = Path.GetDirectoryName(dest);
+                if (!string.IsNullOrEmpty(parent))
+                {
+                    Directory.CreateDirectory(parent);
+                }
+
+                bool copied = false;
+                for (int r = 0; r < 5 && !copied; r++)
+                {
+                    try
+                    {
+                        entry.ExtractToFile(dest, overwrite: true);
+                        copied = true;
+                    }
+                    catch
+                    {
+                        Thread.Sleep(150);
+                    }
+                }
+
+                if (currentEntry % 10 == 0 || currentEntry == totalEntries)
+                {
+                    int pct = 15 + (int)((double)currentEntry / totalEntries * 35.0);
+                    SetProgress(pct, $"Kopiere {entry.Name} ({currentEntry}/{totalEntries})...");
+                }
+            }
+
+            Log("Alle Anwendungsdateien aus dem Installer-Paket erfolgreich entpackt.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log($"Hinweis bei eingebetteter Extraktion: {ex.Message}");
+            return false;
+        }
+    }
+
+    private void DownloadAndExtractFromGitHub(string targetDir)
+    {
+        try
+        {
+            var zipUrl = "https://github.com/plysystems/nextXLR/releases/download/v0.1.0-alpha/NextXLR-v0.1.0-alpha.zip";
+            var tempZip = Path.Combine(Path.GetTempPath(), "NextXLR-Download-" + Guid.NewGuid().ToString("N") + ".zip");
+            Log($"Lade {zipUrl} herunter...");
+
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("User-Agent", "NextXLR-Setup");
+                var response = client.GetAsync(zipUrl).GetAwaiter().GetResult();
+                response.EnsureSuccessStatusCode();
+                using var fs = new FileStream(tempZip, FileMode.Create, FileAccess.Write, FileShare.None);
+                response.Content.CopyToAsync(fs).GetAwaiter().GetResult();
+            }
+
+            Log("Download abgeschlossen. Entpacke Paket...");
+            using (var zip = ZipFile.OpenRead(tempZip))
+            {
+                foreach (var entry in zip.Entries)
+                {
+                    string relPath = entry.FullName.Replace('/', Path.DirectorySeparatorChar);
+                    if (relPath.StartsWith("app\\", StringComparison.OrdinalIgnoreCase))
+                    {
+                        relPath = relPath.Substring(4);
+                    }
+                    else if (relPath.StartsWith("app/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        relPath = relPath.Substring(4);
+                    }
+
+                    if (string.IsNullOrEmpty(relPath)) continue;
+
+                    var dest = Path.Combine(targetDir, relPath);
+                    if (string.IsNullOrEmpty(entry.Name))
+                    {
+                        Directory.CreateDirectory(dest);
+                        continue;
+                    }
+
+                    var p = Path.GetDirectoryName(dest);
+                    if (!string.IsNullOrEmpty(p)) Directory.CreateDirectory(p);
+
+                    entry.ExtractToFile(dest, overwrite: true);
+                }
+            }
+
+            try { File.Delete(tempZip); } catch { }
+            Log("Download und Extraktion erfolgreich abgeschlossen.");
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Weder lokales Paket noch Online-Download verfügbar: {ex.Message}", ex);
+        }
     }
 
     private string FindSourcePayloadDirectory()
@@ -896,10 +1048,14 @@ LIZENZBEDINGUNGEN:
         {
             try
             {
+                var currentProc = Environment.ProcessPath ?? "";
+                var currentApp = Application.ExecutablePath;
                 foreach (var file in Directory.GetFiles(dir))
                 {
                     var name = Path.GetFileName(file);
                     if (name.EndsWith(".log", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (!string.IsNullOrEmpty(currentProc) && string.Equals(file, currentProc, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (!string.IsNullOrEmpty(currentApp) && string.Equals(file, currentApp, StringComparison.OrdinalIgnoreCase)) continue;
                     try
                     {
                         File.SetAttributes(file, FileAttributes.Normal);

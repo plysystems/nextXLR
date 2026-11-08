@@ -21,6 +21,7 @@ apps/installer/bin/
 apps/installer/obj/
 installer/bin/
 installer/obj/
+installer/payload.zip
 apps/ui/src-tauri/target
 
 # Logs & temp
