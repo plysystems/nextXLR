@@ -40,6 +40,7 @@ public partial class HardwareState : ObservableObject
 
         HasDevice = hw is not null;
         IsMini = hw?.Kind == "mini";
+        MainViewModel.IsCurrentMini = IsMini;
         DeviceName = hw?.Model ?? Loc.Get("DeviceNone");
         DeviceDetail = hw is null ? Loc.Get("DeviceSoftwareMixer")
             : hw.Serial is { } s ? Loc.Format("DeviceSerial", s) : Loc.Get("StatusConnected");

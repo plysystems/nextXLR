@@ -102,6 +102,25 @@
                             </StackPanel>
                             <HyperlinkButton Content="Öffnen" Grid.Column="2" NavigateUri="ms-settings:privacy-microphone" />
                         </Grid>
+                        <Grid Style="{StaticResource SettingRow}">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <FontIcon Glyph="&#xE74D;" Foreground="{StaticResource WarningBrush}" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Altlasten &amp; alte Software-Reste bereinigen" FontWeight="SemiBold" />
+                                <TextBlock Text="Entfernt veraltete Autostarts der TC-Helicon App, verwaiste Dienste und temporäre Cache-Dateien." Style="{StaticResource Caption}" />
+                            </StackPanel>
+                            <Button x:Name="CleanupRemnantsButton" Content="Bereinigen" Grid.Column="2" Click="CleanupRemnants_Click" />
+                        </Grid>
+                        <Grid Style="{StaticResource SettingRow}">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <FontIcon Glyph="&#xE7E8;" Foreground="{StaticResource ErrorBrush}" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Software &amp; Hintergrunddienst beenden" FontWeight="SemiBold" />
+                                <TextBlock Text="Beendet NEXT : XLR und stoppt den mixforged Hintergrunddienst vollständig." Style="{StaticResource Caption}" />
+                            </StackPanel>
+                            <Button x:Name="QuitAppAndServiceButton" Content="Vollständig beenden" Grid.Column="2" Click="QuitAppAndService_Click" />
+                        </Grid>
+                        <InfoBar x:Name="GeneralResult" IsOpen="False" Margin="0,4,0,0" />
                     </StackPanel>
 
                     <!-- ===== Audio & Treiber (Dedicated Tab) ===== -->

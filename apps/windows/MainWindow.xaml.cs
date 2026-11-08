@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
@@ -68,13 +69,24 @@ public sealed partial class MainWindow : Window
         );
 
         // Minimize / Close to Tray
-        AppWindow.Closing += (sender, args) =>
+        AppWindow.Closing += async (sender, args) =>
         {
             var settings = AppSettings.Load();
             if (settings.MinimizeToTray && !_isExplicitExit)
             {
                 args.Cancel = true;
                 AppWindow.Hide();
+                return;
+            }
+
+            if (!_isExplicitExit)
+            {
+                args.Cancel = true;
+                var canExit = await ConfirmExitWithUnsavedChangesAsync();
+                if (canExit)
+                {
+                    ExitApplicationDirect();
+                }
             }
         };
 
@@ -219,7 +231,77 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    public void ExitApplication()
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern int MessageBoxW(nint hWnd, string lpText, string lpCaption, uint uType);
+
+    private const uint MB_YESNOCANCEL = 0x00000003;
+    private const uint MB_ICONQUESTION = 0x00000020;
+    private const uint MB_TOPMOST = 0x00040000;
+    private const uint MB_SETFOREGROUND = 0x00010000;
+
+    private const int IDYES = 6;
+    private const int IDNO = 7;
+    private const int IDCANCEL = 2;
+
+    public async Task<bool> ConfirmExitWithUnsavedChangesAsync()
+    {
+        if (!MainViewModel.HasPendingChanges)
+        {
+            return true;
+        }
+
+        try { AppWindow.Show(); } catch { }
+
+        int result = MessageBoxW(
+            Handle,
+            "Sie haben nicht gespeicherte Änderungen an Profil- oder Mikrofoneinstellungen vorgenommen.\n\nMöchten Sie Ihre Änderungen vor dem Beenden speichern?",
+            "NEXT : XLR — Ungespeicherte Änderungen",
+            MB_YESNOCANCEL | MB_ICONQUESTION | MB_TOPMOST | MB_SETFOREGROUND);
+
+        if (result == IDCANCEL)
+        {
+            return false;
+        }
+
+        if (result == IDYES)
+        {
+            try
+            {
+                var prof = await ViewModel.GetProfileAsync();
+                var setupName = ProfileService.Setups.DefaultName ?? "Standard";
+                ProfileService.Setups.Save(setupName, prof);
+
+                var micName = ProfileService.Mic.DefaultName ?? "Standard";
+                var micNode = System.Text.Json.JsonSerializer.SerializeToNode(ViewModel.Mic.Build(), Protocol.Json.Options);
+                if (micNode != null)
+                {
+                    ProfileService.Mic.Save(micName, micNode);
+                }
+
+                MainViewModel.HasPendingChanges = false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to save changes on exit: {ex}");
+            }
+        }
+        else if (result == IDNO)
+        {
+            MainViewModel.HasPendingChanges = false;
+        }
+
+        return true;
+    }
+
+    public async void ExitApplication()
+    {
+        var canExit = await ConfirmExitWithUnsavedChangesAsync();
+        if (!canExit) return;
+
+        ExitApplicationDirect();
+    }
+
+    public void ExitApplicationDirect()
     {
         DispatcherQueue.TryEnqueue(() =>
         {

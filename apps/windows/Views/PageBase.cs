@@ -588,26 +588,39 @@ public partial class LightingPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         ViewModel = (MainViewModel)e.Parameter;
-        if (ViewModel.Hardware.IsMini)
+        DevicePreview.ForceMini = ViewModel.Hardware.IsMini;
+        UpdateModelBadge();
+        ViewModel.Hardware.PropertyChanged += Hardware_PropertyChanged;
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        if (ViewModel != null)
         {
-            ModelGoXlrBtn.IsChecked = false;
-            ModelMiniBtn.IsChecked = true;
-            DevicePreview.ForceMini = true;
+            ViewModel.Hardware.PropertyChanged -= Hardware_PropertyChanged;
         }
     }
 
-    private void ModelGoXlr_Click(object sender, RoutedEventArgs e)
+    private void Hardware_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        ModelGoXlrBtn.IsChecked = true;
-        ModelMiniBtn.IsChecked = false;
-        DevicePreview.ForceMini = false;
+        if (e.PropertyName == nameof(HardwareState.IsMini) || e.PropertyName == nameof(HardwareState.HasDevice))
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                DevicePreview.ForceMini = ViewModel.Hardware.IsMini;
+                UpdateModelBadge();
+            });
+        }
     }
 
-    private void ModelMini_Click(object sender, RoutedEventArgs e)
+    private void UpdateModelBadge()
     {
-        ModelGoXlrBtn.IsChecked = false;
-        ModelMiniBtn.IsChecked = true;
-        DevicePreview.ForceMini = true;
+        if (ModelBadgeText != null && ViewModel != null)
+        {
+            ModelBadgeText.Text = ViewModel.Hardware.HasDevice
+                ? (ViewModel.Hardware.IsMini ? "Erkanntes Gerät: GoXLR Mini (Beleuchtung angepasst)" : "Erkanntes Gerät: GoXLR (Vollversion)")
+                : "Gerät: GoXLR (Standard-Vorschau)";
+        }
     }
 
     public string LayoutCaption(bool hasDevice, bool isMini) =>

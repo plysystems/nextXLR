@@ -64,9 +64,10 @@ public sealed class LightingViewModel
             foreach (var (gid, glyph) in GroupOrder)
             {
                 if (gid == "faders") continue;
+                if (MainViewModel.IsCurrentMini && (gid == "effects" || gid == "sampler")) continue;
                 var items = zones.Where(z => z.GroupId == gid).ToList();
                 if (items.Count == 0) continue;
-                var g = new LightingGroupViewModel(Loc.Get("LightGroup_" + gid), glyph);
+                var g = new LightingGroupViewModel(gid, Loc.Get("LightGroup_" + gid), glyph);
                 foreach (var z in items) g.Zones.Add(z);
                 Groups.Add(g);
             }
@@ -390,8 +391,9 @@ public sealed record PaletteColor(string Name, string Hex)
     public SolidColorBrush Brush => new(ColorHex.Parse(Hex));
 }
 
-public sealed class LightingGroupViewModel(string title, string glyph)
+public sealed class LightingGroupViewModel(string id, string title, string glyph)
 {
+    public string Id { get; } = id;
     public string Title { get; } = title;
     public string Glyph { get; } = glyph;
     public ObservableCollection<LightingZoneViewModel> Zones { get; } = new();

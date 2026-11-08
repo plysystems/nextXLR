@@ -101,6 +101,7 @@ public partial class MicSettingsViewModel : ObservableObject
     {
         if (_applyingServer) return;
         _lastEdit = DateTime.UtcNow;
+        MainViewModel.HasPendingChanges = true;
         _transport.SendCoalesced("mic:dsp", new SetMicSettings(Build()));
     }
 

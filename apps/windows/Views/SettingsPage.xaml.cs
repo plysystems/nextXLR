@@ -78,6 +78,140 @@ public sealed partial class SettingsPage : Page
         _settings.Save();
     }
 
+    private void ShowGeneralInfo(InfoBarSeverity severity, string message)
+    {
+        GeneralResult.Severity = severity;
+        GeneralResult.Message = message;
+        GeneralResult.IsOpen = true;
+    }
+
+    private void CleanupRemnants_Click(object sender, RoutedEventArgs e)
+    {
+        int cleanedRegistry = 0;
+        int cleanedFiles = 0;
+        int cleanedServices = 0;
+
+        try
+        {
+            // 1. Registry autostart cleanup in HKCU Run key
+            try
+            {
+                using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
+                if (key != null)
+                {
+                    foreach (var valName in key.GetValueNames())
+                    {
+                        if (valName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
+                            valName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase) ||
+                            valName.Equals("mixforge", StringComparison.OrdinalIgnoreCase))
+                        {
+                            try { key.DeleteValue(valName); cleanedRegistry++; } catch { }
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            // Registry autostart cleanup in HKLM Run key (if accessible)
+            try
+            {
+                using var hklmKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
+                if (hklmKey != null)
+                {
+                    foreach (var valName in hklmKey.GetValueNames())
+                    {
+                        if (valName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
+                            valName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase) ||
+                            valName.Equals("mixforge", StringComparison.OrdinalIgnoreCase))
+                        {
+                            try { hklmKey.DeleteValue(valName); cleanedRegistry++; } catch { }
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            // 2. Terminate old TC-Helicon background processes if running
+            foreach (var procName in new[] { "GoXLRApp", "GoXLRAudioCplApp" })
+            {
+                try
+                {
+                    foreach (var p in System.Diagnostics.Process.GetProcessesByName(procName))
+                    {
+                        try { p.Kill(); } catch { }
+                    }
+                }
+                catch { }
+            }
+
+            // 3. Remove orphaned temp and crash files
+            try
+            {
+                var tempPath = System.IO.Path.GetTempPath();
+                var patterns = new[] { "GoXLR*", "TC-Helicon*", "mixforge*.log", "NextXLR*.log" };
+                foreach (var pattern in patterns)
+                {
+                    foreach (var file in System.IO.Directory.EnumerateFiles(tempPath, pattern))
+                    {
+                        try { System.IO.File.Delete(file); cleanedFiles++; } catch { }
+                    }
+                }
+            }
+            catch { }
+
+            // 4. Remove orphaned legacy service if exists
+            try
+            {
+                var psi = new System.Diagnostics.ProcessStartInfo("sc.exe", "delete mixforge")
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true
+                };
+                using var p = System.Diagnostics.Process.Start(psi);
+                p?.WaitForExit(1000);
+                if (p?.ExitCode == 0) cleanedServices++;
+            }
+            catch { }
+
+            ShowGeneralInfo(InfoBarSeverity.Success,
+                $"Altlasten bereinigt: {cleanedRegistry} Autostart-Einträge und {cleanedFiles} temporäre Cache-Dateien{(cleanedServices > 0 ? $", {cleanedServices} Dienst" : "")} erfolgreich entfernt.");
+        }
+        catch (Exception ex)
+        {
+            ShowGeneralInfo(InfoBarSeverity.Error, $"Fehler beim Bereinigen der Altlasten: {ex.Message}");
+        }
+    }
+
+    private async void QuitAppAndService_Click(object sender, RoutedEventArgs e)
+    {
+        if (App.MainWindowInstance is MainWindow mw)
+        {
+            var canExit = await mw.ConfirmExitWithUnsavedChangesAsync();
+            if (!canExit) return;
+
+            try { BluetoothAudioRouter.Instance.Stop(); } catch { }
+
+            foreach (var procName in new[] { "mixforged", "mixforge" })
+            {
+                try
+                {
+                    foreach (var p in System.Diagnostics.Process.GetProcessesByName(procName))
+                    {
+                        try { p.Kill(); } catch { }
+                    }
+                }
+                catch { }
+            }
+
+            mw.ExitApplicationDirect();
+        }
+        else
+        {
+            Microsoft.UI.Xaml.Application.Current.Exit();
+        }
+    }
+
     private void AutoUpdate_Toggled(object sender, RoutedEventArgs e)
     {
         if (_loading) return;

@@ -17,6 +17,9 @@ public partial class MainViewModel : ObservableObject
     private readonly PipeTransport _transport;
     private readonly MeterAnimator _meterAnimator;
 
+    public static bool HasPendingChanges { get; set; }
+    public static bool IsCurrentMini { get; set; }
+
     public ObservableCollection<ChannelViewModel> Channels { get; } = new();
     /// <summary>Mixer "Inputs": channels on faders A–D first (in fader order), then the rest.</summary>
     public ObservableCollection<ChannelViewModel> InputStrips { get; } = new();
@@ -326,6 +329,11 @@ public partial class MainViewModel : ObservableObject
             }
         }
         MicChannel = Find(0);
+        if (Find(8) is { } hpChannel)
+        {
+            BluetoothAudioRouter.Instance.Volume = (float)hpChannel.Volume;
+            BluetoothAudioRouter.Instance.IsMuted = hpChannel.Muted;
+        }
         if (!_muteOnStartupApplied && MicChannel != null)
         {
             _muteOnStartupApplied = true;

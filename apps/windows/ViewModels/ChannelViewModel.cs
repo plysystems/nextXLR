@@ -167,12 +167,22 @@ public partial class ChannelViewModel : ObservableObject
             RestoreVolume = c.RestoreVolume;
             Metered = c.Metered;
             IsFixed = c.Fixed;
+
+            if (Id == 8)
+            {
+                BluetoothAudioRouter.Instance.Volume = (float)c.Volume;
+                BluetoothAudioRouter.Instance.IsMuted = c.Muted;
+            }
         }
         finally { _applyingServer = false; }
     }
 
     partial void OnVolumeChanged(double value)
     {
+        if (Id == 8)
+        {
+            BluetoothAudioRouter.Instance.Volume = (float)value;
+        }
         if (!IsSubmixActive)
         {
             OnPropertyChanged(nameof(VolumePercent));
@@ -187,7 +197,11 @@ public partial class ChannelViewModel : ObservableObject
             PeakHold = 0;
             PeakLabel = "-∞";
         }
-        if (!_applyingServer) _transport.SendCoalesced($"vol:{Id}", new SetVolume(Id, value));
+        if (!_applyingServer)
+        {
+            MainViewModel.HasPendingChanges = true;
+            _transport.SendCoalesced($"vol:{Id}", new SetVolume(Id, value));
+        }
     }
 
     partial void OnSubmixVolumeChanged(double value)
@@ -197,11 +211,19 @@ public partial class ChannelViewModel : ObservableObject
             OnPropertyChanged(nameof(VolumePercent));
             OnPropertyChanged(nameof(VolumeLabel));
         }
-        if (!_applyingServer) _transport.SendCoalesced($"subvol:{Id}", new SetSubmixVolume(Id, value));
+        if (!_applyingServer)
+        {
+            MainViewModel.HasPendingChanges = true;
+            _transport.SendCoalesced($"subvol:{Id}", new SetSubmixVolume(Id, value));
+        }
     }
 
     partial void OnMutedChanged(bool value)
     {
+        if (Id == 8)
+        {
+            BluetoothAudioRouter.Instance.IsMuted = value;
+        }
         if (!IsSubmixActive)
         {
             OnPropertyChanged(nameof(ActiveMuted));
@@ -216,7 +238,11 @@ public partial class ChannelViewModel : ObservableObject
             PeakHold = 0;
             PeakLabel = "-∞";
         }
-        if (!_applyingServer) _transport.Send(new SetMute(Id, value));
+        if (!_applyingServer)
+        {
+            MainViewModel.HasPendingChanges = true;
+            _transport.Send(new SetMute(Id, value));
+        }
     }
 
     partial void OnSubmixMutedChanged(bool value)

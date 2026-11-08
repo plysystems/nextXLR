@@ -68,3 +68,5 @@ if (-not $compressed) {
 }
 
 Write-Host "Release package created successfully at: $zipPath"
+Copy-Item $installerDst (Join-Path $distDir "NextXLR-Setup-0.1.0-alpha.exe") -Force
+Write-Host "Standalone installer copied to dist/NextXLR-Setup-0.1.0-alpha.exe"
