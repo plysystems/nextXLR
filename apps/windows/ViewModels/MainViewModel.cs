@@ -176,6 +176,19 @@ public partial class MainViewModel : ObservableObject
     /// <summary>Engine version from the daemon's hello (shown in Settings → Updates).</summary>
     [ObservableProperty] private string _engineVersion = "–";
 
+    /// <summary>Global loading / busy state indicator.</summary>
+    [ObservableProperty] private bool _isBusy;
+    [ObservableProperty] private string _busyText = "Laden...";
+
+    public void SetBusy(bool busy, string text = "Laden...")
+    {
+        _ui.TryEnqueue(() =>
+        {
+            IsBusy = busy;
+            BusyText = text;
+        });
+    }
+
     public MainViewModel(DispatcherQueue ui, PipeTransport transport)
     {
         _ui = ui;

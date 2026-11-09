@@ -30,10 +30,11 @@ public static class NextXLRTheme
     public static readonly Color Warning = Color.FromArgb(245, 185, 66);        // #F5B942
     public static readonly Color Success = Color.FromArgb(31, 199, 154);        // #1FC79A
 
-    public static readonly Font TitleFont = new Font("Segoe UI Variable Display", 15f, FontStyle.Bold);
-    public static readonly Font SubtitleFont = new Font("Segoe UI", 9.5f, FontStyle.Regular);
+    public static readonly Font TitleFont = new Font("Segoe UI Variable Display", 13.5f, FontStyle.Bold);
+    public static readonly Font SubtitleFont = new Font("Segoe UI", 9f, FontStyle.Regular);
     public static readonly Font BodyFont = new Font("Segoe UI", 9.5f, FontStyle.Regular);
     public static readonly Font BoldFont = new Font("Segoe UI", 9.5f, FontStyle.Bold);
+    public static readonly Font ButtonFont = new Font("Segoe UI", 9.5f, FontStyle.Bold);
     public static readonly Font MonospaceFont = new Font("Consolas", 8.5f, FontStyle.Regular);
 
     public static Image? GetLogoImage()
@@ -153,7 +154,7 @@ public class ModernCheckBox : Control
         this.Cursor = Cursors.Hand;
         this.Font = NextXLRTheme.BodyFont;
         this.ForeColor = NextXLRTheme.TextPrimary;
-        this.Height = 26;
+        this.Height = 28;
     }
 
     protected override void OnMouseEnter(EventArgs e) { _isHovered = true; Invalidate(); base.OnMouseEnter(e); }
@@ -163,7 +164,8 @@ public class ModernCheckBox : Control
     protected override void OnPaint(PaintEventArgs e)
     {
         var g = e.Graphics;
-        g.SmoothingMode = SmoothingMode.AntiAlias;
+        g.SmoothingMode = SmoothingMode.HighQuality;
+        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
         g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
         int boxSize = 18;
@@ -177,26 +179,26 @@ public class ModernCheckBox : Control
                 using var fill = new SolidBrush(NextXLRTheme.BrandAccent);
                 g.FillPath(fill, boxPath);
 
-                // Draw crisp dark checkmark
-                using var pen = new Pen(Color.FromArgb(12, 15, 20), 2.2f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
+                // Draw crisp checkmark
+                using var pen = new Pen(Color.FromArgb(13, 21, 19), 2.2f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
                 g.DrawLines(pen, new[]
                 {
-                    new PointF(boxRect.X + 4f, boxRect.Y + 9.5f),
+                    new PointF(boxRect.X + 4.2f, boxRect.Y + 9.5f),
                     new PointF(boxRect.X + 7.5f, boxRect.Y + 13f),
-                    new PointF(boxRect.X + 14f, boxRect.Y + 5.5f)
+                    new PointF(boxRect.X + 13.8f, boxRect.Y + 5.5f)
                 });
             }
             else
             {
-                using var fill = new SolidBrush(_isHovered ? NextXLRTheme.SurfaceL4 : NextXLRTheme.SurfaceL3);
+                using var fill = new SolidBrush(_isHovered ? NextXLRTheme.SurfaceL4 : NextXLRTheme.SurfaceL2);
                 g.FillPath(fill, boxPath);
-                using var stroke = new Pen(_isHovered ? NextXLRTheme.Brand : NextXLRTheme.Stroke, 1.2f);
+                using var stroke = new Pen(_isHovered ? NextXLRTheme.BrandAccent : NextXLRTheme.Stroke, 1.2f);
                 g.DrawPath(stroke, boxPath);
             }
         }
 
-        // Draw label text
-        int textX = boxSize + 10;
+        // Draw label text with proper font and clean vertical centering
+        int textX = boxSize + 12;
         var textRect = new Rectangle(textX, 0, Width - textX, Height);
         TextRenderer.DrawText(g, Text, Font, textRect, ForeColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
     }
@@ -204,12 +206,13 @@ public class ModernCheckBox : Control
 
 public class RoundedCard : Panel
 {
-    public int CornerRadius { get; set; } = 14;
+    public int CornerRadius { get; set; } = 12;
     public Color BorderColor { get; set; } = NextXLRTheme.Stroke;
     public int BorderWidth { get; set; } = 1;
 
     public RoundedCard()
     {
+        SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
         this.DoubleBuffered = true;
         this.BackColor = NextXLRTheme.SurfaceL2;
         this.Padding = new Padding(16);
@@ -218,7 +221,8 @@ public class RoundedCard : Panel
     protected override void OnPaint(PaintEventArgs e)
     {
         base.OnPaint(e);
-        e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
+        e.Graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
 
         var rect = new Rectangle(0, 0, Width - 1, Height - 1);
         using var path = NextXLRTheme.CreateRoundedRectangle(rect, CornerRadius);
@@ -238,19 +242,20 @@ public class ModernButton : Button
 {
     public bool IsAccent { get; set; } = false;
     public bool IsDanger { get; set; } = false;
-    public int CornerRadius { get; set; } = 10;
+    public int CornerRadius { get; set; } = 8;
 
     private bool _isHovered = false;
     private bool _isPressed = false;
 
     public ModernButton()
     {
+        SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
         this.DoubleBuffered = true;
         this.FlatStyle = FlatStyle.Flat;
         this.FlatAppearance.BorderSize = 0;
         this.Cursor = Cursors.Hand;
-        this.Font = NextXLRTheme.BoldFont;
-        this.Size = new Size(120, 38);
+        this.Font = NextXLRTheme.ButtonFont;
+        this.Size = new Size(125, 36);
     }
 
     protected override void OnMouseEnter(EventArgs e) { _isHovered = true; Invalidate(); base.OnMouseEnter(e); }
@@ -261,7 +266,9 @@ public class ModernButton : Button
     protected override void OnPaint(PaintEventArgs pevent)
     {
         var g = pevent.Graphics;
-        g.SmoothingMode = SmoothingMode.AntiAlias;
+        g.SmoothingMode = SmoothingMode.HighQuality;
+        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
         var rect = new Rectangle(0, 0, Width - 1, Height - 1);
         using var path = NextXLRTheme.CreateRoundedRectangle(rect, CornerRadius);
@@ -272,27 +279,27 @@ public class ModernButton : Button
 
         if (!Enabled)
         {
-            bg = NextXLRTheme.SurfaceL2;
-            fg = NextXLRTheme.TextSubtle;
-            border = NextXLRTheme.StrokeSubtle;
+            bg = Color.FromArgb(22, 26, 33);
+            fg = Color.FromArgb(85, 93, 107);
+            border = Color.FromArgb(32, 37, 46);
         }
         else if (IsDanger)
         {
-            bg = _isPressed ? NextXLRTheme.DangerDark : (_isHovered ? Color.FromArgb(250, 90, 115) : NextXLRTheme.Danger);
+            bg = _isPressed ? Color.FromArgb(180, 35, 45) : (_isHovered ? Color.FromArgb(235, 65, 75) : Color.FromArgb(220, 50, 60));
             fg = Color.White;
             border = bg;
         }
         else if (IsAccent)
         {
-            bg = _isPressed ? NextXLRTheme.BrandDark : (_isHovered ? NextXLRTheme.Brand : NextXLRTheme.BrandAccent);
-            fg = NextXLRTheme.DarkBg;
+            bg = _isPressed ? Color.FromArgb(22, 160, 122) : (_isHovered ? Color.FromArgb(45, 220, 172) : NextXLRTheme.BrandAccent);
+            fg = Color.FromArgb(11, 22, 19);
             border = bg;
         }
         else
         {
-            bg = _isPressed ? NextXLRTheme.SurfaceL1 : (_isHovered ? NextXLRTheme.SurfaceL4 : NextXLRTheme.SurfaceL3);
-            fg = NextXLRTheme.TextPrimary;
-            border = _isHovered ? NextXLRTheme.Brand : NextXLRTheme.Stroke;
+            bg = _isPressed ? Color.FromArgb(22, 26, 34) : (_isHovered ? Color.FromArgb(38, 44, 56) : Color.FromArgb(29, 34, 43));
+            fg = Color.FromArgb(240, 243, 246);
+            border = _isHovered ? NextXLRTheme.BrandAccent : Color.FromArgb(46, 54, 68);
         }
 
         using (var brush = new SolidBrush(bg)) g.FillPath(brush, path);
@@ -313,28 +320,30 @@ public class ModernProgressBar : Control
 
     public ModernProgressBar()
     {
+        SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
         this.DoubleBuffered = true;
-        this.Height = 14;
+        this.Height = 10;
         this.BackColor = NextXLRTheme.DarkBg;
     }
 
     protected override void OnPaint(PaintEventArgs e)
     {
         var g = e.Graphics;
-        g.SmoothingMode = SmoothingMode.AntiAlias;
+        g.SmoothingMode = SmoothingMode.HighQuality;
+        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
 
         var rect = new Rectangle(0, 0, Width - 1, Height - 1);
         using var bgPath = NextXLRTheme.CreateRoundedRectangle(rect, Height / 2);
-        using var bgBrush = new SolidBrush(NextXLRTheme.SurfaceL1);
+        using var bgBrush = new SolidBrush(Color.FromArgb(20, 24, 32));
         g.FillPath(bgBrush, bgPath);
 
-        using var strokePen = new Pen(NextXLRTheme.Stroke, 1f);
+        using var strokePen = new Pen(Color.FromArgb(38, 45, 58), 1f);
         g.DrawPath(strokePen, bgPath);
 
         if (_value > 0)
         {
             int fillW = (int)((Width - 2) * (_value / 100f));
-            if (fillW > Height)
+            if (fillW >= Height)
             {
                 var fillRect = new Rectangle(1, 1, fillW, Height - 2);
                 using var fillPath = NextXLRTheme.CreateRoundedRectangle(fillRect, (Height - 2) / 2);
@@ -342,5 +351,64 @@ public class ModernProgressBar : Control
                 g.FillPath(fillBrush, fillPath);
             }
         }
+    }
+}
+
+public class StepPill : Control
+{
+    private bool _active;
+    private bool _completed;
+
+    public bool Active { get => _active; set { _active = value; Invalidate(); } }
+    public bool Completed { get => _completed; set { _completed = value; Invalidate(); } }
+
+    public StepPill() : this("") { }
+    public StepPill(string text)
+    {
+        SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
+        this.DoubleBuffered = true;
+        this.Text = text;
+        this.Height = 26;
+        this.Width = 145;
+        this.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        var g = e.Graphics;
+        g.SmoothingMode = SmoothingMode.HighQuality;
+        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
+        var rect = new Rectangle(0, 0, Width - 1, Height - 1);
+        using var path = NextXLRTheme.CreateRoundedRectangle(rect, Height / 2);
+
+        Color bg;
+        Color border;
+        Color fg;
+
+        if (_active)
+        {
+            bg = Color.FromArgb(20, 50, 42);
+            border = NextXLRTheme.BrandAccent;
+            fg = NextXLRTheme.Brand;
+        }
+        else if (_completed)
+        {
+            bg = Color.FromArgb(26, 32, 42);
+            border = Color.FromArgb(45, 54, 70);
+            fg = Color.FromArgb(210, 218, 230);
+        }
+        else
+        {
+            bg = Color.FromArgb(16, 19, 25);
+            border = Color.FromArgb(30, 35, 45);
+            fg = Color.FromArgb(95, 105, 120);
+        }
+
+        using (var brush = new SolidBrush(bg)) g.FillPath(brush, path);
+        using (var pen = new Pen(border, 1f)) g.DrawPath(pen, path);
+
+        TextRenderer.DrawText(g, Text, Font, rect, fg, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
     }
 }

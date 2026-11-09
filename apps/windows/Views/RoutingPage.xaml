@@ -176,6 +176,17 @@
                     <InfoBar Severity="Informational" IsOpen="True" IsClosable="False"
                              Message="Upcoming: Der integrierte Windows Lautstärkemixer wird in einem kommenden Update freigeschaltet. Du kannst deine App-Soundeinstellungen vorerst über den Windows-Mixer Button konfigurieren." />
 
+                    <!-- Animierter Lade-Indikator für Windows Lautstärkemixer -->
+                    <Border Background="{StaticResource SurfaceL2Brush}" CornerRadius="12" Padding="20"
+                            Visibility="{x:Bind ViewModel.AppRouting.IsScanning, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal" Spacing="14" HorizontalAlignment="Center">
+                            <ProgressRing IsActive="{x:Bind ViewModel.AppRouting.IsScanning, Mode=OneWay}"
+                                          Width="24" Height="24" Foreground="{StaticResource BrandBrush}" />
+                            <TextBlock Text="Scanne aktive Windows Audio-Sitzungen..." FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{StaticResource BrandBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+
                     <!-- App sessions list (Disabled with Upcoming Remark) -->
                     <ItemsRepeater ItemsSource="{x:Bind ViewModel.AppRouting.AppSessions}" IsHitTestVisible="False" Opacity="0.6">
                         <ItemsRepeater.Layout>

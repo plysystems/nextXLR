@@ -174,6 +174,7 @@ public partial class AppRoutingManagerViewModel : ObservableObject
     public List<AudioEndpointChoice> InputChoices { get; private set; } = new();
 
     [ObservableProperty] private bool _hasApps;
+    [ObservableProperty] private bool _isScanning;
     [ObservableProperty] private string _statusMessage = "";
 
     public async void Refresh()
@@ -183,23 +184,31 @@ public partial class AppRoutingManagerViewModel : ObservableObject
 
     public async Task RefreshAsync()
     {
-        var outChoices = await Task.Run(WindowsAppAudioRouter.GetOutputChoices);
-        var inChoices = await Task.Run(WindowsAppAudioRouter.GetInputChoices);
-        var sessions = await Task.Run(WindowsAppAudioRouter.GetActiveAppSessions);
-
-        OutputChoices = outChoices;
-        InputChoices = inChoices;
-
-        AppSessions.Clear();
-        foreach (var s in sessions)
+        IsScanning = true;
+        try
         {
-            AppSessions.Add(new AppSessionItemViewModel(s, OutputChoices, InputChoices));
-        }
+            var outChoices = await Task.Run(WindowsAppAudioRouter.GetOutputChoices);
+            var inChoices = await Task.Run(WindowsAppAudioRouter.GetInputChoices);
+            var sessions = await Task.Run(WindowsAppAudioRouter.GetActiveAppSessions);
 
-        HasApps = AppSessions.Count > 0;
-        StatusMessage = HasApps
-            ? $"{AppSessions.Count} aktive Audio-Anwendung{(AppSessions.Count > 1 ? "en" : "")} erkannt"
-            : "Keine aktiven Audio-Anwendungen gefunden. Spiele Ton in einer App ab, damit sie hier erscheint.";
+            OutputChoices = outChoices;
+            InputChoices = inChoices;
+
+            AppSessions.Clear();
+            foreach (var s in sessions)
+            {
+                AppSessions.Add(new AppSessionItemViewModel(s, OutputChoices, InputChoices));
+            }
+
+            HasApps = AppSessions.Count > 0;
+            StatusMessage = HasApps
+                ? $"{AppSessions.Count} aktive Audio-Anwendung{(AppSessions.Count > 1 ? "en" : "")} erkannt"
+                : "Keine aktiven Audio-Anwendungen gefunden. Spiele Ton in einer App ab, damit sie hier erscheint.";
+        }
+        finally
+        {
+            IsScanning = false;
+        }
     }
 
     public void AutoAssignAll()

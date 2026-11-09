@@ -20,8 +20,7 @@ public partial class InstallerForm : Form
 
     private Label lblTitle = null!;
     private Label lblSubtitle = null!;
-    private Label[] stepLabels = new Label[4];
-    private Panel[] stepPills = new Panel[4];
+    private StepPill[] stepPills = new StepPill[4];
 
     private ModernButton btnBack = null!;
     private ModernButton btnNext = null!;
@@ -37,6 +36,7 @@ public partial class InstallerForm : Form
     private TextBox txtInstallPath = null!;
     private ModernCheckBox chkInstallDriver = null!;
     private ModernCheckBox chkInstallService = null!;
+    private ModernCheckBox chkAppAutostart = null!;
     private ModernCheckBox chkDesktopShortcut = null!;
     private ModernCheckBox chkStartMenuShortcut = null!;
     private ModernCheckBox chkLaunchApp = null!;
@@ -47,6 +47,7 @@ public partial class InstallerForm : Form
 
     private int currentPage = 0;
     private string installDir = "";
+    private bool _wasAppAutostartEnabled = true; // Default true, detects existing setting on update
 
     public InstallerForm()
     {
@@ -69,6 +70,30 @@ public partial class InstallerForm : Form
         var appIcon = NextXLRTheme.GetAppIcon();
         if (appIcon != null) this.Icon = appIcon;
         NextXLRTheme.ApplyNativeWinUIStyle(this);
+
+        // Vorhandene Autostart-Einstellung erkennen (für Updates)
+        try
+        {
+            using var k = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
+            var existingVal = k?.GetValue("NextXLR");
+            if (existingVal != null)
+            {
+                _wasAppAutostartEnabled = true;
+            }
+            else
+            {
+                var sPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NextXLR", "settings.json");
+                if (File.Exists(sPath))
+                {
+                    var json = File.ReadAllText(sPath);
+                    if (json.Contains("\"AutostartEnabled\": true"))
+                        _wasAppAutostartEnabled = true;
+                    else if (json.Contains("\"AutostartEnabled\": false"))
+                        _wasAppAutostartEnabled = false;
+                }
+            }
+        }
+        catch { }
 
         // Header Panel
         headerPanel = new Panel
@@ -190,24 +215,14 @@ public partial class InstallerForm : Form
         int x = 28;
         for (int i = 0; i < 4; i++)
         {
-            var pill = new Panel
+            var pill = new StepPill(titles[i])
             {
-                Size = new Size(130, 24),
+                Size = new Size(130, 26),
                 Location = new Point(x, 6),
-                BackColor = NextXLRTheme.SurfaceL2
+                Active = (i == 0),
+                Completed = false
             };
 
-            var lbl = new Label
-            {
-                Text = titles[i],
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
-                ForeColor = NextXLRTheme.TextMuted
-            };
-            pill.Controls.Add(lbl);
-
-            stepLabels[i] = lbl;
             stepPills[i] = pill;
             stepPanel.Controls.Add(pill);
 
@@ -219,24 +234,8 @@ public partial class InstallerForm : Form
     {
         for (int i = 0; i < 4; i++)
         {
-            bool isCurrent = (i == activeStep);
-            bool isPast = (i < activeStep);
-
-            if (isCurrent)
-            {
-                stepPills[i].BackColor = NextXLRTheme.BrandDark;
-                stepLabels[i].ForeColor = NextXLRTheme.Brand;
-            }
-            else if (isPast)
-            {
-                stepPills[i].BackColor = NextXLRTheme.SurfaceL3;
-                stepLabels[i].ForeColor = NextXLRTheme.TextPrimary;
-            }
-            else
-            {
-                stepPills[i].BackColor = NextXLRTheme.SurfaceL1;
-                stepLabels[i].ForeColor = NextXLRTheme.TextSubtle;
-            }
+            stepPills[i].Active = (i == activeStep);
+            stepPills[i].Completed = (i < activeStep);
         }
     }
 
@@ -369,8 +368,8 @@ LIZENZBEDINGUNGEN:
 
         var subCard = new RoundedCard
         {
-            Location = new Point(20, 84),
-            Size = new Size(656, 256),
+            Location = new Point(20, 80),
+            Size = new Size(656, 266),
             BackColor = NextXLRTheme.SurfaceL3,
             CornerRadius = 12
         };
@@ -390,8 +389,8 @@ LIZENZBEDINGUNGEN:
             Checked = true,
             Font = NextXLRTheme.BodyFont,
             ForeColor = NextXLRTheme.TextPrimary,
-            Size = new Size(610, 26),
-            Location = new Point(18, 44)
+            Size = new Size(610, 24),
+            Location = new Point(18, 40)
         };
 
         chkInstallService = new ModernCheckBox
@@ -400,8 +399,18 @@ LIZENZBEDINGUNGEN:
             Checked = true,
             Font = NextXLRTheme.BodyFont,
             ForeColor = NextXLRTheme.TextPrimary,
-            Size = new Size(610, 26),
-            Location = new Point(18, 76)
+            Size = new Size(610, 24),
+            Location = new Point(18, 70)
+        };
+
+        chkAppAutostart = new ModernCheckBox
+        {
+            Text = "NEXT : XLR Hauptanwendung bei Windows-Start minimiert starten",
+            Checked = _wasAppAutostartEnabled,
+            Font = NextXLRTheme.BodyFont,
+            ForeColor = NextXLRTheme.TextPrimary,
+            Size = new Size(610, 24),
+            Location = new Point(18, 100)
         };
 
         chkDesktopShortcut = new ModernCheckBox
@@ -410,8 +419,8 @@ LIZENZBEDINGUNGEN:
             Checked = true,
             Font = NextXLRTheme.BodyFont,
             ForeColor = NextXLRTheme.TextPrimary,
-            Size = new Size(610, 26),
-            Location = new Point(18, 108)
+            Size = new Size(610, 24),
+            Location = new Point(18, 130)
         };
 
         chkStartMenuShortcut = new ModernCheckBox
@@ -420,13 +429,14 @@ LIZENZBEDINGUNGEN:
             Checked = true,
             Font = NextXLRTheme.BodyFont,
             ForeColor = NextXLRTheme.TextPrimary,
-            Size = new Size(610, 26),
-            Location = new Point(18, 140)
+            Size = new Size(610, 24),
+            Location = new Point(18, 160)
         };
 
         subCard.Controls.Add(lblComponents);
         subCard.Controls.Add(chkInstallDriver);
         subCard.Controls.Add(chkInstallService);
+        subCard.Controls.Add(chkAppAutostart);
         subCard.Controls.Add(chkDesktopShortcut);
         subCard.Controls.Add(chkStartMenuShortcut);
 
@@ -675,10 +685,14 @@ LIZENZBEDINGUNGEN:
                     InstallDrivers(installDir);
                 }
 
-                SetProgress(75, "Richte Hintergrunddienst ein...");
+                SetProgress(75, "Richte Hintergrunddienst & Autostart ein...");
                 if (chkInstallService.Checked)
                 {
                     SetupBackgroundService(installDir);
+                }
+                if (chkAppAutostart.Checked)
+                {
+                    SetupAppAutostart(installDir);
                 }
 
                 SetProgress(88, "Erstelle Verknüpfungen...");
@@ -950,6 +964,54 @@ LIZENZBEDINGUNGEN:
             {
                 Process.Start(new ProcessStartInfo { FileName = exe, WorkingDirectory = dir, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden, UseShellExecute = false });
                 Log("mixforge Hintergrunddienst gestartet.");
+            }
+            catch { }
+        }
+    }
+
+    private void SetupAppAutostart(string dir)
+    {
+        var exe = Path.Combine(dir, "NextXLR.exe");
+        if (File.Exists(exe))
+        {
+            try
+            {
+                using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
+                key?.SetValue("NextXLR", $"\"{exe}\" --minimized");
+                Log("NEXT : XLR Hauptanwendung in Windows Autostart registriert (--minimized).");
+            }
+            catch (Exception ex)
+            {
+                Log($"Warnung: Autostart-Eintrag konnte nicht gesetzt werden: {ex.Message}");
+            }
+
+            try
+            {
+                var appDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NextXLR");
+                Directory.CreateDirectory(appDataDir);
+                var settingsPath = Path.Combine(appDataDir, "settings.json");
+                if (File.Exists(settingsPath))
+                {
+                    var content = File.ReadAllText(settingsPath);
+                    if (content.Contains("\"AutostartEnabled\""))
+                    {
+                        content = System.Text.RegularExpressions.Regex.Replace(content, "\"AutostartEnabled\":\\s*(true|false)", "\"AutostartEnabled\": true");
+                    }
+                    else
+                    {
+                        content = content.TrimEnd();
+                        if (content.EndsWith("}"))
+                        {
+                            content = content.Substring(0, content.Length - 1) + ",\n  \"AutostartEnabled\": true\n}";
+                        }
+                    }
+                    File.WriteAllText(settingsPath, content);
+                }
+                else
+                {
+                    File.WriteAllText(settingsPath, "{\n  \"AutostartEnabled\": true\n}");
+                }
+                Log("Autostart-Zustand dauerhaft in settings.json gespeichert.");
             }
             catch { }
         }

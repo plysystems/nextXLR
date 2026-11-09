@@ -164,6 +164,83 @@ public partial class VstPluginItem : ObservableObject
     partial void OnLimiterReleaseChanged(double value) => NotifyHardwareSync();
     partial void OnTargetLufsChanged(double value) => NotifyHardwareSync();
 
+    [ObservableProperty] private string _activeAB = "A";
+    private string? _stateAJson;
+    private string? _stateBJson;
+
+    partial void OnPresetNameChanged(string value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            ApplyPreset(value);
+        }
+    }
+
+    public void SaveCurrentState(string slot)
+    {
+        var json = JsonSerializer.Serialize(this);
+        if (slot == "A") _stateAJson = json;
+        else _stateBJson = json;
+    }
+
+    public void SwitchAB(string targetSlot)
+    {
+        SaveCurrentState(ActiveAB);
+        ActiveAB = targetSlot;
+        string? targetJson = targetSlot == "A" ? _stateAJson : _stateBJson;
+        if (!string.IsNullOrEmpty(targetJson))
+        {
+            RestoreState(targetJson);
+        }
+    }
+
+    public void CopyCurrentToOther()
+    {
+        var json = JsonSerializer.Serialize(this);
+        if (ActiveAB == "A") _stateBJson = json;
+        else _stateAJson = json;
+    }
+
+    public void RestoreState(string json)
+    {
+        try
+        {
+            var imported = JsonSerializer.Deserialize<VstPluginItem>(json);
+            if (imported != null)
+            {
+                InputGainDb = imported.InputGainDb;
+                OutputGainDb = imported.OutputGainDb;
+                MixPercent = imported.MixPercent;
+                LowCutFreq = imported.LowCutFreq;
+                LowGain = imported.LowGain;
+                Mid1Gain = imported.Mid1Gain;
+                Mid2Gain = imported.Mid2Gain;
+                HighShelfGain = imported.HighShelfGain;
+                AirBandGain = imported.AirBandGain;
+                DetectionFreq = imported.DetectionFreq;
+                DeEssThreshold = imported.DeEssThreshold;
+                DeEssDepth = imported.DeEssDepth;
+                OptoPeakReduction = imported.OptoPeakReduction;
+                OptoGain = imported.OptoGain;
+                OptoWarmth = imported.OptoWarmth;
+                SatDrive = imported.SatDrive;
+                SatHarmonics = imported.SatHarmonics;
+                SatTapeSpeed = imported.SatTapeSpeed;
+                ExpanderThreshold = imported.ExpanderThreshold;
+                ExpanderRatio = imported.ExpanderRatio;
+                ExpanderAttack = imported.ExpanderAttack;
+                ExpanderRelease = imported.ExpanderRelease;
+                LimiterCeiling = imported.LimiterCeiling;
+                LimiterLookahead = imported.LimiterLookahead;
+                LimiterRelease = imported.LimiterRelease;
+                TargetLufs = imported.TargetLufs;
+                PresetName = imported.PresetName;
+                NotifyHardwareSync();
+            }
+        }
+        catch { }
+    }
+
     public string[] GetAvailablePresets()
     {
         if (Name.Contains("Pro-EQ", StringComparison.OrdinalIgnoreCase))
@@ -1044,7 +1121,7 @@ public sealed class VstPluginService
         Grid.SetRow(header, 0);
         rootGrid.Children.Add(header);
 
-        // 2. Preset Selection Bar
+        // 2. Standard Studio Configuration & Preset Bar
         var presetCard = new Border
         {
             Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x1E, 0x22, 0x2B)),
@@ -1059,7 +1136,8 @@ public sealed class VstPluginService
             ColumnDefinitions =
             {
                 new ColumnDefinition { Width = GridLength.Auto },
-                new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }
+                new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
+                new ColumnDefinition { Width = GridLength.Auto }
             }
         };
         var presetLabel = new StackPanel
@@ -1067,7 +1145,7 @@ public sealed class VstPluginService
             Orientation = Orientation.Horizontal,
             Spacing = 8,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 16, 0),
+            Margin = new Thickness(0, 0, 14, 0),
             Children =
             {
                 new FontIcon { Glyph = "\uE71D", FontSize = 15, Foreground = plugin.TagBrush },
@@ -1081,10 +1159,81 @@ public sealed class VstPluginService
             SelectedItem = plugin.PresetName
         };
 
+        // Standard Studio A/B Comparison & Reset Toolbar
+        var stdToolbar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(12, 0, 0, 0) };
+
+        var btnA = new Button
+        {
+            Content = "A",
+            FontWeight = Microsoft.UI.Text.FontWeights.Bold,
+            Padding = new Thickness(10, 4, 10, 4),
+            Style = plugin.ActiveAB == "A" ? (Application.Current?.Resources["AccentButtonStyle"] as Style) : (Application.Current?.Resources["SmoothButton"] as Style)
+        };
+        var btnB = new Button
+        {
+            Content = "B",
+            FontWeight = Microsoft.UI.Text.FontWeights.Bold,
+            Padding = new Thickness(10, 4, 10, 4),
+            Style = plugin.ActiveAB == "B" ? (Application.Current?.Resources["AccentButtonStyle"] as Style) : (Application.Current?.Resources["SmoothButton"] as Style)
+        };
+        var btnCopyAB = new Button
+        {
+            Content = "A \u2192 B",
+            FontSize = 11,
+            Padding = new Thickness(8, 4, 8, 4),
+            Style = Application.Current?.Resources["SmoothButton"] as Style
+        };
+        var btnReset = new Button
+        {
+            Content = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 4,
+                Children = { new FontIcon { Glyph = "\uE777", FontSize = 12 }, new TextBlock { Text = "Reset", FontSize = 11 } }
+            },
+            Padding = new Thickness(8, 4, 8, 4),
+            Style = Application.Current?.Resources["SmoothButton"] as Style
+        };
+
+        btnA.Click += (_, _) =>
+        {
+            plugin.SwitchAB("A");
+            editorWin.Close();
+            OpenEditor(parentWindow, plugin);
+        };
+        btnB.Click += (_, _) =>
+        {
+            plugin.SwitchAB("B");
+            editorWin.Close();
+            OpenEditor(parentWindow, plugin);
+        };
+        btnCopyAB.Click += (_, _) =>
+        {
+            plugin.CopyCurrentToOther();
+            btnCopyAB.Content = "Kopiert!";
+        };
+        btnReset.Click += (_, _) =>
+        {
+            var defPresets = plugin.GetAvailablePresets();
+            if (defPresets.Length > 0)
+            {
+                plugin.ApplyPreset(defPresets[0]);
+                editorWin.Close();
+                OpenEditor(parentWindow, plugin);
+            }
+        };
+
+        stdToolbar.Children.Add(btnA);
+        stdToolbar.Children.Add(btnB);
+        stdToolbar.Children.Add(btnCopyAB);
+        stdToolbar.Children.Add(btnReset);
+
         Grid.SetColumn(presetLabel, 0);
         Grid.SetColumn(presetCombo, 1);
+        Grid.SetColumn(stdToolbar, 2);
         presetRow.Children.Add(presetLabel);
         presetRow.Children.Add(presetCombo);
+        presetRow.Children.Add(stdToolbar);
         presetCard.Child = presetRow;
         Grid.SetRow(presetCard, 1);
         rootGrid.Children.Add(presetCard);

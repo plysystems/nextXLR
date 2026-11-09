@@ -16,6 +16,7 @@ public sealed class AppSettings
 
     public bool MinimizeToTray { get; set; } = true;
     public bool StartMinimized { get; set; }
+    public bool AutostartEnabled { get; set; } = false;
     public bool MuteOnStartup { get; set; } = false;
     public bool CheckForUpdatesOnStart { get; set; } = true;
     public double BleepVolume { get; set; } = 100.0;
@@ -95,16 +96,44 @@ public static class Autostart
     {
         get
         {
+            var settings = AppSettings.Load();
             using var key = Registry.CurrentUser.OpenSubKey(RunKey);
-            return key?.GetValue(ValueName) is string;
+            bool regEnabled = key?.GetValue(ValueName) is string;
+
+            // Self-heal: If settings.json states autostart is enabled but registry was cleared by update, restore it!
+            if (settings.AutostartEnabled && !regEnabled)
+            {
+                Set(true);
+                return true;
+            }
+
+            return settings.AutostartEnabled || regEnabled;
         }
     }
 
     public static void Set(bool enabled)
     {
-        using var key = Registry.CurrentUser.CreateSubKey(RunKey);
-        if (enabled && Environment.ProcessPath is { } exe) key.SetValue(ValueName, $"\"{exe}\" --minimized");
-        else key.DeleteValue(ValueName, throwOnMissingValue: false);
+        try
+        {
+            var settings = AppSettings.Load();
+            settings.AutostartEnabled = enabled;
+            settings.Save();
+        }
+        catch { }
+
+        try
+        {
+            using var key = Registry.CurrentUser.CreateSubKey(RunKey);
+            if (enabled && Environment.ProcessPath is { } exe)
+            {
+                key.SetValue(ValueName, $"\"{exe}\" --minimized");
+            }
+            else
+            {
+                key.DeleteValue(ValueName, throwOnMissingValue: false);
+            }
+        }
+        catch { }
     }
 }
 

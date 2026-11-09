@@ -15,6 +15,16 @@
         <Grid x:Name="AppTitleBar" Padding="16,0,150,0">
             <Image Source="Assets/nextXLR_logo.png" Height="40" HorizontalAlignment="Left"
                    VerticalAlignment="Center" Stretch="Uniform" AutomationProperties.Name="NEXT : XLR" />
+
+            <!-- Allgemeiner animierter Lade-Indikator -->
+            <StackPanel x:Name="AppLoadingPanel" Orientation="Horizontal" Spacing="8"
+                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}">
+                <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Width="16" Height="16"
+                              Foreground="{StaticResource BrandBrush}" />
+                <TextBlock Text="{x:Bind ViewModel.BusyText, Mode=OneWay}" FontSize="12" FontWeight="SemiBold"
+                           Foreground="{StaticResource BrandBrush}" VerticalAlignment="Center" />
+            </StackPanel>
         </Grid>
 
         <NavigationView x:Name="Nav" Grid.Row="1"
