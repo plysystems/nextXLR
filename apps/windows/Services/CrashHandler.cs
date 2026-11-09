@@ -196,7 +196,7 @@ public static class CrashHandler
             report.AppendLine("                  NEXT : XLR — NATIVER CRASH REPORT");
             report.AppendLine("================================================================================");
             report.AppendLine($"Timestamp:         {DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}");
-            report.AppendLine($"Application:       NEXT : XLR (v0.1.0-alpha)");
+            report.AppendLine($"Application:       NEXT : XLR (v{AppSettings.AppVersion})");
             report.AppendLine($"Git Commit:        {GitBuildInfo.CommitHash} ({GitBuildInfo.FullCommitHash})");
             report.AppendLine($"Ausnahmecode:      {codeName}");
             report.AppendLine($"Fehleradresse:     0x{rec.ExceptionAddress:X16}");
@@ -270,7 +270,7 @@ public static class CrashHandler
         sb.AppendLine("                       NEXT : XLR — CRASH REPORT");
         sb.AppendLine("================================================================================");
         sb.AppendLine($"Timestamp:         {DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}");
-        sb.AppendLine($"Application:       NEXT : XLR (v0.1.0-alpha)");
+        sb.AppendLine($"Application:       NEXT : XLR (v{AppSettings.AppVersion})");
         sb.AppendLine($"Git Commit:        {GitBuildInfo.CommitHash} ({GitBuildInfo.FullCommitHash})");
         sb.AppendLine($"Crash Source:      {source}");
         sb.AppendLine($"OS Version:        {Environment.OSVersion} ({(Environment.Is64BitOperatingSystem ? "64-Bit" : "32-Bit")})");

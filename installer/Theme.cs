@@ -229,7 +229,7 @@ public class GradientSidebarPanel : Panel
 
         using (var verFont = new Font("Segoe UI", 9f, FontStyle.Bold))
         {
-            TextRenderer.DrawText(g, "Version 0.1.0-alpha", verFont, new Point(footerX, footerY1), Color.FromArgb(245, 255, 255, 255), TextFormatFlags.NoPrefix);
+            TextRenderer.DrawText(g, "Version 0.1.1-alpha", verFont, new Point(footerX, footerY1), Color.FromArgb(245, 255, 255, 255), TextFormatFlags.NoPrefix);
         }
 
         using (var copyFont = new Font("Segoe UI", 8.5f, FontStyle.Regular))
