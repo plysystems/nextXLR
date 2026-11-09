@@ -113,8 +113,9 @@ if (-not (Test-Path $drvDir)) {
     Copy-Item (Join-Path $root "apps\windows\Assets\Driver\*") $drvDir -Recurse -Force
 }
 
-# 3b. Copy LICENSE to app folder
+# 3b. Copy LICENSE & THIRD_PARTY_NOTICES to app folder
 Copy-Item (Join-Path $root "LICENSE") (Join-Path $appDir "LICENSE") -Force -ErrorAction SilentlyContinue
+Copy-Item (Join-Path $root "THIRD_PARTY_NOTICES.md") (Join-Path $appDir "THIRD_PARTY_NOTICES.md") -Force -ErrorAction SilentlyContinue
 
 # 4. Create embedded payload.zip for standalone installer
 $payloadZip = Join-Path $root "installer\payload.zip"
@@ -148,6 +149,7 @@ if (Test-Path $payloadZip) { Remove-Item $payloadZip -Force }
 # 6. Copy Scripts and Meta
 Copy-Item (Join-Path $root "install.bat") $releaseDir -Force
 Copy-Item (Join-Path $root "LICENSE") $releaseDir -Force
+Copy-Item (Join-Path $root "THIRD_PARTY_NOTICES.md") $releaseDir -Force
 Copy-Item (Join-Path $root "README.md") $releaseDir -Force
 
 # 7. Create Zip archive

@@ -6,7 +6,7 @@ members = ["crates/protocol", "crates/engine", "crates/usb", "crates/daemon"]
 version = "0.1.0-alpha"
 edition = "2021"
 authors = ["plysystems"]
-license = "plysystems"
+license = "MIT"
 
 [workspace.dependencies]
 mixforge-protocol = { path = "crates/protocol" }

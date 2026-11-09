@@ -234,7 +234,7 @@ public class GradientSidebarPanel : Panel
 
         using (var copyFont = new Font("Segoe UI", 8.5f, FontStyle.Regular))
         {
-            TextRenderer.DrawText(g, "Kostenlos & Open Source • plysystems", copyFont, new Point(footerX, footerY2), Color.FromArgb(205, 255, 255, 255), TextFormatFlags.NoPrefix);
+            TextRenderer.DrawText(g, "Kostenlos & Open Source · MIT-Lizenz", copyFont, new Point(footerX, footerY2), Color.FromArgb(205, 255, 255, 255), TextFormatFlags.NoPrefix);
         }
     }
 }

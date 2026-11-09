@@ -1,58 +1,28 @@
-NEXT : XLR License Agreement
+MIT License
+
 Copyright (c) 2026 plysystems. All rights reserved.
 
-==============================================================================
-LIZENZVEREINBARUNG / LICENSE AGREEMENT
-==============================================================================
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-Dieses Softwarepaket (NEXT : XLR) wird von plysystems unter den folgenden 
-Bedingungen bereitgestellt / This software package is provided by plysystems 
-under the following terms:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-[DE]
-1. ERLAUBT:
-   - Private Nutzung (kostenfrei und uneingeschränkt)
-   - Kommerzielle Nutzung
-     * Streaming (Twitch, Kick, YouTube etc.)
-     * Erstellung von Inhalten (YouTube-Videos, Podcasts, Broadcasts)
-   - Firmeninterne Nutzung (Unternehmen, Studios, Organisationen)
-   - Änderungen und Erweiterungen am Quellcode
-   - Weiterverteilung der Original- oder modifizierten Software
-
-2. PFLICHT:
-   - Der Copyright-Hinweis "Copyright (c) plysystems" sowie dieser vollständige
-     Lizenztext müssen in allen Kopien, Distributionen oder wesentlichen Teilen
-     der Software beibehalten werden.
-
-3. HAFTUNGSAUSSCHLUSS:
-   - DIE SOFTWARE WIRD OHNE JEDE AUSDRÜCKLICHE ODER STILLSCHWEIGENDE GEWÄHRLEISTUNG
-     BEREITGESTELLT. DIE AUTOREN ODER RECHTEINHABER HAFTEN NICHT FÜR SCHÄDEN ODER
-     SONSTIGE ANSPRÜCHE, DIE AUS DER NUTZUNG DER SOFTWARE ENTSTEHEN.
-
-------------------------------------------------------------------------------
-
-[EN]
-1. PERMITTED:
-   - Private use (free of charge and unrestricted)
-   - Commercial use
-     * Live streaming (Twitch, Kick, YouTube, etc.)
-     * Content creation (YouTube videos, podcasts, broadcast production)
-   - Internal business / corporate use (studios, companies, organizations)
-   - Modifications and derivatives of the source code
-   - Redistribution of original or modified versions of the software
-
-2. OBLIGATIONS:
-   - The copyright notice "Copyright (c) plysystems" and this complete license
-     text must be retained and included in all copies, redistributions, or
-     substantial portions of the Software.
-
-3. DISCLAIMER:
-   - THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-     IMPLIED. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR
-     ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ==============================================================================
-Website: https://github.com/plysystems/nextXLR
-Copyright (c) 2026 plysystems
+Third-Party Software Notices:
+This software incorporates components, libraries, and tools from third-party
+open-source projects under various permissive licenses (MIT, Apache-2.0, 
+BSD-3-Clause). For complete details, see THIRD_PARTY_NOTICES.md.
 ==============================================================================
-

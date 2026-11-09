@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/badge/Release-v0.1.0--alpha-00d2b4.svg)](https://github.com/plysystems/nextXLR/releases)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-blue.svg)](https://github.com/plysystems/nextXLR)
-[![License](https://img.shields.io/badge/License-plysystems%20Free%20License-emerald.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Author](https://img.shields.io/badge/Author-plysystems-informational.svg)](https://github.com/plysystems)
 
 > **NEXT : XLR** ist die moderne, modulare Open-Source Audiosteuerung und Routing-Suite für TC-Helicon GoXLR und GoXLR Mini Geräte sowie Standalone-Virtuelle Mixer unter Windows. Entwickelt von **plysystems**.
@@ -150,20 +150,9 @@ dotnet build installer/NextXLR.Installer.csproj
 
 **Copyright (c) 2026 plysystems. Alle Rechte vorbehalten.**
 
-Diese Software wird von plysystems unter der folgenden Lizenzvereinbarung bereitgestellt:
+Veröffentlicht unter den Bedingungen der **[MIT-Lizenz](LICENSE)**.
 
-### Erlaubt:
-- **Private Nutzung:** Uneingeschränkt und kostenfrei.
-- **Kommerzielle Nutzung:**
-  - Live-Streaming (Twitch, YouTube, Kick usw.)
-  - Content Creation (YouTube-Videos, Podcasts, Broadcast-Produktion)
-- **Firmeninterne Nutzung:** Einsatz in Unternehmen, Studios und Organisationen.
-- **Änderungen am Quellcode:** Anpassung und Weiterentwicklung für eigene Zwecke.
-- **Weiterverteilung:** Weitergabe des Originals oder veränderter Versionen.
-
-### Pflicht & Bedingungen:
-- Der **Copyright-Hinweis ("Copyright (c) plysystems")** sowie der vollständige Lizenztext müssen in allen Kopien, Distributionen oder wesentlichen Teilen der Software beibehalten werden.
-- Die Software wird ohne ausdrückliche oder stillschweigende Gewährleistung bereitgestellt.
+Dieses Projekt enthält zudem Open-Source-Komponenten und -Bibliotheken Dritter. Vollständige Urheberrechtsvermerke und Lizenztexte finden sich in **[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)**.
 
 ---
 
@@ -284,17 +273,6 @@ dotnet build installer/NextXLR.Installer.csproj
 
 **Copyright (c) 2026 plysystems. All rights reserved.**
 
-Provided by plysystems under the following terms:
+Released under the **[MIT License](LICENSE)**.
 
-### Permitted:
-- **Private Use:** Completely free and unrestricted.
-- **Commercial Use:**
-  - Live streaming (Twitch, YouTube, Kick, etc.)
-  - Content creation (YouTube videos, podcasts, broadcast production)
-- **Internal Business Use:** Permitted across companies, studios, and organizations.
-- **Source Modifications:** Freely edit and extend the codebase.
-- **Redistribution:** Freely redistribute original or modified versions.
-
-### Obligations & Conditions:
-- The **copyright notice ("Copyright (c) plysystems")** and this complete license text must be retained in all copies, redistributions, or substantial portions of the Software.
-- The software is provided "AS IS", without warranties of any kind.
+This software also includes third-party open-source components and libraries. For full copyright notices and license texts, see **[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)**.

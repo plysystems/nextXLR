@@ -708,6 +708,33 @@ public sealed partial class SettingsPage : Page
         _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/plysystems/nextXLR/blob/main/LICENSE"));
     }
 
+    private void OpenThirdPartyNotices_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var baseDir = AppContext.BaseDirectory;
+            var noticesPath = Path.Combine(baseDir, "THIRD_PARTY_NOTICES.md");
+            if (!File.Exists(noticesPath))
+            {
+                noticesPath = Path.Combine(baseDir, "..", "..", "..", "..", "..", "THIRD_PARTY_NOTICES.md");
+            }
+            if (File.Exists(noticesPath))
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "notepad.exe",
+                    Arguments = $"\"{Path.GetFullPath(noticesPath)}\"",
+                    UseShellExecute = true
+                });
+                return;
+            }
+        }
+        catch
+        {
+        }
+        _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/plysystems/nextXLR/blob/main/THIRD_PARTY_NOTICES.md"));
+    }
+
     #region Bluetooth & Wireless Headset Routing
 
     private async Task LoadAudioEndpointsAsync()

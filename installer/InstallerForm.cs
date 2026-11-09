@@ -281,13 +281,16 @@ public partial class InstallerForm : Form
         string mitLicenseText =
 @"MIT License
 
-Copyright (c) plysystems. Alle Rechte vorbehalten.
+Copyright (c) 2026 plysystems. All rights reserved.
 
-Hiermit wird jeder Person, die eine Kopie dieser Software und der zugehörigen Dokumentationsdateien erhält, unentgeltlich die Erlaubnis erteilt, uneingeschränkt mit der Software zu handeln, einschließlich und ohne Einschränkung der Rechte zur Nutzung, zum Kopieren, Ändern, Zusammenführen, Veröffentlichen, Verteilen, Unterlizenzieren und/oder Verkaufen von Kopien der Software, vorbehaltlich der folgenden Bedingungen:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the ""Software""), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-Der obige Urheberrechtshinweis und dieser Genehmigungshinweis müssen in allen Kopien oder wesentlichen Teilen der Software enthalten sein.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-DIE SOFTWARE WIRD OHNE JEDE AUSDRÜCKLICHE ODER STILLSCHWEIGENDE GEWÄHRLEISTUNG BEREITGESTELLT.";
+THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+
+Hinweis zu Drittanbieter-Lizenzen (Third-Party Notices):
+Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityToolkit, NAudio, Rust-Audio-Crates, CLAP). Die vollständigen Lizenztexte der Drittanbieter sind in THIRD_PARTY_NOTICES.md enthalten.";
 
         expLicense = new ModernExpander("Lizenz (MIT)", mitLicenseText)
         {

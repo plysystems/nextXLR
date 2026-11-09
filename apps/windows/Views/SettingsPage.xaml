@@ -452,7 +452,7 @@
                                         <TextBlock Text="NEXT : XLR ist ein Projekt von plysystems. © 2026 plysystems. Alle Rechte vorbehalten." FontSize="13" Foreground="{StaticResource TextMutedBrush}" />
                                     </StackPanel>
                                     <Border Grid.Column="1" CornerRadius="8" Padding="10,4" Background="{StaticResource SurfaceL3Brush}" VerticalAlignment="Center">
-                                        <TextBlock Text="Freie Lizenz" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource BrandBrush}" />
+                                        <TextBlock Text="MIT-Lizenz" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource BrandBrush}" />
                                     </Border>
                                 </Grid>
 
@@ -467,13 +467,13 @@
                                         <StackPanel Spacing="6">
                                             <StackPanel Orientation="Horizontal" Spacing="8">
                                                 <FontIcon Glyph="&#xE73E;" FontSize="14" Foreground="#10B981" />
-                                                <TextBlock Text="Erlaubt" FontWeight="Bold" FontSize="13" Foreground="#10B981" />
+                                                <TextBlock Text="Erlaubt (MIT)" FontWeight="Bold" FontSize="13" Foreground="#10B981" />
                                             </StackPanel>
-                                            <TextBlock Text="• Private Nutzung" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
-                                            <TextBlock Text="• Kommerzielle Nutzung (Streaming, YouTube-Videos, Twitch-Streams)" FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
-                                            <TextBlock Text="• Firmeninterne Nutzung" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
-                                            <TextBlock Text="• Änderungen am Quellcode" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
-                                            <TextBlock Text="• Weiterverteilung" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                            <TextBlock Text="• Private Nutzung (kostenfrei &amp; unbegrenzt)" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                            <TextBlock Text="• Kommerzielle Nutzung (Streaming, YouTube, Twitch, Podcasts)" FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
+                                            <TextBlock Text="• Firmeninterne Nutzung in Unternehmen &amp; Studios" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                            <TextBlock Text="• Modifikation &amp; Erweiterung des Quellcodes" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                            <TextBlock Text="• Weiterverteilung &amp; Integration" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
                                         </StackPanel>
                                     </Border>
 
@@ -482,11 +482,11 @@
                                         <StackPanel Spacing="6">
                                             <StackPanel Orientation="Horizontal" Spacing="8">
                                                 <FontIcon Glyph="&#xE7BA;" FontSize="14" Foreground="#F59E0B" />
-                                                <TextBlock Text="Pflicht &amp; Bedingungen" FontWeight="Bold" FontSize="13" Foreground="#F59E0B" />
+                                                <TextBlock Text="Bedingungen &amp; Hinweise" FontWeight="Bold" FontSize="13" Foreground="#F59E0B" />
                                             </StackPanel>
                                             <TextBlock Text="• Copyright-Hinweis (plysystems) beibehalten" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
-                                            <TextBlock Text="• Lizenztext beibehalten" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
-                                            <TextBlock Text="• Gilt für alle Kopien und wesentlichen Teile" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                            <TextBlock Text="• MIT-Lizenztext beibehalten" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                            <TextBlock Text="• Drittanbieter-Lizenzen (Third-Party Notices) beachten" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
                                         </StackPanel>
                                     </Border>
                                 </Grid>
@@ -495,7 +495,13 @@
                                     <Button Click="OpenLicense_Click">
                                         <StackPanel Orientation="Horizontal" Spacing="8">
                                             <FontIcon Glyph="&#xE8A5;" FontSize="14" />
-                                            <TextBlock Text="Vollständige Lizenzdatei anzeigen" />
+                                            <TextBlock Text="Lizenzdatei anzeigen (MIT)" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Click="OpenThirdPartyNotices_Click">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <FontIcon Glyph="&#xE943;" FontSize="14" />
+                                            <TextBlock Text="Drittanbieter-Lizenzen (Third-Party)" />
                                         </StackPanel>
                                     </Button>
                                     <HyperlinkButton Content="plysystems auf GitHub" NavigateUri="https://github.com/plysystems/nextXLR" />
