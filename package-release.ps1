@@ -85,8 +85,8 @@ public static class GitBuildInfo
 }
 
 # 0b. Compile projects to ensure latest binaries
-Write-Host "Building Windows Application (Self-Contained)..."
-dotnet build (Join-Path $root "apps\windows\NextXLR.csproj") -c Debug -p:SelfContained=true --no-restore
+Write-Host "Building Windows Application..."
+dotnet build (Join-Path $root "apps\windows\NextXLR.csproj") -c Debug --no-restore
 
 Write-Host "Creating release package directory structure..."
 if (Test-Path $releaseDir) { Remove-Item $releaseDir -Recurse -Force }

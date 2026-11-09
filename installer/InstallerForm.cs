@@ -54,7 +54,7 @@ public partial class InstallerForm : Form
     private void InitializeComponent()
     {
         this.Text = "NEXT : XLR Setup";
-        this.Size = new Size(860, 560);
+        this.ClientSize = new Size(844, 520);
         this.MinimumSize = new Size(840, 540);
         this.StartPosition = FormStartPosition.CenterScreen;
         this.BackColor = NextXLRTheme.DarkBg;
@@ -91,23 +91,24 @@ public partial class InstallerForm : Form
         }
         catch { }
 
-        // Right Main Container
-        mainContainer = new Panel
-        {
-            Dock = DockStyle.Fill,
-            BackColor = Color.FromArgb(22, 24, 31) // #16181F
-        };
-        this.Controls.Add(mainContainer);
-
         // Left Gradient Sidebar (matching Bild 1)
         sidebarPanel = new GradientSidebarPanel
         {
-            Dock = DockStyle.Left,
-            Width = 280
+            Location = new Point(0, 0),
+            Size = new Size(280, this.ClientSize.Height),
+            Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left
         };
         this.Controls.Add(sidebarPanel);
-        sidebarPanel.SendToBack();
-        mainContainer.BringToFront();
+
+        // Right Main Container
+        mainContainer = new Panel
+        {
+            Location = new Point(280, 0),
+            Size = new Size(this.ClientSize.Width - 280, this.ClientSize.Height),
+            Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+            BackColor = Color.FromArgb(22, 24, 31) // #16181F
+        };
+        this.Controls.Add(mainContainer);
 
         BuildSetupPage();
         BuildProgressPage();

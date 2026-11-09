@@ -140,7 +140,7 @@ public class GradientSidebarPanel : Panel
     {
         SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
         this.DoubleBuffered = true;
-        this.Dock = DockStyle.Left;
+        this.Dock = DockStyle.None;
         this.Width = 280;
 
         var icon = NextXLRTheme.GetAppIcon(128);
@@ -219,7 +219,7 @@ public class GradientSidebarPanel : Panel
         using (var subFont = new Font("Segoe UI", 9.5f, FontStyle.Regular))
         {
             var subRect = new Rectangle(12, iconBoxY + iconBoxSize + 56, Width - 24, 25);
-            TextRenderer.DrawText(g, "Die moderne Audio-Suite für Windows", subFont, subRect, Color.FromArgb(235, 255, 255, 255), TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.NoPrefix);
+            TextRenderer.DrawText(g, "Live-Audio für Windows", subFont, subRect, Color.FromArgb(235, 255, 255, 255), TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.NoPrefix);
         }
 
         // 6. Draw Footer Info at Bottom
@@ -500,6 +500,10 @@ public class ModernExpander : Panel
                 _chevronLabel.Text = _isExpanded ? "⌃" : "⌵";
                 this.Height = _isExpanded ? 160 : 38;
                 _contentBox.Visible = _isExpanded;
+                if (_isExpanded)
+                {
+                    this.BringToFront();
+                }
                 Invalidate();
             }
         }
