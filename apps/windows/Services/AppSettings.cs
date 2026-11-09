@@ -172,6 +172,11 @@ public static class Autostart
         try
         {
             using var key = Registry.CurrentUser.CreateSubKey(RunKey);
+            key.DeleteValue("NextXLR_BackgroundService", throwOnMissingValue: false);
+            key.DeleteValue("mixforge", throwOnMissingValue: false);
+            key.DeleteValue("mixforged", throwOnMissingValue: false);
+            key.DeleteValue("GoXLRNext", throwOnMissingValue: false);
+
             if (enabled && Environment.ProcessPath is { } exe)
             {
                 key.SetValue(ValueName, $"\"{exe}\" --minimized");
@@ -200,10 +205,16 @@ public static class Rebrand
             if (Directory.Exists(oldDir) && !Directory.Exists(newDir)) Directory.Move(oldDir, newDir);
 
             using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
-            if (key?.GetValue("GoXLRNext") is string)
+            if (key != null)
             {
-                key.DeleteValue("GoXLRNext", throwOnMissingValue: false);
-                Autostart.Set(true);   // re-register with the new executable
+                key.DeleteValue("NextXLR_BackgroundService", throwOnMissingValue: false);
+                key.DeleteValue("mixforge", throwOnMissingValue: false);
+                key.DeleteValue("mixforged", throwOnMissingValue: false);
+                if (key.GetValue("GoXLRNext") is string)
+                {
+                    key.DeleteValue("GoXLRNext", throwOnMissingValue: false);
+                    Autostart.Set(true);   // re-register with the new executable
+                }
             }
         }
         catch { /* best effort: the app works without the old data */ }

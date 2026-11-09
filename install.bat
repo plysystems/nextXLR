@@ -58,7 +58,8 @@ if exist "%DRV_DIR%\goxlr_audio.inf" (
 )
 
 echo [4/4] Richte mixforge Hintergrunddienst ^& Windows Autostart ein...
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "NextXLR_BackgroundService" /t REG_SZ /d "\"%TARGET_DIR%\mixforged.exe\"" /f >nul
+reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "NextXLR_BackgroundService" /f >nul 2>&1
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "NextXLR" /t REG_SZ /d "\"%TARGET_DIR%\NextXLR.exe\" --minimized" /f >nul
 
 rem Erstelle Desktop Verknuepfung
 powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), 'NEXT XLR.lnk')); $s.TargetPath = '%TARGET_DIR%\NextXLR.exe'; $s.WorkingDirectory = '%TARGET_DIR%'; $s.Save()"

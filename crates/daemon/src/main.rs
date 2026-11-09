@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 //! `mixforged` — owns the state hub and exposes it over `\\.\pipe\mixforge` (desktop app)
 //! and `ws://<bind>/ws` (remote panels, Stream Deck). Same JSON protocol on both.
 //!
@@ -47,6 +49,15 @@ fn env_flag(name: &str) -> bool {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    #[cfg(windows)]
+    unsafe {
+        extern "system" {
+            fn AttachConsole(dw_process_id: u32) -> i32;
+        }
+        const ATTACH_PARENT_PROCESS: u32 = 0xFFFF_FFFF;
+        let _ = AttachConsole(ATTACH_PARENT_PROCESS);
+    }
+
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()))
         .init();

@@ -1,10 +1,12 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
+using NAudio.CoreAudioApi;
+using NAudio.Wave;
 using Windows.Devices.Enumeration;
 using Windows.Media.Core;
 using Windows.Media.Devices;
 using Windows.Media.MediaProperties;
-using Windows.Media.Playback;
 using Windows.Media.Transcoding;
 using Windows.Storage;
 
@@ -182,61 +184,176 @@ public sealed class SamplerStore
 }
 
 /// <summary>
-/// One playback voice (MediaPlayer). Pads play into the GoXLR's "Sample" playback device, so
-/// they land on the Samples channel and its routing like on the original sampler; previews in
-/// the browser use the Windows default device.
+/// High-performance, low-latency audio playback voice for sampler pads (using NAudio WASAPI).
+/// Pads play into the GoXLR's "Sample" playback device so they land on the Samples channel
+/// and its routing matrix. Previews in the browser play into the Windows default multimedia device.
+/// Completely avoids Windows System Media Transport Controls (SMTC) hidden message windows.
 /// </summary>
 public sealed class SamplePlayer : IDisposable
 {
-    private readonly MediaPlayer _player = new() { AutoPlay = false };
-    private static Task<DeviceInformation?>? _sampleDevice;
+    private MediaFoundationReader? _reader;
+    private WasapiOut? _output;
+    private readonly bool _toSampleChannel;
+    private readonly object _lock = new();
+    private System.Threading.Timer? _trimTimer;
+    private static MMDevice? _cachedSampleDevice;
+    private static bool _deviceSearched;
 
     public event Action<bool>? PlayingChanged;
     public bool IsPlaying { get; private set; }
 
     public SamplePlayer(bool toSampleChannel)
     {
-        _player.MediaEnded += (_, _) => SetPlaying(false);
-        _player.MediaFailed += (_, _) => SetPlaying(false);
-        if (toSampleChannel) _ = RouteToSampleChannel();
+        _toSampleChannel = toSampleChannel;
     }
 
-    private async Task RouteToSampleChannel()
+    private static MMDevice? FindSampleDevice()
     {
-        _sampleDevice ??= FindSampleDevice();
-        if (await _sampleDevice is { } d) _player.AudioDevice = d;
-    }
-
-    private static async Task<DeviceInformation?> FindSampleDevice()
-    {
+        if (_deviceSearched) return _cachedSampleDevice;
+        _deviceSearched = true;
         try
         {
-            var all = await DeviceInformation.FindAllAsync(MediaDevice.GetAudioRenderSelector());
-            return all.FirstOrDefault(d => d.Name.StartsWith("Sample", StringComparison.OrdinalIgnoreCase)
-                                           && d.Name.Contains("GoXLR", StringComparison.OrdinalIgnoreCase));
+            using var enumerator = new MMDeviceEnumerator();
+            var renderDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active);
+            _cachedSampleDevice = renderDevices.FirstOrDefault(d =>
+                (d.FriendlyName.StartsWith("Sample", StringComparison.OrdinalIgnoreCase) ||
+                 d.FriendlyName.Contains("Sample", StringComparison.OrdinalIgnoreCase)) &&
+                (d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
+                 d.FriendlyName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase)));
         }
-        catch { return null; }
+        catch { }
+        return _cachedSampleDevice;
     }
 
     /// <summary>Elapsed position inside the file (seconds).</summary>
-    public double Position => _player.PlaybackSession?.Position.TotalSeconds ?? 0;
+    public double Position
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _reader?.CurrentTime.TotalSeconds ?? 0;
+            }
+        }
+    }
 
     public void Play(string file, double start = 0, double end = 0)
     {
-        var source = MediaSource.CreateFromUri(new Uri(file));
-        var from = TimeSpan.FromSeconds(Math.Max(0, start));
-        _player.Source = end > start
-            ? new MediaPlaybackItem(source, from, TimeSpan.FromSeconds(end - start))
-            : new MediaPlaybackItem(source, from);
-        _player.Play();
-        SetPlaying(true);
+        lock (_lock)
+        {
+            StopInternal();
+            try
+            {
+                if (!System.IO.File.Exists(file)) return;
+
+                _reader = new MediaFoundationReader(file);
+                if (start > 0 && start < _reader.TotalTime.TotalSeconds)
+                {
+                    _reader.CurrentTime = TimeSpan.FromSeconds(start);
+                }
+
+                MMDevice? targetDevice = null;
+                if (_toSampleChannel)
+                {
+                    targetDevice = FindSampleDevice();
+                }
+
+                if (targetDevice != null)
+                {
+                    try
+                    {
+                        _output = new WasapiOut(targetDevice, AudioClientShareMode.Shared, true, 20);
+                        _output.Init(_reader);
+                    }
+                    catch
+                    {
+                        _output?.Dispose();
+                        _output = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 30);
+                        _output.Init(_reader);
+                    }
+                }
+                else
+                {
+                    using var enumerator = new MMDeviceEnumerator();
+                    var defDev = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+                    if (defDev != null)
+                    {
+                        try
+                        {
+                            _output = new WasapiOut(defDev, AudioClientShareMode.Shared, true, 20);
+                            _output.Init(_reader);
+                        }
+                        catch
+                        {
+                            _output?.Dispose();
+                            _output = new WasapiOut(defDev, AudioClientShareMode.Shared, false, 30);
+                            _output.Init(_reader);
+                        }
+                    }
+                    else
+                    {
+                        _output = new WasapiOut(AudioClientShareMode.Shared, 30);
+                        _output.Init(_reader);
+                    }
+                }
+
+                _output.PlaybackStopped += (s, e) =>
+                {
+                    lock (_lock)
+                    {
+                        SetPlaying(false);
+                    }
+                };
+
+                _output.Play();
+                SetPlaying(true);
+
+                if (end > start)
+                {
+                    double durationSeconds = end - start;
+                    _trimTimer = new System.Threading.Timer(_ =>
+                    {
+                        lock (_lock)
+                        {
+                            StopInternal();
+                        }
+                    }, null, TimeSpan.FromSeconds(durationSeconds), Timeout.InfiniteTimeSpan);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SamplePlayer Play error: {ex.Message}");
+                StopInternal();
+            }
+        }
     }
 
     public void Stop()
     {
-        if (!IsPlaying) return;
-        _player.Pause();
-        _player.Source = null;
+        lock (_lock)
+        {
+            StopInternal();
+        }
+    }
+
+    private void StopInternal()
+    {
+        _trimTimer?.Dispose();
+        _trimTimer = null;
+
+        if (_output != null)
+        {
+            try { _output.Stop(); } catch { }
+            try { _output.Dispose(); } catch { }
+            _output = null;
+        }
+
+        if (_reader != null)
+        {
+            try { _reader.Dispose(); } catch { }
+            _reader = null;
+        }
+
         SetPlaying(false);
     }
 
@@ -247,5 +364,11 @@ public sealed class SamplePlayer : IDisposable
         PlayingChanged?.Invoke(playing);
     }
 
-    public void Dispose() => _player.Dispose();
+    public void Dispose()
+    {
+        lock (_lock)
+        {
+            StopInternal();
+        }
+    }
 }

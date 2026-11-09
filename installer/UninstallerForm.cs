@@ -374,6 +374,9 @@ public partial class UninstallerForm : Form
             using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
             key.DeleteValue("NextXLR", throwOnMissingValue: false);
             key.DeleteValue("GoXLRNext", throwOnMissingValue: false);
+            key.DeleteValue("NextXLR_BackgroundService", throwOnMissingValue: false);
+            key.DeleteValue("mixforge", throwOnMissingValue: false);
+            key.DeleteValue("mixforged", throwOnMissingValue: false);
         }
         catch { }
     }

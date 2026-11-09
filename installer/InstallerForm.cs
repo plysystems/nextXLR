@@ -595,6 +595,15 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
             KillProcess("mixforge");
             System.Threading.Thread.Sleep(500);
 
+            try
+            {
+                using var runKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
+                runKey?.DeleteValue("NextXLR_BackgroundService", throwOnMissingValue: false);
+                runKey?.DeleteValue("mixforge", throwOnMissingValue: false);
+                runKey?.DeleteValue("mixforged", throwOnMissingValue: false);
+            }
+            catch { }
+
             if (Directory.Exists(targetDir))
             {
                 Log("Bereinige veraltete Binärdateien im Zielordner...");
@@ -766,6 +775,9 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
         {
             var exe = Path.Combine(appPath, "NextXLR.exe");
             using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
+            key.DeleteValue("NextXLR_BackgroundService", throwOnMissingValue: false);
+            key.DeleteValue("mixforge", throwOnMissingValue: false);
+            key.DeleteValue("mixforged", throwOnMissingValue: false);
             key.SetValue("NextXLR", $"\"{exe}\" --minimized");
 
             // In settings.json spiegeln
@@ -790,6 +802,9 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
         {
             using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
             key.DeleteValue("NextXLR", throwOnMissingValue: false);
+            key.DeleteValue("NextXLR_BackgroundService", throwOnMissingValue: false);
+            key.DeleteValue("mixforge", throwOnMissingValue: false);
+            key.DeleteValue("mixforged", throwOnMissingValue: false);
 
             var sPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NextXLR", "settings.json");
             if (File.Exists(sPath))

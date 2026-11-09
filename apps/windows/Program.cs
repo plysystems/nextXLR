@@ -87,7 +87,10 @@ public static class Program
             }
             catch { }
 
-            // 4. Launch WinUI 3 App
+            // 4. Migration & cleanup of legacy autostart entries
+            try { Services.Rebrand.MigrateFromGoXlrNext(); } catch { }
+
+            // 5. Launch WinUI 3 App
             global::WinRT.ComWrappersSupport.InitializeComWrappers();
             global::Microsoft.UI.Xaml.Application.Start((p) => {
                 try
