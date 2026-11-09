@@ -249,14 +249,21 @@ public partial class MicPage : Page
     {
         ViewModel = (MainViewModel)e.Parameter;
         VstPluginService.ActiveMicViewModel = Mic;
-        MicProfileBox.SelectionChanged += (_, _) => UpdateDefaultIcon();
+        MicProfileBox.SelectionChanged -= MicProfileBox_SelectionChanged;
+        MicProfileBox.SelectionChanged += MicProfileBox_SelectionChanged;
         RefreshMicProfiles();
         VstPluginService.SyncAllToHardware();
+    }
+
+    private void MicProfileBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateDefaultIcon();
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        VstPluginService.Instance.SaveRack();
     }
 
     // ---------------- Mic profiles (gate, compressor, EQ, de-esser) ----------------

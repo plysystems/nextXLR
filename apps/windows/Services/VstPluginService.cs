@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI;
@@ -37,7 +38,37 @@ public partial class VstPluginItem : ObservableObject
     [ObservableProperty] private double _mixPercent = 100.0;
     [ObservableProperty] private string _oversampling = "1x (Echtzeit)";
     [ObservableProperty] private string _processingMode = "Stereo";
-    [ObservableProperty] private string _presetName = "Standard";
+
+    private string _presetName = "Standard";
+    public string PresetName
+    {
+        get => _presetName;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value) || value == _presetName) return;
+            if (SetProperty(ref _presetName, value))
+            {
+                ApplyPreset(value);
+                VstPluginService.Instance.SaveRack();
+            }
+        }
+    }
+
+    [JsonIgnore]
+    public bool IsActive
+    {
+        get => !IsBypassed && IsEnabled;
+        set
+        {
+            IsBypassed = !value;
+            IsEnabled = value;
+            OnPropertyChanged(nameof(IsActive));
+            OnPropertyChanged(nameof(StatusText));
+            OnPropertyChanged(nameof(StatusBrush));
+            NotifyHardwareSync();
+            VstPluginService.Instance.SaveRack();
+        }
+    }
 
     // --- Specialized DSP Properties ---
     // [EQ] NEXT : Pro-EQ 6
@@ -88,9 +119,13 @@ public partial class VstPluginItem : ObservableObject
     [ObservableProperty] private double _release = 120.0;
     [ObservableProperty] private double _drive = 0.0;
 
+    [JsonIgnore]
     public string StatusText => IsBypassed ? "Bypass" : (IsEnabled ? "Aktiv" : "Aus");
+
+    [JsonIgnore]
     public SolidColorBrush StatusBrush => new(IsBypassed ? ColorHelper.FromArgb(255, 0xEF, 0x8C, 0x34) : (IsEnabled ? ColorHelper.FromArgb(255, 0x22, 0xD3, 0xA6) : ColorHelper.FromArgb(255, 0x88, 0x88, 0x88)));
 
+    [JsonIgnore]
     public SolidColorBrush TagBrush
     {
         get
@@ -111,6 +146,12 @@ public partial class VstPluginItem : ObservableObject
         }
     }
 
+    [JsonIgnore]
+    private string[]? _availablePresets;
+
+    [JsonIgnore]
+    public string[] AvailablePresets => _availablePresets ??= GetAvailablePresets();
+
     private void NotifyHardwareSync()
     {
         VstPluginService.SyncToHardware(this);
@@ -118,6 +159,7 @@ public partial class VstPluginItem : ObservableObject
 
     partial void OnIsEnabledChanged(bool value)
     {
+        OnPropertyChanged(nameof(IsActive));
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(StatusBrush));
         NotifyHardwareSync();
@@ -126,6 +168,7 @@ public partial class VstPluginItem : ObservableObject
 
     partial void OnIsBypassedChanged(bool value)
     {
+        OnPropertyChanged(nameof(IsActive));
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(StatusBrush));
         NotifyHardwareSync();
@@ -168,19 +211,26 @@ public partial class VstPluginItem : ObservableObject
     private string? _stateAJson;
     private string? _stateBJson;
 
-    partial void OnPresetNameChanged(string value)
+    [JsonIgnore]
+    private static readonly JsonSerializerOptions StateSerializerOptions = new()
     {
-        if (!string.IsNullOrWhiteSpace(value))
-        {
-            ApplyPreset(value);
-        }
-    }
+        WriteIndented = false,
+        ReferenceHandler = ReferenceHandler.IgnoreCycles,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
 
     public void SaveCurrentState(string slot)
     {
-        var json = JsonSerializer.Serialize(this);
-        if (slot == "A") _stateAJson = json;
-        else _stateBJson = json;
+        try
+        {
+            var json = JsonSerializer.Serialize(this, StateSerializerOptions);
+            if (slot == "A") _stateAJson = json;
+            else _stateBJson = json;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Failed to save A/B state {slot}: {ex.Message}");
+        }
     }
 
     public void SwitchAB(string targetSlot)
@@ -196,16 +246,20 @@ public partial class VstPluginItem : ObservableObject
 
     public void CopyCurrentToOther()
     {
-        var json = JsonSerializer.Serialize(this);
-        if (ActiveAB == "A") _stateBJson = json;
-        else _stateAJson = json;
+        try
+        {
+            var json = JsonSerializer.Serialize(this, StateSerializerOptions);
+            if (ActiveAB == "A") _stateBJson = json;
+            else _stateAJson = json;
+        }
+        catch { }
     }
 
     public void RestoreState(string json)
     {
         try
         {
-            var imported = JsonSerializer.Deserialize<VstPluginItem>(json);
+            var imported = JsonSerializer.Deserialize<VstPluginItem>(json, StateSerializerOptions);
             if (imported != null)
             {
                 InputGainDb = imported.InputGainDb;
@@ -236,6 +290,7 @@ public partial class VstPluginItem : ObservableObject
                 TargetLufs = imported.TargetLufs;
                 PresetName = imported.PresetName;
                 NotifyHardwareSync();
+                VstPluginService.Instance.SaveRack();
             }
         }
         catch { }
@@ -932,7 +987,13 @@ public sealed class VstPluginService
         {
             Directory.CreateDirectory(Path.GetDirectoryName(SettingsFile)!);
             var list = RackPlugins.ToList();
-            var json = JsonSerializer.Serialize(list, new JsonSerializerOptions { WriteIndented = true });
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            };
+            var json = JsonSerializer.Serialize(list, options);
             string tempFile = SettingsFile + ".tmp";
             File.WriteAllText(tempFile, json);
             File.Move(tempFile, SettingsFile, true);
@@ -951,7 +1012,12 @@ public sealed class VstPluginService
             if (File.Exists(SettingsFile))
             {
                 var json = File.ReadAllText(SettingsFile);
-                var items = JsonSerializer.Deserialize<List<VstPluginItem>>(json);
+                var options = new JsonSerializerOptions
+                {
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                };
+                var items = JsonSerializer.Deserialize<List<VstPluginItem>>(json, options);
                 if (items != null && items.Count > 0)
                 {
                     foreach (var it in items) RackPlugins.Add(it);
@@ -1103,7 +1169,7 @@ public sealed class VstPluginService
 
         var bypassToggle = new ToggleSwitch
         {
-            IsOn = !plugin.IsBypassed,
+            IsOn = plugin.IsActive,
             OnContent = "Aktiv",
             OffContent = "Bypass",
             MinWidth = 0,
@@ -1111,7 +1177,7 @@ public sealed class VstPluginService
         };
         bypassToggle.Toggled += (_, _) =>
         {
-            plugin.IsBypassed = !bypassToggle.IsOn;
+            plugin.IsActive = bypassToggle.IsOn;
         };
         headerRight.Children.Add(bypassToggle);
 
@@ -1155,7 +1221,7 @@ public sealed class VstPluginService
         var presetCombo = new ComboBox
         {
             HorizontalAlignment = HorizontalAlignment.Stretch,
-            ItemsSource = plugin.GetAvailablePresets(),
+            ItemsSource = plugin.AvailablePresets,
             SelectedItem = plugin.PresetName
         };
 
@@ -1189,7 +1255,7 @@ public sealed class VstPluginService
             {
                 Orientation = Orientation.Horizontal,
                 Spacing = 4,
-                Children = { new FontIcon { Glyph = "\uE777", FontSize = 12 }, new TextBlock { Text = "Reset", FontSize = 11 } }
+                Children = { new FontIcon { Glyph = "\uE777", FontSize = 12 }, new TextBlock { Text = "Standard-Reset", FontSize = 11 } }
             },
             Padding = new Thickness(8, 4, 8, 4),
             Style = Application.Current?.Resources["SmoothButton"] as Style
@@ -1214,10 +1280,10 @@ public sealed class VstPluginService
         };
         btnReset.Click += (_, _) =>
         {
-            var defPresets = plugin.GetAvailablePresets();
+            var defPresets = plugin.AvailablePresets;
             if (defPresets.Length > 0)
             {
-                plugin.ApplyPreset(defPresets[0]);
+                plugin.PresetName = defPresets[0];
                 editorWin.Close();
                 OpenEditor(parentWindow, plugin);
             }
@@ -1254,15 +1320,15 @@ public sealed class VstPluginService
         var masterStack = new StackPanel { Spacing = 12 };
         masterStack.Children.Add(new TextBlock
         {
-            Text = "MASTER GAIN & DRY/WET MIX",
+            Text = "MASTER GAIN & DRY/WET MIX (GRUND-EINSTELLUNGEN)",
             FontWeight = Microsoft.UI.Text.FontWeights.Bold,
             FontSize = 11,
             Foreground = plugin.TagBrush
         });
 
-        var inGainSlider = CreateSliderRow("Input Gain", "-24 dB", "+24 dB", plugin.InputGainDb, v => plugin.InputGainDb = v, "dB");
-        var outGainSlider = CreateSliderRow("Output / Makeup Gain", "-24 dB", "+24 dB", plugin.OutputGainDb, v => plugin.OutputGainDb = v, "dB");
-        var mixSlider = CreateSliderRow("Dry / Wet Mix", "0 %", "100 %", plugin.MixPercent, v => plugin.MixPercent = v, "%", 0, 100);
+        var inGainSlider = CreateSliderRow("Input Gain (Eingangspegel)", "Pegel vor der Effektbearbeitung anpassen. Empfohlen: 0.0 dB", plugin.InputGainDb, v => plugin.InputGainDb = v, "dB", -24, 24, 0.5);
+        var outGainSlider = CreateSliderRow("Output Gain (Lautstärke-Ausgleich)", "Ausgangspegel zum Ausgleich von Lautstärkeverlusten nach dem Plugin", plugin.OutputGainDb, v => plugin.OutputGainDb = v, "dB", -24, 24, 0.5);
+        var mixSlider = CreateSliderRow("Dry / Wet Mix (Effekt-Anteil)", "Mischungsverhältnis zwischen Originalton (0 %) und 100 % vollem Studio-Effekt", plugin.MixPercent, v => plugin.MixPercent = v, "%", 0, 100, 1.0);
 
         masterStack.Children.Add(inGainSlider);
         masterStack.Children.Add(outGainSlider);
@@ -1282,7 +1348,7 @@ public sealed class VstPluginService
         var dspStack = new StackPanel { Spacing = 12 };
         dspStack.Children.Add(new TextBlock
         {
-            Text = $"{plugin.Name.ToUpperInvariant()} — DSP PARAMETER & KONTROLLEN",
+            Text = $"{plugin.Name.ToUpperInvariant()} — KLANG-PARAMETER & REGLER",
             FontWeight = Microsoft.UI.Text.FontWeights.Bold,
             FontSize = 11,
             Foreground = plugin.TagBrush
@@ -1292,54 +1358,53 @@ public sealed class VstPluginService
 
         if (plugin.Name.Contains("Pro-EQ", StringComparison.OrdinalIgnoreCase))
         {
-            dspControls.Add(CreateSliderRow("Low-Cut Filter (HPF)", "20 Hz", "300 Hz", plugin.LowCutFreq, v => plugin.LowCutFreq = v, "Hz", 20, 300));
-            dspControls.Add(CreateSliderRow("Bass / Grundton (120 Hz)", "-12 dB", "+12 dB", plugin.LowGain, v => plugin.LowGain = v, "dB", -12, 12));
-            dspControls.Add(CreateSliderRow("Mitten-Entmumpfung (450 Hz)", "-12 dB", "+12 dB", plugin.Mid1Gain, v => plugin.Mid1Gain = v, "dB", -12, 12));
-            dspControls.Add(CreateSliderRow("Präsenz & Verständlichkeit (2.5 kHz)", "-12 dB", "+12 dB", plugin.Mid2Gain, v => plugin.Mid2Gain = v, "dB", -12, 12));
-            dspControls.Add(CreateSliderRow("High-Shelf Glanz (8 kHz)", "-12 dB", "+12 dB", plugin.HighShelfGain, v => plugin.HighShelfGain = v, "dB", -12, 12));
-            dspControls.Add(CreateSliderRow("Air-Band Seide (14 kHz)", "-12 dB", "+12 dB", plugin.AirBandGain, v => plugin.AirBandGain = v, "dB", -12, 12));
+            dspControls.Add(CreateSliderRow("Trittschall & Rumpeln (Low-Cut HPF)", "Schneidet störende Tisch-Erschütterungen und Windgeräusche sauber ab. Empfohlen: 80 Hz", plugin.LowCutFreq, v => plugin.LowCutFreq = v, "Hz", 20, 300, 5));
+            dspControls.Add(CreateSliderRow("Stimm-Fundament & Wärme (Bass 120 Hz)", "Gibt der Stimme Körper und Fülle. Leicht anheben (+1 bis +3 dB) für tieferen Rundfunkklang", plugin.LowGain, v => plugin.LowGain = v, "dB", -12, 12, 0.5));
+            dspControls.Add(CreateSliderRow("Hohlraum-Entmumpfung (Mitten 450 Hz)", "Leichtes Absenken (-1 bis -3 dB) entfernt dumpfen 'Karton-Sound' und Raumhall", plugin.Mid1Gain, v => plugin.Mid1Gain = v, "dB", -12, 12, 0.5));
+            dspControls.Add(CreateSliderRow("Sprachverständlichkeit (Präsenz 2.5 kHz)", "Macht jedes gesprochene Wort im Stream, Podcast und Discord glasklar verständlich", plugin.Mid2Gain, v => plugin.Mid2Gain = v, "dB", -12, 12, 0.5));
+            dspControls.Add(CreateSliderRow("Frische & Glanz (Höhen 8 kHz)", "Verleiht der Stimme einen modernen, professionellen Studio-Glanz", plugin.HighShelfGain, v => plugin.HighShelfGain = v, "dB", -12, 12, 0.5));
+            dspControls.Add(CreateSliderRow("Air-Band Seide (Brillanz 14 kHz)", "Edle, samtige Höhenluft – der unverwechselbare Klang teurer Großmembran-Kondensatormikrofone", plugin.AirBandGain, v => plugin.AirBandGain = v, "dB", -12, 12, 0.5));
         }
         else if (plugin.Name.Contains("DeEsser", StringComparison.OrdinalIgnoreCase))
         {
-            dspControls.Add(CreateSliderRow("Zischlaut-Zielfrequenz", "3.000 Hz", "9.500 Hz", plugin.DetectionFreq, v => plugin.DetectionFreq = v, "Hz", 3000, 9500));
-            dspControls.Add(CreateSliderRow("De-Esser Threshold", "-40 dB", "0 dB", plugin.DeEssThreshold, v => plugin.DeEssThreshold = v, "dB", -40, 0));
-            dspControls.Add(CreateSliderRow("Maximale Reduktion (Depth)", "-24 dB", "0 dB", plugin.DeEssDepth, v => plugin.DeEssDepth = v, "dB", -24, 0));
+            dspControls.Add(CreateSliderRow("Zischlaut-Zielfrequenz (Frequency)", "Frequenzbereich stechender S-, SCH- und Z-Laute (Frauenstimmen 7–8 kHz, Männerstimmen ca. 6 kHz)", plugin.DetectionFreq, v => plugin.DetectionFreq = v, "Hz", 3000, 9500, 100));
+            dspControls.Add(CreateSliderRow("Einsatz-Schwelle (Threshold)", "Pegel, ab dem scharfe Zischlaute gedämpft werden. Empfohlen: -18 dB", plugin.DeEssThreshold, v => plugin.DeEssThreshold = v, "dB", -40, 0, 1));
+            dspControls.Add(CreateSliderRow("Maximale Zisch-Dämpfung (Depth)", "Wie stark stechende S-Laute maximal gezähmt werden. Empfohlen: -6 bis -12 dB", plugin.DeEssDepth, v => plugin.DeEssDepth = v, "dB", -24, 0, 0.5));
         }
         else if (plugin.Name.Contains("Opto", StringComparison.OrdinalIgnoreCase))
         {
-            dspControls.Add(CreateSliderRow("Peak Reduction", "0 %", "100 %", plugin.OptoPeakReduction, v => plugin.OptoPeakReduction = v, "%", 0, 100));
-            dspControls.Add(CreateSliderRow("Opto Makeup Gain", "0 dB", "24 dB", plugin.OptoGain, v => plugin.OptoGain = v, "dB", 0, 24));
-            dspControls.Add(CreateSliderRow("Optische Röhrenwärme", "0 %", "100 %", plugin.OptoWarmth, v => plugin.OptoWarmth = v, "%", 0, 100));
+            dspControls.Add(CreateSliderRow("Lautstärke-Glättung (Peak Reduction)", "Gleicht laute Rufe und leises Flüstern automatisch an für einen konstanten Sprachpegel", plugin.OptoPeakReduction, v => plugin.OptoPeakReduction = v, "%", 0, 100, 1));
+            dspControls.Add(CreateSliderRow("Lautstärke-Ausgleich (Makeup Gain)", "Hebt die Gesamtlautstärke nach der Kompression auf optimalen Broadcast-Pegel an", plugin.OptoGain, v => plugin.OptoGain = v, "dB", 0, 24, 0.5));
+            dspControls.Add(CreateSliderRow("Optische Röhrenwärme (Warmth)", "Fügt der Stimme den beliebten analogen LA-2A Röhren-Charakter und Sättigung hinzu", plugin.OptoWarmth, v => plugin.OptoWarmth = v, "%", 0, 100, 1));
         }
         else if (plugin.Name.Contains("Tube", StringComparison.OrdinalIgnoreCase) || plugin.Name.Contains("Sat", StringComparison.OrdinalIgnoreCase))
         {
-            dspControls.Add(CreateSliderRow("Sättigungs-Intensität (Drive)", "0 %", "100 %", plugin.SatDrive, v => plugin.SatDrive = v, "%", 0, 100));
-            dspControls.Add(CreateSliderRow("Headroom Trim", "-6 dB", "+6 dB", plugin.SatHeadroom, v => plugin.SatHeadroom = v, "dB", -6, 6));
+            dspControls.Add(CreateSliderRow("Röhrensättigung (Drive)", "Erzeugt harmonische Obertöne für eine volle, durchsetzungsfähige Radiostimme", plugin.SatDrive, v => plugin.SatDrive = v, "%", 0, 100, 1));
+            dspControls.Add(CreateSliderRow("Headroom Pegel-Trim", "Feinabstimmung des Eingangspegels (-6 bis +6 dB)", plugin.SatHeadroom, v => plugin.SatHeadroom = v, "dB", -6, 6, 0.5));
         }
         else if (plugin.Name.Contains("Expander", StringComparison.OrdinalIgnoreCase))
         {
-            dspControls.Add(CreateSliderRow("Expander Threshold", "-60 dB", "0 dB", plugin.ExpanderThreshold, v => plugin.ExpanderThreshold = v, "dB", -60, 0));
-            dspControls.Add(CreateSliderRow("Expander Ratio", "1.2:1", "8.0:1", plugin.ExpanderRatio, v => plugin.ExpanderRatio = v, ":1", 1.2, 8.0));
-            dspControls.Add(CreateSliderRow("Attack Einschwingzeit", "0.5 ms", "50 ms", plugin.ExpanderAttack, v => plugin.ExpanderAttack = v, "ms", 0.5, 50));
-            dspControls.Add(CreateSliderRow("Release Rückstellzeit", "20 ms", "800 ms", plugin.ExpanderRelease, v => plugin.ExpanderRelease = v, "ms", 20, 800));
-            dspControls.Add(CreateSliderRow("Hysterese-Puffer", "1 dB", "12 dB", plugin.ExpanderHysteresis, v => plugin.ExpanderHysteresis = v, "dB", 1, 12));
+            dspControls.Add(CreateSliderRow("Stille-Schwellenwert (Threshold)", "Geräusche leiser als dieser Pegel werden ausgeblendet (Tastatur, Atmen, Lüfter). Empfohlen: -36 dB", plugin.ExpanderThreshold, v => plugin.ExpanderThreshold = v, "dB", -60, 0, 1));
+            dspControls.Add(CreateSliderRow("Dämpfungs-Stärke (Ratio)", "Wie drastisch unerwünschte Hintergrundgeräusche abgesenkt werden. Empfohlen: 2.0:1 bis 3.0:1", plugin.ExpanderRatio, v => plugin.ExpanderRatio = v, ":1", 1.2, 8.0, 0.2));
+            dspControls.Add(CreateSliderRow("Öffnungs-Reaktionszeit (Attack)", "Wie blitzschnell das Gate beim ersten Wort öffnet, damit kein Wortanfang verschluckt wird", plugin.ExpanderAttack, v => plugin.ExpanderAttack = v, "ms", 0.5, 50, 0.5));
+            dspControls.Add(CreateSliderRow("Ausblendzeit (Release)", "Wie sanft die Stimme nach dem Sprechen ausklingt, bevor das Gate wieder stumm schaltet", plugin.ExpanderRelease, v => plugin.ExpanderRelease = v, "ms", 20, 800, 10));
         }
         else if (plugin.Name.Contains("Limiter", StringComparison.OrdinalIgnoreCase) || plugin.Name.Contains("Master", StringComparison.OrdinalIgnoreCase))
         {
-            dspControls.Add(CreateSliderRow("True-Peak Ceiling", "-3.0 dBTP", "0.0 dBTP", plugin.LimiterCeiling, v => plugin.LimiterCeiling = v, "dBTP", -3.0, 0.0));
-            dspControls.Add(CreateSliderRow("Lookahead Puffer", "0.5 ms", "5.0 ms", plugin.LimiterLookahead, v => plugin.LimiterLookahead = v, "ms", 0.5, 5.0));
-            dspControls.Add(CreateSliderRow("Release Zeit", "10 ms", "500 ms", plugin.LimiterRelease, v => plugin.LimiterRelease = v, "ms", 10, 500));
-            dspControls.Add(CreateSliderRow("Ziel-Lautheit (Target LUFS)", "-24 LUFS", "-9 LUFS", plugin.TargetLufs, v => plugin.TargetLufs = v, "LUFS", -24, -9));
+            dspControls.Add(CreateSliderRow("Maximalpegel-Schutz (Ceiling)", "Absolutes Limit zur Verhinderung digitaler Verzerrung und Clipping. Empfohlen: -1.0 dBTP", plugin.LimiterCeiling, v => plugin.LimiterCeiling = v, "dBTP", -3.0, 0.0, 0.1));
+            dspControls.Add(CreateSliderRow("Ziel-Lautheit (Target LUFS)", "Internationale Streaming-Norm: -14 LUFS für YouTube, Twitch, Kick und Podcasts", plugin.TargetLufs, v => plugin.TargetLufs = v, "LUFS", -24, -9, 0.5));
+            dspControls.Add(CreateSliderRow("Lookahead Vorhersage-Puffer", "Analysiert Pegelspitzen im Voraus für verzerrungsfreies Abfangen", plugin.LimiterLookahead, v => plugin.LimiterLookahead = v, "ms", 0.5, 5.0, 0.5));
+            dspControls.Add(CreateSliderRow("Rückstellzeit (Release)", "Schnelligkeit, mit der die Lautstärke nach lauten Spitzen wieder freigegeben wird", plugin.LimiterRelease, v => plugin.LimiterRelease = v, "ms", 10, 500, 5));
         }
         else
         {
-            dspControls.Add(CreateSliderRow("Threshold / Einsatzpunkt", "-60 dB", "0 dB", plugin.Threshold, v => plugin.Threshold = v, "dB", -60, 0));
-            dspControls.Add(CreateSliderRow("Trennfrequenz / Low-Cut", "20 Hz", "20.000 Hz", plugin.Frequency, v => plugin.Frequency = v, "Hz", 20, 20000));
-            dspControls.Add(CreateSliderRow("Gütefaktor / Q-Breite", "0.1", "10.0", plugin.QFactor, v => plugin.QFactor = v, "Q", 0.1, 10.0));
-            dspControls.Add(CreateSliderRow("Kompressor Ratio", "1.0:1", "20.0:1", plugin.Ratio, v => plugin.Ratio = v, ":1", 1.0, 20.0));
-            dspControls.Add(CreateSliderRow("Attack / Einschwingzeit", "0.1 ms", "200 ms", plugin.Attack, v => plugin.Attack = v, "ms", 0.1, 200));
-            dspControls.Add(CreateSliderRow("Release / Rückstellzeit", "10 ms", "2000 ms", plugin.Release, v => plugin.Release = v, "ms", 10, 2000));
-            dspControls.Add(CreateSliderRow("Harmonische Sättigung / Drive", "0 %", "100 %", plugin.Drive, v => plugin.Drive = v, "%", 0, 100));
+            dspControls.Add(CreateSliderRow("Threshold / Einsatzpunkt", "Schwellenwert für den Beginn der Effektbearbeitung", plugin.Threshold, v => plugin.Threshold = v, "dB", -60, 0, 1));
+            dspControls.Add(CreateSliderRow("Trennfrequenz / Filter", "Arbeitsfrequenz des Filters bzw. Equalizers", plugin.Frequency, v => plugin.Frequency = v, "Hz", 20, 20000, 10));
+            dspControls.Add(CreateSliderRow("Gütefaktor / Q-Breite", "Filterbandbreite (schmalbandig bis breitbandig)", plugin.QFactor, v => plugin.QFactor = v, "Q", 0.1, 10.0, 0.1));
+            dspControls.Add(CreateSliderRow("Kompressor / Gate Ratio", "Kompression- oder Dämpfungsfaktor", plugin.Ratio, v => plugin.Ratio = v, ":1", 1.0, 20.0, 0.5));
+            dspControls.Add(CreateSliderRow("Attack / Einschwingzeit", "Reaktionszeit beim Einsetzen des Effekts", plugin.Attack, v => plugin.Attack = v, "ms", 0.1, 200, 0.5));
+            dspControls.Add(CreateSliderRow("Release / Rückstellzeit", "Abklingzeit nach dem Ende des Signals", plugin.Release, v => plugin.Release = v, "ms", 10, 2000, 10));
+            dspControls.Add(CreateSliderRow("Harmonische Sättigung / Drive", "Wärme- und Verzerrungsanteil", plugin.Drive, v => plugin.Drive = v, "%", 0, 100, 1));
         }
 
         foreach (var c in dspControls) dspStack.Children.Add(c);
@@ -1507,20 +1572,22 @@ public sealed class VstPluginService
 
     private static FrameworkElement CreateSliderRow(
         string title,
-        string minLabel,
-        string maxLabel,
+        string hint,
         double initialValue,
         Action<double> onValueChanged,
         string unit,
         double min = -24,
-        double max = 24)
+        double max = 24,
+        double step = 0.5)
     {
         var card = new Border
         {
             Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x14, 0x16, 0x1C)),
             CornerRadius = new CornerRadius(8),
-            Padding = new Thickness(12, 8, 12, 8),
-            Margin = new Thickness(0, 0, 0, 6)
+            Padding = new Thickness(14, 10, 14, 10),
+            Margin = new Thickness(0, 0, 0, 8),
+            BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x24, 0x28, 0x33)),
+            BorderThickness = new Thickness(1)
         };
 
         var stack = new StackPanel { Spacing = 4 };
@@ -1542,11 +1609,24 @@ public sealed class VstPluginService
         topRow.Children.Add(valueBlock);
         stack.Children.Add(topRow);
 
+        if (!string.IsNullOrEmpty(hint))
+        {
+            var hintBlock = new TextBlock
+            {
+                Text = hint,
+                FontSize = 11,
+                Foreground = new SolidColorBrush(ColorHelper.FromArgb(255, 0x8E, 0x97, 0xA8)),
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 1, 0, 4)
+            };
+            stack.Children.Add(hintBlock);
+        }
+
         var slider = new Slider
         {
             Minimum = min,
             Maximum = max,
-            StepFrequency = (max - min) > 100 ? 5 : 0.5,
+            StepFrequency = step,
             Value = initialValue,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             Margin = new Thickness(0, 2, 0, 0)
