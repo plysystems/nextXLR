@@ -73,10 +73,11 @@ public partial class ChannelViewModel : ObservableObject
     public double MaxVolumePercent => 100.0;
 
     /// <summary>
-    /// Only Microphone (0), Chat (1), Music (2), Game (3), and System (4) can be customized (name and icon).
-    /// Console (7), Line In (6), Samples (5), Headphones (8), Broadcast Stream Mix (11), Line Out (10), Chat Mic (12), Monitor (9) are locked.
+    /// Inputs can be customized (name and icon):
+    /// Microphone (0), Chat (1), Music (2), Game (3), System (4), Samples (5), Line In (6), Console (7).
+    /// Outputs (Headphones, Line Out, Mic Monitor, Broadcast Stream Mix, Chat Mic) remain locked.
     /// </summary>
-    public bool CanEdit => Id is 0 or 1 or 2 or 3 or 4;
+    public bool CanEdit => Id is 0 or 1 or 2 or 3 or 4 or 5 or 6 or 7;
 
     partial void OnIsSubmixActiveChanged(bool value)
     {
@@ -127,11 +128,18 @@ public partial class ChannelViewModel : ObservableObject
         get => _isDragging;
         set
         {
-            _isDragging = value;
-            if (!value && _deferred is { } d)
+            if (_isDragging != value)
             {
-                _deferred = null;
-                ApplyFromServer(d);
+                _isDragging = value;
+                if (!value)
+                {
+                    if (_deferred is { } d)
+                    {
+                        _deferred = null;
+                        ApplyFromServer(d);
+                    }
+                    MainViewModel.Instance?.OnChannelDragEnded();
+                }
             }
         }
     }
@@ -270,14 +278,25 @@ public partial class ChannelViewModel : ObservableObject
     {
         if (!CanEdit) return;
         name = name.Trim();
-        if (name.Length is > 0 and <= 24 && name != Name) _transport.Send(new SetChannelName(Id, name));
+        if (name.Length is > 0 and <= 24 && name != Name)
+        {
+            Name = name;
+            MainViewModel.HasPendingChanges = true;
+            _transport.Send(new SetChannelName(Id, name));
+        }
     }
 
     /// <summary>Assign an icon from <see cref="IconCatalog"/>; null resets to the default.</summary>
     public void SetIcon(string? iconId)
     {
         if (!CanEdit) return;
-        if (iconId != IconId) _transport.Send(new SetChannelIcon(Id, iconId));
+        if (iconId != IconId)
+        {
+            IconId = iconId;
+            Glyph = IconCatalog.Glyph(iconId ?? DefaultIconId);
+            MainViewModel.HasPendingChanges = true;
+            _transport.Send(new SetChannelIcon(Id, iconId));
+        }
     }
 
     public string DefaultIconId => IconCatalog.DefaultFor(Id, _kind);

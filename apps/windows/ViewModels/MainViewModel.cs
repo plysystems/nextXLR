@@ -349,8 +349,25 @@ public partial class MainViewModel : ObservableObject
 
     private static readonly uint[] OutputOrder = [8, 11, 10, 12, 9];
 
+    private IReadOnlyList<FaderAssignment>? _pendingFaderArrangement;
+
+    public void OnChannelDragEnded()
+    {
+        if (_pendingFaderArrangement != null && !Channels.Any(c => c.IsDragging))
+        {
+            var pending = _pendingFaderArrangement;
+            _pendingFaderArrangement = null;
+            ArrangeStrips(pending);
+        }
+    }
+
     private void ArrangeStrips(IReadOnlyList<FaderAssignment> faders)
     {
+        if (Channels.Any(c => c.IsDragging))
+        {
+            _pendingFaderArrangement = faders;
+            return;
+        }
         static int Rank(uint[] order, uint id) { var i = Array.IndexOf(order, id); return i < 0 ? 100 + (int)id : i; }
         int FaderRank(uint id) => faders.FirstOrDefault(f => f.Channel == id)?.Fader is { Length: 1 } l ? l[0] - 'A' : 99;
         var inputs = Channels.Where(c => !c.IsOutput)

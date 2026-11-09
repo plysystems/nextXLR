@@ -70,6 +70,7 @@ public sealed partial class ChannelStrip : UserControl
     private void IconGrid_ItemClick(object sender, ItemClickEventArgs e)
     {
         if (ViewModel is null || !ViewModel.CanEdit) return;
+        IconGrid.SelectedItem = e.ClickedItem;
         _pendingIcon = ((IconCatalogEntry)e.ClickedItem).Id;
         _iconChanged = true;
     }
