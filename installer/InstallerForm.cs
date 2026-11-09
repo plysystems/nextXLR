@@ -91,18 +91,23 @@ public partial class InstallerForm : Form
         }
         catch { }
 
-        // Left Gradient Sidebar (matching Bild 1)
-        sidebarPanel = new GradientSidebarPanel();
-        this.Controls.Add(sidebarPanel);
-
         // Right Main Container
         mainContainer = new Panel
         {
             Dock = DockStyle.Fill,
-            BackColor = Color.FromArgb(22, 24, 31), // #16181F
-            Padding = new Padding(36, 26, 36, 20)
+            BackColor = Color.FromArgb(22, 24, 31) // #16181F
         };
         this.Controls.Add(mainContainer);
+
+        // Left Gradient Sidebar (matching Bild 1)
+        sidebarPanel = new GradientSidebarPanel
+        {
+            Dock = DockStyle.Left,
+            Width = 280
+        };
+        this.Controls.Add(sidebarPanel);
+        sidebarPanel.SendToBack();
+        mainContainer.BringToFront();
 
         BuildSetupPage();
         BuildProgressPage();
@@ -119,6 +124,8 @@ public partial class InstallerForm : Form
             BackColor = Color.Transparent
         };
 
+        int leftMargin = 32;
+
         // Title
         var lblTitle = new Label
         {
@@ -126,7 +133,7 @@ public partial class InstallerForm : Form
             Font = new Font("Segoe UI Variable Display", 21f, FontStyle.Bold),
             ForeColor = Color.FromArgb(248, 250, 252),
             AutoSize = true,
-            Location = new Point(0, 0)
+            Location = new Point(leftMargin, 26)
         };
         pageSetup.Controls.Add(lblTitle);
 
@@ -136,7 +143,7 @@ public partial class InstallerForm : Form
             Text = "Professionelles Audio-Routing, integrierte Studio-DSPs und GoXLR-Treiberunterstützung ohne Cloud-Zwang.",
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
             ForeColor = Color.FromArgb(148, 163, 184),
-            Location = new Point(0, 42),
+            Location = new Point(leftMargin, 68),
             Size = new Size(500, 38)
         };
         pageSetup.Controls.Add(lblDesc);
@@ -148,14 +155,14 @@ public partial class InstallerForm : Form
             Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
             ForeColor = Color.FromArgb(241, 245, 249),
             AutoSize = true,
-            Location = new Point(0, 88)
+            Location = new Point(leftMargin, 114)
         };
         pageSetup.Controls.Add(lblPathHeader);
 
         // Path Box Container
         var pathBoxContainer = new Panel
         {
-            Location = new Point(0, 114),
+            Location = new Point(leftMargin, 140),
             Size = new Size(405, 36),
             BackColor = Color.FromArgb(32, 36, 46)
         };
@@ -205,7 +212,7 @@ public partial class InstallerForm : Form
         btnBrowse = new ModernButton
         {
             Text = "Ändern...",
-            Location = new Point(415, 114),
+            Location = new Point(leftMargin + 415, 140),
             Size = new Size(85, 36),
             CornerRadius = 6
         };
@@ -219,7 +226,7 @@ public partial class InstallerForm : Form
             Font = new Font("Segoe UI", 8.5f, FontStyle.Regular),
             ForeColor = Color.FromArgb(100, 116, 139),
             AutoSize = true,
-            Location = new Point(0, 154)
+            Location = new Point(leftMargin, 182)
         };
         pageSetup.Controls.Add(lblPathHint);
 
@@ -230,7 +237,7 @@ public partial class InstallerForm : Form
             Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
             ForeColor = Color.FromArgb(241, 245, 249),
             AutoSize = true,
-            Location = new Point(0, 188)
+            Location = new Point(leftMargin, 214)
         };
         pageSetup.Controls.Add(lblOptionsHeader);
 
@@ -238,7 +245,7 @@ public partial class InstallerForm : Form
         {
             Text = "Verknüpfung im Startmenü",
             Checked = true,
-            Location = new Point(0, 214),
+            Location = new Point(leftMargin, 240),
             Size = new Size(350, 28)
         };
         pageSetup.Controls.Add(chkStartMenuShortcut);
@@ -247,7 +254,7 @@ public partial class InstallerForm : Form
         {
             Text = "Verknüpfung auf dem Desktop",
             Checked = false, // Bild 1 default: unchecked
-            Location = new Point(0, 246),
+            Location = new Point(leftMargin, 272),
             Size = new Size(350, 28)
         };
         pageSetup.Controls.Add(chkDesktopShortcut);
@@ -256,7 +263,7 @@ public partial class InstallerForm : Form
         {
             Text = "Mit Windows starten",
             Checked = _wasAppAutostartEnabled,
-            Location = new Point(0, 278),
+            Location = new Point(leftMargin, 304),
             Size = new Size(350, 28)
         };
         pageSetup.Controls.Add(chkAppAutostart);
@@ -265,7 +272,7 @@ public partial class InstallerForm : Form
         {
             Text = "NEXT : XLR danach starten",
             Checked = true,
-            Location = new Point(0, 310),
+            Location = new Point(leftMargin, 336),
             Size = new Size(350, 28)
         };
         pageSetup.Controls.Add(chkLaunchApp);
@@ -284,7 +291,7 @@ DIE SOFTWARE WIRD OHNE JEDE AUSDRÜCKLICHE ODER STILLSCHWEIGENDE GEWÄHRLEISTUNG
 
         expLicense = new ModernExpander("Lizenz (MIT)", mitLicenseText)
         {
-            Location = new Point(0, 352),
+            Location = new Point(leftMargin, 375),
             Size = new Size(500, 38)
         };
         pageSetup.Controls.Add(expLicense);
@@ -293,7 +300,7 @@ DIE SOFTWARE WIRD OHNE JEDE AUSDRÜCKLICHE ODER STILLSCHWEIGENDE GEWÄHRLEISTUNG
         btnCancel = new ModernButton
         {
             Text = "Abbrechen",
-            Location = new Point(265, 435),
+            Location = new Point(leftMargin + 265, 442),
             Size = new Size(110, 36),
             CornerRadius = 6
         };
@@ -303,7 +310,7 @@ DIE SOFTWARE WIRD OHNE JEDE AUSDRÜCKLICHE ODER STILLSCHWEIGENDE GEWÄHRLEISTUNG
         btnInstall = new ModernButton
         {
             Text = "Installieren",
-            Location = new Point(385, 435),
+            Location = new Point(leftMargin + 385, 442),
             Size = new Size(115, 36),
             IsCyanAccent = true,
             CornerRadius = 6
@@ -323,13 +330,15 @@ DIE SOFTWARE WIRD OHNE JEDE AUSDRÜCKLICHE ODER STILLSCHWEIGENDE GEWÄHRLEISTUNG
             Visible = false
         };
 
+        int leftMargin = 32;
+
         lblProgressTitle = new Label
         {
             Text = "NEXT : XLR wird installiert...",
             Font = new Font("Segoe UI Variable Display", 21f, FontStyle.Bold),
             ForeColor = Color.FromArgb(248, 250, 252),
             AutoSize = true,
-            Location = new Point(0, 0)
+            Location = new Point(leftMargin, 26)
         };
         pageProgress.Controls.Add(lblProgressTitle);
 
@@ -338,14 +347,14 @@ DIE SOFTWARE WIRD OHNE JEDE AUSDRÜCKLICHE ODER STILLSCHWEIGENDE GEWÄHRLEISTUNG
             Text = "Dateien werden entpackt und Windows-Verknüpfungen werden eingerichtet.",
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
             ForeColor = Color.FromArgb(148, 163, 184),
-            Location = new Point(0, 42),
+            Location = new Point(leftMargin, 68),
             Size = new Size(500, 38)
         };
         pageProgress.Controls.Add(lblProgressSubtitle);
 
         progressBar = new ModernProgressBar
         {
-            Location = new Point(0, 110),
+            Location = new Point(leftMargin, 118),
             Size = new Size(500, 10),
             Value = 5
         };
@@ -356,7 +365,7 @@ DIE SOFTWARE WIRD OHNE JEDE AUSDRÜCKLICHE ODER STILLSCHWEIGENDE GEWÄHRLEISTUNG
             Text = "Installation wird vorbereitet...",
             Font = new Font("Segoe UI", 9f, FontStyle.Regular),
             ForeColor = Color.FromArgb(226, 232, 240),
-            Location = new Point(0, 130),
+            Location = new Point(leftMargin, 138),
             Size = new Size(500, 24)
         };
         pageProgress.Controls.Add(lblProgressStatus);
@@ -370,8 +379,8 @@ DIE SOFTWARE WIRD OHNE JEDE AUSDRÜCKLICHE ODER STILLSCHWEIGENDE GEWÄHRLEISTUNG
             ForeColor = Color.FromArgb(148, 163, 184),
             BorderStyle = BorderStyle.None,
             Font = new Font("Consolas", 8.5f, FontStyle.Regular),
-            Location = new Point(0, 165),
-            Size = new Size(500, 290)
+            Location = new Point(leftMargin, 172),
+            Size = new Size(500, 255)
         };
         pageProgress.Controls.Add(txtLog);
 
@@ -387,13 +396,15 @@ DIE SOFTWARE WIRD OHNE JEDE AUSDRÜCKLICHE ODER STILLSCHWEIGENDE GEWÄHRLEISTUNG
             Visible = false
         };
 
+        int leftMargin = 32;
+
         var lblDoneTitle = new Label
         {
             Text = "Installation abgeschlossen!",
             Font = new Font("Segoe UI Variable Display", 21f, FontStyle.Bold),
             ForeColor = Color.FromArgb(56, 189, 248),
             AutoSize = true,
-            Location = new Point(0, 0)
+            Location = new Point(leftMargin, 26)
         };
         pageComplete.Controls.Add(lblDoneTitle);
 
@@ -402,7 +413,7 @@ DIE SOFTWARE WIRD OHNE JEDE AUSDRÜCKLICHE ODER STILLSCHWEIGENDE GEWÄHRLEISTUNG
             Text = "NEXT : XLR ist jetzt einsatzbereit. Du kannst die Software jederzeit über das Startmenü oder die Taskleiste öffnen.",
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
             ForeColor = Color.FromArgb(203, 213, 225),
-            Location = new Point(0, 42),
+            Location = new Point(leftMargin, 68),
             Size = new Size(500, 48)
         };
         pageComplete.Controls.Add(lblDoneSubtitle);
@@ -413,7 +424,7 @@ DIE SOFTWARE WIRD OHNE JEDE AUSDRÜCKLICHE ODER STILLSCHWEIGENDE GEWÄHRLEISTUNG
             Checked = true,
             Font = new Font("Segoe UI", 10f, FontStyle.Bold),
             ForeColor = Color.FromArgb(248, 250, 252),
-            Location = new Point(0, 120),
+            Location = new Point(leftMargin, 130),
             Size = new Size(350, 28)
         };
         pageComplete.Controls.Add(chkLaunchAfterFinish);
@@ -421,7 +432,7 @@ DIE SOFTWARE WIRD OHNE JEDE AUSDRÜCKLICHE ODER STILLSCHWEIGENDE GEWÄHRLEISTUNG
         btnFinish = new ModernButton
         {
             Text = "Fertigstellen",
-            Location = new Point(370, 435),
+            Location = new Point(leftMargin + 370, 442),
             Size = new Size(130, 36),
             IsCyanAccent = true,
             CornerRadius = 6

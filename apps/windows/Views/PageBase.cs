@@ -372,18 +372,62 @@ public partial class MicPage : Page
         return true;
     }
 
-    private void MicSave_Click(object sender, RoutedEventArgs e)
+    private async void MicSave_Click(object sender, RoutedEventArgs e)
     {
-        var name = string.IsNullOrWhiteSpace(MicProfileName.Text)
-            ? Loc.Format("MicProfileDefaultName", DateTime.Now.ToString("g"))
-            : MicProfileName.Text.Trim();
+        var inputName = MicProfileName.Text.Trim();
+        string targetName;
+
+        if (string.IsNullOrWhiteSpace(inputName))
+        {
+            if (Selected is not { } selected)
+            {
+                Show(InfoBarSeverity.Warning, Loc.Get("MicProfilePick"));
+                return;
+            }
+
+            var dialog = new ContentDialog
+            {
+                XamlRoot = this.XamlRoot,
+                Title = "Profil überschreiben?",
+                Content = $"Möchten Sie das ausgewählte Profil '{selected.Name}' wirklich mit den aktuellen Einstellungen überschreiben?",
+                PrimaryButtonText = "Überschreiben",
+                CloseButtonText = "Abbrechen",
+                DefaultButton = ContentDialogButton.Primary
+            };
+
+            var res = await dialog.ShowAsync();
+            if (res != ContentDialogResult.Primary) return;
+
+            targetName = selected.Name;
+        }
+        else
+        {
+            targetName = inputName;
+            var existing = ProfileService.Mic.List().FirstOrDefault(p => string.Equals(p.Name, targetName, StringComparison.OrdinalIgnoreCase));
+            if (existing != null)
+            {
+                var dialog = new ContentDialog
+                {
+                    XamlRoot = this.XamlRoot,
+                    Title = "Profil überschreiben?",
+                    Content = $"Ein Profil mit dem Namen '{targetName}' existiert bereits. Möchten Sie es wirklich überschreiben?",
+                    PrimaryButtonText = "Überschreiben",
+                    CloseButtonText = "Abbrechen",
+                    DefaultButton = ContentDialogButton.Primary
+                };
+
+                var res = await dialog.ShowAsync();
+                if (res != ContentDialogResult.Primary) return;
+            }
+        }
+
         try
         {
-            ProfileService.Mic.Save(name, Current());
-            VstPluginService.Instance.SaveRackForProfile(name);
+            ProfileService.Mic.Save(targetName, Current());
+            VstPluginService.Instance.SaveRackForProfile(targetName);
             MicProfileName.Text = "";
-            RefreshMicProfiles(name);
-            Show(InfoBarSeverity.Success, Loc.Format("MicProfileSaved", name));
+            RefreshMicProfiles(targetName);
+            Show(InfoBarSeverity.Success, Loc.Format("MicProfileSaved", targetName));
         }
         catch (Exception ex) { Show(InfoBarSeverity.Error, ex.Message); }
     }

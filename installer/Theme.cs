@@ -66,14 +66,14 @@ public static class NextXLRTheme
         return null;
     }
 
-    public static Icon? GetAppIcon()
+    public static Icon? GetAppIcon(int size = 128)
     {
         try
         {
             var asm = typeof(NextXLRTheme).Assembly;
             var stream = asm.GetManifestResourceStream("NextXLR.Installer.nextXLR_icon.ico")
                       ?? asm.GetManifestResourceStream("nextXLR_icon.ico");
-            if (stream != null) return new Icon(stream);
+            if (stream != null) return new Icon(stream, size, size);
 
             var candidates = new[]
             {
@@ -83,7 +83,7 @@ public static class NextXLRTheme
             };
             foreach (var path in candidates)
             {
-                if (File.Exists(path)) return new Icon(path);
+                if (File.Exists(path)) return new Icon(path, size, size);
             }
         }
         catch { }
@@ -143,7 +143,7 @@ public class GradientSidebarPanel : Panel
         this.Dock = DockStyle.Left;
         this.Width = 280;
 
-        var icon = NextXLRTheme.GetAppIcon();
+        var icon = NextXLRTheme.GetAppIcon(128);
         if (icon != null)
         {
             _appIconImage = icon.ToBitmap();
@@ -160,6 +160,7 @@ public class GradientSidebarPanel : Panel
         var g = e.Graphics;
         g.SmoothingMode = SmoothingMode.HighQuality;
         g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
         g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
         // 1. Rich vertical-diagonal gradient matching Bild 1 & Bild 2
@@ -181,18 +182,18 @@ public class GradientSidebarPanel : Panel
         }
 
         // 2. Subtle translucent glass box for app icon
-        int iconBoxSize = 94;
+        int iconBoxSize = 96;
         int iconBoxX = (Width - iconBoxSize) / 2;
         int iconBoxY = 135;
         var iconBoxRect = new Rectangle(iconBoxX, iconBoxY, iconBoxSize, iconBoxSize);
 
         using (var iconPath = NextXLRTheme.CreateRoundedRectangle(iconBoxRect, 22))
         {
-            using (var glassBrush = new SolidBrush(Color.FromArgb(45, 0, 0, 0)))
+            using (var glassBrush = new SolidBrush(Color.FromArgb(40, 0, 0, 0)))
             {
                 g.FillPath(glassBrush, iconPath);
             }
-            using (var glassPen = new Pen(Color.FromArgb(50, 255, 255, 255), 1.2f))
+            using (var glassPen = new Pen(Color.FromArgb(55, 255, 255, 255), 1.2f))
             {
                 g.DrawPath(glassPen, iconPath);
             }
@@ -201,7 +202,7 @@ public class GradientSidebarPanel : Panel
         // 3. Draw App Icon centered
         if (_appIconImage != null)
         {
-            int drawSize = 64;
+            int drawSize = 72;
             int drawX = iconBoxX + (iconBoxSize - drawSize) / 2;
             int drawY = iconBoxY + (iconBoxSize - drawSize) / 2;
             g.DrawImage(_appIconImage, new Rectangle(drawX, drawY, drawSize, drawSize));
@@ -211,14 +212,14 @@ public class GradientSidebarPanel : Panel
         using (var titleFont = new Font("Segoe UI Variable Display", 22f, FontStyle.Bold))
         {
             var titleRect = new Rectangle(12, iconBoxY + iconBoxSize + 16, Width - 24, 40);
-            TextRenderer.DrawText(g, "NEXT : XLR", titleFont, titleRect, Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.Top);
+            TextRenderer.DrawText(g, "NEXT : XLR", titleFont, titleRect, Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.NoPrefix);
         }
 
-        // 5. Draw Subtitle "Live-Audio für Windows"
+        // 5. Draw Subtitle
         using (var subFont = new Font("Segoe UI", 9.5f, FontStyle.Regular))
         {
-            var subRect = new Rectangle(12, iconBoxY + iconBoxSize + 58, Width - 24, 25);
-            TextRenderer.DrawText(g, "Live-Audio für Windows", subFont, subRect, Color.FromArgb(235, 255, 255, 255), TextFormatFlags.HorizontalCenter | TextFormatFlags.Top);
+            var subRect = new Rectangle(12, iconBoxY + iconBoxSize + 56, Width - 24, 25);
+            TextRenderer.DrawText(g, "Die moderne Audio-Suite für Windows", subFont, subRect, Color.FromArgb(235, 255, 255, 255), TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.NoPrefix);
         }
 
         // 6. Draw Footer Info at Bottom
@@ -228,12 +229,12 @@ public class GradientSidebarPanel : Panel
 
         using (var verFont = new Font("Segoe UI", 9f, FontStyle.Bold))
         {
-            TextRenderer.DrawText(g, "Version 0.1.0-alpha", verFont, new Point(footerX, footerY1), Color.FromArgb(245, 255, 255, 255));
+            TextRenderer.DrawText(g, "Version 0.1.0-alpha", verFont, new Point(footerX, footerY1), Color.FromArgb(245, 255, 255, 255), TextFormatFlags.NoPrefix);
         }
 
         using (var copyFont = new Font("Segoe UI", 8.5f, FontStyle.Regular))
         {
-            TextRenderer.DrawText(g, "Kostenlos & Open Source • plysystems", copyFont, new Point(footerX, footerY2), Color.FromArgb(205, 255, 255, 255));
+            TextRenderer.DrawText(g, "Kostenlos & Open Source • plysystems", copyFont, new Point(footerX, footerY2), Color.FromArgb(205, 255, 255, 255), TextFormatFlags.NoPrefix);
         }
     }
 }

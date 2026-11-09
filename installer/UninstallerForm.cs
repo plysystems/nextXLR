@@ -74,18 +74,23 @@ public partial class UninstallerForm : Form
         if (appIcon != null) this.Icon = appIcon;
         NextXLRTheme.ApplyNativeWinUIStyle(this);
 
-        // Left Gradient Sidebar (matching Bild 2)
-        sidebarPanel = new GradientSidebarPanel();
-        this.Controls.Add(sidebarPanel);
-
         // Right Main Container
         mainContainer = new Panel
         {
             Dock = DockStyle.Fill,
-            BackColor = Color.FromArgb(22, 24, 31), // #16181F
-            Padding = new Padding(36, 26, 36, 20)
+            BackColor = Color.FromArgb(22, 24, 31) // #16181F
         };
         this.Controls.Add(mainContainer);
+
+        // Left Gradient Sidebar (matching Bild 2)
+        sidebarPanel = new GradientSidebarPanel
+        {
+            Dock = DockStyle.Left,
+            Width = 280
+        };
+        this.Controls.Add(sidebarPanel);
+        sidebarPanel.SendToBack();
+        mainContainer.BringToFront();
 
         BuildConfirmPage();
         BuildProgressPage();
@@ -102,13 +107,15 @@ public partial class UninstallerForm : Form
             BackColor = Color.Transparent
         };
 
+        int leftMargin = 32;
+
         var lblTitle = new Label
         {
             Text = "NEXT : XLR deinstallieren",
             Font = new Font("Segoe UI Variable Display", 21f, FontStyle.Bold),
             ForeColor = Color.FromArgb(248, 250, 252),
             AutoSize = true,
-            Location = new Point(0, 0)
+            Location = new Point(leftMargin, 26)
         };
         pageConfirm.Controls.Add(lblTitle);
 
@@ -117,7 +124,7 @@ public partial class UninstallerForm : Form
             Text = "NEXT : XLR wird beendet und vollständig von deinem Computer entfernt. Deine Windows-Standard-Audiogeräte werden wiederhergestellt.",
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
             ForeColor = Color.FromArgb(148, 163, 184),
-            Location = new Point(0, 42),
+            Location = new Point(leftMargin, 68),
             Size = new Size(500, 48)
         };
         pageConfirm.Controls.Add(lblDesc);
@@ -127,7 +134,7 @@ public partial class UninstallerForm : Form
             Text = "Auch meine Einstellungen und Profile löschen",
             SubText = "Deine Mediendateien und Samples selbst werden nie gelöscht, nur die Konfiguration von NEXT : XLR.",
             Checked = false, // Bild 2 default: unchecked
-            Location = new Point(0, 115),
+            Location = new Point(leftMargin, 130),
             Size = new Size(500, 52)
         };
         pageConfirm.Controls.Add(chkRemoveData);
@@ -136,7 +143,7 @@ public partial class UninstallerForm : Form
         btnCancel = new ModernButton
         {
             Text = "Abbrechen",
-            Location = new Point(265, 435),
+            Location = new Point(leftMargin + 265, 442),
             Size = new Size(110, 36),
             CornerRadius = 6
         };
@@ -146,7 +153,7 @@ public partial class UninstallerForm : Form
         btnUninstall = new ModernButton
         {
             Text = "Deinstallieren",
-            Location = new Point(385, 435),
+            Location = new Point(leftMargin + 385, 442),
             Size = new Size(115, 36),
             IsCyanAccent = true, // matching Bild 2 cyan button
             CornerRadius = 6
@@ -170,13 +177,15 @@ public partial class UninstallerForm : Form
             Visible = false
         };
 
+        int leftMargin = 32;
+
         lblProgressTitle = new Label
         {
             Text = "NEXT : XLR wird deinstalliert...",
             Font = new Font("Segoe UI Variable Display", 21f, FontStyle.Bold),
             ForeColor = Color.FromArgb(248, 250, 252),
             AutoSize = true,
-            Location = new Point(0, 0)
+            Location = new Point(leftMargin, 26)
         };
         pageProgress.Controls.Add(lblProgressTitle);
 
@@ -185,14 +194,14 @@ public partial class UninstallerForm : Form
             Text = "Laufende Hintergrunddienste und Prozesse werden beendet...",
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
             ForeColor = Color.FromArgb(148, 163, 184),
-            Location = new Point(0, 42),
+            Location = new Point(leftMargin, 68),
             Size = new Size(500, 38)
         };
         pageProgress.Controls.Add(lblProgressSubtitle);
 
         progressBar = new ModernProgressBar
         {
-            Location = new Point(0, 110),
+            Location = new Point(leftMargin, 118),
             Size = new Size(500, 10),
             Value = 5
         };
@@ -203,7 +212,7 @@ public partial class UninstallerForm : Form
             Text = "Deinstallation wird vorbereitet...",
             Font = new Font("Segoe UI", 9f, FontStyle.Regular),
             ForeColor = Color.FromArgb(226, 232, 240),
-            Location = new Point(0, 130),
+            Location = new Point(leftMargin, 138),
             Size = new Size(500, 24)
         };
         pageProgress.Controls.Add(lblProgressStatus);
@@ -217,8 +226,8 @@ public partial class UninstallerForm : Form
             ForeColor = Color.FromArgb(148, 163, 184),
             BorderStyle = BorderStyle.None,
             Font = new Font("Consolas", 8.5f, FontStyle.Regular),
-            Location = new Point(0, 165),
-            Size = new Size(500, 290)
+            Location = new Point(leftMargin, 172),
+            Size = new Size(500, 255)
         };
         pageProgress.Controls.Add(txtLog);
 
@@ -234,13 +243,15 @@ public partial class UninstallerForm : Form
             Visible = false
         };
 
+        int leftMargin = 32;
+
         var lblDoneTitle = new Label
         {
             Text = "Deinstallation abgeschlossen",
             Font = new Font("Segoe UI Variable Display", 21f, FontStyle.Bold),
             ForeColor = Color.FromArgb(56, 189, 248),
             AutoSize = true,
-            Location = new Point(0, 0)
+            Location = new Point(leftMargin, 26)
         };
         pageDone.Controls.Add(lblDoneTitle);
 
@@ -249,7 +260,7 @@ public partial class UninstallerForm : Form
             Text = "NEXT : XLR wurde erfolgreich von deinem Computer entfernt. Deine Windows-Standardeinstellungen wurden wiederhergestellt.",
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
             ForeColor = Color.FromArgb(203, 213, 225),
-            Location = new Point(0, 42),
+            Location = new Point(leftMargin, 68),
             Size = new Size(500, 48)
         };
         pageDone.Controls.Add(lblDoneSubtitle);
@@ -257,7 +268,7 @@ public partial class UninstallerForm : Form
         btnFinish = new ModernButton
         {
             Text = "Schließen",
-            Location = new Point(370, 435),
+            Location = new Point(leftMargin + 370, 442),
             Size = new Size(130, 36),
             IsCyanAccent = true,
             CornerRadius = 6
