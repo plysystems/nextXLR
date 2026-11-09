@@ -201,6 +201,8 @@ public static class CrashHandler
 
             var root = new Grid
             {
+                RequestedTheme = ElementTheme.Dark,
+                Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x16, 0x18, 0x1F)),
                 Padding = new Thickness(24),
                 RowDefinitions =
                 {
@@ -241,7 +243,8 @@ public static class CrashHandler
             {
                 Text = "Unerwarteter Fehler in NEXT : XLR",
                 FontSize = 18,
-                FontWeight = Microsoft.UI.Text.FontWeights.Bold
+                FontWeight = Microsoft.UI.Text.FontWeights.Bold,
+                Foreground = new SolidColorBrush(Colors.White)
             };
             var subtitleText = new TextBlock
             {
@@ -345,6 +348,10 @@ public static class CrashHandler
             var saveAsBtn = new Button
             {
                 Style = Application.Current?.Resources["AccentButtonStyle"] as Style,
+                Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x1F, 0xC7, 0x9A)),
+                Foreground = new SolidColorBrush(Colors.Black),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(14, 8, 14, 8),
                 Content = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
@@ -385,6 +392,10 @@ public static class CrashHandler
             var copyBtn = new Button
             {
                 Style = Application.Current?.Resources["SmoothButton"] as Style,
+                Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x2A, 0x2E, 0x38)),
+                Foreground = new SolidColorBrush(Colors.White),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(12, 8, 12, 8),
                 Content = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
@@ -412,6 +423,10 @@ public static class CrashHandler
             var openFolderBtn = new Button
             {
                 Style = Application.Current?.Resources["SmoothButton"] as Style,
+                Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x2A, 0x2E, 0x38)),
+                Foreground = new SolidColorBrush(Colors.White),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(12, 8, 12, 8),
                 Content = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
@@ -444,7 +459,12 @@ public static class CrashHandler
             var restartBtn = new Button
             {
                 Content = "App neu starten",
-                Style = Application.Current?.Resources?["AccentButtonStyle"] as Style
+                Style = Application.Current?.Resources?["AccentButtonStyle"] as Style,
+                Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x1F, 0xC7, 0x9A)),
+                Foreground = new SolidColorBrush(Colors.Black),
+                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(14, 8, 14, 8)
             };
             restartBtn.Click += (_, _) =>
             {
@@ -464,7 +484,11 @@ public static class CrashHandler
             var closeBtn = new Button
             {
                 Content = "Beenden",
-                Style = Application.Current?.Resources["SmoothButton"] as Style
+                Style = Application.Current?.Resources["SmoothButton"] as Style,
+                Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x2A, 0x2E, 0x38)),
+                Foreground = new SolidColorBrush(Colors.White),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(14, 8, 14, 8)
             };
             closeBtn.Click += (_, _) => Environment.Exit(1);
 

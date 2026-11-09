@@ -135,6 +135,7 @@ public partial class VstPluginItem : ObservableObject
 
     private void NotifyHardwareSync()
     {
+        if (VstPluginService.SuppressHardwareSync) return;
         VstPluginService.SyncToHardware(this);
     }
 
@@ -513,8 +514,25 @@ public partial class VstPluginItem : ObservableObject
 /// </summary>
 public sealed partial class VstPluginService : ObservableObject
 {
-    private static readonly Lazy<VstPluginService> _instance = new(() => new VstPluginService());
-    public static VstPluginService Instance => _instance.Value;
+    private static VstPluginService? _instance;
+    private static readonly object _initLock = new();
+
+    public static VstPluginService Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                lock (_initLock)
+                {
+                    _instance ??= new VstPluginService();
+                }
+            }
+            return _instance;
+        }
+    }
+
+    public static bool SuppressHardwareSync { get; set; } = false;
 
     public static MicSettingsViewModel? ActiveMicViewModel { get; set; }
 
@@ -552,6 +570,7 @@ public sealed partial class VstPluginService : ObservableObject
 
     private VstPluginService()
     {
+        _instance = this;
         LoadRack();
     }
 
@@ -690,10 +709,12 @@ public sealed partial class VstPluginService : ObservableObject
     /// </summary>
     public static void SyncToHardware(VstPluginItem plugin)
     {
+        if (SuppressHardwareSync) return;
         var mic = ActiveMicViewModel;
         if (mic == null) return;
 
-        bool isBypassed = !Instance.IsMasterEnabled || !plugin.IsEnabled || plugin.IsBypassed;
+        bool masterEnabled = _instance?.IsMasterEnabled ?? true;
+        bool isBypassed = !masterEnabled || !plugin.IsEnabled || plugin.IsBypassed;
 
         if (plugin.Name.Contains("Pro-EQ", StringComparison.OrdinalIgnoreCase))
         {
@@ -841,8 +862,12 @@ public sealed partial class VstPluginService : ObservableObject
     /// </summary>
     public static void SyncAllToHardware()
     {
-        if (ActiveMicViewModel == null) return;
-        foreach (var p in Instance.RackPlugins)
+        if (SuppressHardwareSync) return;
+        var mic = ActiveMicViewModel;
+        if (mic == null) return;
+        var plugins = _instance?.RackPlugins;
+        if (plugins == null) return;
+        foreach (var p in plugins)
         {
             SyncToHardware(p);
         }
@@ -1139,6 +1164,7 @@ public sealed partial class VstPluginService : ObservableObject
     {
         try
         {
+            SuppressHardwareSync = true;
             RackPlugins.Clear();
             if (File.Exists(SettingsFile))
             {
@@ -1176,13 +1202,20 @@ public sealed partial class VstPluginService : ObservableObject
                     }
                 }
             }
-        }
-        catch { }
 
-        // Default: Populate with the 6 integrated broadcast plugins
-        foreach (var p in GetIntegratedPlugins())
+            // Default: Populate with the 6 integrated broadcast plugins
+            foreach (var p in GetIntegratedPlugins())
+            {
+                RackPlugins.Add(p);
+            }
+        }
+        catch (Exception ex)
         {
-            RackPlugins.Add(p);
+            Debug.WriteLine($"Failed to load VST rack: {ex.Message}");
+        }
+        finally
+        {
+            SuppressHardwareSync = false;
         }
     }
 
