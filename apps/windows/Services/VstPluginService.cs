@@ -32,42 +32,25 @@ public partial class VstPluginItem : ObservableObject
     [ObservableProperty] private string _tagCode = "[DSP]";
     [ObservableProperty] private string _tagColorHex = "#1FC79A";
     [ObservableProperty] private bool _isEnabled = true;
-    [ObservableProperty] private bool _isBypassed = false;
     [ObservableProperty] private double _inputGainDb = 0.0;
     [ObservableProperty] private double _outputGainDb = 0.0;
     [ObservableProperty] private double _mixPercent = 100.0;
     [ObservableProperty] private string _oversampling = "1x (Echtzeit)";
     [ObservableProperty] private string _processingMode = "Stereo";
+    [ObservableProperty] private string _presetName = "Standard";
 
-    private string _presetName = "Standard";
-    public string PresetName
+    [JsonIgnore]
+    public bool IsBypassed
     {
-        get => _presetName;
-        set
-        {
-            if (string.IsNullOrWhiteSpace(value) || value == _presetName) return;
-            if (SetProperty(ref _presetName, value))
-            {
-                ApplyPreset(value);
-                VstPluginService.Instance.SaveRack();
-            }
-        }
+        get => !IsEnabled;
+        set => IsEnabled = !value;
     }
 
     [JsonIgnore]
     public bool IsActive
     {
-        get => !IsBypassed && IsEnabled;
-        set
-        {
-            IsBypassed = !value;
-            IsEnabled = value;
-            OnPropertyChanged(nameof(IsActive));
-            OnPropertyChanged(nameof(StatusText));
-            OnPropertyChanged(nameof(StatusBrush));
-            NotifyHardwareSync();
-            VstPluginService.Instance.SaveRack();
-        }
+        get => IsEnabled;
+        set => IsEnabled = value;
     }
 
     // --- Specialized DSP Properties ---
@@ -120,10 +103,10 @@ public partial class VstPluginItem : ObservableObject
     [ObservableProperty] private double _drive = 0.0;
 
     [JsonIgnore]
-    public string StatusText => IsBypassed ? "Bypass" : (IsEnabled ? "Aktiv" : "Aus");
+    public string StatusText => IsEnabled ? "Aktiv" : "Bypass";
 
     [JsonIgnore]
-    public SolidColorBrush StatusBrush => new(IsBypassed ? ColorHelper.FromArgb(255, 0xEF, 0x8C, 0x34) : (IsEnabled ? ColorHelper.FromArgb(255, 0x22, 0xD3, 0xA6) : ColorHelper.FromArgb(255, 0x88, 0x88, 0x88)));
+    public SolidColorBrush StatusBrush => new(IsEnabled ? ColorHelper.FromArgb(255, 0x22, 0xD3, 0xA6) : ColorHelper.FromArgb(255, 0xEF, 0x8C, 0x34));
 
     [JsonIgnore]
     public SolidColorBrush TagBrush
@@ -147,10 +130,7 @@ public partial class VstPluginItem : ObservableObject
     }
 
     [JsonIgnore]
-    private string[]? _availablePresets;
-
-    [JsonIgnore]
-    public string[] AvailablePresets => _availablePresets ??= GetAvailablePresets();
+    public string[] AvailablePresets => GetAvailablePresets();
 
     private void NotifyHardwareSync()
     {
@@ -159,20 +139,11 @@ public partial class VstPluginItem : ObservableObject
 
     partial void OnIsEnabledChanged(bool value)
     {
+        OnPropertyChanged(nameof(IsBypassed));
         OnPropertyChanged(nameof(IsActive));
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(StatusBrush));
         NotifyHardwareSync();
-        VstPluginService.Instance.SaveRack();
-    }
-
-    partial void OnIsBypassedChanged(bool value)
-    {
-        OnPropertyChanged(nameof(IsActive));
-        OnPropertyChanged(nameof(StatusText));
-        OnPropertyChanged(nameof(StatusBrush));
-        NotifyHardwareSync();
-        VstPluginService.Instance.SaveRack();
     }
 
     partial void OnLowCutFreqChanged(double value) => NotifyHardwareSync();
@@ -1169,7 +1140,7 @@ public sealed class VstPluginService
 
         var bypassToggle = new ToggleSwitch
         {
-            IsOn = plugin.IsActive,
+            IsOn = plugin.IsEnabled,
             OnContent = "Aktiv",
             OffContent = "Bypass",
             MinWidth = 0,
@@ -1177,7 +1148,9 @@ public sealed class VstPluginService
         };
         bypassToggle.Toggled += (_, _) =>
         {
-            plugin.IsActive = bypassToggle.IsOn;
+            plugin.IsEnabled = bypassToggle.IsOn;
+            VstPluginService.SyncToHardware(plugin);
+            Instance.SaveRack();
         };
         headerRight.Children.Add(bypassToggle);
 

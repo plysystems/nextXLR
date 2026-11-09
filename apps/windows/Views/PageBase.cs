@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using NextXLR.Services;
 using NextXLR.ViewModels;
@@ -247,12 +248,19 @@ public partial class MicPage : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        ViewModel = (MainViewModel)e.Parameter;
-        VstPluginService.ActiveMicViewModel = Mic;
-        MicProfileBox.SelectionChanged -= MicProfileBox_SelectionChanged;
-        MicProfileBox.SelectionChanged += MicProfileBox_SelectionChanged;
-        RefreshMicProfiles();
-        VstPluginService.SyncAllToHardware();
+        try
+        {
+            ViewModel = (MainViewModel)e.Parameter;
+            VstPluginService.ActiveMicViewModel = Mic;
+            MicProfileBox.SelectionChanged -= MicProfileBox_SelectionChanged;
+            MicProfileBox.SelectionChanged += MicProfileBox_SelectionChanged;
+            RefreshMicProfiles();
+            VstPluginService.SyncAllToHardware();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error during MicPage.OnNavigatedTo: {ex}");
+        }
     }
 
     private void MicProfileBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -263,7 +271,11 @@ public partial class MicPage : Page
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        VstPluginService.Instance.SaveRack();
+        try
+        {
+            VstPluginService.Instance.SaveRack();
+        }
+        catch { }
     }
 
     // ---------------- Mic profiles (gate, compressor, EQ, de-esser) ----------------
@@ -435,6 +447,40 @@ public partial class MicPage : Page
         {
             VstPluginService.OpenEditor(App.MainWindowInstance ?? new Window(), plugin);
         }
+    }
+
+    private void PluginToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var plugin = (sender as FrameworkElement)?.Tag as VstPluginItem ?? (sender as FrameworkElement)?.DataContext as VstPluginItem;
+            if (plugin != null)
+            {
+                VstPluginService.SyncToHardware(plugin);
+                VstPluginService.Instance.SaveRack();
+            }
+        }
+        catch { }
+    }
+
+    private void PresetCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        try
+        {
+            var cb = sender as ComboBox;
+            var plugin = cb?.Tag as VstPluginItem ?? cb?.DataContext as VstPluginItem;
+            if (plugin != null && cb?.SelectedItem is string newPreset)
+            {
+                if (!string.IsNullOrWhiteSpace(newPreset) && newPreset != plugin.PresetName)
+                {
+                    plugin.PresetName = newPreset;
+                    plugin.ApplyPreset(newPreset);
+                    VstPluginService.SyncToHardware(plugin);
+                    VstPluginService.Instance.SaveRack();
+                }
+            }
+        }
+        catch { }
     }
 
     private void ResetToIntegrated_Click(object sender, RoutedEventArgs e)
