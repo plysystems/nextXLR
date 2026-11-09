@@ -136,7 +136,15 @@ public partial class SamplerViewModel : ObservableObject
         {
             if (pressed) Press(Pads[pad]); else Release(Pads[pad]);
         }
-        else if (pressed && Array.IndexOf(PageButtons, id) is var page and >= 0) SelectPage(Pages[page]);
+        else if (pressed && Array.IndexOf(PageButtons, id) is var page and >= 0)
+        {
+            if (page == 0 && ActivePage == 0)
+            {
+                // Sampler Bank A is already active and pressed again: Toggle Mixer Page on GoXLR!
+                MainViewModel.Instance?.ToggleMixerPage();
+            }
+            SelectPage(Pages[page]);
+        }
         else if (pressed && id == "sampler_clear") ClearArmed = !ClearArmed;
     }
 

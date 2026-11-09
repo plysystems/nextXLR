@@ -410,6 +410,7 @@
                             <Expander.Header><TextBlock x:Uid="HelpControlsTitle" FontWeight="SemiBold" Padding="0,8" /></Expander.Header>
                             <StackPanel Spacing="10">
                                 <TextBlock x:Uid="HelpControls1" TextWrapping="Wrap" />
+                                <TextBlock x:Uid="HelpControlsMixerPages" TextWrapping="Wrap" />
                                 <TextBlock x:Uid="HelpControlsInput" TextWrapping="Wrap" />
                                 <TextBlock x:Uid="HelpControls2" TextWrapping="Wrap" />
                                 <TextBlock x:Uid="HelpControls3" TextWrapping="Wrap" />

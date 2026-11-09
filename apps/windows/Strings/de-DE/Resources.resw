@@ -256,6 +256,7 @@
   <data name="HelpControls1.Text" xml:space="preserve"><value>Fader: Kappe ziehen (Umschalt = fein), Mausrad (Strg = fein) oder Pfeiltasten.</value></data>
   <data name="HelpControls2.Text" xml:space="preserve"><value>Drehregler: nach oben/unten ziehen, scrollen oder Pfeiltasten. Doppelklick setzt auf Standard zurück.</value></data>
   <data name="HelpControls3.Text" xml:space="preserve"><value>Stumm: Der Fader fällt auf 0 und kehrt beim Aufheben auf die vorherige Position zurück.</value></data>
+  <data name="HelpControlsMixerPages.Text" xml:space="preserve"><value>Mixer-Pages (Fader-Bänke GoXLR): Schalte zwischen Seite 1 und Seite 2 direkt in der Mixer-Ansicht um. An der GoXLR-Hardware schaltet ein erneuter Druck auf die bereits aktive Sampler-Taste A (oder das gleichzeitige Drücken von MUTE + !@#$?*) die Motorfader auf die zweite Bank um.</value></data>
   <data name="HelpCreditsTitle.Text" xml:space="preserve"><value>Danksagung</value></data>
   <data name="HelpCreditsDesc.Text" xml:space="preserve"><value>Das GoXLR-USB-Protokoll basiert auf dem Open-Source-Projekt GoXLR Utility (MIT).</value></data>
   <data name="HelpCreditsLink.Content" xml:space="preserve"><value>GoXLR Utility auf GitHub</value></data>

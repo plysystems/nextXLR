@@ -256,6 +256,7 @@
   <data name="HelpControls1.Text" xml:space="preserve"><value>Faders: drag the cap (Shift = fine), scroll the mouse wheel (Ctrl = fine), or use the arrow keys.</value></data>
   <data name="HelpControls2.Text" xml:space="preserve"><value>Knobs: drag up/down, scroll, or use the arrow keys. Double-click resets to the default.</value></data>
   <data name="HelpControls3.Text" xml:space="preserve"><value>Mute: the fader drops to 0 and returns to its previous position when you unmute.</value></data>
+  <data name="HelpControlsMixerPages.Text" xml:space="preserve"><value>Mixer Pages (GoXLR Fader Banks): Switch between Page 1 and Page 2 in the Mixer view. On GoXLR hardware, pressing the active Sampler Bank A button again (or pressing MUTE + !@#$?* together) toggles motorized faders to the second bank.</value></data>
   <data name="HelpCreditsTitle.Text" xml:space="preserve"><value>Credits</value></data>
   <data name="HelpCreditsDesc.Text" xml:space="preserve"><value>The GoXLR USB protocol is based on the open-source GoXLR Utility (MIT).</value></data>
   <data name="HelpCreditsLink.Content" xml:space="preserve"><value>GoXLR Utility on GitHub</value></data>
