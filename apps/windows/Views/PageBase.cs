@@ -255,6 +255,15 @@ public partial class MicPage : Page
             MicProfileBox.SelectionChanged -= MicProfileBox_SelectionChanged;
             MicProfileBox.SelectionChanged += MicProfileBox_SelectionChanged;
             RefreshMicProfiles();
+            if (Selected is { } defEntry)
+            {
+                try
+                {
+                    var (_, _, rawDoc) = ProfileService.Mic.ReadFull(defEntry.Path);
+                    VstPluginService.Instance.LoadRackForProfile(defEntry.Name, rawDoc);
+                }
+                catch { }
+            }
             VstPluginService.SyncAllToHardware();
         }
         catch (Exception ex)
@@ -266,6 +275,26 @@ public partial class MicPage : Page
     private void MicProfileBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         UpdateDefaultIcon();
+        if (Selected is { } entry)
+        {
+            try
+            {
+                var (_, _, rawDoc) = ProfileService.Mic.ReadFull(entry.Path);
+                VstPluginService.Instance.LoadRackForProfile(entry.Name, rawDoc);
+            }
+            catch { }
+        }
+    }
+
+    private void VstMasterToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleSwitch ts)
+        {
+            VstPluginService.Instance.IsMasterEnabled = ts.IsOn;
+            Show(InfoBarSeverity.Informational, ts.IsOn
+                ? "VST3/CLAP Master-Rack aktiviert."
+                : "VST3/CLAP Master-Rack im Bypass (Clean Pass-Through).");
+        }
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -319,6 +348,7 @@ public partial class MicPage : Page
         try
         {
             ProfileService.Mic.Save(name, Current());
+            VstPluginService.Instance.SaveRackForProfile(name);
             MicProfileName.Text = "";
             RefreshMicProfiles(name);
             Show(InfoBarSeverity.Success, Loc.Format("MicProfileSaved", name));
@@ -331,8 +361,12 @@ public partial class MicPage : Page
         if (Selected is not { } entry) { Show(InfoBarSeverity.Informational, Loc.Get("MicProfilePick")); return; }
         try
         {
-            var (name, profile) = ProfileService.Mic.Read(entry.Path);
-            if (Apply(profile)) Show(InfoBarSeverity.Success, Loc.Format("MicProfileLoaded", name));
+            var (name, profile, rawDoc) = ProfileService.Mic.ReadFull(entry.Path);
+            if (Apply(profile))
+            {
+                VstPluginService.Instance.LoadRackForProfile(entry.Name, rawDoc);
+                Show(InfoBarSeverity.Success, Loc.Format("MicProfileLoaded", name));
+            }
         }
         catch (Exception ex) { Show(InfoBarSeverity.Error, ex.Message); }
     }
@@ -388,8 +422,12 @@ public partial class MicPage : Page
         if (file is null) return;
         try
         {
-            var (name, profile) = ProfileService.Mic.Read(file.Path);
+            var (name, profile, rawDoc) = ProfileService.Mic.ReadFull(file.Path);
             ProfileService.Mic.Save(name, profile);
+            if (rawDoc != null)
+            {
+                VstPluginService.Instance.LoadRackForProfile(name, rawDoc);
+            }
             RefreshMicProfiles(name);
             if (Apply(profile)) Show(InfoBarSeverity.Success, Loc.Format("MicProfileImported", name));
         }
@@ -402,6 +440,7 @@ public partial class MicPage : Page
     private void MicDelete_Click(object sender, RoutedEventArgs e)
     {
         if (Selected is not { } entry) { Show(InfoBarSeverity.Informational, Loc.Get("MicProfilePick")); return; }
+        VstPluginService.Instance.DeleteProfileRack(entry.Name);
         ProfileService.Mic.Delete(entry);
         RefreshMicProfiles();
         Show(InfoBarSeverity.Informational, Loc.Format("MicProfileDeleted", entry.Name));

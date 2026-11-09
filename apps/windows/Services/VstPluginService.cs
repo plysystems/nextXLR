@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -510,12 +511,37 @@ public partial class VstPluginItem : ObservableObject
 /// <summary>
 /// Service that scans, manages, and hosts VST3 &amp; CLAP audio plugins and the 6 integrated studio DSP plugins.
 /// </summary>
-public sealed class VstPluginService
+public sealed partial class VstPluginService : ObservableObject
 {
     private static readonly Lazy<VstPluginService> _instance = new(() => new VstPluginService());
     public static VstPluginService Instance => _instance.Value;
 
     public static MicSettingsViewModel? ActiveMicViewModel { get; set; }
+
+    [ObservableProperty] private bool _isMasterEnabled = true;
+    [ObservableProperty] private string _currentProfileName = "Default";
+
+    [JsonIgnore]
+    public bool IsMasterBypassed => !IsMasterEnabled;
+
+    [JsonIgnore]
+    public string MasterStatusText => IsMasterEnabled ? "Aktiv" : "Bypass";
+
+    [JsonIgnore]
+    public SolidColorBrush MasterStatusBrush => new(IsMasterEnabled ? ColorHelper.FromArgb(255, 0x22, 0xD3, 0xA6) : ColorHelper.FromArgb(255, 0xEF, 0x8C, 0x34));
+
+    [JsonIgnore]
+    public double MasterOpacity => IsMasterEnabled ? 1.0 : 0.65;
+
+    partial void OnIsMasterEnabledChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsMasterBypassed));
+        OnPropertyChanged(nameof(MasterStatusText));
+        OnPropertyChanged(nameof(MasterStatusBrush));
+        OnPropertyChanged(nameof(MasterOpacity));
+        SyncAllToHardware();
+        SaveRack();
+    }
 
     private static readonly string SettingsFile = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -667,9 +693,11 @@ public sealed class VstPluginService
         var mic = ActiveMicViewModel;
         if (mic == null) return;
 
+        bool isBypassed = !Instance.IsMasterEnabled || !plugin.IsEnabled || plugin.IsBypassed;
+
         if (plugin.Name.Contains("Pro-EQ", StringComparison.OrdinalIgnoreCase))
         {
-            if (plugin.IsBypassed || !plugin.IsEnabled)
+            if (isBypassed)
             {
                 foreach (var b in mic.EqBands) b.Gain = 0;
             }
@@ -693,7 +721,7 @@ public sealed class VstPluginService
         }
         else if (plugin.Name.Contains("Opto", StringComparison.OrdinalIgnoreCase))
         {
-            if (plugin.IsBypassed || !plugin.IsEnabled)
+            if (isBypassed)
             {
                 mic.CompThreshold = 0;
                 mic.CompMakeup = 0;
@@ -723,7 +751,7 @@ public sealed class VstPluginService
         }
         else if (plugin.Name.Contains("DeEsser", StringComparison.OrdinalIgnoreCase))
         {
-            if (plugin.IsBypassed || !plugin.IsEnabled)
+            if (isBypassed)
             {
                 mic.DeEsser = 0;
             }
@@ -735,7 +763,7 @@ public sealed class VstPluginService
         }
         else if (plugin.Name.Contains("Expander", StringComparison.OrdinalIgnoreCase))
         {
-            if (plugin.IsBypassed || !plugin.IsEnabled)
+            if (isBypassed)
             {
                 mic.GateEnabled = false;
             }
@@ -750,7 +778,7 @@ public sealed class VstPluginService
         }
         else if (plugin.Name.Contains("Tube", StringComparison.OrdinalIgnoreCase) || plugin.Name.Contains("Sat", StringComparison.OrdinalIgnoreCase))
         {
-            if (plugin.IsBypassed || !plugin.IsEnabled)
+            if (isBypassed)
             {
                 mic.VoiceMorphDrive = 0;
             }
@@ -761,7 +789,7 @@ public sealed class VstPluginService
         }
         else if (plugin.Name.Contains("Limiter", StringComparison.OrdinalIgnoreCase) || plugin.Name.Contains("Master", StringComparison.OrdinalIgnoreCase))
         {
-            if (plugin.IsBypassed || !plugin.IsEnabled)
+            if (isBypassed)
             {
                 // Limiter bypass
             }
@@ -774,7 +802,7 @@ public sealed class VstPluginService
         else
         {
             // Generic / External VST3 & CLAP mapping to GoXLR hardware
-            if (plugin.IsBypassed || !plugin.IsEnabled)
+            if (isBypassed)
             {
                 // Bypassed
             }
@@ -952,22 +980,154 @@ public sealed class VstPluginService
         SaveRack();
     }
 
+    public JsonNode SerializeRackToJsonNode()
+    {
+        var options = new JsonSerializerOptions
+        {
+            ReferenceHandler = ReferenceHandler.IgnoreCycles,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+        var json = JsonSerializer.Serialize(RackPlugins.ToList(), options);
+        return JsonNode.Parse(json) ?? new JsonArray();
+    }
+
+    public void LoadRackFromJsonNode(JsonNode? rackNode, bool? masterEnabled = null)
+    {
+        if (masterEnabled.HasValue)
+        {
+            IsMasterEnabled = masterEnabled.Value;
+        }
+
+        if (rackNode != null)
+        {
+            try
+            {
+                var options = new JsonSerializerOptions
+                {
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                };
+                var items = JsonSerializer.Deserialize<List<VstPluginItem>>(rackNode.ToJsonString(), options);
+                if (items != null && items.Count > 0)
+                {
+                    RackPlugins.Clear();
+                    foreach (var it in items) RackPlugins.Add(it);
+                    SyncAllToHardware();
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to deserialize VST rack node: {ex.Message}");
+            }
+        }
+    }
+
+    public static string GetProfileRackPath(string profileName)
+    {
+        var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NextXLR", "vst_profiles");
+        return Path.Combine(dir, ProfileLibrary.SafeFileName(profileName) + ".json");
+    }
+
+    public void SaveRackForProfile(string profileName)
+    {
+        if (string.IsNullOrWhiteSpace(profileName)) return;
+        CurrentProfileName = profileName;
+        try
+        {
+            var filePath = GetProfileRackPath(profileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+            var obj = new JsonObject
+            {
+                ["profile_name"] = profileName,
+                ["master_enabled"] = IsMasterEnabled,
+                ["saved"] = DateTime.Now.ToString("o"),
+                ["rack"] = SerializeRackToJsonNode()
+            };
+            var temp = filePath + ".tmp";
+            File.WriteAllText(temp, obj.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+            File.Move(temp, filePath, true);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Failed to save profile VST rack: {ex.Message}");
+        }
+    }
+
+    public bool LoadRackForProfile(string profileName, JsonNode? rawProfileDoc = null)
+    {
+        if (string.IsNullOrWhiteSpace(profileName)) return false;
+        CurrentProfileName = profileName;
+
+        // 1. Embedded inside rawProfileDoc
+        if (rawProfileDoc != null && rawProfileDoc["vst_rack"] is JsonNode embeddedRack)
+        {
+            bool? master = rawProfileDoc["vst_master_enabled"]?.GetValue<bool>();
+            LoadRackFromJsonNode(embeddedRack, master);
+            SaveRackInternal(false);
+            return true;
+        }
+
+        // 2. vst_profiles/{profileName}.json
+        var profileRackFile = GetProfileRackPath(profileName);
+        if (File.Exists(profileRackFile))
+        {
+            try
+            {
+                var json = File.ReadAllText(profileRackFile);
+                var node = JsonNode.Parse(json);
+                if (node != null)
+                {
+                    bool? master = node["master_enabled"]?.GetValue<bool>();
+                    var rack = node["rack"];
+                    LoadRackFromJsonNode(rack, master);
+                    SaveRackInternal(false);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to load profile VST rack file: {ex.Message}");
+            }
+        }
+
+        return false;
+    }
+
+    public void DeleteProfileRack(string profileName)
+    {
+        try
+        {
+            var file = GetProfileRackPath(profileName);
+            if (File.Exists(file)) File.Delete(file);
+        }
+        catch { }
+    }
+
     public void SaveRack()
+    {
+        SaveRackInternal(true);
+    }
+
+    private void SaveRackInternal(bool saveToProfile)
     {
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(SettingsFile)!);
-            var list = RackPlugins.ToList();
-            var options = new JsonSerializerOptions
+            var envelope = new JsonObject
             {
-                WriteIndented = true,
-                ReferenceHandler = ReferenceHandler.IgnoreCycles,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                ["master_enabled"] = IsMasterEnabled,
+                ["current_profile"] = CurrentProfileName,
+                ["rack"] = SerializeRackToJsonNode()
             };
-            var json = JsonSerializer.Serialize(list, options);
-            string tempFile = SettingsFile + ".tmp";
-            File.WriteAllText(tempFile, json);
+            var tempFile = SettingsFile + ".tmp";
+            File.WriteAllText(tempFile, envelope.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
             File.Move(tempFile, SettingsFile, true);
+
+            if (saveToProfile && !string.IsNullOrWhiteSpace(CurrentProfileName) && CurrentProfileName != "Default")
+            {
+                SaveRackForProfile(CurrentProfileName);
+            }
         }
         catch (Exception ex)
         {
@@ -983,16 +1143,37 @@ public sealed class VstPluginService
             if (File.Exists(SettingsFile))
             {
                 var json = File.ReadAllText(SettingsFile);
-                var options = new JsonSerializerOptions
+                var root = JsonNode.Parse(json);
+                if (root is JsonObject obj)
                 {
-                    ReferenceHandler = ReferenceHandler.IgnoreCycles,
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-                };
-                var items = JsonSerializer.Deserialize<List<VstPluginItem>>(json, options);
-                if (items != null && items.Count > 0)
+                    if (obj["master_enabled"] is JsonNode masterNode)
+                    {
+                        IsMasterEnabled = masterNode.GetValue<bool>();
+                    }
+                    if (obj["current_profile"] is JsonNode profNode)
+                    {
+                        CurrentProfileName = profNode.GetValue<string>();
+                    }
+                    var rackNode = obj["rack"];
+                    if (rackNode != null)
+                    {
+                        LoadRackFromJsonNode(rackNode, IsMasterEnabled);
+                        if (RackPlugins.Count > 0) return;
+                    }
+                }
+                else if (root is JsonArray)
                 {
-                    foreach (var it in items) RackPlugins.Add(it);
-                    return;
+                    var options = new JsonSerializerOptions
+                    {
+                        ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                    };
+                    var items = JsonSerializer.Deserialize<List<VstPluginItem>>(json, options);
+                    if (items != null && items.Count > 0)
+                    {
+                        foreach (var it in items) RackPlugins.Add(it);
+                        return;
+                    }
                 }
             }
         }

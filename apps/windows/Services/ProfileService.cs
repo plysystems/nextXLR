@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -76,6 +78,20 @@ public sealed class ProfileLibrary(string folder, string defaultFile, string kin
             ["saved"] = DateTime.Now.ToString("o"),
             ["profile"] = profile.DeepClone(),
         };
+
+        if (kind == "mic")
+        {
+            try
+            {
+                doc["vst_master_enabled"] = VstPluginService.Instance.IsMasterEnabled;
+                doc["vst_rack"] = VstPluginService.Instance.SerializeRackToJsonNode();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to embed VST rack in mic profile: {ex.Message}");
+            }
+        }
+
         var dir = System.IO.Path.GetDirectoryName(path)!;
         Directory.CreateDirectory(dir);
         var tempPath = path + ".tmp";
@@ -83,19 +99,27 @@ public sealed class ProfileLibrary(string folder, string defaultFile, string kin
         File.Move(tempPath, path, true);
     }
 
-    /// <summary>Reads a profile file (wrapped, bare, or legacy GoXLR .goxlr / XML). Throws with a readable message.</summary>
-    public (string Name, JsonNode Profile) Read(string path)
+    /// <summary>Reads a profile file (wrapped, bare, or legacy GoXLR .goxlr / XML) with full raw JSON doc.</summary>
+    public (string Name, JsonNode Profile, JsonNode? RawDoc) ReadFull(string path)
     {
         if (LegacyProfileImporter.IsLegacyOrArchive(path))
         {
-            return LegacyProfileImporter.Import(path, kind);
+            var (legacyName, legacyProfile) = LegacyProfileImporter.Import(path, kind);
+            return (legacyName, legacyProfile, null);
         }
 
         var node = JsonNode.Parse(File.ReadAllText(path)) ?? throw new InvalidDataException("empty file");
         var profile = node["profile"] ?? node;
         if (!isValid(profile)) throw new InvalidDataException(Loc.Get(kind == "mic" ? "MicProfileInvalid" : "ProfileInvalid"));
         var name = node["name"]?.GetValue<string>() ?? System.IO.Path.GetFileNameWithoutExtension(path);
-        return (name, profile.DeepClone());
+        return (name, profile.DeepClone(), node);
+    }
+
+    /// <summary>Reads a profile file (wrapped, bare, or legacy GoXLR .goxlr / XML). Throws with a readable message.</summary>
+    public (string Name, JsonNode Profile) Read(string path)
+    {
+        var (name, profile, _) = ReadFull(path);
+        return (name, profile);
     }
 
     public void SetDefault(ProfileEntry e)
@@ -125,7 +149,7 @@ public sealed class ProfileLibrary(string folder, string defaultFile, string kin
         catch { return null; }
     }
 
-    private static string SafeFileName(string name)
+    public static string SafeFileName(string name)
     {
         var invalid = System.IO.Path.GetInvalidFileNameChars();
         var cleaned = new string(name.Trim().Select(c => invalid.Contains(c) || c == '.' || c == '/' || c == '\\' ? '_' : c).ToArray());
