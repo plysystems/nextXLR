@@ -45,6 +45,36 @@ public sealed class AppSettings
         ["!@#$?*"] = false
     };
 
+    public void EnsureDistinctMixerPages()
+    {
+        uint[] allDefaults = [0, 1, 2, 4, 3, 7, 6, 5];
+        if (MixerPage1Channels == null || MixerPage1Channels.Length != 4)
+            MixerPage1Channels = [0, 1, 2, 4];
+        if (MixerPage2Channels == null || MixerPage2Channels.Length != 4)
+            MixerPage2Channels = [3, 7, 6, 5];
+
+        var used = new HashSet<uint>();
+        for (int i = 0; i < 4; i++)
+        {
+            if (!used.Add(MixerPage1Channels[i]))
+            {
+                var replacement = allDefaults.FirstOrDefault(c => !used.Contains(c));
+                MixerPage1Channels[i] = replacement;
+                used.Add(replacement);
+            }
+        }
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (!used.Add(MixerPage2Channels[i]))
+            {
+                var replacement = allDefaults.FirstOrDefault(c => !used.Contains(c));
+                MixerPage2Channels[i] = replacement;
+                used.Add(replacement);
+            }
+        }
+    }
+
     public bool IsWirelessChannelRouted(string channelName)
     {
         if (WirelessRouting != null && WirelessRouting.TryGetValue(channelName, out var routed))
@@ -62,11 +92,24 @@ public sealed class AppSettings
     {
         try
         {
-            return File.Exists(FilePath)
-                ? JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new()
-                : new();
+            AppSettings settings;
+            if (File.Exists(FilePath))
+            {
+                settings = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new();
+            }
+            else
+            {
+                settings = new();
+            }
+            settings.EnsureDistinctMixerPages();
+            return settings;
         }
-        catch { return new(); }
+        catch
+        {
+            var fallback = new AppSettings();
+            fallback.EnsureDistinctMixerPages();
+            return fallback;
+        }
     }
 
     public void Save()

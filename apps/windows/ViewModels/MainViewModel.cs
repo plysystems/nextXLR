@@ -517,7 +517,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private int _activeMixerPage = 1;
     public bool IsPage1Active => ActiveMixerPage == 1;
     public bool IsPage2Active => ActiveMixerPage == 2;
-    public string MixerPageDescription => ActiveMixerPage == 1 ? "Seite 1 (Voice & Media: Mic, Chat, Musik, System)" : "Seite 2 (Gaming & Inputs: Game, Console, Line In, Samples)";
+    public string MixerPageDescription => ActiveMixerPage == 1 ? "Seite 1" : "Seite 2";
 
     public void SwitchMixerPage(int page)
     {
@@ -527,6 +527,7 @@ public partial class MainViewModel : ObservableObject
         ActiveMixerPage = page;
         var settings = AppSettings.Load();
         settings.ActiveMixerPage = page;
+        settings.EnsureDistinctMixerPages();
         settings.Save();
 
         uint[] targetChannels = page == 1 ? settings.MixerPage1Channels : settings.MixerPage2Channels;
@@ -566,22 +567,47 @@ public partial class MainViewModel : ObservableObject
         };
 
         var settings = AppSettings.Load();
+        settings.EnsureDistinctMixerPages();
+
+        uint[] currentChannels = ActiveMixerPage == 1 ? settings.MixerPage1Channels : settings.MixerPage2Channels;
+        uint[] otherChannels = ActiveMixerPage == 1 ? settings.MixerPage2Channels : settings.MixerPage1Channels;
+
+        if (currentChannels.Length <= index) return;
+
+        uint oldChannel = currentChannels[index];
+        if (oldChannel == channelId) return;
+
+        // 1. Wenn der gewählte Regler auf der anderen Seite liegt, tausche die Position mit oldChannel
+        int otherIndex = Array.IndexOf(otherChannels, channelId);
+        if (otherIndex >= 0)
+        {
+            otherChannels[otherIndex] = oldChannel;
+        }
+
+        // 2. Wenn der Regler auf derselben Seite in einem anderen Slot lag, tausche dort mit oldChannel
+        int samePageIndex = Array.IndexOf(currentChannels, channelId);
+        if (samePageIndex >= 0 && samePageIndex != index)
+        {
+            currentChannels[samePageIndex] = oldChannel;
+        }
+
+        // 3. Neuen Regler in aktuellen Slot eintragen
+        currentChannels[index] = channelId;
+
         if (ActiveMixerPage == 1)
         {
-            if (settings.MixerPage1Channels != null && settings.MixerPage1Channels.Length > index)
-            {
-                settings.MixerPage1Channels[index] = channelId;
-                settings.Save();
-            }
+            settings.MixerPage1Channels = currentChannels;
+            settings.MixerPage2Channels = otherChannels;
         }
         else
         {
-            if (settings.MixerPage2Channels != null && settings.MixerPage2Channels.Length > index)
-            {
-                settings.MixerPage2Channels[index] = channelId;
-                settings.Save();
-            }
+            settings.MixerPage1Channels = otherChannels;
+            settings.MixerPage2Channels = currentChannels;
         }
+
+        settings.EnsureDistinctMixerPages();
+        settings.Save();
+        HasPendingChanges = true;
     }
 }
 

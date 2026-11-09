@@ -714,126 +714,78 @@ public sealed partial class VstPluginService : ObservableObject
         if (mic == null) return;
 
         bool masterEnabled = _instance?.IsMasterEnabled ?? true;
-        bool isBypassed = !masterEnabled || !plugin.IsEnabled || plugin.IsBypassed;
+        if (!masterEnabled) return; // Master-Rack im Bypass: Hardware-DSP nicht überschreiben!
+        if (!plugin.IsEnabled || plugin.IsBypassed) return; // Bypassed Plugin: Hardware-DSP unberührt lassen!
 
         if (plugin.Name.Contains("Pro-EQ", StringComparison.OrdinalIgnoreCase))
         {
-            if (isBypassed)
+            double subCut = plugin.LowCutFreq >= 100 ? -5.0 : (plugin.LowCutFreq >= 60 ? -2.0 : 0.0);
+            if (mic.EqBands.Count >= 10)
             {
-                foreach (var b in mic.EqBands) b.Gain = 0;
-            }
-            else
-            {
-                double subCut = plugin.LowCutFreq >= 100 ? -5.0 : (plugin.LowCutFreq >= 60 ? -2.0 : 0.0);
-                if (mic.EqBands.Count >= 10)
-                {
-                    mic.EqBands[0].Gain = Math.Clamp(plugin.LowGain + subCut - 3.0, -9.0, 9.0); // 31 Hz
-                    mic.EqBands[1].Gain = Math.Clamp(plugin.LowGain + subCut, -9.0, 9.0);       // 63 Hz
-                    mic.EqBands[2].Gain = Math.Clamp(plugin.LowGain, -9.0, 9.0);                // 125 Hz
-                    mic.EqBands[3].Gain = Math.Clamp(plugin.Mid1Gain * 0.8, -9.0, 9.0);         // 250 Hz
-                    mic.EqBands[4].Gain = Math.Clamp(plugin.Mid1Gain, -9.0, 9.0);               // 500 Hz
-                    mic.EqBands[5].Gain = Math.Clamp(plugin.Mid2Gain * 0.7, -9.0, 9.0);         // 1000 Hz
-                    mic.EqBands[6].Gain = Math.Clamp(plugin.Mid2Gain, -9.0, 9.0);               // 2000 Hz
-                    mic.EqBands[7].Gain = Math.Clamp(plugin.HighShelfGain, -9.0, 9.0);          // 4000 Hz
-                    mic.EqBands[8].Gain = Math.Clamp(plugin.HighShelfGain + 0.5, -9.0, 9.0);    // 8000 Hz
-                    mic.EqBands[9].Gain = Math.Clamp(plugin.AirBandGain, -9.0, 9.0);            // 16000 Hz
-                }
+                mic.EqBands[0].Gain = Math.Clamp(plugin.LowGain + subCut - 3.0, -9.0, 9.0); // 31 Hz
+                mic.EqBands[1].Gain = Math.Clamp(plugin.LowGain + subCut, -9.0, 9.0);       // 63 Hz
+                mic.EqBands[2].Gain = Math.Clamp(plugin.LowGain, -9.0, 9.0);                // 125 Hz
+                mic.EqBands[3].Gain = Math.Clamp(plugin.Mid1Gain * 0.8, -9.0, 9.0);         // 250 Hz
+                mic.EqBands[4].Gain = Math.Clamp(plugin.Mid1Gain, -9.0, 9.0);               // 500 Hz
+                mic.EqBands[5].Gain = Math.Clamp(plugin.Mid2Gain * 0.7, -9.0, 9.0);         // 1000 Hz
+                mic.EqBands[6].Gain = Math.Clamp(plugin.Mid2Gain, -9.0, 9.0);               // 2000 Hz
+                mic.EqBands[7].Gain = Math.Clamp(plugin.HighShelfGain, -9.0, 9.0);          // 4000 Hz
+                mic.EqBands[8].Gain = Math.Clamp(plugin.HighShelfGain + 0.5, -9.0, 9.0);    // 8000 Hz
+                mic.EqBands[9].Gain = Math.Clamp(plugin.AirBandGain, -9.0, 9.0);            // 16000 Hz
             }
         }
         else if (plugin.Name.Contains("Opto", StringComparison.OrdinalIgnoreCase))
         {
-            if (isBypassed)
+            // Peak Reduction: 0..100% -> -40 dB to 0 dB
+            mic.CompThreshold = Math.Clamp(-(plugin.OptoPeakReduction * 0.38), -40, 0);
+            mic.CompMakeup = Math.Clamp(plugin.OptoGain, -6, 24);
+            mic.CompRatio = 9; // 4.0:1
+            if (plugin.OptoSpeed.Contains("Fast", StringComparison.OrdinalIgnoreCase))
             {
-                mic.CompThreshold = 0;
-                mic.CompMakeup = 0;
+                mic.CompAttack = 4;
+                mic.CompRelease = 5;
+            }
+            else if (plugin.OptoSpeed.Contains("Slow", StringComparison.OrdinalIgnoreCase))
+            {
+                mic.CompAttack = 12;
+                mic.CompRelease = 14;
             }
             else
             {
-                // Peak Reduction: 0..100% -> -40 dB to 0 dB
-                mic.CompThreshold = Math.Clamp(-(plugin.OptoPeakReduction * 0.38), -40, 0);
-                mic.CompMakeup = Math.Clamp(plugin.OptoGain, -6, 24);
-                mic.CompRatio = 9; // 4.0:1
-                if (plugin.OptoSpeed.Contains("Fast", StringComparison.OrdinalIgnoreCase))
-                {
-                    mic.CompAttack = 4;
-                    mic.CompRelease = 5;
-                }
-                else if (plugin.OptoSpeed.Contains("Slow", StringComparison.OrdinalIgnoreCase))
-                {
-                    mic.CompAttack = 12;
-                    mic.CompRelease = 14;
-                }
-                else
-                {
-                    mic.CompAttack = 7;
-                    mic.CompRelease = 9;
-                }
+                mic.CompAttack = 7;
+                mic.CompRelease = 9;
             }
         }
         else if (plugin.Name.Contains("DeEsser", StringComparison.OrdinalIgnoreCase))
         {
-            if (isBypassed)
-            {
-                mic.DeEsser = 0;
-            }
-            else
-            {
-                // DeEssDepth: -24 dB to 0 dB -> 0 to 100%
-                mic.DeEsser = Math.Clamp(-plugin.DeEssDepth / 24.0 * 100.0, 0, 100);
-            }
+            // DeEssDepth: -24 dB to 0 dB -> 0 to 100%
+            mic.DeEsser = Math.Clamp(-plugin.DeEssDepth / 24.0 * 100.0, 0, 100);
         }
         else if (plugin.Name.Contains("Expander", StringComparison.OrdinalIgnoreCase))
         {
-            if (isBypassed)
-            {
-                mic.GateEnabled = false;
-            }
-            else
-            {
-                mic.GateEnabled = true;
-                mic.GateThreshold = Math.Clamp(plugin.ExpanderThreshold, -59, 0);
-                mic.GateAttenuation = Math.Clamp(plugin.ExpanderRatio * 16.0, 10, 100);
-                mic.GateAttack = Math.Clamp(plugin.ExpanderAttack / 1.5, 0, 45);
-                mic.GateRelease = Math.Clamp(plugin.ExpanderRelease / 20.0, 0, 45);
-            }
+            mic.GateEnabled = true;
+            mic.GateThreshold = Math.Clamp(plugin.ExpanderThreshold, -59, 0);
+            mic.GateAttenuation = Math.Clamp(plugin.ExpanderRatio * 16.0, 10, 100);
+            mic.GateAttack = Math.Clamp(plugin.ExpanderAttack / 1.5, 0, 45);
+            mic.GateRelease = Math.Clamp(plugin.ExpanderRelease / 20.0, 0, 45);
         }
         else if (plugin.Name.Contains("Tube", StringComparison.OrdinalIgnoreCase) || plugin.Name.Contains("Sat", StringComparison.OrdinalIgnoreCase))
         {
-            if (isBypassed)
-            {
-                mic.VoiceMorphDrive = 0;
-            }
-            else
-            {
-                mic.VoiceMorphDrive = Math.Clamp(plugin.SatDrive, 0, 100);
-            }
+            mic.VoiceMorphDrive = Math.Clamp(plugin.SatDrive, 0, 100);
         }
         else if (plugin.Name.Contains("Limiter", StringComparison.OrdinalIgnoreCase) || plugin.Name.Contains("Master", StringComparison.OrdinalIgnoreCase))
         {
-            if (isBypassed)
-            {
-                // Limiter bypass
-            }
-            else
-            {
-                double boost = (plugin.TargetLufs + 18.0) * 0.4;
-                mic.CompMakeup = Math.Clamp(mic.CompMakeup + boost, -6, 24);
-            }
+            double boost = (plugin.TargetLufs + 18.0) * 0.4;
+            mic.CompMakeup = Math.Clamp(mic.CompMakeup + boost, -6, 24);
         }
         else
         {
             // Generic / External VST3 & CLAP mapping to GoXLR hardware
-            if (isBypassed)
-            {
-                // Bypassed
-            }
-            else
-            {
-                // Map threshold, ratio, attack, release to hardware compressor
-                mic.CompThreshold = Math.Clamp(plugin.Threshold, -40, 0);
-                mic.CompMakeup = Math.Clamp(plugin.OutputGainDb, -6, 24);
-                mic.CompRatio = Math.Clamp((int)Math.Round(plugin.Ratio), 0, 14);
-                mic.VoiceMorphDrive = Math.Clamp(plugin.Drive, 0, 100);
+            // Map threshold, ratio, attack, release to hardware compressor
+            mic.CompThreshold = Math.Clamp(plugin.Threshold, -40, 0);
+            mic.CompMakeup = Math.Clamp(plugin.OutputGainDb, -6, 24);
+            mic.CompRatio = Math.Clamp((int)Math.Round(plugin.Ratio), 0, 14);
+            mic.VoiceMorphDrive = Math.Clamp(plugin.Drive, 0, 100);
 
                 // Map frequency to nearest EQ band
                 int targetBand = plugin.Frequency switch
@@ -853,7 +805,6 @@ public sealed partial class VstPluginService : ObservableObject
                 {
                     mic.EqBands[targetBand].Gain = Math.Clamp(plugin.OutputGainDb, -9, 9);
                 }
-            }
         }
     }
 

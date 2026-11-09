@@ -97,6 +97,18 @@ public partial class MicSettingsViewModel : ObservableObject
         if (e.PropertyName is { } n && DeviceProps.Contains(n)) Changed();
     }
 
+    partial void OnGateEnabledChanged(bool value)
+    {
+        if (VstPluginService.Instance != null && !VstPluginService.SuppressHardwareSync)
+        {
+            var expander = VstPluginService.Instance.RackPlugins.FirstOrDefault(p => p.Name.Contains("Expander", StringComparison.OrdinalIgnoreCase));
+            if (expander != null && expander.IsEnabled != value)
+            {
+                expander.IsEnabled = value;
+            }
+        }
+    }
+
     private void Changed()
     {
         if (_applyingServer) return;

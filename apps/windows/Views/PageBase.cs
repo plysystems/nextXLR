@@ -286,7 +286,6 @@ public partial class MicPage : Page
                 }
                 catch { }
             }
-            VstPluginService.SyncAllToHardware();
         }
         catch (Exception ex)
         {
@@ -325,6 +324,17 @@ public partial class MicPage : Page
         try
         {
             VstPluginService.Instance.SaveRack();
+            var profileNode = Current();
+            if (Selected is { } entry)
+            {
+                ProfileService.Mic.Save(entry.Name, profileNode);
+                VstPluginService.Instance.SaveRackForProfile(entry.Name);
+            }
+            else
+            {
+                var defName = ProfileService.Mic.DefaultName ?? "Standard";
+                ProfileService.Mic.Save(defName, profileNode);
+            }
         }
         catch { }
     }
