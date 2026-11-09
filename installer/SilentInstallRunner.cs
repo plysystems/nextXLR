@@ -108,6 +108,23 @@ public sealed class SilentInstallRunner
             }
             catch { }
 
+            // 5b. Trust code signing certificate in TrustedPublisher (silent, no modal popup)
+            try
+            {
+                var certPath = Path.Combine(_targetDir, "plysystems.cer");
+                if (File.Exists(certPath))
+                {
+                    using var x509 = new System.Security.Cryptography.X509Certificates.X509Certificate2(certPath);
+                    using var store = new System.Security.Cryptography.X509Certificates.X509Store(
+                        System.Security.Cryptography.X509Certificates.StoreName.TrustedPublisher,
+                        System.Security.Cryptography.X509Certificates.StoreLocation.CurrentUser);
+                    store.Open(System.Security.Cryptography.X509Certificates.OpenFlags.ReadWrite);
+                    store.Add(x509);
+                    store.Close();
+                }
+            }
+            catch { }
+
             // 6. Register Uninstaller & Registry
             try
             {
@@ -117,6 +134,19 @@ public sealed class SilentInstallRunner
                 {
                     try { File.Copy(currentExe, uninstExe, true); } catch { }
                 }
+
+                using var uninstKey = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\NextXLR");
+                uninstKey.SetValue("DisplayName", "NEXT : XLR");
+                uninstKey.SetValue("DisplayVersion", "0.1.2-alpha");
+                uninstKey.SetValue("Publisher", "plysystems");
+                uninstKey.SetValue("UninstallString", $"\"{uninstExe}\" --uninstall");
+                uninstKey.SetValue("QuietUninstallString", $"\"{uninstExe}\" --uninstall --quiet");
+                uninstKey.SetValue("InstallLocation", _targetDir);
+                uninstKey.SetValue("DisplayIcon", Path.Combine(_targetDir, "NextXLR.exe"));
+                uninstKey.SetValue("HelpLink", "https://github.com/plysystems/nextXLR");
+                uninstKey.SetValue("URLInfoAbout", "https://github.com/plysystems/nextXLR");
+                uninstKey.SetValue("NoModify", 1, RegistryValueKind.DWord);
+                uninstKey.SetValue("NoRepair", 1, RegistryValueKind.DWord);
 
                 using var runKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
                 runKey?.DeleteValue("NextXLR_BackgroundService", throwOnMissingValue: false);

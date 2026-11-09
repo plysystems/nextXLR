@@ -35,6 +35,7 @@
             <SolidColorBrush x:Key="MeterTrackBrush" Color="#0F1116" />
             <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F0F3F6" />
             <SolidColorBrush x:Key="TextMutedBrush" Color="#8B93A3" />
+            <SolidColorBrush x:Key="MutedTextBrush" Color="#8B93A3" />
 
             <LinearGradientBrush x:Key="MeterBrush" StartPoint="0,1" EndPoint="0,0">
                 <GradientStop Color="#1BB38C" Offset="0" />

@@ -2,9 +2,31 @@ $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 $root = $PSScriptRoot
 $distDir = Join-Path $root "dist"
-$version = "0.1.1-alpha"
+$version = "0.1.2-alpha"
 $releaseDir = Join-Path $distDir "NextXLR-v$version"
 $appDir = Join-Path $releaseDir "app"
+
+# Code signing helper setup
+$pfxFile = Join-Path $root "certificates\plysystems-codesign.pfx"
+$codeCert = $null
+if (Test-Path $pfxFile) {
+    try {
+        $codeCert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($pfxFile, "plysystems2026", [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
+        Write-Host "Code signing certificate loaded ($($codeCert.Subject))."
+    } catch {
+        Write-Warning "Could not load code signing certificate: $_"
+    }
+}
+
+function Sign-Binary([string]$targetFile) {
+    if (-not (Test-Path $targetFile) -or -not $codeCert) { return }
+    try {
+        Set-AuthenticodeSignature -FilePath $targetFile -Certificate $codeCert -HashAlgorithm SHA256 -ErrorAction SilentlyContinue | Out-Null
+        Write-Host "  [Code-Signed] $(Split-Path $targetFile -Leaf)"
+    } catch {
+        Write-Warning "Failed to sign $targetFile : $_"
+    }
+}
 
 # 0b. Compile projects to ensure latest binaries
 Write-Host "Building Windows Application..."
@@ -35,9 +57,18 @@ if (-not (Test-Path $drvDir)) {
     Copy-Item (Join-Path $root "apps\windows\Assets\Driver\*") $drvDir -Recurse -Force
 }
 
-# 3b. Copy LICENSE & THIRD_PARTY_NOTICES to app folder
+# 3b. Copy LICENSE & THIRD_PARTY_NOTICES & Certificate to app folder
 Copy-Item (Join-Path $root "LICENSE") (Join-Path $appDir "LICENSE") -Force -ErrorAction SilentlyContinue
 Copy-Item (Join-Path $root "THIRD_PARTY_NOTICES.md") (Join-Path $appDir "THIRD_PARTY_NOTICES.md") -Force -ErrorAction SilentlyContinue
+Copy-Item (Join-Path $root "certificates\plysystems.cer") (Join-Path $appDir "plysystems.cer") -Force -ErrorAction SilentlyContinue
+Copy-Item (Join-Path $root "certificates\plysystems.cer") (Join-Path $releaseDir "plysystems.cer") -Force -ErrorAction SilentlyContinue
+
+# 3c. Code-sign app binaries before embedding into installer payload
+Write-Host "Signing core executables and libraries..."
+Sign-Binary (Join-Path $appDir "NextXLR.exe")
+Sign-Binary (Join-Path $appDir "NextXLR.dll")
+Sign-Binary (Join-Path $appDir "mixforged.exe")
+Sign-Binary (Join-Path $appDir "mixforge.exe")
 
 # 4. Create embedded payload.zip for standalone installer
 $payloadZip = Join-Path $root "installer\payload.zip"
@@ -57,13 +88,26 @@ if (-not (Test-Path $standaloneInstaller)) {
     throw "Standalone installer executable was not found at $standaloneInstaller"
 }
 
+# Sign Standalone Installer
+Write-Host "Signing standalone setup executable..."
+Sign-Binary $standaloneInstaller
+
 # Copy standalone installer to dist and release dir
 $installerDst = Join-Path $releaseDir "NextXLR-Setup-$version.exe"
 Copy-Item $standaloneInstaller $installerDst -Force
-Copy-Item $standaloneInstaller (Join-Path $distDir "NextXLR-Setup-$version.exe") -Force
+for ($attempt = 1; $attempt -le 5; $attempt++) {
+    try {
+        Copy-Item $standaloneInstaller (Join-Path $distDir "NextXLR-Setup-$version.exe") -Force
+        break
+    } catch {
+        Start-Sleep -Seconds 1
+    }
+}
 
-# Place standalone uninstaller in app folder
-Copy-Item $standaloneInstaller (Join-Path $appDir "NextXLR-Uninstall.exe") -Force
+# Place standalone uninstaller in app folder and sign it
+$uninstDst = Join-Path $appDir "NextXLR-Uninstall.exe"
+Copy-Item $standaloneInstaller $uninstDst -Force
+Sign-Binary $uninstDst
 
 # Cleanup temporary payload.zip
 if (Test-Path $payloadZip) { Remove-Item $payloadZip -Force }

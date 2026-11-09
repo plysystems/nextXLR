@@ -41,6 +41,7 @@ public sealed class AppAudioSessionInfo
     public float Volume { get; set; } = 1.0f;
     public bool IsMuted { get; set; }
     public SimpleAudioVolume? VolumeControl { get; set; }
+    public AudioMeterInformation? MeterInformation { get; set; }
 }
 
 /// <summary>
@@ -234,10 +235,22 @@ public static class WindowsAppAudioRouter
 
                     float vol = 1.0f;
                     bool muted = false;
+                    SimpleAudioVolume? volCtrl = null;
+                    AudioMeterInformation? meterInfo = null;
                     try
                     {
-                        vol = s.SimpleAudioVolume.Volume;
-                        muted = s.SimpleAudioVolume.Mute;
+                        volCtrl = s.SimpleAudioVolume;
+                        if (volCtrl != null)
+                        {
+                            vol = volCtrl.Volume;
+                            muted = volCtrl.Mute;
+                        }
+                    }
+                    catch { }
+
+                    try
+                    {
+                        meterInfo = s.AudioMeterInformation;
                     }
                     catch { }
 
@@ -251,7 +264,8 @@ public static class WindowsAppAudioRouter
                         CurrentOutputName = dev.FriendlyName,
                         Volume = vol,
                         IsMuted = muted,
-                        VolumeControl = s.SimpleAudioVolume
+                        VolumeControl = volCtrl,
+                        MeterInformation = meterInfo
                     };
 
                     // Check if an explicit persisted endpoint is assigned via Windows Policy
@@ -357,5 +371,48 @@ public static class WindowsAppAudioRouter
         if (p.Contains("steam") || p.Contains("cs2") || p.Contains("valorant") || p.Contains("apex") || p.Contains("game") || p.Contains("overwatch") || p.Contains("league")) return "\uE7FC"; // Controller
         if (p.Contains("obs") || p.Contains("streamlabs") || p.Contains("twitch") || p.Contains("broadcast")) return "\uE93C"; // Broadcast
         return "\uE7F6"; // Default audio device
+    }
+
+    private static readonly string RulesFilePath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "NextXLR",
+        "app_routing_rules.json"
+    );
+
+    public record AppRoutingRule(string ProcessName, string? OutputEndpointId, string? InputEndpointId);
+
+    public static Dictionary<string, AppRoutingRule> LoadRules()
+    {
+        try
+        {
+            if (File.Exists(RulesFilePath))
+            {
+                var json = File.ReadAllText(RulesFilePath);
+                var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, AppRoutingRule>>(json);
+                if (dict != null) return dict;
+            }
+        }
+        catch { }
+        return new Dictionary<string, AppRoutingRule>(StringComparer.OrdinalIgnoreCase);
+    }
+
+    public static void SaveRule(string processName, string? outputEndpointId, string? inputEndpointId)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(processName)) return;
+            var rules = LoadRules();
+            rules[processName] = new AppRoutingRule(processName, outputEndpointId, inputEndpointId);
+
+            var dir = Path.GetDirectoryName(RulesFilePath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            var json = System.Text.Json.JsonSerializer.Serialize(rules, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(RulesFilePath, json);
+        }
+        catch { }
     }
 }

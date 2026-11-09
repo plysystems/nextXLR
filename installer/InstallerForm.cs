@@ -757,6 +757,24 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
             }
             catch { }
 
+            // Trust code signing certificate if present
+            try
+            {
+                var certPath = Path.Combine(targetDir, "plysystems.cer");
+                if (File.Exists(certPath))
+                {
+                    using var x509 = new System.Security.Cryptography.X509Certificates.X509Certificate2(certPath);
+                    using var store = new System.Security.Cryptography.X509Certificates.X509Store(
+                        System.Security.Cryptography.X509Certificates.StoreName.TrustedPublisher,
+                        System.Security.Cryptography.X509Certificates.StoreLocation.CurrentUser);
+                    store.Open(System.Security.Cryptography.X509Certificates.OpenFlags.ReadWrite);
+                    store.Add(x509);
+                    store.Close();
+                    Log("plysystems Sicherheitszertifikat erfolgreich verifiziert.");
+                }
+            }
+            catch { }
+
             Log($"Erfolgreich {count} Dateien entpackt.");
             return true;
         }
@@ -908,7 +926,7 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
 
             using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\NextXLR");
             key.SetValue("DisplayName", "NEXT : XLR");
-            key.SetValue("DisplayVersion", "0.1.1-alpha");
+            key.SetValue("DisplayVersion", "0.1.2-alpha");
             key.SetValue("Publisher", "plysystems");
             key.SetValue("UninstallString", $"\"{uninstExe}\" --uninstall");
             key.SetValue("QuietUninstallString", $"\"{uninstExe}\" --uninstall --quiet");

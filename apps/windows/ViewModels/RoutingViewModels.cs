@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using NextXLR.Protocol;
 using NextXLR.Services;
@@ -97,6 +98,9 @@ public partial class AppSessionItemViewModel : ObservableObject
     [ObservableProperty] private int _selectedInputIndex;
     [ObservableProperty] private double _volume;
     [ObservableProperty] private bool _isMuted;
+    [ObservableProperty] private double _peakPercent;
+
+    public string VolumeText => $"{(int)Math.Round(Volume)}%";
 
     public AppSessionItemViewModel(AppAudioSessionInfo info, List<AudioEndpointChoice> outChoices, List<AudioEndpointChoice> inChoices)
     {
@@ -132,12 +136,35 @@ public partial class AppSessionItemViewModel : ObservableObject
         _selectedInputIndex = inIdx;
     }
 
+    public void UpdatePeak()
+    {
+        if (_info.MeterInformation != null)
+        {
+            try
+            {
+                float peak = _info.MeterInformation.MasterPeakValue;
+                PeakPercent = Math.Clamp(peak * 100.0, 0.0, 100.0);
+            }
+            catch
+            {
+                PeakPercent = 0.0;
+            }
+        }
+        else
+        {
+            PeakPercent = 0.0;
+        }
+    }
+
     partial void OnSelectedOutputIndexChanged(int value)
     {
         if (value >= 0 && value < _outputChoices.Count)
         {
             var choice = _outputChoices[value];
-            WindowsAppAudioRouter.SetAppEndpoint(ProcessId, ProcessName, false, string.IsNullOrEmpty(choice.Id) ? null : choice.Id);
+            string? devId = string.IsNullOrEmpty(choice.Id) ? null : choice.Id;
+            WindowsAppAudioRouter.SetAppEndpoint(ProcessId, ProcessName, false, devId);
+            string? inDevId = SelectedInputIndex >= 0 && SelectedInputIndex < _inputChoices.Count ? (string.IsNullOrEmpty(_inputChoices[SelectedInputIndex].Id) ? null : _inputChoices[SelectedInputIndex].Id) : null;
+            WindowsAppAudioRouter.SaveRule(ProcessName, devId, inDevId);
         }
     }
 
@@ -146,12 +173,16 @@ public partial class AppSessionItemViewModel : ObservableObject
         if (value >= 0 && value < _inputChoices.Count)
         {
             var choice = _inputChoices[value];
-            WindowsAppAudioRouter.SetAppEndpoint(ProcessId, ProcessName, true, string.IsNullOrEmpty(choice.Id) ? null : choice.Id);
+            string? devId = string.IsNullOrEmpty(choice.Id) ? null : choice.Id;
+            WindowsAppAudioRouter.SetAppEndpoint(ProcessId, ProcessName, true, devId);
+            string? outDevId = SelectedOutputIndex >= 0 && SelectedOutputIndex < _outputChoices.Count ? (string.IsNullOrEmpty(_outputChoices[SelectedOutputIndex].Id) ? null : _outputChoices[SelectedOutputIndex].Id) : null;
+            WindowsAppAudioRouter.SaveRule(ProcessName, outDevId, devId);
         }
     }
 
     partial void OnVolumeChanged(double value)
     {
+        OnPropertyChanged(nameof(VolumeText));
         if (_info.VolumeControl != null)
         {
             try { _info.VolumeControl.Volume = (float)System.Math.Clamp(value / 100.0, 0.0, 1.0); } catch { }
@@ -174,8 +205,41 @@ public partial class AppRoutingManagerViewModel : ObservableObject
     public List<AudioEndpointChoice> InputChoices { get; private set; } = new();
 
     [ObservableProperty] private bool _hasApps;
+    [ObservableProperty] private bool _hasNoApps;
     [ObservableProperty] private bool _isScanning;
     [ObservableProperty] private string _statusMessage = "";
+
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _meterTimer;
+
+    public void StartMonitoring()
+    {
+        if (_meterTimer == null)
+        {
+            var queue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+            if (queue != null)
+            {
+                _meterTimer = queue.CreateTimer();
+                _meterTimer.Interval = TimeSpan.FromMilliseconds(50);
+                _meterTimer.Tick += (_, _) =>
+                {
+                    foreach (var s in AppSessions)
+                    {
+                        s.UpdatePeak();
+                    }
+                };
+            }
+        }
+        _meterTimer?.Start();
+    }
+
+    public void StopMonitoring()
+    {
+        _meterTimer?.Stop();
+        foreach (var s in AppSessions)
+        {
+            s.PeakPercent = 0.0;
+        }
+    }
 
     public async void Refresh()
     {
@@ -185,12 +249,13 @@ public partial class AppRoutingManagerViewModel : ObservableObject
     public async Task RefreshAsync()
     {
         IsScanning = true;
-        MainViewModel.Instance?.SetBusy(true, "Scanne Windows Audio-Sitzungen...");
+        HasNoApps = false;
         try
         {
             var outChoices = await Task.Run(WindowsAppAudioRouter.GetOutputChoices);
             var inChoices = await Task.Run(WindowsAppAudioRouter.GetInputChoices);
             var sessions = await Task.Run(WindowsAppAudioRouter.GetActiveAppSessions);
+            var rules = await Task.Run(WindowsAppAudioRouter.LoadRules);
 
             OutputChoices = outChoices;
             InputChoices = inChoices;
@@ -198,18 +263,46 @@ public partial class AppRoutingManagerViewModel : ObservableObject
             AppSessions.Clear();
             foreach (var s in sessions)
             {
-                AppSessions.Add(new AppSessionItemViewModel(s, OutputChoices, InputChoices));
+                var vm = new AppSessionItemViewModel(s, OutputChoices, InputChoices);
+
+                // Auto-apply saved rule if configured
+                if (rules.TryGetValue(s.ProcessName, out var rule))
+                {
+                    if (!string.IsNullOrEmpty(rule.OutputEndpointId))
+                    {
+                        var outIdx = OutputChoices.FindIndex(c => c.Id.Equals(rule.OutputEndpointId, StringComparison.OrdinalIgnoreCase));
+                        if (outIdx >= 0 && vm.SelectedOutputIndex != outIdx)
+                        {
+                            vm.SelectedOutputIndex = outIdx;
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(rule.InputEndpointId))
+                    {
+                        var inIdx = InputChoices.FindIndex(c => c.Id.Equals(rule.InputEndpointId, StringComparison.OrdinalIgnoreCase));
+                        if (inIdx >= 0 && vm.SelectedInputIndex != inIdx)
+                        {
+                            vm.SelectedInputIndex = inIdx;
+                        }
+                    }
+                }
+
+                AppSessions.Add(vm);
             }
 
             HasApps = AppSessions.Count > 0;
+            HasNoApps = !HasApps;
             StatusMessage = HasApps
                 ? $"{AppSessions.Count} aktive Audio-Anwendung{(AppSessions.Count > 1 ? "en" : "")} erkannt"
                 : "Keine aktiven Audio-Anwendungen gefunden. Spiele Ton in einer App ab, damit sie hier erscheint.";
         }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"AppRoutingManager.RefreshAsync error: {ex}");
+            HasNoApps = AppSessions.Count == 0;
+        }
         finally
         {
             IsScanning = false;
-            MainViewModel.Instance?.SetBusy(false);
         }
     }
 

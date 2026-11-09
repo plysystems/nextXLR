@@ -19,8 +19,18 @@ public partial class App : Application
         try
         {
             Services.CrashHandler.Initialize();
-            Services.Rebrand.MigrateFromGoXlrNext();
-            EnsureDaemonRunning();
+
+            // Asynchronous non-blocking background tasks so the UI window opens instantly
+            Task.Run(() =>
+            {
+                try
+                {
+                    Services.Rebrand.MigrateFromGoXlrNext();
+                    EnsureDaemonRunning();
+                }
+                catch { }
+            });
+
             _window = new MainWindow();
             MainWindowInstance = _window;
             _window.Activate();

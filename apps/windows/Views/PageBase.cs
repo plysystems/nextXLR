@@ -23,6 +23,7 @@ public partial class MixerPage : Page
 
     public MixerPage()
     {
+        NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
         // Bleep is press-and-hold: the toggle's own click state is ignored; the daemon's
         // broadcast (state.bleep) drives IsChecked, also when the hardware button is held.
@@ -228,12 +229,23 @@ public partial class RoutingPage : Page
     private static readonly Microsoft.UI.Xaml.Media.SolidColorBrush RowIdle = new(Windows.UI.Color.FromArgb(0, 0x23, 0x28, 0x33));
 
     public MainViewModel ViewModel { get; private set; } = null!;
-    public RoutingPage() => InitializeComponent();
+    public RoutingPage()
+    {
+        NavigationCacheMode = NavigationCacheMode.Required;
+        InitializeComponent();
+    }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         ViewModel = (MainViewModel)e.Parameter;
+        ViewModel.AppRouting.StartMonitoring();
         ViewModel.AppRouting.Refresh();
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        ViewModel.AppRouting.StopMonitoring();
+        base.OnNavigatedFrom(e);
     }
 
     private void RefreshAppRouting_Click(object sender, RoutedEventArgs e)
@@ -266,7 +278,11 @@ public partial class MicPage : Page
     public MicSettingsViewModel Mic => ViewModel.Mic;
     public VstPluginService Vst => VstPluginService.Instance;
     public Visibility Visible(bool b) => b ? Visibility.Visible : Visibility.Collapsed;
-    public MicPage() => InitializeComponent();
+    public MicPage()
+    {
+        NavigationCacheMode = NavigationCacheMode.Required;
+        InitializeComponent();
+    }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
@@ -764,7 +780,11 @@ public partial class EffectsPage : Page
 {
     public MainViewModel ViewModel { get; private set; } = null!;
     public EffectsViewModel Fx => ViewModel.Effects;
-    public EffectsPage() => InitializeComponent();
+    public EffectsPage()
+    {
+        NavigationCacheMode = NavigationCacheMode.Required;
+        InitializeComponent();
+    }
     protected override void OnNavigatedTo(NavigationEventArgs e) => ViewModel = (MainViewModel)e.Parameter;
 
     private Visibility BoolToVisibility(bool active) => active ? Visibility.Visible : Visibility.Collapsed;
@@ -774,7 +794,11 @@ public partial class SamplerPage : Page
 {
     public MainViewModel ViewModel { get; private set; } = null!;
     public SamplerViewModel Sampler => ViewModel.Sampler;
-    public SamplerPage() => InitializeComponent();
+    public SamplerPage()
+    {
+        NavigationCacheMode = NavigationCacheMode.Required;
+        InitializeComponent();
+    }
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         ViewModel = (MainViewModel)e.Parameter;
@@ -941,7 +965,11 @@ public partial class SamplerPage : Page
 public partial class LightingPage : Page
 {
     public MainViewModel ViewModel { get; private set; } = null!;
-    public LightingPage() => InitializeComponent();
+    public LightingPage()
+    {
+        NavigationCacheMode = NavigationCacheMode.Required;
+        InitializeComponent();
+    }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {

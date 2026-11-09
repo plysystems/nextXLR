@@ -16,6 +16,7 @@ public sealed partial class SettingsPage : Page
 
     public SettingsPage()
     {
+        NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
     }
 
