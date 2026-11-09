@@ -437,7 +437,7 @@ public sealed class VstPluginService
             {
                 Name = "NEXT : Pro-EQ 6",
                 Vendor = "NEXT : XLR Studio DSP",
-                Format = "Studio DSP",
+                Format = "VST3 • DSP",
                 Path = "Builtin::Pro-EQ6",
                 TagCode = "[EQ]",
                 TagColorHex = "#1FC79A",
@@ -453,7 +453,7 @@ public sealed class VstPluginService
             {
                 Name = "NEXT : Precision DeEsser",
                 Vendor = "NEXT : XLR Studio DSP",
-                Format = "Studio DSP",
+                Format = "VST3 • DSP",
                 Path = "Builtin::PrecisionDeEsser",
                 TagCode = "[DE-ESS]",
                 TagColorHex = "#33D6AA",
@@ -466,7 +466,7 @@ public sealed class VstPluginService
             {
                 Name = "NEXT : Broadcast Opto",
                 Vendor = "NEXT : XLR Studio DSP",
-                Format = "Studio DSP",
+                Format = "VST3 • DSP",
                 Path = "Builtin::BroadcastOpto",
                 TagCode = "[COMP]",
                 TagColorHex = "#F5B942",
@@ -479,7 +479,7 @@ public sealed class VstPluginService
             {
                 Name = "NEXT : Tube & Tape Sat",
                 Vendor = "NEXT : XLR Studio DSP",
-                Format = "Studio DSP",
+                Format = "VST3 • DSP",
                 Path = "Builtin::TubeTapeSat",
                 TagCode = "[WARMTH]",
                 TagColorHex = "#FF7043",
@@ -492,7 +492,7 @@ public sealed class VstPluginService
             {
                 Name = "NEXT : Smart Expander",
                 Vendor = "NEXT : XLR Studio DSP",
-                Format = "Studio DSP",
+                Format = "VST3 • DSP",
                 Path = "Builtin::SmartExpander",
                 TagCode = "[GATE]",
                 TagColorHex = "#42A5F5",
@@ -506,7 +506,7 @@ public sealed class VstPluginService
             {
                 Name = "NEXT : True-Peak Master",
                 Vendor = "NEXT : XLR Studio DSP",
-                Format = "Studio DSP",
+                Format = "VST3 • DSP",
                 Path = "Builtin::TruePeakMaster",
                 TagCode = "[LIMITER]",
                 TagColorHex = "#AB47BC",
@@ -666,6 +666,41 @@ public sealed class VstPluginService
             {
                 double boost = (plugin.TargetLufs + 18.0) * 0.4;
                 mic.CompMakeup = Math.Clamp(mic.CompMakeup + boost, -6, 24);
+            }
+        }
+        else
+        {
+            // Generic / External VST3 & CLAP mapping to GoXLR hardware
+            if (plugin.IsBypassed || !plugin.IsEnabled)
+            {
+                // Bypassed
+            }
+            else
+            {
+                // Map threshold, ratio, attack, release to hardware compressor
+                mic.CompThreshold = Math.Clamp(plugin.Threshold, -40, 0);
+                mic.CompMakeup = Math.Clamp(plugin.OutputGainDb, -6, 24);
+                mic.CompRatio = Math.Clamp((int)Math.Round(plugin.Ratio), 0, 14);
+                mic.VoiceMorphDrive = Math.Clamp(plugin.Drive, 0, 100);
+
+                // Map frequency to nearest EQ band
+                int targetBand = plugin.Frequency switch
+                {
+                    < 45 => 0,       // 31 Hz
+                    < 90 => 1,       // 63 Hz
+                    < 180 => 2,      // 125 Hz
+                    < 350 => 3,      // 250 Hz
+                    < 750 => 4,      // 500 Hz
+                    < 1500 => 5,     // 1000 Hz
+                    < 3000 => 6,     // 2000 Hz
+                    < 6000 => 7,     // 4000 Hz
+                    < 12000 => 8,    // 8000 Hz
+                    _ => 9           // 16000 Hz
+                };
+                if (targetBand >= 0 && targetBand < mic.EqBands.Count)
+                {
+                    mic.EqBands[targetBand].Gain = Math.Clamp(plugin.OutputGainDb, -9, 9);
+                }
             }
         }
     }

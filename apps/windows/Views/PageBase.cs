@@ -257,7 +257,6 @@ public partial class MicPage : Page
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        VstPluginService.ActiveMicViewModel = null;
     }
 
     // ---------------- Mic profiles (gate, compressor, EQ, de-esser) ----------------
@@ -494,42 +493,93 @@ public partial class MicPage : Page
 
     private async void ScanVst_Click(object sender, RoutedEventArgs e)
     {
-        Show(InfoBarSeverity.Informational, "Scanne System nach VST3 & CLAP Audio-Plugins...");
+        Show(InfoBarSeverity.Informational, "Scanne System nach VST3- & CLAP-Audio-Plugins...");
         var plugins = await Task.Run(() => VstPluginService.ScanInstalledPlugins());
-        int added = 0;
-        foreach (var p in plugins)
+        var externalPlugins = plugins.Where(p => !p.Path.StartsWith("Builtin::")).ToList();
+
+        if (externalPlugins.Count == 0)
         {
-            if (!VstPluginService.Instance.RackPlugins.Any(r => r.Path.Equals(p.Path, StringComparison.OrdinalIgnoreCase)))
+            Show(InfoBarSeverity.Informational, "Scan abgeschlossen: Keine externen VST3/CLAP-Dateien in den Standard-Verzeichnissen gefunden. Die 6 integrierten Studio-DSPs sind aktiv.");
+            return;
+        }
+
+        try
+        {
+            var dialog = new ContentDialog
             {
-                VstPluginService.Instance.AddPlugin(p);
-                added++;
+                XamlRoot = this.XamlRoot,
+                Title = $"Gefundene VST3 / CLAP Plugins ({externalPlugins.Count})",
+                PrimaryButtonText = "Ausgewähltes Plugin hinzufügen",
+                CloseButtonText = "Abbrechen",
+                DefaultButton = ContentDialogButton.Primary
+            };
+
+            var combo = new ComboBox
+            {
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                ItemsSource = externalPlugins.Select(p => $"{p.Name} ({p.Format} • {p.Vendor})").ToList(),
+                SelectedIndex = 0
+            };
+
+            var stack = new StackPanel { Spacing = 10 };
+            stack.Children.Add(new TextBlock { Text = "Wählen Sie ein auf dem System gefundenes Plugin aus, um es zum Mikrofon-Rack hinzuzufügen:", FontSize = 13, TextWrapping = TextWrapping.Wrap });
+            stack.Children.Add(combo);
+            dialog.Content = stack;
+
+            var res = await dialog.ShowAsync();
+            if (res == ContentDialogResult.Primary && combo.SelectedIndex >= 0)
+            {
+                var selected = externalPlugins[combo.SelectedIndex];
+                if (!VstPluginService.Instance.RackPlugins.Any(r => r.Path.Equals(selected.Path, StringComparison.OrdinalIgnoreCase)))
+                {
+                    VstPluginService.Instance.AddPlugin(selected);
+                    VstPluginService.SyncToHardware(selected);
+                    Show(InfoBarSeverity.Success, $"Plugin '{selected.Name}' ({selected.Format}) zum Rack hinzugefügt und aktiviert.");
+                }
+                else
+                {
+                    Show(InfoBarSeverity.Informational, $"Plugin '{selected.Name}' befindet sich bereits im Rack.");
+                }
             }
         }
-        Show(InfoBarSeverity.Success, $"Scan abgeschlossen: {plugins.Count} VST3/CLAP Plugins im System gefunden ({added} neu zum Rack hinzugefügt).");
+        catch
+        {
+            Show(InfoBarSeverity.Informational, $"Scan abgeschlossen: {externalPlugins.Count} externe Plugins gefunden.");
+        }
     }
 
     private async void AddVst_Click(object sender, RoutedEventArgs e)
     {
-        var picker = new FileOpenPicker();
-        picker.FileTypeFilter.Add(".vst3");
-        picker.FileTypeFilter.Add(".clap");
-        picker.FileTypeFilter.Add(".dll");
-        WinRT.Interop.InitializeWithWindow.Initialize(picker, MainWindow.Handle);
-        var file = await picker.PickSingleFileAsync();
-        if (file is null) return;
-
-        string format = file.FileType.ToLowerInvariant() == ".clap" ? "CLAP" : "VST3";
-        var item = new VstPluginItem
+        try
         {
-            Name = file.DisplayName,
-            Vendor = "Benutzer-Plugin",
-            Format = format,
-            Path = file.Path,
-            IsEnabled = true
-        };
-        VstPluginService.Instance.AddPlugin(item);
-        Show(InfoBarSeverity.Success, $"Plugin hinzugefügt: {item.Name} ({format})");
-        VstPluginService.OpenEditor(App.MainWindowInstance ?? new Window(), item);
+            var picker = new FileOpenPicker();
+            picker.FileTypeFilter.Add(".vst3");
+            picker.FileTypeFilter.Add(".clap");
+            picker.FileTypeFilter.Add(".dll");
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, MainWindow.Handle);
+            var file = await picker.PickSingleFileAsync();
+            if (file is null) return;
+
+            string format = file.FileType.ToLowerInvariant() == ".clap" ? "CLAP" : "VST3";
+            var item = new VstPluginItem
+            {
+                Name = file.DisplayName,
+                Vendor = "Externes Plugin",
+                Format = format,
+                Path = file.Path,
+                TagCode = format == "CLAP" ? "[CLAP]" : "[VST3]",
+                TagColorHex = "#8B93A3",
+                IsEnabled = true
+            };
+            VstPluginService.Instance.AddPlugin(item);
+            VstPluginService.SyncToHardware(item);
+            Show(InfoBarSeverity.Success, $"Plugin hinzugefügt: {item.Name} ({format})");
+            VstPluginService.OpenEditor(App.MainWindowInstance ?? new Window(), item);
+        }
+        catch (Exception ex)
+        {
+            Show(InfoBarSeverity.Error, $"Fehler beim Laden des Plugins: {ex.Message}");
+        }
     }
 }
 

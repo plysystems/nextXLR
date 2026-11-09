@@ -420,7 +420,7 @@
                 </StackPanel>
             </Expander>
 
-            <!-- Studio Audio-Rack & DSP-Plugins -->
+            <!-- VST3-Plugins -->
             <Expander IsExpanded="True">
                 <Expander.Header>
                     <Grid Padding="0,10" ColumnSpacing="12">
@@ -430,8 +430,8 @@
                         </Grid.ColumnDefinitions>
                         <FontIcon Glyph="&#xE99A;" Foreground="{StaticResource BrandBrush}" />
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="Studio Audio-Rack &amp; DSP-Plugins" Style="{StaticResource CardTitle}" />
-                            <TextBlock Text="6 integrierte Broadcast-DSPs (EQ, Opto, De-Esser, Tube-Sat, Expander, Limiter) &amp; VST3/CLAP-Hosting" Style="{StaticResource Caption}" />
+                            <TextBlock Text="VST3-Plugins" Style="{StaticResource CardTitle}" />
+                            <TextBlock Text="6 integrierte High-End Studio-DSPs (EQ, Opto, De-Esser, Tube-Sat, Expander, Limiter) &amp; VST3/CLAP-Unterstützung" Style="{StaticResource Caption}" />
                         </StackPanel>
                     </Grid>
                 </Expander.Header>

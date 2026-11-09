@@ -184,6 +184,7 @@ public partial class MainViewModel : ObservableObject
         Lighting = new LightingViewModel(transport);
         Effects = new EffectsViewModel(transport);
         Mic = new MicSettingsViewModel(transport);
+        VstPluginService.ActiveMicViewModel = Mic;
         Sampler = new SamplerViewModel(transport, ui);
         _transport.MessageReceived += m => _ui.TryEnqueue(() => Handle(m));
         _transport.StateChanged += s => _ui.TryEnqueue(() => OnConnection(s));
