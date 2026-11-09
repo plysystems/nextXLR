@@ -31,11 +31,33 @@ public static class CrashHandler
 
     public static void Initialize()
     {
+        // 1. AppDomain unhandled exceptions (background threads, threadpool, runtime crashes)
         try
         {
-            Directory.CreateDirectory(CrashLogsDir);
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+            {
+                if (e.ExceptionObject is Exception ex)
+                {
+                    HandleException(ex, "AppDomain UnhandledException (IsTerminating: " + e.IsTerminating + ")");
+                }
+            };
+        }
+        catch { }
 
-            // 1. WinUI 3 XAML unhandled exceptions
+        // 2. Unobserved task exceptions (async Tasks)
+        try
+        {
+            TaskScheduler.UnobservedTaskException += (s, e) =>
+            {
+                HandleException(e.Exception, "TaskScheduler UnobservedTaskException");
+                e.SetObserved();
+            };
+        }
+        catch { }
+
+        // 3. WinUI 3 XAML unhandled exceptions
+        try
+        {
             if (Application.Current != null)
             {
                 Application.Current.UnhandledException += (s, e) =>
@@ -44,27 +66,15 @@ public static class CrashHandler
                     e.Handled = true; // Prevent instant process termination so crash dialog can display
                 };
             }
-
-            // 2. AppDomain unhandled exceptions (background threads, threadpool)
-            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-            {
-                if (e.ExceptionObject is Exception ex)
-                {
-                    HandleException(ex, "AppDomain UnhandledException (IsTerminating: " + e.IsTerminating + ")");
-                }
-            };
-
-            // 3. Unobserved task exceptions (async Tasks)
-            TaskScheduler.UnobservedTaskException += (s, e) =>
-            {
-                HandleException(e.Exception, "TaskScheduler UnobservedTaskException");
-                e.SetObserved();
-            };
         }
-        catch (Exception ex)
+        catch { }
+
+        // 4. Ensure crashlogs directory exists
+        try
         {
-            Debug.WriteLine($"Failed to initialize CrashHandler: {ex.Message}");
+            Directory.CreateDirectory(CrashLogsDir);
         }
+        catch { }
     }
 
     public static void HandleException(Exception ex, string source)

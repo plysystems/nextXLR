@@ -16,12 +16,20 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        Services.CrashHandler.Initialize();
-        Services.Rebrand.MigrateFromGoXlrNext();
-        EnsureDaemonRunning();
-        _window = new MainWindow();
-        MainWindowInstance = _window;
-        _window.Activate();
+        try
+        {
+            Services.CrashHandler.Initialize();
+            Services.Rebrand.MigrateFromGoXlrNext();
+            EnsureDaemonRunning();
+            _window = new MainWindow();
+            MainWindowInstance = _window;
+            _window.Activate();
+        }
+        catch (Exception ex)
+        {
+            Services.CrashHandler.HandleException(ex, "App.OnLaunched Exception");
+            throw;
+        }
     }
 
     public static void EnsureDaemonRunning()

@@ -46,7 +46,6 @@ public sealed partial class MainWindow : Window
         CurrentInstance = this;
         ViewModel = new MainViewModel(Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread(), _transport);
         InitializeComponent();
-        ViewModel.SetBusy(true, "Initialisiere NEXT : XLR Audio-Suite...");
 
         Title = Loc.Get("AppTitle");
         Handle = WinRT.Interop.WindowNative.GetWindowHandle(this);
@@ -107,6 +106,11 @@ public sealed partial class MainWindow : Window
         {
             try
             {
+                if (!ViewModel.IsConnected)
+                {
+                    ViewModel.SetBusy(true, "Verbinde mit GoXLR Audio-Engine...");
+                }
+
                 var settings = AppSettings.Load();
                 if (!settings.HasCompletedTour)
                 {
@@ -421,7 +425,6 @@ public sealed partial class MainWindow : Window
     public SolidColorBrush StatusBrush(bool connected) => connected ? Online : Offline;
     public bool HasText(string? s) => !string.IsNullOrEmpty(s);
     public bool Not(bool b) => !b;
-    public Visibility VisibleIf(bool b) => b ? Visibility.Visible : Visibility.Collapsed;
     public Visibility VisibleIfNot(bool b) => b ? Visibility.Collapsed : Visibility.Visible;
 
     // ---- Guided Tour ----

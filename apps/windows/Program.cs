@@ -24,73 +24,96 @@ public static class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        // 1. First line of defense: Check existing processes
-        var currentProc = Process.GetCurrentProcess();
-        var existingProcesses = Process.GetProcessesByName("NextXLR")
-            .Where(p => p.Id != currentProc.Id)
-            .ToList();
-
-        if (existingProcesses.Count > 0)
-        {
-            // Another instance is definitely already executing!
-            WakeUpExistingInstance(existingProcesses);
-            return;
-        }
-
-        // 2. Second line of defense: Global/Local Mutex
-        bool createdNew;
         try
         {
-            _singleInstanceMutex = new Mutex(true, MutexName, out createdNew);
-        }
-        catch
-        {
-            createdNew = false;
-        }
+            Services.CrashHandler.Initialize();
 
-        if (!createdNew)
-        {
-            WakeUpExistingInstance(existingProcesses);
-            return;
-        }
+            // 1. First line of defense: Check existing processes
+            var currentProc = Process.GetCurrentProcess();
+            var existingProcesses = Process.GetProcessesByName("NextXLR")
+                .Where(p => p.Id != currentProc.Id)
+                .ToList();
 
-        // 3. Start listener for future instance wake-up signals
-        try
-        {
-            _wakeUpEvent = new EventWaitHandle(false, EventResetMode.AutoReset, WakeUpEventName);
-            var listenerThread = new Thread(() =>
+            if (existingProcesses.Count > 0)
             {
-                while (true)
+                // Another instance is definitely already executing!
+                WakeUpExistingInstance(existingProcesses);
+                return;
+            }
+
+            // 2. Second line of defense: Global/Local Mutex
+            bool createdNew;
+            try
+            {
+                _singleInstanceMutex = new Mutex(true, MutexName, out createdNew);
+            }
+            catch
+            {
+                createdNew = false;
+            }
+
+            if (!createdNew)
+            {
+                WakeUpExistingInstance(existingProcesses);
+                return;
+            }
+
+            // 3. Start listener for future instance wake-up signals
+            try
+            {
+                _wakeUpEvent = new EventWaitHandle(false, EventResetMode.AutoReset, WakeUpEventName);
+                var listenerThread = new Thread(() =>
                 {
-                    try
+                    while (true)
                     {
-                        if (_wakeUpEvent.WaitOne())
+                        try
                         {
-                            MainWindow.CurrentInstance?.RestoreWindow();
+                            if (_wakeUpEvent.WaitOne())
+                            {
+                                MainWindow.CurrentInstance?.RestoreWindow();
+                            }
+                        }
+                        catch
+                        {
+                            break;
                         }
                     }
-                    catch
-                    {
-                        break;
-                    }
-                }
-            })
-            {
-                IsBackground = true,
-                Name = "NextXLR_SingleInstance_Listener"
-            };
-            listenerThread.Start();
-        }
-        catch { }
+                })
+                {
+                    IsBackground = true,
+                    Name = "NextXLR_SingleInstance_Listener"
+                };
+                listenerThread.Start();
+            }
+            catch { }
 
-        // 4. Launch WinUI 3 App
-        global::WinRT.ComWrappersSupport.InitializeComWrappers();
-        global::Microsoft.UI.Xaml.Application.Start((p) => {
-            var context = new global::Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext(
-                global::Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread());
-            global::System.Threading.SynchronizationContext.SetSynchronizationContext(context);
-            new App();
-        });
+            // 4. Launch WinUI 3 App
+            global::WinRT.ComWrappersSupport.InitializeComWrappers();
+            global::Microsoft.UI.Xaml.Application.Start((p) => {
+                try
+                {
+                    var context = new global::Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext(
+                        global::Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread());
+                    global::System.Threading.SynchronizationContext.SetSynchronizationContext(context);
+                    new App();
+                }
+                catch (Exception ex)
+                {
+                    Services.CrashHandler.HandleException(ex, "Application.Start Delegate Exception");
+                    throw;
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var errFile = Path.Combine(AppContext.BaseDirectory, "startup_crash.log");
+                File.WriteAllText(errFile, ex.ToString());
+            }
+            catch { }
+            Services.CrashHandler.HandleException(ex, "Program.Main Top-Level Exception");
+        }
     }
 
     private static void WakeUpExistingInstance(System.Collections.Generic.List<Process> processes)
