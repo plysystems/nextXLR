@@ -27,6 +27,11 @@ public sealed class AppSettings
     public string? BluetoothHeadsetDeviceId { get; set; }
     public string? BluetoothHeadsetDeviceName { get; set; }
     public bool BluetoothMuteMicSidetone { get; set; } = true;
+
+    // Mixer Pages (Bank 1 & Bank 2) - GoXLR full model only
+    public int ActiveMixerPage { get; set; } = 1;
+    public uint[] MixerPage1Channels { get; set; } = [0, 1, 2, 4]; // Mic, Chat, Music, System
+    public uint[] MixerPage2Channels { get; set; } = [3, 7, 6, 5]; // Game, Console, Line In, Samples
     public Dictionary<string, bool> WirelessRouting { get; set; } = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Mic"] = false,

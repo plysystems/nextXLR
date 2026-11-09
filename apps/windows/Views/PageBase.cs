@@ -108,6 +108,28 @@ public partial class MixerPage : Page
         if (ViewModel != null) ViewModel.ActiveMixIndex = 1;
     }
 
+    private void MixerPage1_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.SwitchMixerPage(1);
+    }
+
+    private void MixerPage2_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.SwitchMixerPage(2);
+    }
+
+    public Microsoft.UI.Xaml.Media.Brush Page1Background(int activePage) =>
+        activePage == 1 ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["BrandBrush"] : new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
+
+    public Microsoft.UI.Xaml.Media.Brush Page1Foreground(int activePage) =>
+        activePage == 1 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 14, 16, 21)) : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextMutedBrush"];
+
+    public Microsoft.UI.Xaml.Media.Brush Page2Background(int activePage) =>
+        activePage == 2 ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["BrandBrush"] : new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
+
+    public Microsoft.UI.Xaml.Media.Brush Page2Foreground(int activePage) =>
+        activePage == 2 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 14, 16, 21)) : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextMutedBrush"];
+
     public Microsoft.UI.Xaml.Media.Brush StreamMixBackground(bool submix) =>
         !submix ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["BrandBrush"] : new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
 

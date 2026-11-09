@@ -42,6 +42,10 @@ public partial class FaderSlotViewModel(string letter) : ObservableObject
 
     partial void OnSelectedChanged(ChannelViewModel? value)
     {
-        if (!_applyingServer && value is not null) _transport?.Send(new AssignFader(Letter, value.Id));
+        if (!_applyingServer && value is not null)
+        {
+            _transport?.Send(new AssignFader(Letter, value.Id));
+            MainViewModel.Instance?.OnFaderSlotAssigned(Letter, value.Id);
+        }
     }
 }

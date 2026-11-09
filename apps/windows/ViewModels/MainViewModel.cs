@@ -17,6 +17,7 @@ public partial class MainViewModel : ObservableObject
     private readonly PipeTransport _transport;
     private readonly MeterAnimator _meterAnimator;
 
+    public static MainViewModel? Instance { get; private set; }
     public static bool HasPendingChanges { get; set; }
     public static bool IsCurrentMini { get; set; }
 
@@ -191,6 +192,7 @@ public partial class MainViewModel : ObservableObject
 
     public MainViewModel(DispatcherQueue ui, PipeTransport transport)
     {
+        Instance = this;
         _ui = ui;
         _transport = transport;
         _meterAnimator = new MeterAnimator(Channels);
@@ -207,6 +209,7 @@ public partial class MainViewModel : ObservableObject
             var settings = AppSettings.Load();
             _bleepVolume = settings.BleepVolume;
             BleepSound.Volume = Math.Clamp(_bleepVolume / 100.0, 0.0, 1.0);
+            _activeMixerPage = settings.ActiveMixerPage;
         }
         catch { }
     }
@@ -263,14 +266,24 @@ public partial class MainViewModel : ObservableObject
                 ReconcileChannels(s.Channels);
                 ReconcileRouting(s);
                 Hardware.Apply(s.Hardware.FirstOrDefault());
+                OnPropertyChanged(nameof(CanUseMixerPages));
+                OnPropertyChanged(nameof(MixerPagesVisibility));
                 ApplyFaders(s.Faders ?? []);
                 ArrangeStrips(s.Faders ?? []);
                 ApplyAccents(s.Faders ?? [], s.Lighting ?? []);
                 ReconcileRouting(s);   // after accents, so row colours match the strips
+                bool prevBleep = BleepActive;
                 BleepActive = s.Bleep;
+                bool prevCough = MicMuted;
                 _applyingMicMute = true;
                 MicMuted = s.MicMuted;
                 _applyingMicMute = false;
+
+                // Hardware combination on GoXLR (Full): MUTE + !@#$?* (Bleep) toggles Mixer Page
+                if (CanUseMixerPages && s.Bleep && s.MicMuted && (!prevBleep || !prevCough))
+                {
+                    ToggleMixerPage();
+                }
                 if (s.Effects is { } fx) Effects.ApplyFromServer(fx);
                 if (s.Mic is { } mic) Mic.ApplyFromServer(mic);
                 Lighting.Apply(Hardware.LightingZoneIds, s.Lighting);
@@ -493,6 +506,80 @@ public partial class MainViewModel : ObservableObject
                 {
                     cell.ApplyFromServer(routed.Contains((cell.ChannelId, cell.BusId)));
                 }
+            }
+        }
+    }
+
+    // ---------------- Mixer Pages (GoXLR Full Model only) ----------------
+    public bool CanUseMixerPages => !Hardware.IsMini;
+    public Microsoft.UI.Xaml.Visibility MixerPagesVisibility => CanUseMixerPages ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+
+    [ObservableProperty] private int _activeMixerPage = 1;
+    public bool IsPage1Active => ActiveMixerPage == 1;
+    public bool IsPage2Active => ActiveMixerPage == 2;
+    public string MixerPageDescription => ActiveMixerPage == 1 ? "Seite 1 (Voice & Media: Mic, Chat, Musik, System)" : "Seite 2 (Gaming & Inputs: Game, Console, Line In, Samples)";
+
+    public void SwitchMixerPage(int page)
+    {
+        if (Hardware.IsMini) return;
+        if (page < 1 || page > 2) return;
+
+        ActiveMixerPage = page;
+        var settings = AppSettings.Load();
+        settings.ActiveMixerPage = page;
+        settings.Save();
+
+        uint[] targetChannels = page == 1 ? settings.MixerPage1Channels : settings.MixerPage2Channels;
+        string[] letters = ["A", "B", "C", "D"];
+
+        for (int i = 0; i < 4 && i < targetChannels.Length; i++)
+        {
+            uint chId = targetChannels[i];
+            _transport.Send(new AssignFader(letters[i], chId));
+            if (i < FaderSlots.Count)
+            {
+                FaderSlots[i].ApplyFromServer(chId);
+            }
+        }
+
+        OnPropertyChanged(nameof(ActiveMixerPage));
+        OnPropertyChanged(nameof(IsPage1Active));
+        OnPropertyChanged(nameof(IsPage2Active));
+        OnPropertyChanged(nameof(MixerPageDescription));
+    }
+
+    public void ToggleMixerPage()
+    {
+        if (Hardware.IsMini) return;
+        SwitchMixerPage(ActiveMixerPage == 1 ? 2 : 1);
+    }
+
+    public void OnFaderSlotAssigned(string letter, uint channelId)
+    {
+        if (Hardware.IsMini) return;
+        int index = letter.ToUpperInvariant() switch
+        {
+            "A" => 0,
+            "B" => 1,
+            "C" => 2,
+            _ => 3
+        };
+
+        var settings = AppSettings.Load();
+        if (ActiveMixerPage == 1)
+        {
+            if (settings.MixerPage1Channels != null && settings.MixerPage1Channels.Length > index)
+            {
+                settings.MixerPage1Channels[index] = channelId;
+                settings.Save();
+            }
+        }
+        else
+        {
+            if (settings.MixerPage2Channels != null && settings.MixerPage2Channels.Length > index)
+            {
+                settings.MixerPage2Channels[index] = channelId;
+                settings.Save();
             }
         }
     }
