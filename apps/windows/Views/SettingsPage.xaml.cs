@@ -267,12 +267,12 @@ public sealed partial class SettingsPage : Page
                         $"• Installiertes Build: {localHash} (v{AppSettings.AppVersion})\n\n" +
                         $"Klicke unten, um das Installationsprogramm herunterzuladen und direkt über die bestehende Version zu installieren.";
 
-                    var exeDownloadUrl = "https://github.com/plysystems/nextXLR/raw/main/dist/NextXLR-Setup-0.1.0-alpha.exe";
+                    var exeDownloadUrl = "https://github.com/plysystems/nextXLR/releases/latest/download/NextXLR-Setup-0.1.0-alpha.exe";
                     var repoUrl = "https://github.com/plysystems/nextXLR";
 
                     var btnAuto = new Button
                     {
-                        Content = "Update automatisch installieren",
+                        Content = "Update automatisch installieren & neu starten",
                         Style = (Style)Application.Current.Resources["AccentButtonStyle"]
                     };
                     btnAuto.Click += async (_, _) =>
@@ -379,22 +379,32 @@ public sealed partial class SettingsPage : Page
     {
         UpdateResult.Severity = InfoBarSeverity.Informational;
         UpdateResult.Title = "Update wird heruntergeladen...";
-        UpdateResult.Message = "Verbindung wird hergestellt...";
+        UpdateResult.Message = "Verbindung mit GitHub wird hergestellt...";
         UpdateResult.ActionButton = null;
+        UpdateProgressBar.Visibility = Visibility.Visible;
+        UpdateProgressBar.IsIndeterminate = true;
 
         try
         {
-            using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+            using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromMinutes(10) };
             client.DefaultRequestHeaders.UserAgent.ParseAdd("NextXLR-App/" + AppSettings.AppVersion);
 
             using var response = await client.GetAsync(downloadUrl, System.Net.Http.HttpCompletionOption.ResponseHeadersRead);
             if (!response.IsSuccessStatusCode)
             {
+                UpdateProgressBar.Visibility = Visibility.Collapsed;
                 _ = Windows.System.Launcher.LaunchUriAsync(new Uri(fallbackUrl));
                 return;
             }
 
             var totalBytes = response.Content.Headers.ContentLength ?? -1L;
+            if (totalBytes > 0)
+            {
+                UpdateProgressBar.IsIndeterminate = false;
+                UpdateProgressBar.Maximum = 100;
+                UpdateProgressBar.Value = 0;
+            }
+
             var tempExe = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "NextXLR-Setup-Update.exe");
 
             await using (var contentStream = await response.Content.ReadAsStreamAsync())
@@ -410,7 +420,7 @@ public sealed partial class SettingsPage : Page
                     await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead));
                     totalRead += bytesRead;
 
-                    if ((DateTime.UtcNow - lastReport).TotalMilliseconds > 300)
+                    if ((DateTime.UtcNow - lastReport).TotalMilliseconds > 200)
                     {
                         lastReport = DateTime.UtcNow;
                         var mbRead = totalRead / (1024.0 * 1024.0);
@@ -418,6 +428,7 @@ public sealed partial class SettingsPage : Page
                         {
                             var totalMb = totalBytes / (1024.0 * 1024.0);
                             var percent = (int)(totalRead * 100 / totalBytes);
+                            UpdateProgressBar.Value = percent;
                             UpdateResult.Message = $"Herunterladen: {percent}% ({mbRead:F1} MB von {totalMb:F1} MB)...";
                         }
                         else
@@ -428,22 +439,26 @@ public sealed partial class SettingsPage : Page
                 }
             }
 
+            UpdateProgressBar.Visibility = Visibility.Collapsed;
             UpdateResult.Severity = InfoBarSeverity.Success;
-            UpdateResult.Title = "Download abgeschlossen!";
-            UpdateResult.Message = "Starte Installationsprogramm und schließe NEXT : XLR...";
+            UpdateResult.Title = "Update wird installiert...";
+            UpdateResult.Message = "NEXT : XLR schließt in Kürze, wendet das Update an und startet automatisch neu...";
 
-            await Task.Delay(800);
+            await Task.Delay(1000);
 
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            var psi = new System.Diagnostics.ProcessStartInfo
             {
                 FileName = tempExe,
+                Arguments = $"--update --restart --wait-pid {System.Diagnostics.Process.GetCurrentProcess().Id}",
                 UseShellExecute = true,
-            });
+            };
+            System.Diagnostics.Process.Start(psi);
 
-            Microsoft.UI.Xaml.Application.Current.Exit();
+            MainWindow.CurrentInstance?.ExitApplicationDirect();
         }
         catch (Exception ex)
         {
+            UpdateProgressBar.Visibility = Visibility.Collapsed;
             UpdateResult.Severity = InfoBarSeverity.Error;
             UpdateResult.Title = "Fehler beim Herunterladen des Updates";
             UpdateResult.Message = $"{ex.Message}. Du kannst das Update alternativ manuell von GitHub herunterladen.";

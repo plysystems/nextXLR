@@ -29,8 +29,65 @@ public static class CrashHandler
     private static bool _hasCrashed = false;
     private static readonly object _crashLock = new();
 
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+    private delegate int VectoredExceptionHandlerDelegate(nint exceptionPointers);
+
+    private static VectoredExceptionHandlerDelegate? _vehDelegate;
+    private static nint _vehHandle = nint.Zero;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern nint AddVectoredExceptionHandler(uint firstHandler, VectoredExceptionHandlerDelegate handler);
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern uint GetModuleFileName(nint hModule, StringBuilder lpFilename, int nSize);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool GetModuleHandleEx(uint dwFlags, nint lpModuleName, out nint phModule);
+
+    [DllImport("kernel32.dll")]
+    private static extern void ExitProcess(uint uExitCode);
+
+    private const uint GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS = 0x00000004;
+    private const uint GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT = 0x00000002;
+
+    private const uint EXCEPTION_CONTINUE_SEARCH = 0;
+    private const uint STATUS_ACCESS_VIOLATION = 0xC0000005;
+    private const uint STATUS_IN_PAGE_ERROR = 0xC0000006;
+    private const uint STATUS_ILLEGAL_INSTRUCTION = 0xC000001D;
+    private const uint STATUS_ARRAY_BOUNDS_EXCEEDED = 0xC000008C;
+    private const uint STATUS_STACK_OVERFLOW = 0xC00000FD;
+    private const uint STATUS_STOWED_EXCEPTION = 0xC000027B;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct EXCEPTION_POINTERS
+    {
+        public nint ExceptionRecord;
+        public nint ContextRecord;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct EXCEPTION_RECORD
+    {
+        public uint ExceptionCode;
+        public uint ExceptionFlags;
+        public nint ExceptionRecord;
+        public nint ExceptionAddress;
+        public uint NumberParameters;
+    }
+
     public static void Initialize()
     {
+        // 0. Native Vectored Exception Handler (catches native Access Violations 0xC0000005, XAML crashes, etc.)
+        try
+        {
+            if (_vehHandle == nint.Zero)
+            {
+                _vehDelegate = HandleNativeException;
+                _vehHandle = AddVectoredExceptionHandler(1, _vehDelegate);
+            }
+        }
+        catch { }
+
         // 1. AppDomain unhandled exceptions (background threads, threadpool, runtime crashes)
         try
         {
@@ -75,6 +132,120 @@ public static class CrashHandler
             Directory.CreateDirectory(CrashLogsDir);
         }
         catch { }
+    }
+
+    private static int HandleNativeException(nint pExceptionInfo)
+    {
+        if (pExceptionInfo == nint.Zero) return (int)EXCEPTION_CONTINUE_SEARCH;
+
+        try
+        {
+            var pointers = Marshal.PtrToStructure<EXCEPTION_POINTERS>(pExceptionInfo);
+            if (pointers.ExceptionRecord == nint.Zero) return (int)EXCEPTION_CONTINUE_SEARCH;
+
+            var rec = Marshal.PtrToStructure<EXCEPTION_RECORD>(pointers.ExceptionRecord);
+            uint code = rec.ExceptionCode;
+
+            // Only intercept fatal native exceptions; leave CLR exceptions (0xE0434352) and benign RPC/debugger codes alone
+            if (code != STATUS_ACCESS_VIOLATION &&
+                code != STATUS_ILLEGAL_INSTRUCTION &&
+                code != STATUS_IN_PAGE_ERROR &&
+                code != STATUS_ARRAY_BOUNDS_EXCEEDED &&
+                code != STATUS_STACK_OVERFLOW &&
+                code != STATUS_STOWED_EXCEPTION)
+            {
+                return (int)EXCEPTION_CONTINUE_SEARCH;
+            }
+
+            lock (_crashLock)
+            {
+                if (_hasCrashed) return (int)EXCEPTION_CONTINUE_SEARCH;
+                _hasCrashed = true;
+            }
+
+            string codeName = code switch
+            {
+                STATUS_ACCESS_VIOLATION => "0xC0000005 (STATUS_ACCESS_VIOLATION - Zugriffsverletzung)",
+                STATUS_ILLEGAL_INSTRUCTION => "0xC000001D (STATUS_ILLEGAL_INSTRUCTION - Ungültige Instruktion)",
+                STATUS_IN_PAGE_ERROR => "0xC0000006 (STATUS_IN_PAGE_ERROR - Auslagerungsfehler)",
+                STATUS_ARRAY_BOUNDS_EXCEEDED => "0xC000008C (STATUS_ARRAY_BOUNDS_EXCEEDED - Bereichsüberschreitung)",
+                STATUS_STACK_OVERFLOW => "0xC00000FD (STATUS_STACK_OVERFLOW - Stapelüberlauf)",
+                STATUS_STOWED_EXCEPTION => "0xC000027B (STATUS_STOWED_EXCEPTION - XAML Stowed Exception)",
+                _ => $"0x{code:X8}"
+            };
+
+            string moduleName = "Unbekanntes Modul";
+            string modulePath = "N/A";
+            nint moduleBase = nint.Zero;
+            long offset = 0;
+
+            if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, rec.ExceptionAddress, out var hModule) && hModule != nint.Zero)
+            {
+                moduleBase = hModule;
+                var sb = new StringBuilder(1024);
+                if (GetModuleFileName(hModule, sb, sb.Capacity) > 0)
+                {
+                    modulePath = sb.ToString();
+                    moduleName = Path.GetFileName(modulePath);
+                }
+                offset = (long)rec.ExceptionAddress - (long)moduleBase;
+            }
+
+            var report = new StringBuilder();
+            report.AppendLine("================================================================================");
+            report.AppendLine("                  NEXT : XLR — NATIVER CRASH REPORT");
+            report.AppendLine("================================================================================");
+            report.AppendLine($"Timestamp:         {DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}");
+            report.AppendLine($"Application:       NEXT : XLR (v0.1.0-alpha)");
+            report.AppendLine($"Git Commit:        {GitBuildInfo.CommitHash} ({GitBuildInfo.FullCommitHash})");
+            report.AppendLine($"Ausnahmecode:      {codeName}");
+            report.AppendLine($"Fehleradresse:     0x{rec.ExceptionAddress:X16}");
+            report.AppendLine($"Fehlermodul:       {moduleName} (Offset: +0x{offset:X8})");
+            report.AppendLine($"Modulpfad:         {modulePath}");
+            report.AppendLine($"OS Version:        {Environment.OSVersion} ({(Environment.Is64BitOperatingSystem ? "64-Bit" : "32-Bit")})");
+            report.AppendLine($".NET Runtime:      {Environment.Version}");
+            report.AppendLine($"Process Mode:      {(Environment.Is64BitProcess ? "x64" : "x86")}");
+            try
+            {
+                using var proc = Process.GetCurrentProcess();
+                report.AppendLine($"Memory (WorkingSet): {proc.WorkingSet64 / 1024 / 1024} MB");
+                report.AppendLine($"Threads Count:     {proc.Threads.Count}");
+            }
+            catch { }
+            report.AppendLine("================================================================================");
+            report.AppendLine("HINWEIS:");
+            report.AppendLine("Dieser native Fehler wurde direkt vom Windows Kernel / Windows App SDK abgefangen.");
+            report.AppendLine("================================================================================");
+
+            string crashReport = report.ToString();
+            string logFilePath = SaveCrashLog(crashReport);
+
+            try
+            {
+                MessageBoxW(
+                    nint.Zero,
+                    $"Ein schwerwiegender nativer Systemfehler ist aufgetreten:\n\n" +
+                    $"Ausnahme: {codeName}\n" +
+                    $"Modul: {moduleName} (+0x{offset:X})\n" +
+                    $"Adresse: 0x{rec.ExceptionAddress:X}\n\n" +
+                    $"Ein detaillierter Crashlog wurde gespeichert unter:\n{logFilePath}\n\n" +
+                    $"Das Protokoll wird jetzt zur Analyse geöffnet.",
+                    "NEXT : XLR — Nativer Absturz abgefangen",
+                    0x00000010 | 0x00010000 | 0x00040000 // MB_ICONERROR | MB_SETFOREGROUND | MB_TOPMOST
+                );
+
+                if (File.Exists(logFilePath))
+                {
+                    Process.Start(new ProcessStartInfo { FileName = "notepad.exe", Arguments = $"\"{logFilePath}\"", UseShellExecute = true });
+                }
+            }
+            catch { }
+
+            ExitProcess(code);
+        }
+        catch { }
+
+        return (int)EXCEPTION_CONTINUE_SEARCH;
     }
 
     public static void HandleException(Exception ex, string source)

@@ -307,6 +307,7 @@
                             </Grid>
                         </Border>
                         <InfoBar x:Name="UpdateResult" IsClosable="True" />
+                        <ProgressBar x:Name="UpdateProgressBar" Visibility="Collapsed" IsIndeterminate="False" Minimum="0" Maximum="100" Margin="0, -6, 0, 8" Height="6" CornerRadius="3" Foreground="{StaticResource BrandBrush}" />
 
                         <!-- GitHub Links & Release Channels -->
                         <Border Style="{StaticResource Card}" Padding="16">

@@ -45,10 +45,39 @@ public partial class InstallerForm : Form
 
     private string installDir = "";
     private bool _wasAppAutostartEnabled = true;
+    private readonly bool _isUpdateMode = false;
+    private readonly bool _restartAfter = false;
+    private readonly int _waitPid = 0;
 
-    public InstallerForm()
+    public InstallerForm() : this(false, false, 0, null)
     {
+    }
+
+    public InstallerForm(bool isUpdateMode = false, bool restartAfter = false, int waitPid = 0, string? targetDirectory = null)
+    {
+        _isUpdateMode = isUpdateMode;
+        _restartAfter = restartAfter;
+        _waitPid = waitPid;
+
         InitializeComponent();
+
+        if (!string.IsNullOrWhiteSpace(targetDirectory))
+        {
+            installDir = targetDirectory;
+            txtInstallPath.Text = targetDirectory;
+        }
+
+        if (_isUpdateMode)
+        {
+            this.Text = "NEXT : XLR Update";
+            chkLaunchAfterFinish.Checked = _restartAfter;
+            this.Shown += (_, _) =>
+            {
+                installDir = txtInstallPath.Text.Trim();
+                ShowPage(pageProgress);
+                StartInstallationAsync();
+            };
+        }
     }
 
     private void InitializeComponent()
@@ -573,6 +602,19 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
                 SetProgress(100, "Installation erfolgreich abgeschlossen.");
                 Log("Installation vollständig.");
 
+                if (_isUpdateMode && _restartAfter)
+                {
+                    Log("Automatischer Neustart wird ausgeführt...");
+                    System.Threading.Thread.Sleep(800);
+                    var exe = Path.Combine(installDir, "NextXLR.exe");
+                    if (File.Exists(exe))
+                    {
+                        Process.Start(new ProcessStartInfo { FileName = exe, WorkingDirectory = installDir, UseShellExecute = true });
+                    }
+                    this.Invoke(new Action(() => Application.Exit()));
+                    return;
+                }
+
                 this.Invoke(new Action(() => ShowPage(pageComplete)));
             }
             catch (Exception ex)
@@ -590,11 +632,21 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
     {
         try
         {
+            if (_waitPid > 0)
+            {
+                try
+                {
+                    var p = Process.GetProcessById(_waitPid);
+                    p.WaitForExit(3500);
+                }
+                catch { }
+            }
+
             Log("Beende laufende NEXT : XLR und mixforge Prozesse...");
             KillProcess("NextXLR");
             KillProcess("mixforged");
             KillProcess("mixforge");
-            System.Threading.Thread.Sleep(500);
+            System.Threading.Thread.Sleep(1200);
 
             try
             {
@@ -658,21 +710,34 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
                 var destPath = Path.Combine(targetDir, entry.FullName);
                 Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
-                try
+                bool written = false;
+                for (int attempt = 1; attempt <= 12 && !written; attempt++)
                 {
-                    entry.ExtractToFile(destPath, overwrite: true);
-                }
-                catch (IOException ioEx)
-                {
-                    Log($"Warnung beim Schreiben von {entry.Name}: {ioEx.Message}. Versuche alternative Dateiablage...");
-                    var tempDest = destPath + ".old";
                     try
                     {
-                        if (File.Exists(tempDest)) File.Delete(tempDest);
-                        File.Move(destPath, tempDest);
                         entry.ExtractToFile(destPath, overwrite: true);
+                        written = true;
                     }
-                    catch { }
+                    catch (IOException ioEx)
+                    {
+                        if (attempt < 12)
+                        {
+                            System.Threading.Thread.Sleep(200);
+                            try
+                            {
+                                var tempDest = destPath + ".old." + Guid.NewGuid().ToString("N");
+                                if (File.Exists(tempDest)) File.Delete(tempDest);
+                                File.Move(destPath, tempDest);
+                                entry.ExtractToFile(destPath, overwrite: true);
+                                written = true;
+                            }
+                            catch { }
+                        }
+                        else
+                        {
+                            Log($"Warnung beim Schreiben von {entry.Name}: {ioEx.Message}");
+                        }
+                    }
                 }
 
                 if (count % 15 == 0)
@@ -681,6 +746,16 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
                     SetProgress(pct, $"Entpacke Dateien ({count}/{total})...");
                 }
             }
+
+            // Cleanup any temporary .old files
+            try
+            {
+                foreach (var old in Directory.GetFiles(targetDir, "*.old*", SearchOption.AllDirectories))
+                {
+                    try { File.Delete(old); } catch { }
+                }
+            }
+            catch { }
 
             Log($"Erfolgreich {count} Dateien entpackt.");
             return true;
