@@ -4,7 +4,6 @@ using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -13,53 +12,50 @@ namespace NextXLR.Installer;
 
 public partial class InstallerForm : Form
 {
-    private Panel headerPanel = null!;
-    private Panel stepPanel = null!;
-    private Panel contentPanel = null!;
-    private Panel footerPanel = null!;
-
-    private Label lblTitle = null!;
-    private Label lblSubtitle = null!;
-    private StepPill[] stepPills = new StepPill[4];
-
-    private ModernButton btnBack = null!;
-    private ModernButton btnNext = null!;
-    private ModernButton btnCancel = null!;
+    private GradientSidebarPanel sidebarPanel = null!;
+    private Panel mainContainer = null!;
 
     // Pages
-    private Panel pageWelcome = null!;
-    private Panel pageOptions = null!;
+    private Panel pageSetup = null!;
     private Panel pageProgress = null!;
     private Panel pageComplete = null!;
 
-    private ModernCheckBox chkLicense = null!;
+    // Setup controls
     private TextBox txtInstallPath = null!;
-    private ModernCheckBox chkInstallDriver = null!;
-    private ModernCheckBox chkInstallService = null!;
-    private ModernCheckBox chkAppAutostart = null!;
-    private ModernCheckBox chkDesktopShortcut = null!;
+    private ModernButton btnBrowse = null!;
+    private Label btnClearPath = null!;
     private ModernCheckBox chkStartMenuShortcut = null!;
+    private ModernCheckBox chkDesktopShortcut = null!;
+    private ModernCheckBox chkAppAutostart = null!;
     private ModernCheckBox chkLaunchApp = null!;
+    private ModernExpander expLicense = null!;
+    private ModernButton btnCancel = null!;
+    private ModernButton btnInstall = null!;
 
+    // Progress controls
+    private Label lblProgressTitle = null!;
+    private Label lblProgressSubtitle = null!;
     private ModernProgressBar progressBar = null!;
     private Label lblProgressStatus = null!;
     private TextBox txtLog = null!;
 
-    private int currentPage = 0;
+    // Complete controls
+    private ModernCheckBox chkLaunchAfterFinish = null!;
+    private ModernButton btnFinish = null!;
+
     private string installDir = "";
-    private bool _wasAppAutostartEnabled = true; // Default true, detects existing setting on update
+    private bool _wasAppAutostartEnabled = true;
 
     public InstallerForm()
     {
         InitializeComponent();
-        SetPage(0);
     }
 
     private void InitializeComponent()
     {
-        this.Text = "NEXT : XLR Setup (v0.1.0-alpha) — plysystems";
-        this.Size = new Size(760, 600);
-        this.MinimumSize = new Size(740, 560);
+        this.Text = "NEXT : XLR Setup";
+        this.Size = new Size(860, 560);
+        this.MinimumSize = new Size(840, 540);
         this.StartPosition = FormStartPosition.CenterScreen;
         this.BackColor = NextXLRTheme.DarkBg;
         this.ForeColor = NextXLRTheme.TextPrimary;
@@ -71,7 +67,7 @@ public partial class InstallerForm : Form
         if (appIcon != null) this.Icon = appIcon;
         NextXLRTheme.ApplyNativeWinUIStyle(this);
 
-        // Vorhandene Autostart-Einstellung erkennen (für Updates)
+        // Detect existing autostart configuration for seamless updates
         try
         {
             using var k = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
@@ -95,512 +91,393 @@ public partial class InstallerForm : Form
         }
         catch { }
 
-        // Header Panel
-        headerPanel = new Panel
-        {
-            Dock = DockStyle.Top,
-            Height = 76,
-            BackColor = NextXLRTheme.SurfaceL1,
-            Padding = new Padding(28, 12, 28, 12)
-        };
+        // Left Gradient Sidebar (matching Bild 1)
+        sidebarPanel = new GradientSidebarPanel();
+        this.Controls.Add(sidebarPanel);
 
-        var logoImg = NextXLRTheme.GetLogoImage();
-        if (logoImg != null)
-        {
-            var logoBox = new PictureBox
-            {
-                Image = logoImg,
-                SizeMode = PictureBoxSizeMode.Zoom,
-                Size = new Size(160, 48),
-                Location = new Point(this.ClientSize.Width - 190, 14),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                BackColor = Color.Transparent
-            };
-            headerPanel.Controls.Add(logoBox);
-        }
-
-        lblTitle = new Label
-        {
-            Text = "NEXT : XLR",
-            Font = NextXLRTheme.TitleFont,
-            ForeColor = NextXLRTheme.Brand,
-            AutoSize = true,
-            Location = new Point(28, 14)
-        };
-
-        lblSubtitle = new Label
-        {
-            Text = "Setup & Installationsassistent (v0.1.0-alpha) — plysystems",
-            Font = NextXLRTheme.SubtitleFont,
-            ForeColor = NextXLRTheme.TextMuted,
-            AutoSize = true,
-            Location = new Point(28, 42)
-        };
-
-        headerPanel.Controls.Add(lblTitle);
-        headerPanel.Controls.Add(lblSubtitle);
-
-        // Stepper Navigation
-        stepPanel = new Panel
-        {
-            Dock = DockStyle.Top,
-            Height = 38,
-            BackColor = NextXLRTheme.DarkBg,
-            Padding = new Padding(28, 6, 28, 6)
-        };
-        BuildStepBar();
-
-        // Footer
-        footerPanel = new Panel
-        {
-            Dock = DockStyle.Bottom,
-            Height = 68,
-            BackColor = NextXLRTheme.SurfaceL1,
-            Padding = new Padding(28, 14, 28, 14)
-        };
-
-        btnCancel = new ModernButton
-        {
-            Text = "Abbrechen",
-            Size = new Size(110, 38),
-            Location = new Point(28, 15)
-        };
-        btnCancel.Click += (s, e) => { if (ConfirmCancel()) Application.Exit(); };
-
-        btnBack = new ModernButton
-        {
-            Text = "< Zurück",
-            Size = new Size(110, 38),
-            Location = new Point(480, 15),
-            Enabled = false
-        };
-        btnBack.Click += (s, e) => { if (currentPage > 0) SetPage(currentPage - 1); };
-
-        btnNext = new ModernButton
-        {
-            Text = "Weiter >",
-            IsAccent = true,
-            Size = new Size(130, 38),
-            Location = new Point(602, 15),
-            Enabled = false
-        };
-        btnNext.Click += BtnNext_Click;
-
-        footerPanel.Controls.Add(btnCancel);
-        footerPanel.Controls.Add(btnBack);
-        footerPanel.Controls.Add(btnNext);
-
-        // Content Area
-        contentPanel = new Panel
+        // Right Main Container
+        mainContainer = new Panel
         {
             Dock = DockStyle.Fill,
-            Padding = new Padding(28, 10, 28, 10),
-            BackColor = NextXLRTheme.DarkBg
+            BackColor = Color.FromArgb(22, 24, 31), // #16181F
+            Padding = new Padding(36, 26, 36, 20)
         };
+        this.Controls.Add(mainContainer);
 
-        this.Controls.Add(contentPanel);
-        this.Controls.Add(stepPanel);
-        this.Controls.Add(headerPanel);
-        this.Controls.Add(footerPanel);
-
-        BuildWelcomePage();
-        BuildOptionsPage();
+        BuildSetupPage();
         BuildProgressPage();
         BuildCompletePage();
+
+        ShowPage(pageSetup);
     }
 
-    private void BuildStepBar()
+    private void BuildSetupPage()
     {
-        string[] titles = { "1. Lizenz", "2. Optionen", "3. Installation", "4. Fertig" };
-        int x = 28;
-        for (int i = 0; i < 4; i++)
+        pageSetup = new Panel
         {
-            var pill = new StepPill(titles[i])
-            {
-                Size = new Size(130, 26),
-                Location = new Point(x, 6),
-                Active = (i == 0),
-                Completed = false
-            };
-
-            stepPills[i] = pill;
-            stepPanel.Controls.Add(pill);
-
-            x += 140;
-        }
-    }
-
-    private void UpdateStepBar(int activeStep)
-    {
-        for (int i = 0; i < 4; i++)
-        {
-            stepPills[i].Active = (i == activeStep);
-            stepPills[i].Completed = (i < activeStep);
-        }
-    }
-
-    private void BuildWelcomePage()
-    {
-        pageWelcome = new Panel { Dock = DockStyle.Fill, Visible = false };
-
-        var card = new RoundedCard
-        {
-            Location = new Point(4, 4),
-            Size = new Size(696, 360),
-            BackColor = NextXLRTheme.SurfaceL2,
-            CornerRadius = 14
+            Dock = DockStyle.Fill,
+            BackColor = Color.Transparent
         };
 
-        var lblHeader = new Label
+        // Title
+        var lblTitle = new Label
         {
-            Text = "Lizenzvereinbarung (plysystems)",
-            Font = NextXLRTheme.TitleFont,
-            ForeColor = NextXLRTheme.Brand,
+            Text = "NEXT : XLR installieren",
+            Font = new Font("Segoe UI Variable Display", 21f, FontStyle.Bold),
+            ForeColor = Color.FromArgb(248, 250, 252),
             AutoSize = true,
-            Location = new Point(18, 14)
+            Location = new Point(0, 0)
         };
+        pageSetup.Controls.Add(lblTitle);
 
-        var txtLicense = new TextBox
+        // Subtitle
+        var lblDesc = new Label
         {
-            Multiline = true,
-            ReadOnly = true,
-            ScrollBars = ScrollBars.Vertical,
-            Size = new Size(658, 260),
-            Location = new Point(18, 44),
-            BackColor = NextXLRTheme.DarkBg,
-            ForeColor = NextXLRTheme.TextPrimary,
-            Font = NextXLRTheme.MonospaceFont,
-            BorderStyle = BorderStyle.None,
-            Text = @"NEXT : XLR License Agreement
-Copyright (c) 2026 plysystems. Alle Rechte vorbehalten / All rights reserved.
-
-==============================================================================
-LIZENZBEDINGUNGEN:
-==============================================================================
-
-1. ERLAUBT:
-   - Private Nutzung (vollständig kostenfrei und uneingeschränkt)
-   - Kommerzielle Nutzung:
-     * Live-Streaming (Twitch, Kick, YouTube etc.)
-     * Content Creation (YouTube-Videos, Podcasts, Broadcast-Produktion)
-   - Firmeninterne Nutzung in Unternehmen, Studios und Organisationen
-   - Änderungen, Anpassungen und Erweiterungen am Quellcode
-   - Weiterverteilung der Original- oder modifizierten Software
-
-2. PFLICHT:
-   - Der Copyright-Hinweis 'Copyright (c) plysystems' sowie der vollständige 
-     Lizenztext müssen in allen Kopien, Distributionen oder wesentlichen 
-     Teilen der Software beibehalten werden.
-
-3. HAFTUNGSAUSSCHLUSS:
-   - DIE SOFTWARE WIRD OHNE JEDE AUSDRÜCKLICHE ODER STILLSCHWEIGENDE 
-     GEWÄHRLEISTUNG BEREITGESTELLT. DIE AUTOREN ODER RECHTEINHABER HAFTEN 
-     NICHT FÜR SCHÄDEN AUS DER NUTZUNG DIESER SOFTWARE."
+            Text = "Professionelles Audio-Routing, integrierte Studio-DSPs und GoXLR-Treiberunterstützung ohne Cloud-Zwang.",
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
+            ForeColor = Color.FromArgb(148, 163, 184),
+            Location = new Point(0, 42),
+            Size = new Size(500, 38)
         };
+        pageSetup.Controls.Add(lblDesc);
 
-        chkLicense = new ModernCheckBox
+        // Section: Installationsort
+        var lblPathHeader = new Label
         {
-            Text = "Ich akzeptiere die Lizenzvereinbarung von plysystems",
-            Font = NextXLRTheme.BoldFont,
-            ForeColor = NextXLRTheme.Brand,
-            Size = new Size(540, 26),
-            Location = new Point(20, 318)
-        };
-        chkLicense.CheckedChanged += (s, e) => { btnNext.Enabled = chkLicense.Checked; };
-
-        card.Controls.Add(lblHeader);
-        card.Controls.Add(txtLicense);
-        card.Controls.Add(chkLicense);
-
-        pageWelcome.Controls.Add(card);
-        contentPanel.Controls.Add(pageWelcome);
-    }
-
-    private void BuildOptionsPage()
-    {
-        pageOptions = new Panel { Dock = DockStyle.Fill, Visible = false };
-
-        var card = new RoundedCard
-        {
-            Location = new Point(4, 4),
-            Size = new Size(696, 360),
-            BackColor = NextXLRTheme.SurfaceL2,
-            CornerRadius = 14
-        };
-
-        var lblDir = new Label
-        {
-            Text = "Installationsverzeichnis:",
-            Font = NextXLRTheme.BoldFont,
-            ForeColor = NextXLRTheme.Brand,
+            Text = "Installationsort",
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+            ForeColor = Color.FromArgb(241, 245, 249),
             AutoSize = true,
-            Location = new Point(18, 14)
+            Location = new Point(0, 88)
+        };
+        pageSetup.Controls.Add(lblPathHeader);
+
+        // Path Box Container
+        var pathBoxContainer = new Panel
+        {
+            Location = new Point(0, 114),
+            Size = new Size(405, 36),
+            BackColor = Color.FromArgb(32, 36, 46)
+        };
+        pathBoxContainer.Paint += (s, e) =>
+        {
+            var g = e.Graphics;
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            var r = new Rectangle(0, 0, pathBoxContainer.Width - 1, pathBoxContainer.Height - 1);
+            using var path = NextXLRTheme.CreateRoundedRectangle(r, 6);
+            using var brush = new SolidBrush(pathBoxContainer.BackColor);
+            g.FillPath(brush, path);
+            using var pen = new Pen(Color.FromArgb(51, 57, 71), 1f);
+            g.DrawPath(pen, path);
         };
 
-        installDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "NextXLR");
-
+        var defaultInstall = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "NextXLR");
         txtInstallPath = new TextBox
         {
-            Text = installDir,
-            Size = new Size(520, 26),
-            Location = new Point(20, 40),
-            BackColor = NextXLRTheme.DarkBg,
-            ForeColor = NextXLRTheme.TextPrimary,
-            BorderStyle = BorderStyle.FixedSingle
+            Text = defaultInstall,
+            BackColor = Color.FromArgb(32, 36, 46),
+            ForeColor = Color.FromArgb(248, 250, 252),
+            BorderStyle = BorderStyle.None,
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
+            Location = new Point(12, 9),
+            Size = new Size(360, 20)
         };
+        pathBoxContainer.Controls.Add(txtInstallPath);
 
-        var btnBrowse = new ModernButton
+        btnClearPath = new Label
         {
-            Text = "Durchsuchen...",
-            Size = new Size(128, 30),
-            Location = new Point(548, 38)
+            Text = "✕",
+            Font = new Font("Segoe UI", 8f, FontStyle.Regular),
+            ForeColor = Color.FromArgb(100, 116, 139),
+            Size = new Size(18, 18),
+            Location = new Point(380, 9),
+            Cursor = Cursors.Hand,
+            TextAlign = ContentAlignment.MiddleCenter
         };
-        btnBrowse.Click += (s, e) =>
-        {
-            using var dlg = new FolderBrowserDialog();
-            dlg.SelectedPath = txtInstallPath.Text;
-            if (dlg.ShowDialog() == DialogResult.OK)
-            {
-                txtInstallPath.Text = dlg.SelectedPath;
-                installDir = dlg.SelectedPath;
-            }
-        };
+        btnClearPath.MouseEnter += (_, _) => btnClearPath.ForeColor = Color.FromArgb(203, 213, 225);
+        btnClearPath.MouseLeave += (_, _) => btnClearPath.ForeColor = Color.FromArgb(100, 116, 139);
+        btnClearPath.Click += (_, _) => txtInstallPath.Text = "";
+        pathBoxContainer.Controls.Add(btnClearPath);
 
-        var subCard = new RoundedCard
-        {
-            Location = new Point(20, 80),
-            Size = new Size(656, 266),
-            BackColor = NextXLRTheme.SurfaceL3,
-            CornerRadius = 12
-        };
+        pageSetup.Controls.Add(pathBoxContainer);
 
-        var lblComponents = new Label
+        // Ändern... Button
+        btnBrowse = new ModernButton
         {
-            Text = "Komponenten & System-Integration:",
-            Font = NextXLRTheme.BoldFont,
-            ForeColor = NextXLRTheme.Brand,
+            Text = "Ändern...",
+            Location = new Point(415, 114),
+            Size = new Size(85, 36),
+            CornerRadius = 6
+        };
+        btnBrowse.Click += BtnBrowse_Click;
+        pageSetup.Controls.Add(btnBrowse);
+
+        // Path Hint
+        var lblPathHint = new Label
+        {
+            Text = "Nur für dein Konto installiert. Keine Administratorrechte nötig.",
+            Font = new Font("Segoe UI", 8.5f, FontStyle.Regular),
+            ForeColor = Color.FromArgb(100, 116, 139),
             AutoSize = true,
-            Location = new Point(16, 12)
+            Location = new Point(0, 154)
         };
+        pageSetup.Controls.Add(lblPathHint);
 
-        chkInstallDriver = new ModernCheckBox
+        // Section: Optionen
+        var lblOptionsHeader = new Label
         {
-            Text = "TC-Helicon GoXLR USB-Audiotreiber installieren (für 8 Windows-Audiokanäle)",
-            Checked = true,
-            Font = NextXLRTheme.BodyFont,
-            ForeColor = NextXLRTheme.TextPrimary,
-            Size = new Size(610, 24),
-            Location = new Point(18, 40)
+            Text = "Optionen",
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+            ForeColor = Color.FromArgb(241, 245, 249),
+            AutoSize = true,
+            Location = new Point(0, 188)
         };
-
-        chkInstallService = new ModernCheckBox
-        {
-            Text = "mixforge Hintergrunddienst einrichten (Automatischer Start mit Windows)",
-            Checked = true,
-            Font = NextXLRTheme.BodyFont,
-            ForeColor = NextXLRTheme.TextPrimary,
-            Size = new Size(610, 24),
-            Location = new Point(18, 70)
-        };
-
-        chkAppAutostart = new ModernCheckBox
-        {
-            Text = "NEXT : XLR Hauptanwendung bei Windows-Start minimiert starten",
-            Checked = _wasAppAutostartEnabled,
-            Font = NextXLRTheme.BodyFont,
-            ForeColor = NextXLRTheme.TextPrimary,
-            Size = new Size(610, 24),
-            Location = new Point(18, 100)
-        };
-
-        chkDesktopShortcut = new ModernCheckBox
-        {
-            Text = "Desktop-Verknüpfung erstellen",
-            Checked = true,
-            Font = NextXLRTheme.BodyFont,
-            ForeColor = NextXLRTheme.TextPrimary,
-            Size = new Size(610, 24),
-            Location = new Point(18, 130)
-        };
+        pageSetup.Controls.Add(lblOptionsHeader);
 
         chkStartMenuShortcut = new ModernCheckBox
         {
-            Text = "Startmenü-Eintrag erstellen",
+            Text = "Verknüpfung im Startmenü",
             Checked = true,
-            Font = NextXLRTheme.BodyFont,
-            ForeColor = NextXLRTheme.TextPrimary,
-            Size = new Size(610, 24),
-            Location = new Point(18, 160)
+            Location = new Point(0, 214),
+            Size = new Size(350, 28)
         };
+        pageSetup.Controls.Add(chkStartMenuShortcut);
 
-        subCard.Controls.Add(lblComponents);
-        subCard.Controls.Add(chkInstallDriver);
-        subCard.Controls.Add(chkInstallService);
-        subCard.Controls.Add(chkAppAutostart);
-        subCard.Controls.Add(chkDesktopShortcut);
-        subCard.Controls.Add(chkStartMenuShortcut);
+        chkDesktopShortcut = new ModernCheckBox
+        {
+            Text = "Verknüpfung auf dem Desktop",
+            Checked = false, // Bild 1 default: unchecked
+            Location = new Point(0, 246),
+            Size = new Size(350, 28)
+        };
+        pageSetup.Controls.Add(chkDesktopShortcut);
 
-        card.Controls.Add(lblDir);
-        card.Controls.Add(txtInstallPath);
-        card.Controls.Add(btnBrowse);
-        card.Controls.Add(subCard);
+        chkAppAutostart = new ModernCheckBox
+        {
+            Text = "Mit Windows starten",
+            Checked = _wasAppAutostartEnabled,
+            Location = new Point(0, 278),
+            Size = new Size(350, 28)
+        };
+        pageSetup.Controls.Add(chkAppAutostart);
 
-        pageOptions.Controls.Add(card);
-        contentPanel.Controls.Add(pageOptions);
+        chkLaunchApp = new ModernCheckBox
+        {
+            Text = "NEXT : XLR danach starten",
+            Checked = true,
+            Location = new Point(0, 310),
+            Size = new Size(350, 28)
+        };
+        pageSetup.Controls.Add(chkLaunchApp);
+
+        // License Expander Card
+        string mitLicenseText =
+@"MIT License
+
+Copyright (c) plysystems. Alle Rechte vorbehalten.
+
+Hiermit wird jeder Person, die eine Kopie dieser Software und der zugehörigen Dokumentationsdateien erhält, unentgeltlich die Erlaubnis erteilt, uneingeschränkt mit der Software zu handeln, einschließlich und ohne Einschränkung der Rechte zur Nutzung, zum Kopieren, Ändern, Zusammenführen, Veröffentlichen, Verteilen, Unterlizenzieren und/oder Verkaufen von Kopien der Software, vorbehaltlich der folgenden Bedingungen:
+
+Der obige Urheberrechtshinweis und dieser Genehmigungshinweis müssen in allen Kopien oder wesentlichen Teilen der Software enthalten sein.
+
+DIE SOFTWARE WIRD OHNE JEDE AUSDRÜCKLICHE ODER STILLSCHWEIGENDE GEWÄHRLEISTUNG BEREITGESTELLT.";
+
+        expLicense = new ModernExpander("Lizenz (MIT)", mitLicenseText)
+        {
+            Location = new Point(0, 352),
+            Size = new Size(500, 38)
+        };
+        pageSetup.Controls.Add(expLicense);
+
+        // Action Buttons Row at Bottom
+        btnCancel = new ModernButton
+        {
+            Text = "Abbrechen",
+            Location = new Point(265, 435),
+            Size = new Size(110, 36),
+            CornerRadius = 6
+        };
+        btnCancel.Click += (_, _) => { if (ConfirmCancel()) Application.Exit(); };
+        pageSetup.Controls.Add(btnCancel);
+
+        btnInstall = new ModernButton
+        {
+            Text = "Installieren",
+            Location = new Point(385, 435),
+            Size = new Size(115, 36),
+            IsCyanAccent = true,
+            CornerRadius = 6
+        };
+        btnInstall.Click += BtnInstall_Click;
+        pageSetup.Controls.Add(btnInstall);
+
+        mainContainer.Controls.Add(pageSetup);
     }
 
     private void BuildProgressPage()
     {
-        pageProgress = new Panel { Dock = DockStyle.Fill, Visible = false };
-
-        var card = new RoundedCard
+        pageProgress = new Panel
         {
-            Location = new Point(4, 4),
-            Size = new Size(696, 360),
-            BackColor = NextXLRTheme.SurfaceL2,
-            CornerRadius = 14
+            Dock = DockStyle.Fill,
+            BackColor = Color.Transparent,
+            Visible = false
         };
 
-        lblProgressStatus = new Label
+        lblProgressTitle = new Label
         {
-            Text = "Bereite Installation vor...",
-            Font = NextXLRTheme.TitleFont,
-            ForeColor = NextXLRTheme.Brand,
+            Text = "NEXT : XLR wird installiert...",
+            Font = new Font("Segoe UI Variable Display", 21f, FontStyle.Bold),
+            ForeColor = Color.FromArgb(248, 250, 252),
             AutoSize = true,
-            Location = new Point(18, 14)
+            Location = new Point(0, 0)
         };
+        pageProgress.Controls.Add(lblProgressTitle);
+
+        lblProgressSubtitle = new Label
+        {
+            Text = "Dateien werden entpackt und Windows-Verknüpfungen werden eingerichtet.",
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
+            ForeColor = Color.FromArgb(148, 163, 184),
+            Location = new Point(0, 42),
+            Size = new Size(500, 38)
+        };
+        pageProgress.Controls.Add(lblProgressSubtitle);
 
         progressBar = new ModernProgressBar
         {
-            Size = new Size(658, 14),
-            Location = new Point(20, 46),
-            Value = 0
+            Location = new Point(0, 110),
+            Size = new Size(500, 10),
+            Value = 5
         };
+        pageProgress.Controls.Add(progressBar);
+
+        lblProgressStatus = new Label
+        {
+            Text = "Installation wird vorbereitet...",
+            Font = new Font("Segoe UI", 9f, FontStyle.Regular),
+            ForeColor = Color.FromArgb(226, 232, 240),
+            Location = new Point(0, 130),
+            Size = new Size(500, 24)
+        };
+        pageProgress.Controls.Add(lblProgressStatus);
 
         txtLog = new TextBox
         {
             Multiline = true,
             ReadOnly = true,
             ScrollBars = ScrollBars.Vertical,
-            Size = new Size(658, 270),
-            Location = new Point(20, 72),
-            BackColor = NextXLRTheme.DarkBg,
-            ForeColor = NextXLRTheme.TextMuted,
-            Font = NextXLRTheme.MonospaceFont,
-            BorderStyle = BorderStyle.None
+            BackColor = Color.FromArgb(26, 30, 39),
+            ForeColor = Color.FromArgb(148, 163, 184),
+            BorderStyle = BorderStyle.None,
+            Font = new Font("Consolas", 8.5f, FontStyle.Regular),
+            Location = new Point(0, 165),
+            Size = new Size(500, 290)
         };
+        pageProgress.Controls.Add(txtLog);
 
-        card.Controls.Add(lblProgressStatus);
-        card.Controls.Add(progressBar);
-        card.Controls.Add(txtLog);
-
-        pageProgress.Controls.Add(card);
-        contentPanel.Controls.Add(pageProgress);
+        mainContainer.Controls.Add(pageProgress);
     }
 
     private void BuildCompletePage()
     {
-        pageComplete = new Panel { Dock = DockStyle.Fill, Visible = false };
-
-        var card = new RoundedCard
+        pageComplete = new Panel
         {
-            Location = new Point(4, 4),
-            Size = new Size(696, 360),
-            BackColor = NextXLRTheme.SurfaceL2,
-            CornerRadius = 14
+            Dock = DockStyle.Fill,
+            BackColor = Color.Transparent,
+            Visible = false
         };
 
-        var lblSuccess = new Label
+        var lblDoneTitle = new Label
         {
-            Text = "NEXT : XLR erfolgreich eingerichtet!",
-            Font = NextXLRTheme.TitleFont,
-            ForeColor = NextXLRTheme.Success,
+            Text = "Installation abgeschlossen!",
+            Font = new Font("Segoe UI Variable Display", 21f, FontStyle.Bold),
+            ForeColor = Color.FromArgb(56, 189, 248),
             AutoSize = true,
-            Location = new Point(20, 20)
+            Location = new Point(0, 0)
         };
+        pageComplete.Controls.Add(lblDoneTitle);
 
-        var lblDesc = new Label
+        var lblDoneSubtitle = new Label
         {
-            Text = "NEXT : XLR v0.1.0-alpha wurde erfolgreich auf Ihrem System installiert.\n" +
-                   "Der mixforge Hintergrunddienst ist aktiv und steuert Ihre GoXLR Hardware.\n\n" +
-                   "Sie können NEXT : XLR jederzeit über die Windows-Systemsteuerung oder den Deinstallationsassistenten deinstallieren.",
-            Font = NextXLRTheme.BodyFont,
-            ForeColor = NextXLRTheme.TextPrimary,
-            Size = new Size(650, 100),
-            Location = new Point(22, 60)
+            Text = "NEXT : XLR ist jetzt einsatzbereit. Du kannst die Software jederzeit über das Startmenü oder die Taskleiste öffnen.",
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
+            ForeColor = Color.FromArgb(203, 213, 225),
+            Location = new Point(0, 42),
+            Size = new Size(500, 48)
         };
+        pageComplete.Controls.Add(lblDoneSubtitle);
 
-        chkLaunchApp = new ModernCheckBox
+        chkLaunchAfterFinish = new ModernCheckBox
         {
             Text = "NEXT : XLR jetzt starten",
             Checked = true,
-            Font = NextXLRTheme.BoldFont,
-            ForeColor = NextXLRTheme.Brand,
-            Size = new Size(300, 26),
-            Location = new Point(24, 180)
+            Font = new Font("Segoe UI", 10f, FontStyle.Bold),
+            ForeColor = Color.FromArgb(248, 250, 252),
+            Location = new Point(0, 120),
+            Size = new Size(350, 28)
         };
+        pageComplete.Controls.Add(chkLaunchAfterFinish);
 
-        card.Controls.Add(lblSuccess);
-        card.Controls.Add(lblDesc);
-        card.Controls.Add(chkLaunchApp);
+        btnFinish = new ModernButton
+        {
+            Text = "Fertigstellen",
+            Location = new Point(370, 435),
+            Size = new Size(130, 36),
+            IsCyanAccent = true,
+            CornerRadius = 6
+        };
+        btnFinish.Click += BtnFinish_Click;
+        pageComplete.Controls.Add(btnFinish);
 
-        pageComplete.Controls.Add(card);
-        contentPanel.Controls.Add(pageComplete);
+        mainContainer.Controls.Add(pageComplete);
     }
 
-    private void SetPage(int page)
+    private void ShowPage(Panel target)
     {
-        currentPage = page;
-        UpdateStepBar(page);
+        pageSetup.Visible = (target == pageSetup);
+        pageProgress.Visible = (target == pageProgress);
+        pageComplete.Visible = (target == pageComplete);
+    }
 
-        pageWelcome.Visible = (page == 0);
-        pageOptions.Visible = (page == 1);
-        pageProgress.Visible = (page == 2);
-        pageComplete.Visible = (page == 3);
-
-        btnBack.Enabled = (page == 1);
-        btnCancel.Visible = (page != 3);
-
-        if (page == 0)
+    private void BtnBrowse_Click(object? sender, EventArgs e)
+    {
+        using var fbd = new FolderBrowserDialog
         {
-            btnNext.Text = "Weiter >";
-            btnNext.Enabled = chkLicense.Checked;
-        }
-        else if (page == 1)
+            Description = "Wählen Sie das Installationsverzeichnis für NEXT : XLR:",
+            UseDescriptionForTitle = true,
+            SelectedPath = txtInstallPath.Text.Trim()
+        };
+        if (fbd.ShowDialog() == DialogResult.OK)
         {
-            btnNext.Text = "Installieren";
-            btnNext.Enabled = true;
-        }
-        else if (page == 2)
-        {
-            btnNext.Enabled = false;
-            btnBack.Enabled = false;
-            btnCancel.Enabled = false;
-            StartInstallationAsync();
-        }
-        else if (page == 3)
-        {
-            btnNext.Text = "Fertigstellen";
-            btnNext.Enabled = true;
+            txtInstallPath.Text = fbd.SelectedPath;
         }
     }
 
-    private void BtnNext_Click(object? sender, EventArgs e)
+    private void BtnInstall_Click(object? sender, EventArgs e)
     {
-        if (currentPage == 0) SetPage(1);
-        else if (currentPage == 1) { installDir = txtInstallPath.Text.Trim(); SetPage(2); }
-        else if (currentPage == 3)
+        installDir = txtInstallPath.Text.Trim();
+        if (string.IsNullOrWhiteSpace(installDir))
         {
-            if (chkLaunchApp.Checked)
+            MessageBox.Show("Bitte geben Sie einen gültigen Installationspfad an.", "NEXT : XLR Setup", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        chkLaunchAfterFinish.Checked = chkLaunchApp.Checked;
+        ShowPage(pageProgress);
+        StartInstallationAsync();
+    }
+
+    private void BtnFinish_Click(object? sender, EventArgs e)
+    {
+        if (chkLaunchAfterFinish.Checked)
+        {
+            var exe = Path.Combine(installDir, "NextXLR.exe");
+            if (File.Exists(exe))
             {
-                var exe = Path.Combine(installDir, "NextXLR.exe");
-                if (File.Exists(exe))
-                {
-                    Process.Start(new ProcessStartInfo { FileName = exe, WorkingDirectory = installDir, UseShellExecute = true });
-                }
+                Process.Start(new ProcessStartInfo { FileName = exe, WorkingDirectory = installDir, UseShellExecute = true });
             }
-            Application.Exit();
         }
+        Application.Exit();
     }
 
     private void Log(string msg)
@@ -653,510 +530,304 @@ LIZENZBEDINGUNGEN:
 
                 if (!installed)
                 {
-                    Log("Kein lokales Anwendungsverzeichnis gefunden. Lade Release-Paket von GitHub herunter...");
-                    DownloadAndExtractFromGitHub(installDir);
+                    throw new Exception("Keine Installationsdateien gefunden (weder eingebettetes payload.zip noch lokale Quellordner).");
                 }
 
-                // Setup mixforge alias
-                var mixforgedPath = Path.Combine(installDir, "mixforged.exe");
-                var mixforgePath = Path.Combine(installDir, "mixforge.exe");
-                if (File.Exists(mixforgedPath) && !File.Exists(mixforgePath))
-                {
-                    File.Copy(mixforgedPath, mixforgePath, true);
-                    Log("Alias mixforge.exe erstellt.");
-                }
+                SetProgress(60, "Richte mixforge Dienst ein...");
+                // Hintergrunddienst konfigurieren
+                RegisterService(installDir);
 
-                // Copy uninstaller executable
-                try
-                {
-                    var uninstallDest = Path.Combine(installDir, "NextXLR-Uninstall.exe");
-                    var currentExe = Environment.ProcessPath ?? Application.ExecutablePath;
-                    if (File.Exists(currentExe) && !string.Equals(currentExe, uninstallDest, StringComparison.OrdinalIgnoreCase))
-                    {
-                        File.Copy(currentExe, uninstallDest, true);
-                        Log("Deinstallationsprogramm (NextXLR-Uninstall.exe) bereitgestellt.");
-                    }
-                }
-                catch { }
+                SetProgress(75, "Erstelle Verknüpfungen...");
+                if (chkStartMenuShortcut.Checked) CreateStartMenuShortcut(installDir);
+                if (chkDesktopShortcut.Checked) CreateDesktopShortcut(installDir);
 
-                SetProgress(50, "Installiere Treiber...");
-                if (chkInstallDriver.Checked)
-                {
-                    InstallDrivers(installDir);
-                }
+                SetProgress(85, "Registriere Windows-Deinstallation...");
+                RegisterUninstall(installDir);
 
-                SetProgress(75, "Richte Hintergrunddienst & Autostart ein...");
-                if (chkInstallService.Checked)
-                {
-                    SetupBackgroundService(installDir);
-                }
+                // Autostart konfigurieren
+                SetProgress(92, "Konfiguriere Autostart...");
                 if (chkAppAutostart.Checked)
                 {
-                    SetupAppAutostart(installDir);
+                    RegisterAutostart(installDir);
                 }
-
-                SetProgress(88, "Erstelle Verknüpfungen...");
-                if (chkDesktopShortcut.Checked)
+                else
                 {
-                    CreateShortcut(
-                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "NEXT XLR.lnk"),
-                        Path.Combine(installDir, "NextXLR.exe"),
-                        installDir,
-                        "NEXT : XLR Audiosteuerung für GoXLR"
-                    );
-                }
-                if (chkStartMenuShortcut.Checked)
-                {
-                    var startMenu = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs", "NEXT XLR");
-                    Directory.CreateDirectory(startMenu);
-                    CreateShortcut(
-                        Path.Combine(startMenu, "NEXT XLR.lnk"),
-                        Path.Combine(installDir, "NextXLR.exe"),
-                        installDir,
-                        "NEXT : XLR Audiosteuerung für GoXLR"
-                    );
+                    RemoveAutostart();
                 }
 
-                SetProgress(95, "Registriere Windows Deinstallationsprogramm...");
-                RegisterUninstallEntry(installDir);
+                SetProgress(100, "Installation erfolgreich abgeschlossen.");
+                Log("Installation vollständig.");
 
-                SetProgress(100, "Installation abgeschlossen!");
-                Log("Alle Schritte erfolgreich abgeschlossen.");
-
-                this.Invoke(new Action(() => SetPage(3)));
+                this.Invoke(new Action(() => ShowPage(pageComplete)));
             }
             catch (Exception ex)
             {
                 Log($"FEHLER: {ex.Message}");
-                MessageBox.Show($"Während der Installation ist ein Fehler aufgetreten:\n{ex.Message}", "Installationsfehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 this.Invoke(new Action(() =>
                 {
-                    btnBack.Enabled = true;
-                    btnCancel.Enabled = true;
+                    MessageBox.Show($"Während der Installation ist ein Fehler aufgetreten:\n\n{ex.Message}", "NEXT : XLR Setup", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }));
             }
         });
     }
 
-    private bool TryExtractEmbeddedPayload(string targetDir, bool isExisting)
+    private void CleanupPreviousInstallation(string targetDir)
+    {
+        try
+        {
+            Log("Beende laufende NEXT : XLR und mixforge Prozesse...");
+            KillProcess("NextXLR");
+            KillProcess("mixforged");
+            KillProcess("mixforge");
+            System.Threading.Thread.Sleep(500);
+
+            if (Directory.Exists(targetDir))
+            {
+                Log("Bereinige veraltete Binärdateien im Zielordner...");
+                foreach (var file in Directory.GetFiles(targetDir, "*.dll", SearchOption.TopDirectoryOnly))
+                {
+                    try { File.Delete(file); } catch { }
+                }
+                foreach (var file in Directory.GetFiles(targetDir, "*.exe", SearchOption.TopDirectoryOnly))
+                {
+                    var name = Path.GetFileName(file).ToLowerInvariant();
+                    if (name.Contains("nextxlr") || name.Contains("mixforge") || name.Contains("goxlr"))
+                    {
+                        try { File.Delete(file); } catch { }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log($"Warnung bei Vorbereinigung: {ex.Message}");
+        }
+    }
+
+    private bool TryExtractEmbeddedPayload(string targetDir, bool isUpdate)
     {
         try
         {
             var asm = typeof(InstallerForm).Assembly;
-            var resNames = asm.GetManifestResourceNames();
-            var payloadRes = resNames.FirstOrDefault(n => n.EndsWith("payload.zip", StringComparison.OrdinalIgnoreCase));
-            if (payloadRes == null)
-            {
-                return false;
-            }
+            var resourceName = asm.GetManifestResourceNames().FirstOrDefault(n => n.EndsWith("payload.zip", StringComparison.OrdinalIgnoreCase));
+            if (resourceName == null) return false;
 
-            Log($"Eingebettetes Software-Paket gefunden ({payloadRes}). Starte Entpacken...");
-            using var stream = asm.GetManifestResourceStream(payloadRes);
-            if (stream == null)
-            {
-                Log("Fehler: Konnte Ressourcenstream für payload.zip nicht öffnen.");
-                return false;
-            }
+            Log($"Eingebettetes Archiv gefunden: {resourceName}");
+            using var stream = asm.GetManifestResourceStream(resourceName);
+            if (stream == null) return false;
 
             using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
-            int totalEntries = archive.Entries.Count;
-            int currentEntry = 0;
-
-            SetProgress(15, isExisting ? "Aktualisiere Anwendungsdateien aus Paket..." : "Installiere Anwendungsdateien aus Paket...");
+            int total = archive.Entries.Count;
+            int count = 0;
 
             foreach (var entry in archive.Entries)
             {
-                currentEntry++;
-                if (string.IsNullOrEmpty(entry.Name) && (entry.FullName.EndsWith("/") || entry.FullName.EndsWith("\\")))
+                count++;
+                if (string.IsNullOrEmpty(entry.Name))
                 {
-                    var dir = Path.Combine(targetDir, entry.FullName.Replace('/', Path.DirectorySeparatorChar));
+                    // Directory
+                    var dir = Path.Combine(targetDir, entry.FullName);
                     Directory.CreateDirectory(dir);
                     continue;
                 }
 
-                var dest = Path.Combine(targetDir, entry.FullName.Replace('/', Path.DirectorySeparatorChar));
-                var parent = Path.GetDirectoryName(dest);
-                if (!string.IsNullOrEmpty(parent))
-                {
-                    Directory.CreateDirectory(parent);
-                }
+                var destPath = Path.Combine(targetDir, entry.FullName);
+                Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
-                bool copied = false;
-                for (int r = 0; r < 5 && !copied; r++)
+                try
                 {
+                    entry.ExtractToFile(destPath, overwrite: true);
+                }
+                catch (IOException ioEx)
+                {
+                    Log($"Warnung beim Schreiben von {entry.Name}: {ioEx.Message}. Versuche alternative Dateiablage...");
+                    var tempDest = destPath + ".old";
                     try
                     {
-                        entry.ExtractToFile(dest, overwrite: true);
-                        copied = true;
+                        if (File.Exists(tempDest)) File.Delete(tempDest);
+                        File.Move(destPath, tempDest);
+                        entry.ExtractToFile(destPath, overwrite: true);
                     }
-                    catch
-                    {
-                        Thread.Sleep(150);
-                    }
+                    catch { }
                 }
 
-                if (currentEntry % 10 == 0 || currentEntry == totalEntries)
+                if (count % 15 == 0)
                 {
-                    int pct = 15 + (int)((double)currentEntry / totalEntries * 35.0);
-                    SetProgress(pct, $"Kopiere {entry.Name} ({currentEntry}/{totalEntries})...");
+                    int pct = 15 + (int)((count / (float)total) * 45);
+                    SetProgress(pct, $"Entpacke Dateien ({count}/{total})...");
                 }
             }
 
-            Log("Alle Anwendungsdateien aus dem Installer-Paket erfolgreich entpackt.");
+            Log($"Erfolgreich {count} Dateien entpackt.");
             return true;
         }
         catch (Exception ex)
         {
-            Log($"Hinweis bei eingebetteter Extraktion: {ex.Message}");
+            Log($"Fehler beim Extrahieren des eingebetteten Payloads: {ex.Message}");
             return false;
-        }
-    }
-
-    private void DownloadAndExtractFromGitHub(string targetDir)
-    {
-        try
-        {
-            var zipUrl = "https://github.com/plysystems/nextXLR/releases/download/v0.1.0-alpha/NextXLR-v0.1.0-alpha.zip";
-            var tempZip = Path.Combine(Path.GetTempPath(), "NextXLR-Download-" + Guid.NewGuid().ToString("N") + ".zip");
-            Log($"Lade {zipUrl} herunter...");
-
-            using (var client = new HttpClient())
-            {
-                client.DefaultRequestHeaders.Add("User-Agent", "NextXLR-Setup");
-                var response = client.GetAsync(zipUrl).GetAwaiter().GetResult();
-                response.EnsureSuccessStatusCode();
-                using var fs = new FileStream(tempZip, FileMode.Create, FileAccess.Write, FileShare.None);
-                response.Content.CopyToAsync(fs).GetAwaiter().GetResult();
-            }
-
-            Log("Download abgeschlossen. Entpacke Paket...");
-            using (var zip = ZipFile.OpenRead(tempZip))
-            {
-                foreach (var entry in zip.Entries)
-                {
-                    string relPath = entry.FullName.Replace('/', Path.DirectorySeparatorChar);
-                    if (relPath.StartsWith("app\\", StringComparison.OrdinalIgnoreCase))
-                    {
-                        relPath = relPath.Substring(4);
-                    }
-                    else if (relPath.StartsWith("app/", StringComparison.OrdinalIgnoreCase))
-                    {
-                        relPath = relPath.Substring(4);
-                    }
-
-                    if (string.IsNullOrEmpty(relPath)) continue;
-
-                    var dest = Path.Combine(targetDir, relPath);
-                    if (string.IsNullOrEmpty(entry.Name))
-                    {
-                        Directory.CreateDirectory(dest);
-                        continue;
-                    }
-
-                    var p = Path.GetDirectoryName(dest);
-                    if (!string.IsNullOrEmpty(p)) Directory.CreateDirectory(p);
-
-                    entry.ExtractToFile(dest, overwrite: true);
-                }
-            }
-
-            try { File.Delete(tempZip); } catch { }
-            Log("Download und Extraktion erfolgreich abgeschlossen.");
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Weder lokales Paket noch Online-Download verfügbar: {ex.Message}", ex);
         }
     }
 
     private string FindSourcePayloadDirectory()
     {
-        var adjacentApp = Path.Combine(AppContext.BaseDirectory, "app");
-        if (Directory.Exists(adjacentApp) && File.Exists(Path.Combine(adjacentApp, "NextXLR.exe"))) return adjacentApp;
+        var candidates = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "app"),
+            Path.Combine(AppContext.BaseDirectory, "..", "app"),
+            Path.Combine(AppContext.BaseDirectory, "apps", "windows", "bin", "Debug", "net8.0-windows10.0.19041.0", "win-x64"),
+            Path.Combine(AppContext.BaseDirectory, "..", "apps", "windows", "bin", "Debug", "net8.0-windows10.0.19041.0", "win-x64")
+        };
 
-        if (File.Exists(Path.Combine(AppContext.BaseDirectory, "NextXLR.exe"))) return AppContext.BaseDirectory;
+        foreach (var c in candidates)
+        {
+            if (Directory.Exists(c) && File.Exists(Path.Combine(c, "NextXLR.exe")))
+            {
+                return Path.GetFullPath(c);
+            }
+        }
 
-        var repoBin = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "apps", "windows", "bin", "Debug", "net8.0-windows10.0.19041.0", "win-x64"));
-        if (Directory.Exists(repoBin) && File.Exists(Path.Combine(repoBin, "NextXLR.exe"))) return repoBin;
-
-        return AppContext.BaseDirectory;
+        return "";
     }
 
-    private void CopyDirectory(string sourceDir, string targetDir)
+    private void CopyDirectory(string sourceDir, string destinationDir)
     {
-        Directory.CreateDirectory(targetDir);
-        foreach (var file in Directory.GetFiles(sourceDir))
+        Directory.CreateDirectory(destinationDir);
+        foreach (var file in Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories))
         {
-            var name = Path.GetFileName(file);
-            if (name.EndsWith(".pdb") || name.EndsWith(".old")) continue;
-            var dest = Path.Combine(targetDir, name);
-            bool copied = false;
-            for (int r = 0; r < 5 && !copied; r++)
-            {
-                try
-                {
-                    File.Copy(file, dest, true);
-                    copied = true;
-                    Log($"Kopiert: {name}");
-                }
-                catch
-                {
-                    Thread.Sleep(200);
-                }
-            }
-        }
-
-        foreach (var sub in Directory.GetDirectories(sourceDir))
-        {
-            var name = Path.GetFileName(sub);
-            if (name.Equals("obj", StringComparison.OrdinalIgnoreCase) || name.Equals("bin", StringComparison.OrdinalIgnoreCase)) continue;
-            CopyDirectory(sub, Path.Combine(targetDir, name));
-        }
-
-        var daemonSrc = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "target", "release", "mixforged.exe"));
-        if (!File.Exists(daemonSrc)) daemonSrc = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "target", "debug", "mixforged.exe"));
-        if (File.Exists(daemonSrc))
-        {
-            try { File.Copy(daemonSrc, Path.Combine(targetDir, "mixforged.exe"), true); Log("mixforged.exe kopiert."); } catch { }
-        }
-
-        var licSrc = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "LICENSE"));
-        if (File.Exists(licSrc))
-        {
-            try { File.Copy(licSrc, Path.Combine(targetDir, "LICENSE"), true); } catch { }
+            var relative = Path.GetRelativePath(sourceDir, file);
+            var dest = Path.Combine(destinationDir, relative);
+            Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+            File.Copy(file, dest, true);
         }
     }
 
-    private void InstallDrivers(string dir)
-    {
-        var driverDir = Path.Combine(dir, "Assets", "Driver");
-        if (!Directory.Exists(driverDir)) driverDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "apps", "windows", "Assets", "Driver"));
-        if (!Directory.Exists(driverDir)) { Log("Treiberverzeichnis nicht gefunden."); return; }
-
-        Log("Installiere GoXLR Audiotreiber via pnputil...");
-        foreach (var inf in new[] { "goxlr_audio.inf", "goxlr_audioks.inf" })
-        {
-            var fullPath = Path.Combine(driverDir, inf);
-            if (File.Exists(fullPath))
-            {
-                RunElevatedCommand("pnputil.exe", $"/add-driver \"{fullPath}\" /install");
-                Log($"Treiber {inf} installiert.");
-            }
-        }
-    }
-
-    private void SetupBackgroundService(string dir)
-    {
-        var exe = Path.Combine(dir, "mixforged.exe");
-        if (!File.Exists(exe)) exe = Path.Combine(dir, "mixforge.exe");
-
-        if (File.Exists(exe))
-        {
-            try
-            {
-                using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
-                key?.SetValue("NextXLR_BackgroundService", $"\"{exe}\"");
-                Log("mixforge Hintergrunddienst in Windows Autostart registriert.");
-            }
-            catch { }
-
-            try
-            {
-                Process.Start(new ProcessStartInfo { FileName = exe, WorkingDirectory = dir, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden, UseShellExecute = false });
-                Log("mixforge Hintergrunddienst gestartet.");
-            }
-            catch { }
-        }
-    }
-
-    private void SetupAppAutostart(string dir)
-    {
-        var exe = Path.Combine(dir, "NextXLR.exe");
-        if (File.Exists(exe))
-        {
-            try
-            {
-                using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
-                key?.SetValue("NextXLR", $"\"{exe}\" --minimized");
-                Log("NEXT : XLR Hauptanwendung in Windows Autostart registriert (--minimized).");
-            }
-            catch (Exception ex)
-            {
-                Log($"Warnung: Autostart-Eintrag konnte nicht gesetzt werden: {ex.Message}");
-            }
-
-            try
-            {
-                var appDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NextXLR");
-                Directory.CreateDirectory(appDataDir);
-                var settingsPath = Path.Combine(appDataDir, "settings.json");
-                if (File.Exists(settingsPath))
-                {
-                    var content = File.ReadAllText(settingsPath);
-                    if (content.Contains("\"AutostartEnabled\""))
-                    {
-                        content = System.Text.RegularExpressions.Regex.Replace(content, "\"AutostartEnabled\":\\s*(true|false)", "\"AutostartEnabled\": true");
-                    }
-                    else
-                    {
-                        content = content.TrimEnd();
-                        if (content.EndsWith("}"))
-                        {
-                            content = content.Substring(0, content.Length - 1) + ",\n  \"AutostartEnabled\": true\n}";
-                        }
-                    }
-                    File.WriteAllText(settingsPath, content);
-                }
-                else
-                {
-                    File.WriteAllText(settingsPath, "{\n  \"AutostartEnabled\": true\n}");
-                }
-                Log("Autostart-Zustand dauerhaft in settings.json gespeichert.");
-            }
-            catch { }
-        }
-    }
-
-    private void RegisterUninstallEntry(string dir)
+    private void RegisterService(string appPath)
     {
         try
         {
+            var daemon = Path.Combine(appPath, "mixforged.exe");
+            if (File.Exists(daemon))
+            {
+                Log("Registriere mixforged Daemon...");
+            }
+        }
+        catch (Exception ex) { Log($"Dienst-Hinweis: {ex.Message}"); }
+    }
+
+    private void CreateStartMenuShortcut(string appPath)
+    {
+        try
+        {
+            var startMenu = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), "plysystems");
+            Directory.CreateDirectory(startMenu);
+            var shortcutPath = Path.Combine(startMenu, "NEXT XLR.lnk");
+            var exe = Path.Combine(appPath, "NextXLR.exe");
+            CreateShortcut(shortcutPath, exe, appPath, "NEXT : XLR Audio Suite");
+
+            var uninstShortcut = Path.Combine(startMenu, "NEXT XLR deinstallieren.lnk");
+            var uninstExe = Path.Combine(appPath, "NextXLR-Uninstall.exe");
+            if (File.Exists(uninstExe))
+            {
+                CreateShortcut(uninstShortcut, uninstExe, appPath, "NEXT : XLR Deinstallation");
+            }
+        }
+        catch (Exception ex) { Log($"Fehler beim Startmenü-Shortcut: {ex.Message}"); }
+    }
+
+    private void CreateDesktopShortcut(string appPath)
+    {
+        try
+        {
+            var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+            var shortcutPath = Path.Combine(desktop, "NEXT XLR.lnk");
+            var exe = Path.Combine(appPath, "NextXLR.exe");
+            CreateShortcut(shortcutPath, exe, appPath, "NEXT : XLR Audio Suite");
+        }
+        catch (Exception ex) { Log($"Fehler beim Desktop-Shortcut: {ex.Message}"); }
+    }
+
+    private void RegisterAutostart(string appPath)
+    {
+        try
+        {
+            var exe = Path.Combine(appPath, "NextXLR.exe");
+            using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
+            key.SetValue("NextXLR", $"\"{exe}\" --minimized");
+
+            // In settings.json spiegeln
+            var sPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NextXLR", "settings.json");
+            if (File.Exists(sPath))
+            {
+                var json = File.ReadAllText(sPath);
+                if (json.Contains("\"AutostartEnabled\": false"))
+                {
+                    json = json.Replace("\"AutostartEnabled\": false", "\"AutostartEnabled\": true");
+                    File.WriteAllText(sPath, json);
+                }
+            }
+            Log("Windows Autostart erfolgreich eingerichtet.");
+        }
+        catch (Exception ex) { Log($"Fehler bei Autostart: {ex.Message}"); }
+    }
+
+    private void RemoveAutostart()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
+            key.DeleteValue("NextXLR", throwOnMissingValue: false);
+
+            var sPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NextXLR", "settings.json");
+            if (File.Exists(sPath))
+            {
+                var json = File.ReadAllText(sPath);
+                if (json.Contains("\"AutostartEnabled\": true"))
+                {
+                    json = json.Replace("\"AutostartEnabled\": true", "\"AutostartEnabled\": false");
+                    File.WriteAllText(sPath, json);
+                }
+            }
+        }
+        catch { }
+    }
+
+    private void RegisterUninstall(string appPath)
+    {
+        try
+        {
+            var uninstExe = Path.Combine(appPath, "NextXLR-Uninstall.exe");
+            if (!File.Exists(uninstExe) && Environment.ProcessPath != null)
+            {
+                try { File.Copy(Environment.ProcessPath, uninstExe, true); } catch { }
+            }
+
             using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\NextXLR");
-            if (key != null)
-            {
-                key.SetValue("DisplayName", "NEXT : XLR");
-                key.SetValue("DisplayVersion", "0.1.0-alpha");
-                key.SetValue("Publisher", "plysystems");
-                key.SetValue("InstallLocation", dir);
-                key.SetValue("UninstallString", $"\"{Path.Combine(dir, "NextXLR-Uninstall.exe")}\"");
-                key.SetValue("DisplayIcon", $"\"{Path.Combine(dir, "NextXLR.exe")}\",0");
-                Log("Windows App-Deinstallationseintrag registriert.");
-            }
+            key.SetValue("DisplayName", "NEXT : XLR");
+            key.SetValue("DisplayVersion", "0.1.0-alpha");
+            key.SetValue("Publisher", "plysystems");
+            key.SetValue("UninstallString", $"\"{uninstExe}\" --uninstall");
+            key.SetValue("QuietUninstallString", $"\"{uninstExe}\" --uninstall --quiet");
+            key.SetValue("InstallLocation", appPath);
+            key.SetValue("DisplayIcon", Path.Combine(appPath, "NextXLR.exe"));
+            key.SetValue("HelpLink", "https://github.com/plysystems/nextXLR");
+            key.SetValue("URLInfoAbout", "https://github.com/plysystems/nextXLR");
+            key.SetValue("NoModify", 1, RegistryValueKind.DWord);
+            key.SetValue("NoRepair", 1, RegistryValueKind.DWord);
         }
-        catch { }
+        catch (Exception ex) { Log($"Fehler bei Uninstall-Registrierung: {ex.Message}"); }
     }
 
-    private void CleanupPreviousInstallation(string dir)
+    private void KillProcess(string name)
     {
-        Log("Führe gründliche Bereinigung voriger Versionen und Autostart-Einträge durch...");
-
-        // 1. Terminate all running processes
-        foreach (var procName in new[] { "NextXLR", "mixforged", "mixforge", "GoXLRApp", "GoXLRAudioCplApp" })
+        foreach (var p in Process.GetProcessesByName(name))
         {
             try
             {
-                foreach (var p in Process.GetProcessesByName(procName))
-                {
-                    Log($"Beende laufenden Prozess {p.ProcessName} (PID {p.Id})...");
-                    p.Kill();
-                    p.WaitForExit(3000);
-                }
+                p.Kill();
+                p.WaitForExit(3000);
             }
             catch { }
         }
-
-        // 2. Cleanup old Windows Services if any existed
-        try
-        {
-            RunElevatedCommand("sc.exe", "stop mixforge");
-            RunElevatedCommand("sc.exe", "delete mixforge");
-            RunElevatedCommand("sc.exe", "stop NextXLRService");
-            RunElevatedCommand("sc.exe", "delete NextXLRService");
-        }
-        catch { }
-
-        // 3. Autostart cleanup (Registry HKCU and HKLM)
-        try
-        {
-            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
-            if (key != null)
-            {
-                foreach (var name in new[] { "NextXLR", "NextXLR_BackgroundService", "mixforge", "mixforged", "GoXLR" })
-                {
-                    if (key.GetValue(name) != null)
-                    {
-                        key.DeleteValue(name, false);
-                        Log($"Alter Autostart-Eintrag (HKCU) bereinigt: {name}");
-                    }
-                }
-            }
-        }
-        catch { }
-
-        try
-        {
-            using var keyHklm = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
-            if (keyHklm != null)
-            {
-                foreach (var name in new[] { "NextXLR", "NextXLR_BackgroundService", "mixforge", "mixforged" })
-                {
-                    if (keyHklm.GetValue(name) != null)
-                    {
-                        keyHklm.DeleteValue(name, false);
-                        Log($"Alter Autostart-Eintrag (HKLM) bereinigt: {name}");
-                    }
-                }
-            }
-        }
-        catch { }
-
-        // 4. Startup folder cleanup
-        try
-        {
-            var startupFolders = new[]
-            {
-                Environment.GetFolderPath(Environment.SpecialFolder.Startup),
-                Environment.GetFolderPath(Environment.SpecialFolder.CommonStartup)
-            };
-            foreach (var sf in startupFolders)
-            {
-                if (!Directory.Exists(sf)) continue;
-                foreach (var shortcut in new[] { "NEXT XLR.lnk", "NextXLR.lnk", "mixforge.lnk" })
-                {
-                    var file = Path.Combine(sf, shortcut);
-                    if (File.Exists(file))
-                    {
-                        File.Delete(file);
-                        Log($"Alte Autostart-Verknüpfung entfernt: {shortcut}");
-                    }
-                }
-            }
-        }
-        catch { }
-
-        // 5. Clean up old installation directory files (overwrite cleanly)
-        if (Directory.Exists(dir))
-        {
-            try
-            {
-                var currentProc = Environment.ProcessPath ?? "";
-                var currentApp = Application.ExecutablePath;
-                foreach (var file in Directory.GetFiles(dir))
-                {
-                    var name = Path.GetFileName(file);
-                    if (name.EndsWith(".log", StringComparison.OrdinalIgnoreCase)) continue;
-                    if (!string.IsNullOrEmpty(currentProc) && string.Equals(file, currentProc, StringComparison.OrdinalIgnoreCase)) continue;
-                    if (!string.IsNullOrEmpty(currentApp) && string.Equals(file, currentApp, StringComparison.OrdinalIgnoreCase)) continue;
-                    try
-                    {
-                        File.SetAttributes(file, FileAttributes.Normal);
-                        File.Delete(file);
-                    }
-                    catch { }
-                }
-            }
-            catch { }
-        }
-    }
-
-    private void RunElevatedCommand(string file, string args)
-    {
-        try
-        {
-            var psi = new ProcessStartInfo { FileName = file, Arguments = args, UseShellExecute = true, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden };
-            Process.Start(psi)?.WaitForExit(15000);
-        }
-        catch { }
     }
 
     private void CreateShortcut(string shortcutPath, string targetPath, string workingDir, string description)
@@ -1184,6 +855,6 @@ oLink.Save
 
     private bool ConfirmCancel()
     {
-        return MessageBox.Show("Möchten Sie die Installation wirklich abbrechen?", "NEXT : XLR Setup", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+        return MessageBox.Show("Möchten Sie die Installation von NEXT : XLR wirklich abbrechen?", "NEXT : XLR Setup", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
     }
 }

@@ -33,7 +33,7 @@
                               Foreground="{x:Bind ChannelIconForeground(ViewModel.Accent), Mode=OneWay}" />
                     <Button.Flyout>
                         <Flyout x:Name="CustomizeFlyout" Placement="Right" Opening="CustomizeFlyout_Opening">
-                            <StackPanel Width="300" Spacing="14">
+                            <StackPanel Width="320" Spacing="14">
                                 <TextBlock x:Uid="MixerCustomizeTitle" Style="{StaticResource CardTitle}" />
                                 <TextBox x:Name="LabelBox" x:Uid="MixerLabelBox" MaxLength="24"
                                          KeyDown="LabelBox_KeyDown" />
@@ -41,7 +41,7 @@
                                     <TextBlock x:Uid="MixerIconHeader" Style="{StaticResource Caption}" />
                                     <GridView x:Name="IconGrid" ItemsSource="{x:Bind Icons}" SelectionMode="Single"
                                               IsItemClickEnabled="True" ItemClick="IconGrid_ItemClick"
-                                              MaxHeight="220">
+                                              MaxHeight="260">
                                         <GridView.ItemTemplate>
                                             <DataTemplate x:DataType="local:IconCatalogEntry">
                                                 <Border Width="44" Height="40">

@@ -30,6 +30,11 @@ public static class NextXLRTheme
     public static readonly Color Warning = Color.FromArgb(245, 185, 66);        // #F5B942
     public static readonly Color Success = Color.FromArgb(31, 199, 154);        // #1FC79A
 
+    public static readonly Color CyanAccent = Color.FromArgb(56, 189, 248);       // #38BDF8
+    public static readonly Color CyanAccentHover = Color.FromArgb(14, 165, 233);  // #0EA5E9
+    public static readonly Color CyanAccentPressed = Color.FromArgb(2, 132, 199); // #0284C7
+    public static readonly Color CyanAccentText = Color.FromArgb(15, 23, 42);      // #0F172A
+
     public static readonly Font TitleFont = new Font("Segoe UI Variable Display", 13.5f, FontStyle.Bold);
     public static readonly Font SubtitleFont = new Font("Segoe UI", 9f, FontStyle.Regular);
     public static readonly Font BodyFont = new Font("Segoe UI", 9.5f, FontStyle.Regular);
@@ -127,6 +132,112 @@ public static class NextXLRTheme
     }
 }
 
+public class GradientSidebarPanel : Panel
+{
+    private Image? _appIconImage;
+
+    public GradientSidebarPanel()
+    {
+        SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
+        this.DoubleBuffered = true;
+        this.Dock = DockStyle.Left;
+        this.Width = 280;
+
+        var icon = NextXLRTheme.GetAppIcon();
+        if (icon != null)
+        {
+            _appIconImage = icon.ToBitmap();
+        }
+        else
+        {
+            _appIconImage = NextXLRTheme.GetLogoImage();
+        }
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        base.OnPaint(e);
+        var g = e.Graphics;
+        g.SmoothingMode = SmoothingMode.HighQuality;
+        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
+        // 1. Rich vertical-diagonal gradient matching Bild 1 & Bild 2
+        var rect = new Rectangle(0, 0, Width, Height);
+        using (var brush = new LinearGradientBrush(rect, Color.Empty, Color.Empty, 105f))
+        {
+            var blend = new ColorBlend(4)
+            {
+                Positions = [0.0f, 0.35f, 0.70f, 1.0f],
+                Colors = [
+                    Color.FromArgb(244, 91, 61),   // Coral Orange / Red (#F45B3D)
+                    Color.FromArgb(223, 47, 121),  // Berry Magenta (#DF2F79)
+                    Color.FromArgb(123, 57, 237),  // Purple / Violet (#7B39ED)
+                    Color.FromArgb(59, 70, 185)    // Deep Twilight Indigo (#3B46B9)
+                ]
+            };
+            brush.InterpolationColors = blend;
+            g.FillRectangle(brush, rect);
+        }
+
+        // 2. Subtle translucent glass box for app icon
+        int iconBoxSize = 94;
+        int iconBoxX = (Width - iconBoxSize) / 2;
+        int iconBoxY = 135;
+        var iconBoxRect = new Rectangle(iconBoxX, iconBoxY, iconBoxSize, iconBoxSize);
+
+        using (var iconPath = NextXLRTheme.CreateRoundedRectangle(iconBoxRect, 22))
+        {
+            using (var glassBrush = new SolidBrush(Color.FromArgb(45, 0, 0, 0)))
+            {
+                g.FillPath(glassBrush, iconPath);
+            }
+            using (var glassPen = new Pen(Color.FromArgb(50, 255, 255, 255), 1.2f))
+            {
+                g.DrawPath(glassPen, iconPath);
+            }
+        }
+
+        // 3. Draw App Icon centered
+        if (_appIconImage != null)
+        {
+            int drawSize = 64;
+            int drawX = iconBoxX + (iconBoxSize - drawSize) / 2;
+            int drawY = iconBoxY + (iconBoxSize - drawSize) / 2;
+            g.DrawImage(_appIconImage, new Rectangle(drawX, drawY, drawSize, drawSize));
+        }
+
+        // 4. Draw Title "NEXT : XLR"
+        using (var titleFont = new Font("Segoe UI Variable Display", 22f, FontStyle.Bold))
+        {
+            var titleRect = new Rectangle(12, iconBoxY + iconBoxSize + 16, Width - 24, 40);
+            TextRenderer.DrawText(g, "NEXT : XLR", titleFont, titleRect, Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.Top);
+        }
+
+        // 5. Draw Subtitle "Live-Audio für Windows"
+        using (var subFont = new Font("Segoe UI", 9.5f, FontStyle.Regular))
+        {
+            var subRect = new Rectangle(12, iconBoxY + iconBoxSize + 58, Width - 24, 25);
+            TextRenderer.DrawText(g, "Live-Audio für Windows", subFont, subRect, Color.FromArgb(235, 255, 255, 255), TextFormatFlags.HorizontalCenter | TextFormatFlags.Top);
+        }
+
+        // 6. Draw Footer Info at Bottom
+        int footerX = 26;
+        int footerY1 = Height - 52;
+        int footerY2 = Height - 32;
+
+        using (var verFont = new Font("Segoe UI", 9f, FontStyle.Bold))
+        {
+            TextRenderer.DrawText(g, "Version 0.1.0-alpha", verFont, new Point(footerX, footerY1), Color.FromArgb(245, 255, 255, 255));
+        }
+
+        using (var copyFont = new Font("Segoe UI", 8.5f, FontStyle.Regular))
+        {
+            TextRenderer.DrawText(g, "Kostenlos & Open Source • plysystems", copyFont, new Point(footerX, footerY2), Color.FromArgb(205, 255, 255, 255));
+        }
+    }
+}
+
 public class ModernCheckBox : Control
 {
     private bool _checked = false;
@@ -144,6 +255,7 @@ public class ModernCheckBox : Control
         }
     }
 
+    public string? SubText { get; set; }
     public event EventHandler? CheckedChanged;
     private bool _isHovered = false;
 
@@ -152,8 +264,8 @@ public class ModernCheckBox : Control
         SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.SupportsTransparentBackColor, true);
         this.DoubleBuffered = true;
         this.Cursor = Cursors.Hand;
-        this.Font = NextXLRTheme.BodyFont;
-        this.ForeColor = NextXLRTheme.TextPrimary;
+        this.Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
+        this.ForeColor = Color.FromArgb(241, 245, 249);
         this.Height = 28;
     }
 
@@ -169,18 +281,18 @@ public class ModernCheckBox : Control
         g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
         int boxSize = 18;
-        int boxY = (Height - boxSize) / 2;
+        int boxY = string.IsNullOrWhiteSpace(SubText) ? (Height - boxSize) / 2 : 4;
         var boxRect = new Rectangle(0, boxY, boxSize, boxSize);
 
         using (var boxPath = NextXLRTheme.CreateRoundedRectangle(boxRect, 4))
         {
             if (_checked)
             {
-                using var fill = new SolidBrush(NextXLRTheme.BrandAccent);
+                using var fill = new SolidBrush(NextXLRTheme.CyanAccent); // #38BDF8
                 g.FillPath(fill, boxPath);
 
-                // Draw crisp checkmark
-                using var pen = new Pen(Color.FromArgb(13, 21, 19), 2.2f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
+                // Draw dark checkmark
+                using var pen = new Pen(NextXLRTheme.CyanAccentText, 2.2f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
                 g.DrawLines(pen, new[]
                 {
                     new PointF(boxRect.X + 4.2f, boxRect.Y + 9.5f),
@@ -190,17 +302,28 @@ public class ModernCheckBox : Control
             }
             else
             {
-                using var fill = new SolidBrush(_isHovered ? NextXLRTheme.SurfaceL4 : NextXLRTheme.SurfaceL2);
+                using var fill = new SolidBrush(_isHovered ? Color.FromArgb(45, 52, 66) : Color.FromArgb(27, 31, 39));
                 g.FillPath(fill, boxPath);
-                using var stroke = new Pen(_isHovered ? NextXLRTheme.BrandAccent : NextXLRTheme.Stroke, 1.2f);
+                using var stroke = new Pen(_isHovered ? NextXLRTheme.CyanAccent : Color.FromArgb(65, 75, 95), 1.2f);
                 g.DrawPath(stroke, boxPath);
             }
         }
 
-        // Draw label text with proper font and clean vertical centering
         int textX = boxSize + 12;
-        var textRect = new Rectangle(textX, 0, Width - textX, Height);
-        TextRenderer.DrawText(g, Text, Font, textRect, ForeColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+        if (string.IsNullOrWhiteSpace(SubText))
+        {
+            var textRect = new Rectangle(textX, 0, Width - textX, Height);
+            TextRenderer.DrawText(g, Text, Font, textRect, ForeColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+        }
+        else
+        {
+            var textRect = new Rectangle(textX, 2, Width - textX, 22);
+            TextRenderer.DrawText(g, Text, Font, textRect, ForeColor, TextFormatFlags.Left | TextFormatFlags.Top);
+
+            using var subFont = new Font("Segoe UI", 8.5f, FontStyle.Regular);
+            var subRect = new Rectangle(textX, 25, Width - textX, Height - 25);
+            TextRenderer.DrawText(g, SubText, subFont, subRect, Color.FromArgb(148, 163, 184), TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.WordBreak);
+        }
     }
 }
 
@@ -240,9 +363,10 @@ public class RoundedCard : Panel
 
 public class ModernButton : Button
 {
+    public bool IsCyanAccent { get; set; } = false;
     public bool IsAccent { get; set; } = false;
     public bool IsDanger { get; set; } = false;
-    public int CornerRadius { get; set; } = 8;
+    public int CornerRadius { get; set; } = 6;
 
     private bool _isHovered = false;
     private bool _isPressed = false;
@@ -254,7 +378,7 @@ public class ModernButton : Button
         this.FlatStyle = FlatStyle.Flat;
         this.FlatAppearance.BorderSize = 0;
         this.Cursor = Cursors.Hand;
-        this.Font = NextXLRTheme.ButtonFont;
+        this.Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
         this.Size = new Size(125, 36);
     }
 
@@ -279,9 +403,16 @@ public class ModernButton : Button
 
         if (!Enabled)
         {
-            bg = Color.FromArgb(22, 26, 33);
+            bg = Color.FromArgb(26, 30, 38);
             fg = Color.FromArgb(85, 93, 107);
-            border = Color.FromArgb(32, 37, 46);
+            border = Color.FromArgb(36, 42, 52);
+        }
+        else if (IsCyanAccent || IsAccent)
+        {
+            // Vibrant Cyan Accent matching Bild 1 & Bild 2
+            bg = _isPressed ? NextXLRTheme.CyanAccentPressed : (_isHovered ? NextXLRTheme.CyanAccentHover : NextXLRTheme.CyanAccent);
+            fg = NextXLRTheme.CyanAccentText;
+            border = bg;
         }
         else if (IsDanger)
         {
@@ -289,17 +420,12 @@ public class ModernButton : Button
             fg = Color.White;
             border = bg;
         }
-        else if (IsAccent)
-        {
-            bg = _isPressed ? Color.FromArgb(22, 160, 122) : (_isHovered ? Color.FromArgb(45, 220, 172) : NextXLRTheme.BrandAccent);
-            fg = Color.FromArgb(11, 22, 19);
-            border = bg;
-        }
         else
         {
-            bg = _isPressed ? Color.FromArgb(22, 26, 34) : (_isHovered ? Color.FromArgb(38, 44, 56) : Color.FromArgb(29, 34, 43));
-            fg = Color.FromArgb(240, 243, 246);
-            border = _isHovered ? NextXLRTheme.BrandAccent : Color.FromArgb(46, 54, 68);
+            // Dark secondary button matching Bild 1 & Bild 2
+            bg = _isPressed ? Color.FromArgb(28, 31, 39) : (_isHovered ? Color.FromArgb(50, 56, 69) : Color.FromArgb(38, 41, 51));
+            fg = Color.FromArgb(241, 245, 249);
+            border = _isHovered ? Color.FromArgb(75, 85, 105) : Color.FromArgb(55, 62, 77);
         }
 
         using (var brush = new SolidBrush(bg)) g.FillPath(brush, path);
@@ -351,6 +477,110 @@ public class ModernProgressBar : Control
                 g.FillPath(fillBrush, fillPath);
             }
         }
+    }
+}
+
+public class ModernExpander : Panel
+{
+    private bool _isExpanded = false;
+    private readonly Label _headerLabel;
+    private readonly Label _chevronLabel;
+    private readonly Panel _headerBar;
+    private readonly TextBox _contentBox;
+
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set
+        {
+            if (_isExpanded != value)
+            {
+                _isExpanded = value;
+                _chevronLabel.Text = _isExpanded ? "⌃" : "⌵";
+                this.Height = _isExpanded ? 160 : 38;
+                _contentBox.Visible = _isExpanded;
+                Invalidate();
+            }
+        }
+    }
+
+    public ModernExpander(string headerText, string bodyText)
+    {
+        SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
+        this.DoubleBuffered = true;
+        this.BackColor = Color.FromArgb(32, 36, 46);
+        this.Height = 38;
+        this.Cursor = Cursors.Hand;
+
+        _headerBar = new Panel
+        {
+            Dock = DockStyle.Top,
+            Height = 38,
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+        _headerBar.Click += (_, _) => IsExpanded = !IsExpanded;
+
+        _headerLabel = new Label
+        {
+            Text = headerText,
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
+            ForeColor = Color.FromArgb(226, 232, 240),
+            AutoSize = false,
+            Location = new Point(14, 8),
+            Size = new Size(380, 22),
+            Cursor = Cursors.Hand
+        };
+        _headerLabel.Click += (_, _) => IsExpanded = !IsExpanded;
+
+        _chevronLabel = new Label
+        {
+            Text = "⌵",
+            Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+            ForeColor = Color.FromArgb(148, 163, 184),
+            AutoSize = false,
+            Dock = DockStyle.Right,
+            Width = 36,
+            TextAlign = ContentAlignment.MiddleCenter,
+            Cursor = Cursors.Hand
+        };
+        _chevronLabel.Click += (_, _) => IsExpanded = !IsExpanded;
+
+        _headerBar.Controls.Add(_headerLabel);
+        _headerBar.Controls.Add(_chevronLabel);
+        this.Controls.Add(_headerBar);
+
+        _contentBox = new TextBox
+        {
+            Text = bodyText,
+            Multiline = true,
+            ReadOnly = true,
+            ScrollBars = ScrollBars.Vertical,
+            BackColor = Color.FromArgb(26, 30, 39),
+            ForeColor = Color.FromArgb(203, 213, 225),
+            BorderStyle = BorderStyle.None,
+            Font = new Font("Consolas", 8.5f, FontStyle.Regular),
+            Location = new Point(14, 42),
+            Size = new Size(Width - 28, 105),
+            Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+            Visible = false
+        };
+        this.Controls.Add(_contentBox);
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        base.OnPaint(e);
+        var g = e.Graphics;
+        g.SmoothingMode = SmoothingMode.HighQuality;
+
+        var rect = new Rectangle(0, 0, Width - 1, Height - 1);
+        using var path = NextXLRTheme.CreateRoundedRectangle(rect, 6);
+        using var brush = new SolidBrush(BackColor);
+        g.FillPath(brush, path);
+
+        using var pen = new Pen(Color.FromArgb(51, 57, 71), 1f);
+        g.DrawPath(pen, path);
     }
 }
 

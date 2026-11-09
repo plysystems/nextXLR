@@ -10,27 +10,23 @@ namespace NextXLR.Installer;
 
 public partial class UninstallerForm : Form
 {
-    private Panel headerPanel = null!;
-    private Panel contentPanel = null!;
-    private Panel footerPanel = null!;
+    private GradientSidebarPanel sidebarPanel = null!;
+    private Panel mainContainer = null!;
 
-    private Label lblTitle = null!;
-    private Label lblSubtitle = null!;
-    private ModernButton btnCancel = null!;
-    private ModernButton btnUninstall = null!;
-    private ModernButton btnFinish = null!;
-
+    // Pages
     private Panel pageConfirm = null!;
     private Panel pageProgress = null!;
     private Panel pageDone = null!;
 
-    private ModernCheckBox chkRemoveService = null!;
-    private ModernCheckBox chkRemoveShortcuts = null!;
     private ModernCheckBox chkRemoveData = null!;
-    private ModernCheckBox chkRemoveDrivers = null!;
+    private ModernButton btnCancel = null!;
+    private ModernButton btnUninstall = null!;
+    private ModernButton btnFinish = null!;
 
-    private Label lblProgressStatus = null!;
+    private Label lblProgressTitle = null!;
+    private Label lblProgressSubtitle = null!;
     private ModernProgressBar progressBar = null!;
+    private Label lblProgressStatus = null!;
     private TextBox txtLog = null!;
 
     private string installDir = "";
@@ -64,9 +60,9 @@ public partial class UninstallerForm : Form
 
     private void InitializeComponent()
     {
-        this.Text = "NEXT : XLR Deinstallation — plysystems";
-        this.Size = new Size(720, 560);
-        this.MinimumSize = new Size(700, 520);
+        this.Text = "NEXT : XLR deinstallieren";
+        this.Size = new Size(860, 560);
+        this.MinimumSize = new Size(840, 540);
         this.StartPosition = FormStartPosition.CenterScreen;
         this.BackColor = NextXLRTheme.DarkBg;
         this.ForeColor = NextXLRTheme.TextPrimary;
@@ -78,392 +74,270 @@ public partial class UninstallerForm : Form
         if (appIcon != null) this.Icon = appIcon;
         NextXLRTheme.ApplyNativeWinUIStyle(this);
 
-        // Header
-        headerPanel = new Panel
-        {
-            Dock = DockStyle.Top,
-            Height = 76,
-            BackColor = NextXLRTheme.SurfaceL1,
-            Padding = new Padding(28, 14, 28, 14)
-        };
+        // Left Gradient Sidebar (matching Bild 2)
+        sidebarPanel = new GradientSidebarPanel();
+        this.Controls.Add(sidebarPanel);
 
-        var logoImg = NextXLRTheme.GetLogoImage();
-        if (logoImg != null)
-        {
-            var logoBox = new PictureBox
-            {
-                Image = logoImg,
-                SizeMode = PictureBoxSizeMode.Zoom,
-                Size = new Size(160, 48),
-                Location = new Point(this.ClientSize.Width - 190, 14),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                BackColor = Color.Transparent
-            };
-            headerPanel.Controls.Add(logoBox);
-        }
-
-        lblTitle = new Label
-        {
-            Text = "NEXT : XLR Deinstallation",
-            Font = NextXLRTheme.TitleFont,
-            ForeColor = NextXLRTheme.Danger,
-            AutoSize = true,
-            Location = new Point(28, 14)
-        };
-
-        lblSubtitle = new Label
-        {
-            Text = "Entfernen von NEXT : XLR, Hintergrunddiensten und Komponenten",
-            Font = NextXLRTheme.SubtitleFont,
-            ForeColor = NextXLRTheme.TextMuted,
-            AutoSize = true,
-            Location = new Point(28, 42)
-        };
-
-        headerPanel.Controls.Add(lblTitle);
-        headerPanel.Controls.Add(lblSubtitle);
-
-        // Footer
-        footerPanel = new Panel
-        {
-            Dock = DockStyle.Bottom,
-            Height = 68,
-            BackColor = NextXLRTheme.SurfaceL1,
-            Padding = new Padding(28, 14, 28, 14)
-        };
-
-        btnCancel = new ModernButton
-        {
-            Text = "Abbrechen",
-            Size = new Size(110, 38),
-            Location = new Point(28, 15)
-        };
-        btnCancel.Click += (s, e) => Application.Exit();
-
-        btnUninstall = new ModernButton
-        {
-            Text = "Deinstallieren",
-            IsDanger = true,
-            Size = new Size(140, 38),
-            Location = new Point(550, 15)
-        };
-        btnUninstall.Click += (s, e) => StartUninstallAsync();
-
-        btnFinish = new ModernButton
-        {
-            Text = "Schließen",
-            IsAccent = true,
-            Size = new Size(120, 38),
-            Location = new Point(570, 15),
-            Visible = false
-        };
-        btnFinish.Click += (s, e) => Application.Exit();
-
-        footerPanel.Controls.Add(btnCancel);
-        footerPanel.Controls.Add(btnUninstall);
-        footerPanel.Controls.Add(btnFinish);
-
-        // Content Host
-        contentPanel = new Panel
+        // Right Main Container
+        mainContainer = new Panel
         {
             Dock = DockStyle.Fill,
-            Padding = new Padding(28, 20, 28, 10),
-            BackColor = NextXLRTheme.DarkBg
+            BackColor = Color.FromArgb(22, 24, 31), // #16181F
+            Padding = new Padding(36, 26, 36, 20)
         };
-
-        this.Controls.Add(contentPanel);
-        this.Controls.Add(headerPanel);
-        this.Controls.Add(footerPanel);
+        this.Controls.Add(mainContainer);
 
         BuildConfirmPage();
         BuildProgressPage();
         BuildDonePage();
+
+        ShowPage(pageConfirm);
     }
 
     private void BuildConfirmPage()
     {
-        pageConfirm = new Panel { Dock = DockStyle.Fill, Visible = true };
-
-        var card = new RoundedCard
+        pageConfirm = new Panel
         {
-            Location = new Point(4, 4),
-            Size = new Size(656, 330),
-            BackColor = NextXLRTheme.SurfaceL2,
-            CornerRadius = 16
+            Dock = DockStyle.Fill,
+            BackColor = Color.Transparent
         };
 
-        var lblPrompt = new Label
+        var lblTitle = new Label
         {
-            Text = "Möchten Sie NEXT : XLR wirklich von Ihrem Computer deinstallieren?",
-            Font = NextXLRTheme.TitleFont,
-            ForeColor = NextXLRTheme.TextPrimary,
+            Text = "NEXT : XLR deinstallieren",
+            Font = new Font("Segoe UI Variable Display", 21f, FontStyle.Bold),
+            ForeColor = Color.FromArgb(248, 250, 252),
             AutoSize = true,
-            Location = new Point(20, 18)
+            Location = new Point(0, 0)
         };
+        pageConfirm.Controls.Add(lblTitle);
 
-        var lblPath = new Label
+        var lblDesc = new Label
         {
-            Text = $"Installationspfad: {installDir}",
-            Font = NextXLRTheme.BodyFont,
-            ForeColor = NextXLRTheme.TextMuted,
-            AutoSize = true,
-            Location = new Point(20, 52)
+            Text = "NEXT : XLR wird beendet und vollständig von deinem Computer entfernt. Deine Windows-Standard-Audiogeräte werden wiederhergestellt.",
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
+            ForeColor = Color.FromArgb(148, 163, 184),
+            Location = new Point(0, 42),
+            Size = new Size(500, 48)
         };
-
-        var subCard = new RoundedCard
-        {
-            Location = new Point(20, 84),
-            Size = new Size(616, 220),
-            BackColor = NextXLRTheme.SurfaceL3,
-            CornerRadius = 12
-        };
-
-        var lblOptions = new Label
-        {
-            Text = "Folgende Aktionen werden ausgeführt:",
-            Font = NextXLRTheme.BoldFont,
-            ForeColor = NextXLRTheme.Brand,
-            AutoSize = true,
-            Location = new Point(16, 12)
-        };
-
-        chkRemoveService = new ModernCheckBox
-        {
-            Text = "mixforge Hintergrunddienst stoppen & aus Windows-Autostart austragen",
-            Checked = true,
-            Font = NextXLRTheme.BodyFont,
-            ForeColor = NextXLRTheme.TextPrimary,
-            Size = new Size(610, 26),
-            Location = new Point(18, 44)
-        };
-
-        chkRemoveShortcuts = new ModernCheckBox
-        {
-            Text = "Desktop- und Startmenü-Verknüpfungen entfernen",
-            Checked = true,
-            Font = NextXLRTheme.BodyFont,
-            ForeColor = NextXLRTheme.TextPrimary,
-            Size = new Size(610, 26),
-            Location = new Point(18, 76)
-        };
+        pageConfirm.Controls.Add(lblDesc);
 
         chkRemoveData = new ModernCheckBox
         {
-            Text = "Benutzerprofile, Equalizer-Setups & Konfigurationen ebenfalls löschen",
-            Checked = false,
-            Font = NextXLRTheme.BodyFont,
-            ForeColor = NextXLRTheme.TextPrimary,
-            Size = new Size(610, 26),
-            Location = new Point(18, 108)
+            Text = "Auch meine Einstellungen und Profile löschen",
+            SubText = "Deine Mediendateien und Samples selbst werden nie gelöscht, nur die Konfiguration von NEXT : XLR.",
+            Checked = false, // Bild 2 default: unchecked
+            Location = new Point(0, 115),
+            Size = new Size(500, 52)
         };
+        pageConfirm.Controls.Add(chkRemoveData);
 
-        chkRemoveDrivers = new ModernCheckBox
+        // Action Buttons Row at Bottom
+        btnCancel = new ModernButton
         {
-            Text = "TC-Helicon GoXLR USB-Audiotreiber deinstallieren (pnputil)",
-            Checked = false,
-            Font = NextXLRTheme.BodyFont,
-            ForeColor = NextXLRTheme.TextMuted,
-            Size = new Size(610, 26),
-            Location = new Point(18, 140)
+            Text = "Abbrechen",
+            Location = new Point(265, 435),
+            Size = new Size(110, 36),
+            CornerRadius = 6
         };
+        btnCancel.Click += (_, _) => Application.Exit();
+        pageConfirm.Controls.Add(btnCancel);
 
-        var lblDriverHint = new Label
+        btnUninstall = new ModernButton
         {
-            Text = "(Hinweis: Deaktiviere Treiber nur, wenn du kein anderes GoXLR-Tool mehr nutzt)",
-            Font = new Font("Segoe UI", 8.5f),
-            ForeColor = NextXLRTheme.TextSubtle,
-            AutoSize = true,
-            Location = new Point(38, 168)
+            Text = "Deinstallieren",
+            Location = new Point(385, 435),
+            Size = new Size(115, 36),
+            IsCyanAccent = true, // matching Bild 2 cyan button
+            CornerRadius = 6
         };
+        btnUninstall.Click += (_, _) =>
+        {
+            ShowPage(pageProgress);
+            StartUninstallAsync();
+        };
+        pageConfirm.Controls.Add(btnUninstall);
 
-        subCard.Controls.Add(lblOptions);
-        subCard.Controls.Add(chkRemoveService);
-        subCard.Controls.Add(chkRemoveShortcuts);
-        subCard.Controls.Add(chkRemoveData);
-        subCard.Controls.Add(chkRemoveDrivers);
-        subCard.Controls.Add(lblDriverHint);
-
-        card.Controls.Add(lblPrompt);
-        card.Controls.Add(lblPath);
-        card.Controls.Add(subCard);
-
-        pageConfirm.Controls.Add(card);
-        contentPanel.Controls.Add(pageConfirm);
+        mainContainer.Controls.Add(pageConfirm);
     }
 
     private void BuildProgressPage()
     {
-        pageProgress = new Panel { Dock = DockStyle.Fill, Visible = false };
-
-        var card = new RoundedCard
+        pageProgress = new Panel
         {
-            Location = new Point(4, 4),
-            Size = new Size(656, 330),
-            BackColor = NextXLRTheme.SurfaceL2,
-            CornerRadius = 16
+            Dock = DockStyle.Fill,
+            BackColor = Color.Transparent,
+            Visible = false
         };
 
-        lblProgressStatus = new Label
+        lblProgressTitle = new Label
         {
-            Text = "Deinstallation läuft...",
-            Font = NextXLRTheme.TitleFont,
-            ForeColor = NextXLRTheme.Brand,
+            Text = "NEXT : XLR wird deinstalliert...",
+            Font = new Font("Segoe UI Variable Display", 21f, FontStyle.Bold),
+            ForeColor = Color.FromArgb(248, 250, 252),
             AutoSize = true,
-            Location = new Point(20, 16)
+            Location = new Point(0, 0)
         };
+        pageProgress.Controls.Add(lblProgressTitle);
+
+        lblProgressSubtitle = new Label
+        {
+            Text = "Laufende Hintergrunddienste und Prozesse werden beendet...",
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
+            ForeColor = Color.FromArgb(148, 163, 184),
+            Location = new Point(0, 42),
+            Size = new Size(500, 38)
+        };
+        pageProgress.Controls.Add(lblProgressSubtitle);
 
         progressBar = new ModernProgressBar
         {
-            Size = new Size(616, 14),
-            Location = new Point(20, 48),
-            Value = 0
+            Location = new Point(0, 110),
+            Size = new Size(500, 10),
+            Value = 5
         };
+        pageProgress.Controls.Add(progressBar);
+
+        lblProgressStatus = new Label
+        {
+            Text = "Deinstallation wird vorbereitet...",
+            Font = new Font("Segoe UI", 9f, FontStyle.Regular),
+            ForeColor = Color.FromArgb(226, 232, 240),
+            Location = new Point(0, 130),
+            Size = new Size(500, 24)
+        };
+        pageProgress.Controls.Add(lblProgressStatus);
 
         txtLog = new TextBox
         {
             Multiline = true,
             ReadOnly = true,
             ScrollBars = ScrollBars.Vertical,
-            Size = new Size(616, 230),
-            Location = new Point(20, 74),
-            BackColor = NextXLRTheme.DarkBg,
-            ForeColor = NextXLRTheme.TextMuted,
-            Font = NextXLRTheme.MonospaceFont,
-            BorderStyle = BorderStyle.None
+            BackColor = Color.FromArgb(26, 30, 39),
+            ForeColor = Color.FromArgb(148, 163, 184),
+            BorderStyle = BorderStyle.None,
+            Font = new Font("Consolas", 8.5f, FontStyle.Regular),
+            Location = new Point(0, 165),
+            Size = new Size(500, 290)
         };
+        pageProgress.Controls.Add(txtLog);
 
-        card.Controls.Add(lblProgressStatus);
-        card.Controls.Add(progressBar);
-        card.Controls.Add(txtLog);
-
-        pageProgress.Controls.Add(card);
-        contentPanel.Controls.Add(pageProgress);
+        mainContainer.Controls.Add(pageProgress);
     }
 
     private void BuildDonePage()
     {
-        pageDone = new Panel { Dock = DockStyle.Fill, Visible = false };
-
-        var card = new RoundedCard
+        pageDone = new Panel
         {
-            Location = new Point(4, 4),
-            Size = new Size(656, 330),
-            BackColor = NextXLRTheme.SurfaceL2,
-            CornerRadius = 16
+            Dock = DockStyle.Fill,
+            BackColor = Color.Transparent,
+            Visible = false
         };
 
         var lblDoneTitle = new Label
         {
-            Text = "Deinstallation erfolgreich abgeschlossen",
-            Font = NextXLRTheme.TitleFont,
-            ForeColor = NextXLRTheme.Success,
+            Text = "Deinstallation abgeschlossen",
+            Font = new Font("Segoe UI Variable Display", 21f, FontStyle.Bold),
+            ForeColor = Color.FromArgb(56, 189, 248),
             AutoSize = true,
-            Location = new Point(20, 24)
+            Location = new Point(0, 0)
         };
+        pageDone.Controls.Add(lblDoneTitle);
 
-        var lblDoneDesc = new Label
+        var lblDoneSubtitle = new Label
         {
-            Text = "NEXT : XLR und die zugehörigen Komponenten wurden erfolgreich von Ihrem Computer entfernt.\n\n" +
-                   "Vielen Dank, dass Sie NEXT : XLR von plysystems verwendet haben.",
-            Font = NextXLRTheme.BodyFont,
-            ForeColor = NextXLRTheme.TextPrimary,
-            Size = new Size(616, 120),
-            Location = new Point(20, 64)
+            Text = "NEXT : XLR wurde erfolgreich von deinem Computer entfernt. Deine Windows-Standardeinstellungen wurden wiederhergestellt.",
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
+            ForeColor = Color.FromArgb(203, 213, 225),
+            Location = new Point(0, 42),
+            Size = new Size(500, 48)
         };
+        pageDone.Controls.Add(lblDoneSubtitle);
 
-        card.Controls.Add(lblDoneTitle);
-        card.Controls.Add(lblDoneDesc);
+        btnFinish = new ModernButton
+        {
+            Text = "Schließen",
+            Location = new Point(370, 435),
+            Size = new Size(130, 36),
+            IsCyanAccent = true,
+            CornerRadius = 6
+        };
+        btnFinish.Click += (_, _) => Application.Exit();
+        pageDone.Controls.Add(btnFinish);
 
-        pageDone.Controls.Add(card);
-        contentPanel.Controls.Add(pageDone);
+        mainContainer.Controls.Add(pageDone);
+    }
+
+    private void ShowPage(Panel target)
+    {
+        pageConfirm.Visible = (target == pageConfirm);
+        pageProgress.Visible = (target == pageProgress);
+        pageDone.Visible = (target == pageDone);
     }
 
     private void Log(string msg)
     {
-        if (txtLog.InvokeRequired)
-        {
-            txtLog.Invoke(new Action(() => Log(msg)));
-            return;
-        }
+        if (txtLog.InvokeRequired) { txtLog.Invoke(new Action(() => Log(msg))); return; }
         txtLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {msg}\r\n");
     }
 
-    private void SetProgress(int val, string status)
+    private void SetProgress(int value, string status)
     {
-        if (progressBar.InvokeRequired)
-        {
-            progressBar.Invoke(new Action(() => SetProgress(val, status)));
-            return;
-        }
-        progressBar.Value = val;
+        if (progressBar.InvokeRequired) { progressBar.Invoke(new Action(() => SetProgress(value, status))); return; }
+        progressBar.Value = value;
         lblProgressStatus.Text = status;
     }
 
     private async void StartUninstallAsync()
     {
-        pageConfirm.Visible = false;
-        pageProgress.Visible = true;
-        btnCancel.Enabled = false;
-        btnUninstall.Enabled = false;
-
         await Task.Run(() =>
         {
             try
             {
                 SetProgress(10, "Beende laufende Prozesse...");
+                Log("Beende NEXT : XLR und mixforge Prozesse...");
                 KillProcess("NextXLR");
                 KillProcess("mixforged");
                 KillProcess("mixforge");
 
-                if (chkRemoveService.Checked)
-                {
-                    SetProgress(30, "Entferne Autostart & Hintergrunddienst...");
-                    RemoveAutostart();
-                }
+                SetProgress(30, "Entferne Autostart...");
+                Log("Entferne Windows Autostart...");
+                RemoveAutostart();
 
-                if (chkRemoveShortcuts.Checked)
-                {
-                    SetProgress(50, "Lösche Verknüpfungen...");
-                    RemoveShortcuts();
-                }
+                SetProgress(50, "Lösche Verknüpfungen...");
+                Log("Lösche Startmenü- und Desktop-Verknüpfungen...");
+                RemoveShortcuts();
 
-                if (chkRemoveDrivers.Checked)
-                {
-                    SetProgress(65, "Deinstalliere GoXLR Audiotreiber...");
-                    RemoveDrivers();
-                }
+                SetProgress(70, "Entferne Windows-Registrierung...");
+                Log("Entferne Deinstallations-Eintrag aus der Registrierung...");
+                RemoveUninstallRegistration();
+
+                SetProgress(85, "Lösche Anwendungsdateien...");
+                Log($"Lösche Anwendungsdateien in: {installDir}");
+                DeleteAppDirectory(installDir);
 
                 if (chkRemoveData.Checked)
                 {
-                    SetProgress(75, "Lösche Benutzerkonfigurationen...");
+                    SetProgress(92, "Lösche Konfigurations- und Profildaten...");
+                    Log("Lösche NEXT : XLR Benutzerordner in %LOCALAPPDATA%...");
                     RemoveUserData();
                 }
-
-                SetProgress(85, "Entferne Programmdateien...");
-                RemoveAppFiles();
-
-                SetProgress(95, "Entferne Windows-Registrierungseinträge...");
-                RemoveUninstallRegistry();
-
-                SetProgress(100, "Fertig!");
-                Log("NEXT : XLR wurde vollständig deinstalliert.");
-
-                this.Invoke(new Action(() =>
+                else
                 {
-                    pageProgress.Visible = false;
-                    pageDone.Visible = true;
-                    btnCancel.Visible = false;
-                    btnUninstall.Visible = false;
-                    btnFinish.Visible = true;
-                }));
+                    Log("Benutzerkonfiguration und Profile bleiben in %LOCALAPPDATA%\\NextXLR erhalten.");
+                }
+
+                SetProgress(100, "Deinstallation erfolgreich abgeschlossen.");
+                Log("Deinstallation abgeschlossen.");
+
+                this.Invoke(new Action(() => ShowPage(pageDone)));
             }
             catch (Exception ex)
             {
-                Log($"Fehler während der Deinstallation: {ex.Message}");
-                MessageBox.Show($"Fehler: {ex.Message}", "Deinstallation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Log($"FEHLER: {ex.Message}");
                 this.Invoke(new Action(() =>
                 {
-                    btnCancel.Enabled = true;
+                    MessageBox.Show($"Während der Deinstallation ist ein Fehler aufgetreten:\n\n{ex.Message}", "NEXT : XLR Deinstallation", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }));
             }
         });
@@ -471,145 +345,89 @@ public partial class UninstallerForm : Form
 
     private void KillProcess(string name)
     {
-        try
+        foreach (var p in Process.GetProcessesByName(name))
         {
-            foreach (var p in Process.GetProcessesByName(name))
+            try
             {
-                try
-                {
-                    p.Kill();
-                    p.WaitForExit(3000);
-                    Log($"Prozess {name} (PID: {p.Id}) beendet.");
-                }
-                catch { }
+                p.Kill();
+                p.WaitForExit(3000);
             }
+            catch { }
         }
-        catch { }
     }
 
     private void RemoveAutostart()
     {
         try
         {
-            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
-            if (key != null)
-            {
-                if (key.GetValue("NextXLR_BackgroundService") != null)
-                {
-                    key.DeleteValue("NextXLR_BackgroundService");
-                    Log("Autostart 'NextXLR_BackgroundService' entfernt.");
-                }
-                if (key.GetValue("NextXLR") != null)
-                {
-                    key.DeleteValue("NextXLR");
-                    Log("Autostart 'NextXLR' entfernt.");
-                }
-            }
+            using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
+            key.DeleteValue("NextXLR", throwOnMissingValue: false);
+            key.DeleteValue("GoXLRNext", throwOnMissingValue: false);
         }
-        catch (Exception ex)
-        {
-            Log($"Autostart-Entfernung: {ex.Message}");
-        }
+        catch { }
     }
 
     private void RemoveShortcuts()
     {
         try
         {
-            var desktopLnk = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "NEXT XLR.lnk");
-            if (File.Exists(desktopLnk)) { File.Delete(desktopLnk); Log("Desktop-Verknüpfung gelöscht."); }
+            var desktop = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "NEXT XLR.lnk");
+            if (File.Exists(desktop)) File.Delete(desktop);
 
-            var startDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs", "NEXT XLR");
-            if (Directory.Exists(startDir)) { Directory.Delete(startDir, true); Log("Startmenü-Eintrag gelöscht."); }
+            var startMenu = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), "plysystems");
+            if (Directory.Exists(startMenu))
+            {
+                Directory.Delete(startMenu, true);
+            }
         }
-        catch (Exception ex)
-        {
-            Log($"Verknüpfungen löschen: {ex.Message}");
-        }
+        catch { }
     }
 
-    private void RemoveDrivers()
+    private void RemoveUninstallRegistration()
     {
         try
         {
-            // Execute pnputil to remove goxlr_audio.inf
-            var psi = new ProcessStartInfo
-            {
-                FileName = "pnputil.exe",
-                Arguments = "/delete-driver goxlr_audio.inf /uninstall",
-                UseShellExecute = true,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden
-            };
-            Process.Start(psi)?.WaitForExit(10000);
-            Log("Audiotreiber-Deinstallation angefordert.");
+            Registry.CurrentUser.DeleteSubKeyTree(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\NextXLR", throwOnMissingSubKey: false);
         }
-        catch (Exception ex)
+        catch { }
+    }
+
+    private void DeleteAppDirectory(string dir)
+    {
+        if (!Directory.Exists(dir)) return;
+
+        try
         {
-            Log($"Treiber-Deinstallation: {ex.Message}");
+            foreach (var file in Directory.GetFiles(dir, "*", SearchOption.AllDirectories))
+            {
+                try
+                {
+                    File.SetAttributes(file, FileAttributes.Normal);
+                    File.Delete(file);
+                }
+                catch { }
+            }
+
+            foreach (var sub in Directory.GetDirectories(dir))
+            {
+                try { Directory.Delete(sub, true); } catch { }
+            }
+
+            try { Directory.Delete(dir, false); } catch { }
         }
+        catch { }
     }
 
     private void RemoveUserData()
     {
         try
         {
-            var dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NextXLR");
-            if (Directory.Exists(dataDir))
-            {
-                Directory.Delete(dataDir, true);
-                Log($"Benutzerdatenverzeichnis gelöscht: {dataDir}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Log($"Benutzerdaten löschen: {ex.Message}");
-        }
-    }
+            var appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NextXLR");
+            if (Directory.Exists(appData)) Directory.Delete(appData, true);
 
-    private void RemoveAppFiles()
-    {
-        if (string.IsNullOrWhiteSpace(installDir) || !Directory.Exists(installDir)) return;
-
-        try
-        {
-            foreach (var file in Directory.GetFiles(installDir))
-            {
-                // Don't delete the running uninstaller binary immediately
-                if (file.Equals(Application.ExecutablePath, StringComparison.OrdinalIgnoreCase)) continue;
-
-                try
-                {
-                    File.Delete(file);
-                }
-                catch { }
-            }
-
-            foreach (var dir in Directory.GetDirectories(installDir))
-            {
-                try
-                {
-                    Directory.Delete(dir, true);
-                }
-                catch { }
-            }
-            Log($"Programmdateien in {installDir} bereinigt.");
-        }
-        catch (Exception ex)
-        {
-            Log($"Programmdateien: {ex.Message}");
-        }
-    }
-
-    private void RemoveUninstallRegistry()
-    {
-        try
-        {
-            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall", writable: true);
-            key?.DeleteSubKeyTree("NextXLR", false);
-            Log("Windows Deinstallations-Eintrag entfernt.");
+            var legacy = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GoXLRNext");
+            if (Directory.Exists(legacy)) Directory.Delete(legacy, true);
         }
         catch { }
     }
 }
-
