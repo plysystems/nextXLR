@@ -19,7 +19,7 @@
             <!-- Allgemeiner animierter Lade-Indikator -->
             <StackPanel x:Name="AppLoadingPanel" Orientation="Horizontal" Spacing="8"
                         HorizontalAlignment="Right" VerticalAlignment="Center"
-                        Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}">
+                        Visibility="{x:Bind VisibleIf(ViewModel.IsBusy), Mode=OneWay}">
                 <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Width="16" Height="16"
                               Foreground="{StaticResource BrandBrush}" />
                 <TextBlock Text="{x:Bind ViewModel.BusyText, Mode=OneWay}" FontSize="12" FontWeight="SemiBold"
@@ -137,6 +137,22 @@
                     </InfoBar>
                 </StackPanel>
                 <Frame x:Name="ContentFrame" Grid.Row="1" />
+
+                <!-- Animiertes Lade-Overlay bei Start, Seitenwechsel, Plugin-Scan oder Profil-Laden -->
+                <Grid Grid.Row="1" Background="#550A0C10"
+                      Visibility="{x:Bind VisibleIf(ViewModel.IsBusy), Mode=OneWay}"
+                      Canvas.ZIndex="500">
+                    <Border Background="{StaticResource SurfaceL2Brush}" BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}"
+                            BorderThickness="1" CornerRadius="16" Padding="28,20"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Width="28" Height="28"
+                                          Foreground="{StaticResource BrandBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.BusyText, Mode=OneWay}" FontSize="14" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Grid>
         </NavigationView>
 

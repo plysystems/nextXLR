@@ -185,6 +185,7 @@ public partial class AppRoutingManagerViewModel : ObservableObject
     public async Task RefreshAsync()
     {
         IsScanning = true;
+        MainViewModel.Instance?.SetBusy(true, "Scanne Windows Audio-Sitzungen...");
         try
         {
             var outChoices = await Task.Run(WindowsAppAudioRouter.GetOutputChoices);
@@ -208,6 +209,7 @@ public partial class AppRoutingManagerViewModel : ObservableObject
         finally
         {
             IsScanning = false;
+            MainViewModel.Instance?.SetBusy(false);
         }
     }
 

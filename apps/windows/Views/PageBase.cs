@@ -661,8 +661,17 @@ public partial class MicPage : Page
 
     private async void ScanVst_Click(object sender, RoutedEventArgs e)
     {
+        ViewModel.SetBusy(true, "Scanne System nach VST3- & CLAP-Plugins...");
         Show(InfoBarSeverity.Informational, "Scanne System nach VST3- & CLAP-Audio-Plugins...");
-        var plugins = await Task.Run(() => VstPluginService.ScanInstalledPlugins());
+        List<VstPluginItem> plugins;
+        try
+        {
+            plugins = await Task.Run(() => VstPluginService.ScanInstalledPlugins());
+        }
+        finally
+        {
+            ViewModel.SetBusy(false);
+        }
         var externalPlugins = plugins.Where(p => !p.Path.StartsWith("Builtin::")).ToList();
 
         if (externalPlugins.Count == 0)

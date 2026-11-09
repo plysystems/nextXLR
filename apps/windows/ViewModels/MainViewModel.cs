@@ -236,18 +236,39 @@ public partial class MainViewModel : ObservableObject
     public async Task<string?> LoadProfileAsync(System.Text.Json.Nodes.JsonNode profile)
     {
         if (!IsConnected) return Loc.Get("StatusOffline");
-        _profileLoad = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        LastError = null;
-        _transport.Send(new LoadProfile(profile));
-        // Success = no error within a short window (the state broadcast arrives meanwhile).
-        var done = await Task.WhenAny(_profileLoad.Task, Task.Delay(700));
-        return done == _profileLoad.Task ? await _profileLoad.Task : null;
+        SetBusy(true, "Lade Profil...");
+        try
+        {
+            _profileLoad = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            LastError = null;
+            _transport.Send(new LoadProfile(profile));
+            // Success = no error within a short window (the state broadcast arrives meanwhile).
+            var done = await Task.WhenAny(_profileLoad.Task, Task.Delay(700));
+            return done == _profileLoad.Task ? await _profileLoad.Task : null;
+        }
+        finally
+        {
+            SetBusy(false);
+        }
     }
 
     private void OnConnection(ConnectionState s)
     {
         IsConnected = s == ConnectionState.Connected;
-        if (IsConnected) Sampler.PushLeds();   // the device's sampler LEDs follow the app
+        if (IsConnected)
+        {
+            Sampler.PushLeds();   // the device's sampler LEDs follow the app
+            SetBusy(false);
+        }
+        else if (s == ConnectionState.Connecting)
+        {
+            SetBusy(true, "Verbinde mit GoXLR Audio-Engine...");
+        }
+        else
+        {
+            SetBusy(false);
+        }
+
         ConnectionText = s switch
         {
             ConnectionState.Connected => Loc.Get("StatusConnected"),
