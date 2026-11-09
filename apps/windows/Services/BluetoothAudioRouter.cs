@@ -397,7 +397,7 @@ public sealed class BluetoothAudioRouter : IDisposable
                 CurrentSourceName = string.Join(" + ", capturedChannelNames);
 
                 // 2. Wrap mixer with real-time GoXLR master volume scaling (Headphones Channel 8)
-                ISSampleProvider pipeline = new VolumeScalingSampleProvider(mixer, this);
+                ISampleProvider pipeline = new VolumeScalingSampleProvider(mixer, this);
 
                 // 3. Resample if the target Bluetooth headset requires a different sample rate (e.g. 44.1 kHz)
                 int targetSampleRate = 48000;
