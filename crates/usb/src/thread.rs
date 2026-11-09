@@ -62,8 +62,8 @@ where
                     if consecutive_errors == 1 {
                         tracing::warn!("hardware read warning: {e:#}");
                     }
-                    if consecutive_errors >= 10 {
-                        tracing::error!("hardware read failed permanently: {e:#}");
+                    if consecutive_errors >= 50 {
+                        tracing::error!("hardware read failed permanently (after 50 retries): {e:#}");
                         on_event(HardwareEvent::Disconnected);
                         return;
                     }

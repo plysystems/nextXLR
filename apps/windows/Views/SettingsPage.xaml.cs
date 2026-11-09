@@ -425,10 +425,9 @@ public sealed partial class SettingsPage : Page
 
             // Attempt download with fallback tag URLs if needed
             var urlsToTry = new List<string> { downloadUrl };
-            var directTagUrl = $"https://github.com/plysystems/nextXLR/releases/download/{targetTag}/NextXLR-Setup-0.1.1-alpha.exe";
+            var cleanTag = targetTag.TrimStart('v', 'V');
+            var directTagUrl = $"https://github.com/plysystems/nextXLR/releases/download/{targetTag}/NextXLR-Setup-{cleanTag}.exe";
             if (!urlsToTry.Contains(directTagUrl)) urlsToTry.Add(directTagUrl);
-            var v010Url = $"https://github.com/plysystems/nextXLR/releases/download/{targetTag}/NextXLR-Setup-0.1.0-alpha.exe";
-            if (!urlsToTry.Contains(v010Url)) urlsToTry.Add(v010Url);
 
             System.Net.Http.HttpResponseMessage? response = null;
 

@@ -107,7 +107,14 @@ fn scan(bindings: &[EndpointBinding]) -> windows::core::Result<Vec<(usize, IAudi
                     .map(|v| v.to_string())
                     .unwrap_or_default();
                 let name_lower = name.to_lowercase();
-                let is_goxlr = name_lower.contains("goxlr") || name_lower.contains("tc-helicon");
+                let is_goxlr = name_lower.contains("goxlr")
+                    || name_lower.contains("tc-helicon")
+                    || name_lower.contains("tc helicon")
+                    || bindings.iter().any(|b| {
+                        b.capture == capture
+                            && (name_lower == b.prefix.to_lowercase()
+                                || name_lower.starts_with(&format!("{} (", b.prefix.to_lowercase())))
+                    });
                 if !is_goxlr {
                     continue;
                 }

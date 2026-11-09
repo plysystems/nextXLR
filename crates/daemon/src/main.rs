@@ -122,7 +122,7 @@ async fn main() -> Result<()> {
         }
     }
 
-    tokio::spawn(run_hub(hub, hub_rx, events.clone(), hw_thread));
+    tokio::spawn(run_hub(hub, hub_rx, events.clone(), hw_thread, hub_tx.clone(), sim_model.is_some()));
 
     // ---- API -------------------------------------------------------------------------------
     let app = AppState {
@@ -249,10 +249,15 @@ async fn run_hub(
     mut hub: Hub,
     mut rx: mpsc::UnboundedReceiver<HubMsg>,
     events: broadcast::Sender<ServerMessage>,
-    hw: Option<HardwareThread>,
+    mut hw: Option<HardwareThread>,
+    hub_tx: mpsc::UnboundedSender<HubMsg>,
+    is_sim: bool,
 ) {
     let mut meter_tick = tokio::time::interval(Duration::from_millis(33));
     meter_tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+
+    let mut hw_reconnect_tick = tokio::time::interval(Duration::from_secs(2));
+    hw_reconnect_tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
     loop {
         tokio::select! {
@@ -261,7 +266,10 @@ async fn run_hub(
                 let (input, reply) = match msg {
                     HubMsg::Client { msg, reply } => (Input::Client(msg), Some(reply)),
                     HubMsg::Hardware(ev) => {
-                        if !matches!(ev, HardwareEvent::FaderMoved { .. } | HardwareEvent::MicLevel(_)) {
+                        if matches!(ev, HardwareEvent::Disconnected) {
+                            tracing::warn!("GoXLR disconnected — hardware thread dropped");
+                            hw = None;
+                        } else if !matches!(ev, HardwareEvent::FaderMoved { .. } | HardwareEvent::MicLevel(_)) {
                             tracing::debug!(?ev, "← hardware");
                         }
                         (Input::Hardware(ev), None)
@@ -274,7 +282,7 @@ async fn run_hub(
                         Effect::Reply(m) => replies.push(m),
                         Effect::Hardware(cmd) => {
                             tracing::debug!(?cmd, "→ hardware");
-                            if let Some(hw) = &hw { hw.send(cmd); }
+                            if let Some(h) = &hw { h.send(cmd); }
                         }
                     }
                 }
@@ -283,6 +291,32 @@ async fn run_hub(
             _ = meter_tick.tick() => {
                 if events.receiver_count() > 0 {
                     let _ = events.send(hub.meters_message());
+                }
+            }
+            _ = hw_reconnect_tick.tick() => {
+                #[cfg(windows)]
+                if hw.is_none() && !is_sim {
+                    let mut info = mixforge_usb::discover();
+                    if !info.is_empty() {
+                        let tx = hub_tx.clone();
+                        let forward = move |ev| {
+                            let _ = tx.send(HubMsg::Hardware(ev));
+                        };
+                        if let Some(new_hw) = open_goxlr(&mut info, forward) {
+                            tracing::info!("GoXLR reconnected successfully!");
+                            hub.set_motorized_faders(
+                                info.iter().any(|h| h.capabilities.motorized_faders),
+                            );
+                            hub.set_hardware(info);
+                            for e in hub.full_hardware_sync() {
+                                if let Effect::Hardware(cmd) = e {
+                                    new_hw.send(cmd);
+                                }
+                            }
+                            hw = Some(new_hw);
+                            let _ = events.send(hub.state_message());
+                        }
+                    }
                 }
             }
         }

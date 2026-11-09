@@ -8,22 +8,75 @@ using NAudio.CoreAudioApi;
 
 namespace NextXLR.Services;
 
-public enum AudioFlow { Render = 0, Capture = 1 }
-public enum AudioRole { Console = 0, Multimedia = 1, Communications = 2 }
+public enum EDataFlow { eRender = 0, eCapture = 1, eAll = 2 }
+public enum ERole { eConsole = 0, eMultimedia = 1, eCommunications = 2 }
 
-[ComImport]
 [Guid("ab3d4648-e242-459f-b02f-541c70306324")]
-[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-internal interface IAudioPolicyConfigFactory
+[InterfaceType(ComInterfaceType.InterfaceIsIInspectable)]
+internal interface IAudioPolicyConfigFactoryVariantFor21H2
 {
-    // IInspectable slots
-    int GetIids(out uint iidCount, out IntPtr iids);
-    int GetRuntimeClassName(out IntPtr className);
-    int GetTrustLevel(out uint trustLevel);
+    int __incomplete__add_CtxVolumeChange();
+    int __incomplete__remove_CtxVolumeChanged();
+    int __incomplete__add_RingerVibrateStateChanged();
+    int __incomplete__remove_RingerVibrateStateChange();
+    int __incomplete__SetVolumeGroupGainForId();
+    int __incomplete__GetVolumeGroupGainForId();
+    int __incomplete__GetActiveVolumeGroupForEndpointId();
+    int __incomplete__GetVolumeGroupsForEndpoint();
+    int __incomplete__GetCurrentVolumeContext();
+    int __incomplete__SetVolumeGroupMuteForId();
+    int __incomplete__GetVolumeGroupMuteForId();
+    int __incomplete__SetRingerVibrateState();
+    int __incomplete__GetRingerVibrateState();
+    int __incomplete__SetPreferredChatApplication();
+    int __incomplete__ResetPreferredChatApplication();
+    int __incomplete__GetPreferredChatApplication();
+    int __incomplete__GetCurrentChatApplications();
+    int __incomplete__add_ChatContextChanged();
+    int __incomplete__remove_ChatContextChanged();
+    [PreserveSig]
+    int SetPersistedDefaultAudioEndpoint(uint processId, EDataFlow flow, ERole role, IntPtr deviceId);
+    [PreserveSig]
+    int GetPersistedDefaultAudioEndpoint(uint processId, EDataFlow flow, ERole role, [Out, MarshalAs(UnmanagedType.HString)] out string deviceId);
+    [PreserveSig]
+    int ClearAllPersistedApplicationDefaultEndpoints();
+}
 
-    // IAudioPolicyConfigFactory slots
-    int SetPersistedDefaultAudioEndpoint(uint processId, uint flow, uint role, IntPtr deviceId);
-    int GetPersistedDefaultAudioEndpoint(uint processId, uint flow, uint role, [MarshalAs(UnmanagedType.HString)] out string deviceId);
+[Guid("2a59116d-6c4f-45e0-a74f-707e3fef9258")]
+[InterfaceType(ComInterfaceType.InterfaceIsIInspectable)]
+internal interface IAudioPolicyConfigFactoryVariantForDownlevel
+{
+    int __incomplete__add_CtxVolumeChange();
+    int __incomplete__remove_CtxVolumeChanged();
+    int __incomplete__add_RingerVibrateStateChanged();
+    int __incomplete__remove_RingerVibrateStateChange();
+    int __incomplete__SetVolumeGroupGainForId();
+    int __incomplete__GetVolumeGroupGainForId();
+    int __incomplete__GetActiveVolumeGroupForEndpointId();
+    int __incomplete__GetVolumeGroupsForEndpoint();
+    int __incomplete__GetCurrentVolumeContext();
+    int __incomplete__SetVolumeGroupMuteForId();
+    int __incomplete__GetVolumeGroupMuteForId();
+    int __incomplete__SetRingerVibrateState();
+    int __incomplete__GetRingerVibrateState();
+    int __incomplete__SetPreferredChatApplication();
+    int __incomplete__ResetPreferredChatApplication();
+    int __incomplete__GetPreferredChatApplication();
+    int __incomplete__GetCurrentChatApplications();
+    int __incomplete__add_ChatContextChanged();
+    int __incomplete__remove_ChatContextChanged();
+    [PreserveSig]
+    int SetPersistedDefaultAudioEndpoint(uint processId, EDataFlow flow, ERole role, IntPtr deviceId);
+    [PreserveSig]
+    int GetPersistedDefaultAudioEndpoint(uint processId, EDataFlow flow, ERole role, [Out, MarshalAs(UnmanagedType.HString)] out string deviceId);
+    [PreserveSig]
+    int ClearAllPersistedApplicationDefaultEndpoints();
+}
+
+internal interface IAudioPolicyConfigWrapper
+{
+    int SetPersistedDefaultAudioEndpoint(uint processId, EDataFlow flow, ERole role, IntPtr deviceId);
+    int GetPersistedDefaultAudioEndpoint(uint processId, EDataFlow flow, ERole role, out string deviceId);
     int ClearAllPersistedApplicationDefaultEndpoints();
 }
 
@@ -50,25 +103,99 @@ public sealed class AppAudioSessionInfo
 /// </summary>
 public static class WindowsAppAudioRouter
 {
+    private const string DEVINTERFACE_AUDIO_RENDER = "#{e6327cad-dcec-4949-ae8a-991e976a79d2}";
+    private const string DEVINTERFACE_AUDIO_CAPTURE = "#{2eef81be-33fa-4800-9670-1cd474972c3f}";
+    private const string MMDEVAPI_TOKEN = @"\\?\SWD#MMDEVAPI#";
+
     [DllImport("combase.dll", PreserveSig = true)]
     private static extern int RoGetActivationFactory(
         [MarshalAs(UnmanagedType.HString)] string activatableClassId,
         ref Guid iid,
         [MarshalAs(UnmanagedType.IUnknown)] out object factory);
 
-    private static IAudioPolicyConfigFactory? GetPolicyFactory()
+    [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
+    private static extern int WindowsCreateString(
+        [MarshalAs(UnmanagedType.LPWStr)] string sourceString,
+        uint length,
+        out IntPtr hstring);
+
+    [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
+    private static extern int WindowsDeleteString(IntPtr hstring);
+
+    private class PolicyConfig21H2Adapter : IAudioPolicyConfigWrapper
     {
-        try
+        private readonly IAudioPolicyConfigFactoryVariantFor21H2 _factory;
+        public PolicyConfig21H2Adapter(IAudioPolicyConfigFactoryVariantFor21H2 factory) => _factory = factory;
+        public int SetPersistedDefaultAudioEndpoint(uint pid, EDataFlow flow, ERole role, IntPtr devId) => _factory.SetPersistedDefaultAudioEndpoint(pid, flow, role, devId);
+        public int GetPersistedDefaultAudioEndpoint(uint pid, EDataFlow flow, ERole role, out string devId) => _factory.GetPersistedDefaultAudioEndpoint(pid, flow, role, out devId);
+        public int ClearAllPersistedApplicationDefaultEndpoints() => _factory.ClearAllPersistedApplicationDefaultEndpoints();
+    }
+
+    private class PolicyConfigDownlevelAdapter : IAudioPolicyConfigWrapper
+    {
+        private readonly IAudioPolicyConfigFactoryVariantForDownlevel _factory;
+        public PolicyConfigDownlevelAdapter(IAudioPolicyConfigFactoryVariantForDownlevel factory) => _factory = factory;
+        public int SetPersistedDefaultAudioEndpoint(uint pid, EDataFlow flow, ERole role, IntPtr devId) => _factory.SetPersistedDefaultAudioEndpoint(pid, flow, role, devId);
+        public int GetPersistedDefaultAudioEndpoint(uint pid, EDataFlow flow, ERole role, out string devId) => _factory.GetPersistedDefaultAudioEndpoint(pid, flow, role, out devId);
+        public int ClearAllPersistedApplicationDefaultEndpoints() => _factory.ClearAllPersistedApplicationDefaultEndpoints();
+    }
+
+    private static IAudioPolicyConfigWrapper? _cachedFactory;
+    private static readonly object _lock = new();
+
+    private static IAudioPolicyConfigWrapper? GetPolicyFactory()
+    {
+        lock (_lock)
         {
-            // Windows 11 / Windows 10 20H1+
-            Guid iid = new("ab3d4648-e242-459f-b02f-541c70306324");
-            if (RoGetActivationFactory("Windows.Media.Internal.AudioPolicyConfig", ref iid, out var factory) == 0 && factory != null)
+            if (_cachedFactory != null) return _cachedFactory;
+
+            try
             {
-                return factory as IAudioPolicyConfigFactory;
+                // Primary: Windows 11 / Windows 10 21H2+
+                Guid iid21H2 = typeof(IAudioPolicyConfigFactoryVariantFor21H2).GUID;
+                if (RoGetActivationFactory("Windows.Media.Internal.AudioPolicyConfig", ref iid21H2, out var f21H2) == 0 &&
+                    f21H2 is IAudioPolicyConfigFactoryVariantFor21H2 v21H2)
+                {
+                    _cachedFactory = new PolicyConfig21H2Adapter(v21H2);
+                    return _cachedFactory;
+                }
             }
+            catch { }
+
+            try
+            {
+                // Fallback: Windows 10 Downlevel
+                Guid iidDl = typeof(IAudioPolicyConfigFactoryVariantForDownlevel).GUID;
+                if (RoGetActivationFactory("Windows.Media.Internal.AudioPolicyConfig", ref iidDl, out var fDl) == 0 &&
+                    fDl is IAudioPolicyConfigFactoryVariantForDownlevel vDl)
+                {
+                    _cachedFactory = new PolicyConfigDownlevelAdapter(vDl);
+                    return _cachedFactory;
+                }
+            }
+            catch { }
+
+            return null;
         }
-        catch { }
-        return null;
+    }
+
+    public static string FormatFullDeviceId(string deviceId, bool isCapture)
+    {
+        if (string.IsNullOrWhiteSpace(deviceId)) return "";
+        if (deviceId.StartsWith(MMDEVAPI_TOKEN, StringComparison.OrdinalIgnoreCase)) return deviceId;
+        return $"{MMDEVAPI_TOKEN}{deviceId}{(isCapture ? DEVINTERFACE_AUDIO_CAPTURE : DEVINTERFACE_AUDIO_RENDER)}";
+    }
+
+    public static string UnpackDeviceId(string deviceId)
+    {
+        if (string.IsNullOrWhiteSpace(deviceId)) return "";
+        if (deviceId.StartsWith(MMDEVAPI_TOKEN, StringComparison.OrdinalIgnoreCase))
+            deviceId = deviceId.Substring(MMDEVAPI_TOKEN.Length);
+        if (deviceId.EndsWith(DEVINTERFACE_AUDIO_RENDER, StringComparison.OrdinalIgnoreCase))
+            deviceId = deviceId.Substring(0, deviceId.Length - DEVINTERFACE_AUDIO_RENDER.Length);
+        if (deviceId.EndsWith(DEVINTERFACE_AUDIO_CAPTURE, StringComparison.OrdinalIgnoreCase))
+            deviceId = deviceId.Substring(0, deviceId.Length - DEVINTERFACE_AUDIO_CAPTURE.Length);
+        return deviceId;
     }
 
     /// <summary>Returns list of GoXLR output endpoints available for assignment.</summary>
@@ -91,7 +218,9 @@ public static class WindowsAppAudioRouter
                 var dev = renderDevices.FirstOrDefault(d =>
                     (d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
                      d.FriendlyName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase) ||
-                     d.FriendlyName.Contains("TC Helicon", StringComparison.OrdinalIgnoreCase)) &&
+                     d.FriendlyName.Contains("TC Helicon", StringComparison.OrdinalIgnoreCase) ||
+                     d.FriendlyName.Equals(pref, StringComparison.OrdinalIgnoreCase) ||
+                     d.FriendlyName.StartsWith(pref + " (", StringComparison.OrdinalIgnoreCase)) &&
                     d.FriendlyName.Contains(pref, StringComparison.OrdinalIgnoreCase));
 
                 if (dev != null)
@@ -139,7 +268,8 @@ public static class WindowsAppAudioRouter
             var chatMic = captureDevices.FirstOrDefault(d =>
                 (d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
                  d.FriendlyName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase) ||
-                 d.FriendlyName.Contains("TC Helicon", StringComparison.OrdinalIgnoreCase)) &&
+                 d.FriendlyName.Contains("TC Helicon", StringComparison.OrdinalIgnoreCase) ||
+                 d.FriendlyName.StartsWith("Chat Mic", StringComparison.OrdinalIgnoreCase)) &&
                 d.FriendlyName.Contains("Chat", StringComparison.OrdinalIgnoreCase));
             if (chatMic != null)
             {
@@ -149,7 +279,8 @@ public static class WindowsAppAudioRouter
             var broadcast = captureDevices.FirstOrDefault(d =>
                 (d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
                  d.FriendlyName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase) ||
-                 d.FriendlyName.Contains("TC Helicon", StringComparison.OrdinalIgnoreCase)) &&
+                 d.FriendlyName.Contains("TC Helicon", StringComparison.OrdinalIgnoreCase) ||
+                 d.FriendlyName.StartsWith("Broadcast", StringComparison.OrdinalIgnoreCase)) &&
                 (d.FriendlyName.Contains("Broadcast", StringComparison.OrdinalIgnoreCase) || d.FriendlyName.Contains("Stream", StringComparison.OrdinalIgnoreCase)));
             if (broadcast != null)
             {
@@ -159,7 +290,8 @@ public static class WindowsAppAudioRouter
             var sample = captureDevices.FirstOrDefault(d =>
                 (d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
                  d.FriendlyName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase) ||
-                 d.FriendlyName.Contains("TC Helicon", StringComparison.OrdinalIgnoreCase)) &&
+                 d.FriendlyName.Contains("TC Helicon", StringComparison.OrdinalIgnoreCase) ||
+                 d.FriendlyName.StartsWith("Sample", StringComparison.OrdinalIgnoreCase)) &&
                 d.FriendlyName.Contains("Sample", StringComparison.OrdinalIgnoreCase));
             if (sample != null)
             {
@@ -273,13 +405,13 @@ public static class WindowsAppAudioRouter
                     {
                         try
                         {
-                            if (factory.GetPersistedDefaultAudioEndpoint(pid, 0, 0, out var outDevId) == 0 && !string.IsNullOrEmpty(outDevId))
+                            if (factory.GetPersistedDefaultAudioEndpoint(pid, EDataFlow.eRender, ERole.eMultimedia, out var outDevId) == 0 && !string.IsNullOrEmpty(outDevId))
                             {
-                                info.CurrentOutputDeviceId = outDevId;
+                                info.CurrentOutputDeviceId = UnpackDeviceId(outDevId);
                             }
-                            if (factory.GetPersistedDefaultAudioEndpoint(pid, 1, 0, out var inDevId) == 0 && !string.IsNullOrEmpty(inDevId))
+                            if (factory.GetPersistedDefaultAudioEndpoint(pid, EDataFlow.eCapture, ERole.eMultimedia, out var inDevId) == 0 && !string.IsNullOrEmpty(inDevId))
                             {
-                                info.CurrentInputDeviceId = inDevId;
+                                info.CurrentInputDeviceId = UnpackDeviceId(inDevId);
                             }
                         }
                         catch { }
@@ -302,14 +434,15 @@ public static class WindowsAppAudioRouter
         var factory = GetPolicyFactory();
         if (factory == null) return false;
 
-        uint flow = isCapture ? 1u : 0u; // 0 = Render, 1 = Capture
-        IntPtr pStr = IntPtr.Zero;
+        EDataFlow flow = isCapture ? EDataFlow.eCapture : EDataFlow.eRender;
+        IntPtr hStr = IntPtr.Zero;
 
         try
         {
             if (!string.IsNullOrWhiteSpace(endpointDeviceId))
             {
-                pStr = Marshal.StringToCoTaskMemUni(endpointDeviceId);
+                var fullId = FormatFullDeviceId(endpointDeviceId, isCapture);
+                WindowsCreateString(fullId, (uint)fullId.Length, out hStr);
             }
 
             // Gather all process IDs related to this application (audio helper processes like Spotify, Chrome, Discord)
@@ -332,15 +465,11 @@ public static class WindowsAppAudioRouter
             {
                 try
                 {
-                    // Assign Console (0), Multimedia (1), and Communications (2) roles
-                    factory.SetPersistedDefaultAudioEndpoint(pid, flow, 0, pStr);
-                    if (!isCapture)
+                    factory.SetPersistedDefaultAudioEndpoint(pid, flow, ERole.eMultimedia, hStr);
+                    factory.SetPersistedDefaultAudioEndpoint(pid, flow, ERole.eConsole, hStr);
+                    if (isCapture)
                     {
-                        factory.SetPersistedDefaultAudioEndpoint(pid, flow, 1, pStr);
-                    }
-                    else
-                    {
-                        factory.SetPersistedDefaultAudioEndpoint(pid, flow, 2, pStr);
+                        factory.SetPersistedDefaultAudioEndpoint(pid, flow, ERole.eCommunications, hStr);
                     }
                 }
                 catch { }
@@ -355,9 +484,9 @@ public static class WindowsAppAudioRouter
         }
         finally
         {
-            if (pStr != IntPtr.Zero)
+            if (hStr != IntPtr.Zero)
             {
-                Marshal.FreeCoTaskMem(pStr);
+                WindowsDeleteString(hStr);
             }
         }
     }

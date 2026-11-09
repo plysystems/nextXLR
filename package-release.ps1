@@ -2,9 +2,10 @@ $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 $root = $PSScriptRoot
 $distDir = Join-Path $root "dist"
-$version = "0.1.2-alpha"
+$version = "0.1.3-alpha"
 $releaseDir = Join-Path $distDir "NextXLR-v$version"
 $appDir = Join-Path $releaseDir "app"
+$gitSha = try { (git rev-parse HEAD).Trim() } catch { "release" }
 
 # Code signing helper setup
 $pfxFile = Join-Path $root "certificates\plysystems-codesign.pfx"
@@ -28,16 +29,20 @@ function Sign-Binary([string]$targetFile) {
     }
 }
 
+# 0a. Compile daemon in release mode
+Write-Host "Building Daemon in Release Mode..."
+cargo build --release --bin mixforged
+
 # 0b. Compile projects to ensure latest binaries
-Write-Host "Building Windows Application..."
-dotnet build (Join-Path $root "apps\windows\NextXLR.csproj") -c Debug --no-restore
+Write-Host "Building Windows Application in Release Mode..."
+dotnet build (Join-Path $root "apps\windows\NextXLR.csproj") -c Release -p:SourceRevisionId=$gitSha -p:InformationalVersion="$version+$gitSha" --no-restore
 
 Write-Host "Creating release package directory structure..."
 if (Test-Path $releaseDir) { Remove-Item $releaseDir -Recurse -Force }
 New-Item -ItemType Directory -Path $appDir -Force | Out-Null
 
 # 1. Copy App binaries from Windows build
-$binDir = Join-Path $root "apps\windows\bin\Debug\net8.0-windows10.0.19041.0\win-x64"
+$binDir = Join-Path $root "apps\windows\bin\Release\net8.0-windows10.0.19041.0\win-x64"
 Write-Host "Copying Windows App binaries from $binDir..."
 Copy-Item "$binDir\*" -Destination $appDir -Recurse -Exclude "*.pdb","*.old" -Force
 
@@ -81,7 +86,7 @@ Write-Host "Payload archive created ($([math]::Round((Get-Item $payloadZip).Leng
 Write-Host "Building & Publishing Standalone Self-Contained Installer..."
 $installerPublishDir = Join-Path $root "installer\bin\Publish"
 if (Test-Path $installerPublishDir) { Remove-Item $installerPublishDir -Recurse -Force }
-dotnet publish (Join-Path $root "installer\NextXLR.Installer.csproj") -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true --no-restore -o $installerPublishDir
+dotnet publish (Join-Path $root "installer\NextXLR.Installer.csproj") -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:SourceRevisionId=$gitSha -p:InformationalVersion="$version+$gitSha" --no-restore -o $installerPublishDir
 
 $standaloneInstaller = Join-Path $installerPublishDir "NextXLR-Setup-$version.exe"
 if (-not (Test-Path $standaloneInstaller)) {

@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 echo ==============================================================================
-echo   NEXT : XLR v0.1.2-alpha - Setup ^& Installer
+echo   NEXT : XLR v0.1.3-alpha - Setup ^& Installer
 echo   (c) 2026 plysystems. Alle Rechte vorbehalten.
 echo ==============================================================================
 echo.

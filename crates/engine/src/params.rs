@@ -20,6 +20,25 @@ impl AtomicF32 {
     fn store(&self, v: f32) {
         self.0.store(v.to_bits(), Ordering::Relaxed)
     }
+    #[inline]
+    fn fetch_max(&self, v: f32) {
+        let mut current = self.0.load(Ordering::Relaxed);
+        loop {
+            let current_f32 = f32::from_bits(current);
+            if current_f32 >= v {
+                break;
+            }
+            match self.0.compare_exchange_weak(
+                current,
+                v.to_bits(),
+                Ordering::Relaxed,
+                Ordering::Relaxed,
+            ) {
+                Ok(_) => break,
+                Err(actual) => current = actual,
+            }
+        }
+    }
 }
 
 /// Effective channel gain (fader taper × mute) and the routing matrix.
@@ -107,9 +126,7 @@ impl MeterBank {
     #[inline]
     pub fn push_peak(&self, ch: usize, peak: f32) {
         if let Some(slot) = self.peaks.get(ch) {
-            if peak > slot.load() {
-                slot.store(peak);
-            }
+            slot.fetch_max(peak);
         }
     }
 

@@ -132,11 +132,22 @@ pub async fn serve_pipe(app: AppState) -> std::io::Result<()> {
         .create(PIPE_NAME)?;
     tracing::info!("named pipe on {PIPE_NAME}");
     loop {
-        server.connect().await?;
-        let client = server;
+        if let Err(e) = server.connect().await {
+            tracing::warn!("named pipe connect error: {e}, retrying");
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+            continue;
+        }
         // Create the next instance before serving, so a new client can always connect.
-        server = ServerOptions::new().create(PIPE_NAME)?;
-        tokio::spawn(pipe_session(client, app.clone()));
+        match ServerOptions::new().create(PIPE_NAME) {
+            Ok(next) => {
+                let client = std::mem::replace(&mut server, next);
+                tokio::spawn(pipe_session(client, app.clone()));
+            }
+            Err(e) => {
+                tracing::error!("failed to create next named pipe instance: {e}");
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+            }
+        }
     }
 }
 
