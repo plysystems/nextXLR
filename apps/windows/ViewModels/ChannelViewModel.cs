@@ -80,6 +80,7 @@ public partial class ChannelViewModel : ObservableObject
 
     partial void OnIsSubmixActiveChanged(bool value)
     {
+        UpdateRouterLevels();
         OnPropertyChanged(nameof(VolumePercent));
         OnPropertyChanged(nameof(VolumeLabel));
         OnPropertyChanged(nameof(ActiveMuted));
@@ -168,29 +169,29 @@ public partial class ChannelViewModel : ObservableObject
             Metered = c.Metered;
             IsFixed = c.Fixed;
 
-            if (Id == 8)
-            {
-                BluetoothAudioRouter.Instance.Volume = (float)c.Volume;
-                BluetoothAudioRouter.Instance.IsMuted = c.Muted;
-            }
-            else
-            {
-                BluetoothAudioRouter.Instance.SetChannelLevelById(Id, (float)c.Volume, c.Muted);
-            }
+            UpdateRouterLevels();
         }
         finally { _applyingServer = false; }
     }
 
-    partial void OnVolumeChanged(double value)
+    public void UpdateRouterLevels()
     {
+        double v = IsSubmixActive ? SubmixVolume : Volume;
+        bool m = IsSubmixActive ? SubmixMuted : Muted;
         if (Id == 8)
         {
-            BluetoothAudioRouter.Instance.Volume = (float)value;
+            BluetoothAudioRouter.Instance.Volume = (float)v;
+            BluetoothAudioRouter.Instance.IsMuted = m;
         }
         else
         {
-            BluetoothAudioRouter.Instance.SetChannelLevelById(Id, (float)value, Muted);
+            BluetoothAudioRouter.Instance.SetChannelLevelById(Id, (float)v, m);
         }
+    }
+
+    partial void OnVolumeChanged(double value)
+    {
+        UpdateRouterLevels();
         if (!IsSubmixActive)
         {
             OnPropertyChanged(nameof(VolumePercent));
@@ -214,6 +215,7 @@ public partial class ChannelViewModel : ObservableObject
 
     partial void OnSubmixVolumeChanged(double value)
     {
+        UpdateRouterLevels();
         if (IsSubmixActive)
         {
             OnPropertyChanged(nameof(VolumePercent));
@@ -228,14 +230,7 @@ public partial class ChannelViewModel : ObservableObject
 
     partial void OnMutedChanged(bool value)
     {
-        if (Id == 8)
-        {
-            BluetoothAudioRouter.Instance.IsMuted = value;
-        }
-        else
-        {
-            BluetoothAudioRouter.Instance.SetChannelLevelById(Id, (float)Volume, value);
-        }
+        UpdateRouterLevels();
         if (!IsSubmixActive)
         {
             OnPropertyChanged(nameof(ActiveMuted));
@@ -259,6 +254,7 @@ public partial class ChannelViewModel : ObservableObject
 
     partial void OnSubmixMutedChanged(bool value)
     {
+        UpdateRouterLevels();
         if (IsSubmixActive)
         {
             OnPropertyChanged(nameof(ActiveMuted));
