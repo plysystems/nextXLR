@@ -869,7 +869,7 @@ public sealed partial class SettingsPage : Page
         if (!BluetoothToggle.IsOn)
         {
             BluetoothStatusInfo.Severity = InfoBarSeverity.Informational;
-            BluetoothStatusInfo.Message = "Bluetooth-Routing inaktiv. Kopfhörer-Signal wird direkt über die GoXLR 3,5 mm Klinkenbuchse ausgegeben.";
+            BluetoothStatusInfo.Message = "Externe Ausgabe inaktiv. Kopfhörer-Signal wird direkt über die GoXLR 3,5 mm Klinkenbuchse ausgegeben.";
             return;
         }
 
@@ -888,7 +888,7 @@ public sealed partial class SettingsPage : Page
         else
         {
             BluetoothStatusInfo.Severity = InfoBarSeverity.Warning;
-            BluetoothStatusInfo.Message = "Bitte wähle oben dein Bluetooth- oder Wireless-Headset aus der Liste.";
+            BluetoothStatusInfo.Message = "Bitte wähle oben deine externe Output-Quelle aus der Liste.";
         }
     }
 

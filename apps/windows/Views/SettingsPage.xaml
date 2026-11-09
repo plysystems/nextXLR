@@ -137,10 +137,10 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Spacing="2">
                                         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                            <FontIcon Glyph="&#xE702;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
-                                            <TextBlock Text="Bluetooth &amp; Wireless Headset (Kopfhörer-Ausgang)" FontWeight="SemiBold" FontSize="16" />
+                                            <FontIcon Glyph="&#xE7F6;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
+                                            <TextBlock Text="Externe Output Quelle" FontWeight="SemiBold" FontSize="16" />
                                         </StackPanel>
-                                        <TextBlock Text="Streamt das Kopfhörer-Signal in Echtzeit kabellos an dein Headset – ganz ohne Kabel an die GoXLR-Klinkenbuchse." Style="{StaticResource Caption}" />
+                                        <TextBlock Text="Streamt das Kopfhörer-Signal in Echtzeit an ein externes Ausgabegerät (z. B. Bluetooth-, Wireless- oder USB-Headset)." Style="{StaticResource Caption}" />
                                     </StackPanel>
                                     <ToggleSwitch x:Name="BluetoothToggle" Grid.Column="1" OnContent="Aktiv" OffContent="Aus"
                                                   MinWidth="0" VerticalAlignment="Center" Toggled="BluetoothToggle_Toggled" />
@@ -152,7 +152,7 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <ComboBox x:Name="BluetoothDeviceBox" HorizontalAlignment="Stretch"
-                                              PlaceholderText="Bluetooth- oder Wireless-Kopfhörer auswählen..."
+                                              PlaceholderText="Externes Ausgabegerät auswählen..."
                                               SelectionChanged="BluetoothDeviceBox_SelectionChanged">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate x:DataType="views:AudioEndpointItem">
@@ -169,7 +169,7 @@
                                 </Grid>
 
                                 <CheckBox x:Name="BluetoothSidetoneCheck" IsChecked="True"
-                                          Content="Mikrofon-Monitoring bei Bluetooth stummschalten (verhindert Echo durch Bluetooth-Latenz &amp; in Bildschirmübertragungen)"
+                                          Content="Mikrofon-Monitoring bei externer Ausgabe stummschalten (verhindert Echo durch Übertragungslatenz)"
                                           Checked="BluetoothSidetone_Changed" Unchecked="BluetoothSidetone_Changed" />
 
                                 <InfoBar x:Name="BluetoothStatusInfo" IsOpen="True" IsClosable="False" Severity="Informational"

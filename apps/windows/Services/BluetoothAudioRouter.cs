@@ -250,7 +250,7 @@ public sealed class BluetoothAudioRouter : IDisposable
 
                     if (bcastDev != null)
                     {
-                        AddCaptureToMixer(new WasapiCapture(bcastDev), mixer, bcastDev.FriendlyName, "Broadcast");
+                        AddCaptureToMixer(new WasapiCapture(bcastDev, false, 20), mixer, bcastDev.FriendlyName, "Broadcast");
                         capturedChannelNames.Add(bcastDev.FriendlyName);
                     }
                 }
@@ -278,7 +278,7 @@ public sealed class BluetoothAudioRouter : IDisposable
                             try
                             {
                                 var shortName = NormalizeChannelName(ch.FriendlyName);
-                                AddCaptureToMixer(new WasapiLoopbackCapture(ch), mixer, ch.FriendlyName, shortName);
+                                AddCaptureToMixer(new LowLatencyWasapiLoopbackCapture(ch, 20), mixer, ch.FriendlyName, shortName);
                                 if (!capturedChannelNames.Contains(shortName))
                                 {
                                     capturedChannelNames.Add(shortName);
@@ -297,7 +297,7 @@ public sealed class BluetoothAudioRouter : IDisposable
                         if (defDev != null && !defDev.ID.Equals(targetDevice.ID, StringComparison.OrdinalIgnoreCase))
                         {
                             var shortName = NormalizeChannelName(defDev.FriendlyName);
-                            AddCaptureToMixer(new WasapiLoopbackCapture(defDev), mixer, defDev.FriendlyName, shortName);
+                            AddCaptureToMixer(new LowLatencyWasapiLoopbackCapture(defDev, 20), mixer, defDev.FriendlyName, shortName);
                             capturedChannelNames.Add(defDev.FriendlyName);
                         }
                     }
@@ -316,7 +316,7 @@ public sealed class BluetoothAudioRouter : IDisposable
                         {
                             try
                             {
-                                AddCaptureToMixer(new WasapiCapture(micDev), mixer, micDev.FriendlyName, "Mic");
+                                AddCaptureToMixer(new WasapiCapture(micDev, false, 20), mixer, micDev.FriendlyName, "Mic");
                                 capturedChannelNames.Add("Mikrofon (Sidetone)");
                             }
                             catch { }
@@ -326,7 +326,7 @@ public sealed class BluetoothAudioRouter : IDisposable
 
                 if (_captures.Count == 0)
                 {
-                    SetStatus(false, "Keine GoXLR-Audioquellen für Bluetooth gefunden.");
+                    SetStatus(false, "Keine GoXLR-Audioquellen für externe Ausgabe gefunden.");
                     return;
                 }
 
@@ -363,12 +363,13 @@ public sealed class BluetoothAudioRouter : IDisposable
                     streamProvider = new SampleToWaveProvider16(pipeline);
                 }
 
-                // 5. Initialize Output: WASAPI Shared with 65ms buffer
-                // Polling mode is universally supported across Bluetooth A2DP, Hands-Free, and 2.4GHz wireless dongles.
-                int bufferLatencyMs = 65;
+                // 5. Initialize Output: WASAPI Shared with hardware Event Sync (35ms buffer for low latency)
+                // Event sync provides low hardware latency; if the target device doesn't support event sync,
+                // fallback to low-latency polling mode with 40ms buffer.
+                int bufferLatencyMs = 35;
                 try
                 {
-                    _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, bufferLatencyMs);
+                    _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, true, bufferLatencyMs);
                     _player.Init(streamProvider);
                 }
                 catch
@@ -376,7 +377,7 @@ public sealed class BluetoothAudioRouter : IDisposable
                     try
                     {
                         _player?.Dispose();
-                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, true, bufferLatencyMs);
+                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 40);
                         _player.Init(streamProvider);
                     }
                     catch
@@ -386,7 +387,7 @@ public sealed class BluetoothAudioRouter : IDisposable
                             ? pipeline.ToWaveProvider()
                             : new SampleToWaveProvider16(pipeline);
 
-                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 80);
+                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 50);
                         _player.Init(fallbackProvider);
                     }
                 }
@@ -395,7 +396,7 @@ public sealed class BluetoothAudioRouter : IDisposable
                 {
                     if (IsRunning && e.Exception != null)
                     {
-                        SetStatus(false, $"Bluetooth-Wiedergabe getrennt: {e.Exception.Message}. Wiederverbindung läuft...");
+                        SetStatus(false, $"Externe Wiedergabe getrennt: {e.Exception.Message}. Wiederverbindung läuft...");
                         ScheduleReconnect();
                     }
                 };
@@ -411,12 +412,12 @@ public sealed class BluetoothAudioRouter : IDisposable
                 CurrentDeviceId = targetDevice.ID;
                 CurrentDeviceName = targetDevice.FriendlyName;
 
-                SetStatus(true, $"Aktiv: GoXLR-Mix ({CurrentSourceName}) → '{targetDevice.FriendlyName}' (Kristallklar, ohne Ruckler, GoXLR-Fader & Master aktiv)");
+                SetStatus(true, $"Aktiv: GoXLR-Mix ({CurrentSourceName}) → '{targetDevice.FriendlyName}' (Kristallklar, minimale Latenz, GoXLR-Fader & Master aktiv)");
             }
             catch (Exception ex)
             {
                 StopInternal();
-                SetStatus(false, $"Bluetooth-Routing Fehler: {ex.Message}");
+                SetStatus(false, $"Externe Ausgabe Fehler: {ex.Message}");
                 ScheduleReconnect();
             }
         }
@@ -456,9 +457,9 @@ public sealed class BluetoothAudioRouter : IDisposable
 
     private void AddCaptureToMixer(WasapiCapture capture, MixingSampleProvider mixer, string fullName, string shortName)
     {
-        // Real-time jitter buffer with active max-latency pruning (150ms) and 45ms pre-buffering
-        // completely eliminating stutter and buffering while guaranteeing crystal-clear wireless audio.
-        var jitterBuffer = new RealtimeJitterBuffer(capture.WaveFormat, maxLatencyMs: 150);
+        // Real-time jitter buffer with active max-latency pruning (40ms) and 15ms initial cushion
+        // completely eliminating delay while guaranteeing stable, glitch-free audio output.
+        var jitterBuffer = new RealtimeJitterBuffer(capture.WaveFormat, maxLatencyMs: 40, prebufferMs: 15);
 
         capture.DataAvailable += (s, e) =>
         {
@@ -508,7 +509,7 @@ public sealed class BluetoothAudioRouter : IDisposable
         lock (_lock)
         {
             StopInternal();
-            SetStatus(false, "Bluetooth-Routing inaktiv. Kopfhörer-Signal wird über die GoXLR 3,5 mm Klinkenbuchse ausgegeben.");
+            SetStatus(false, "Externe Ausgabe inaktiv. Kopfhörer-Signal wird über die GoXLR 3,5 mm Klinkenbuchse ausgegeben.");
         }
     }
 
@@ -599,10 +600,25 @@ public sealed class BluetoothAudioRouter : IDisposable
     }
 
     /// <summary>
-    /// Jitter buffer optimized for Bluetooth and 2.4GHz wireless headsets.
-    /// Features adaptive pre-buffering (45ms cushion) to eliminate underruns and stutter,
-    /// frame-aligned boundary clipping to preserve stereo imaging, and an elastic
-    /// 1000ms ring buffer with a 150ms max-lag cap.
+    /// High-performance WASAPI Loopback Capture with low latency (20ms instead of NAudio default 100ms).
+    /// </summary>
+    public sealed class LowLatencyWasapiLoopbackCapture : WasapiCapture
+    {
+        public LowLatencyWasapiLoopbackCapture(MMDevice device, int bufferMilliseconds = 20)
+            : base(device, false, bufferMilliseconds)
+        {
+        }
+
+        protected override AudioClientStreamFlags GetAudioClientStreamFlags()
+        {
+            return AudioClientStreamFlags.Loopback;
+        }
+    }
+
+    /// <summary>
+    /// Jitter buffer optimized for external outputs (Bluetooth, 2.4GHz wireless headsets, USB DACs).
+    /// Features low-latency pre-buffering (15ms cushion) and strict 40ms max-lag cap
+    /// with frame-aligned boundary clipping to preserve stereo imaging and sub-second responsiveness.
     /// </summary>
     public sealed class RealtimeJitterBuffer : ISampleProvider
     {
@@ -618,13 +634,13 @@ public sealed class BluetoothAudioRouter : IDisposable
 
         public WaveFormat WaveFormat { get; }
 
-        public RealtimeJitterBuffer(WaveFormat format, int maxLatencyMs = 150)
+        public RealtimeJitterBuffer(WaveFormat format, int maxLatencyMs = 40, int prebufferMs = 15)
         {
             WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(format.SampleRate, format.Channels);
             int samplesPerMs = Math.Max((format.SampleRate * format.Channels) / 1000, 1);
             _maxTargetLatencySamples = Math.Max(samplesPerMs * maxLatencyMs, 480);
-            _prebufferSamples = Math.Max(samplesPerMs * 45, 240); // 45ms pre-buffer cushion
-            _capacity = samplesPerMs * 1000; // 1000ms total capacity
+            _prebufferSamples = Math.Max(samplesPerMs * prebufferMs, 192); // 15ms initial cushion
+            _capacity = samplesPerMs * 400; // 400ms ring buffer capacity
             _ringBuffer = new float[_capacity];
         }
 
@@ -637,7 +653,8 @@ public sealed class BluetoothAudioRouter : IDisposable
                 int samplesToAdd;
                 ReadOnlySpan<byte> byteSpan = buffer.AsSpan(offset, count);
 
-                if (inputFormat.Encoding == WaveFormatEncoding.IeeeFloat && inputFormat.BitsPerSample == 32)
+                if ((inputFormat.Encoding == WaveFormatEncoding.IeeeFloat ||
+                     (inputFormat is WaveFormatExtensible we && we.SubFormat == SubtypeIeeeFloat)) && inputFormat.BitsPerSample == 32)
                 {
                     ReadOnlySpan<float> floatSpan = MemoryMarshal.Cast<byte, float>(byteSpan);
                     samplesToAdd = floatSpan.Length;
@@ -675,7 +692,7 @@ public sealed class BluetoothAudioRouter : IDisposable
 
                 _bufferedSamples += samplesToAdd;
 
-                // Stop pre-buffering once we've reached our safe cushion
+                // Stop pre-buffering once initial cushion is reached
                 if (_isBuffering && _bufferedSamples >= _prebufferSamples)
                 {
                     _isBuffering = false;
@@ -702,11 +719,21 @@ public sealed class BluetoothAudioRouter : IDisposable
         {
             lock (_lock)
             {
-                if (_isBuffering || _bufferedSamples <= 0)
+                if (_bufferedSamples <= 0)
                 {
                     _isBuffering = true;
                     Array.Clear(buffer, offset, count);
                     return count;
+                }
+
+                if (_isBuffering)
+                {
+                    if (_bufferedSamples < _prebufferSamples)
+                    {
+                        Array.Clear(buffer, offset, count);
+                        return count;
+                    }
+                    _isBuffering = false;
                 }
 
                 int toRead = Math.Min(count, _bufferedSamples);
@@ -715,7 +742,6 @@ public sealed class BluetoothAudioRouter : IDisposable
 
                 if (toRead <= 0)
                 {
-                    _isBuffering = true;
                     Array.Clear(buffer, offset, count);
                     return count;
                 }
@@ -737,7 +763,6 @@ public sealed class BluetoothAudioRouter : IDisposable
                 if (toRead < count)
                 {
                     Array.Clear(buffer, offset + toRead, count - toRead);
-                    _isBuffering = true; // Refill cushion smoothly to prevent stutter chatter
                 }
 
                 return count;

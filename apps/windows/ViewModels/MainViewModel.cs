@@ -40,7 +40,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (b.Id == 888)
         {
-            var wirelessTip = $"{c.Name} → Wireless Kopfhörer";
+            var wirelessTip = $"{c.Name} → Externer Kopfhörer";
             var wirelessCell = new RouteCellViewModel(c.Id, 888, wirelessTip, _transport, c.Name);
             wirelessCell.ApplyFromServer(AppSettings.Load().IsWirelessChannelRouted(c.Name));
             return wirelessCell;
@@ -434,8 +434,8 @@ public partial class MainViewModel : ObservableObject
         var settings = AppSettings.Load();
         if (settings.EnableBluetoothHeadset)
         {
-            // Insert Wireless Kopfhörer column right after standard Kopfhörer
-            columns.Insert(1, new Bus(888, "Wireless Kopfhörer"));
+            // Insert Externer Kopfhörer column right after standard Kopfhörer
+            columns.Insert(1, new Bus(888, "Externer Kopfhörer"));
         }
 
         bool shapeChanged =
@@ -483,7 +483,7 @@ public partial class MainViewModel : ObservableObject
             {
                 if (b.Id == 888)
                 {
-                    var wirelessTip = "!@#$?* → Wireless Kopfhörer";
+                    var wirelessTip = "!@#$?* → Externer Kopfhörer";
                     var wirelessCell = new RouteCellViewModel(999, 888, wirelessTip, _transport, "!@#$?*")
                     {
                         IsBlocked = false,
@@ -650,7 +650,7 @@ public sealed class BusView(uint id, string fallbackName)
 
     public static string Localize(uint id, string fallback)
     {
-        if (id == 888) return "Wireless Kopfhörer";
+        if (id == 888) return "Externer Kopfhörer";
         var s = NextXLR.Services.Loc.Get($"Bus{id}");
         return s == $"Bus{id}" ? fallback : s;
     }
