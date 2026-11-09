@@ -28,7 +28,6 @@ public partial class App : Application
         catch (Exception ex)
         {
             Services.CrashHandler.HandleException(ex, "App.OnLaunched Exception");
-            throw;
         }
     }
 

@@ -149,7 +149,7 @@
                             <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Width="28" Height="28"
                                           Foreground="{StaticResource BrandBrush}" />
                             <TextBlock Text="{x:Bind ViewModel.BusyText, Mode=OneWay}" FontSize="14" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                       Foreground="{ThemeResource TextFillColorPrimaryBrush}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
                 </Grid>
