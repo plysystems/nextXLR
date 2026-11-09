@@ -420,8 +420,8 @@
                 </StackPanel>
             </Expander>
 
-            <!-- VST3-Plugins -->
-            <Expander>
+            <!-- Studio Audio-Rack & DSP-Plugins -->
+            <Expander IsExpanded="True">
                 <Expander.Header>
                     <Grid Padding="0,10" ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
@@ -430,32 +430,62 @@
                         </Grid.ColumnDefinitions>
                         <FontIcon Glyph="&#xE99A;" Foreground="{StaticResource BrandBrush}" />
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="VST3-Plugins" Style="{StaticResource CardTitle}" />
-                            <TextBlock Text="Binde externe VST3- und CLAP-Audio-Effekte direkt in das Mikrofon-Signal ein" Style="{StaticResource Caption}" />
+                            <TextBlock Text="Studio Audio-Rack &amp; DSP-Plugins" Style="{StaticResource CardTitle}" />
+                            <TextBlock Text="6 integrierte Broadcast-DSPs (EQ, Opto, De-Esser, Tube-Sat, Expander, Limiter) &amp; VST3/CLAP-Hosting" Style="{StaticResource Caption}" />
                         </StackPanel>
                     </Grid>
                 </Expander.Header>
                 <StackPanel Spacing="14" Padding="4">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Button Style="{StaticResource AccentButtonStyle}" Click="AddIntegratedPlugins_Click">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE99A;" FontSize="14" />
-                                <TextBlock Text="Studio-DSPs hinzufügen (6 Plugins)" FontWeight="SemiBold" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Style="{StaticResource AccentButtonStyle}" Click="ResetToIntegrated_Click">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE99A;" FontSize="14" />
+                                    <TextBlock Text="Standard Studio-Kette (6 DSPs)" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Style="{StaticResource SmoothButton}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE710;" FontSize="14" />
+                                    <TextBlock Text="Plugin hinzufügen" />
+                                    <FontIcon Glyph="&#xE70D;" FontSize="10" />
+                                </StackPanel>
+                                <Button.Flyout>
+                                    <MenuFlyout Placement="Bottom">
+                                        <MenuFlyoutItem Text="[GATE] NEXT : Smart Expander" Click="AddSpecificPlugin_Click" Tag="GATE" />
+                                        <MenuFlyoutItem Text="[DE-ESS] NEXT : Precision DeEsser" Click="AddSpecificPlugin_Click" Tag="DE-ESS" />
+                                        <MenuFlyoutItem Text="[EQ] NEXT : Pro-EQ 6" Click="AddSpecificPlugin_Click" Tag="EQ" />
+                                        <MenuFlyoutItem Text="[COMP] NEXT : Broadcast Opto" Click="AddSpecificPlugin_Click" Tag="COMP" />
+                                        <MenuFlyoutItem Text="[WARMTH] NEXT : Tube &amp; Tape Sat" Click="AddSpecificPlugin_Click" Tag="WARMTH" />
+                                        <MenuFlyoutItem Text="[LIMITER] NEXT : True-Peak Master" Click="AddSpecificPlugin_Click" Tag="LIMITER" />
+                                        <MenuFlyoutSeparator />
+                                        <MenuFlyoutItem Text="Plugin-Datei laden (.vst3 / .clap)..." Click="AddVst_Click" />
+                                        <MenuFlyoutItem Text="System nach VST3 / CLAP scannen..." Click="ScanVst_Click" />
+                                    </MenuFlyout>
+                                </Button.Flyout>
+                            </Button>
+
+                            <Button Style="{StaticResource SmoothButton}" Click="SyncAllDSPs_Click" ToolTipService.ToolTip="Alle DSP-Einstellungen erneut an GoXLR übertragen">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE777;" FontSize="14" />
+                                    <TextBlock Text="DSPs synchronisieren" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <Border Grid.Column="1" Background="{StaticResource SurfaceL2Brush}" BorderBrush="{StaticResource BrandBrush}" BorderThickness="1" CornerRadius="6" Padding="10,5" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE73E;" FontSize="12" Foreground="{StaticResource BrandBrush}" />
+                                <TextBlock Text="Live im Hardware-DSP (0 ms Latenz)" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource BrandBrush}" />
                             </StackPanel>
-                        </Button>
-                        <Button Style="{StaticResource SmoothButton}" Click="ScanVst_Click">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE895;" FontSize="14" />
-                                <TextBlock Text="Plugins im System scannen (VST3 &amp; CLAP)" />
-                            </StackPanel>
-                        </Button>
-                        <Button Style="{StaticResource SmoothButton}" Click="AddVst_Click">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE710;" FontSize="14" />
-                                <TextBlock Text="Plugin-Datei laden (.vst3 / .clap)..." />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
+                        </Border>
+                    </Grid>
 
                     <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="10" Padding="14">
                         <StackPanel Spacing="10">

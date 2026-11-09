@@ -248,8 +248,16 @@ public partial class MicPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         ViewModel = (MainViewModel)e.Parameter;
+        VstPluginService.ActiveMicViewModel = Mic;
         MicProfileBox.SelectionChanged += (_, _) => UpdateDefaultIcon();
         RefreshMicProfiles();
+        VstPluginService.SyncAllToHardware();
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        VstPluginService.ActiveMicViewModel = null;
     }
 
     // ---------------- Mic profiles (gate, compressor, EQ, de-esser) ----------------
@@ -420,6 +428,29 @@ public partial class MicPage : Page
         if (sender is FrameworkElement { Tag: VstPluginItem plugin })
         {
             VstPluginService.OpenEditor(App.MainWindowInstance ?? new Window(), plugin);
+        }
+    }
+
+    private void ResetToIntegrated_Click(object sender, RoutedEventArgs e)
+    {
+        VstPluginService.Instance.ResetToIntegratedPlugins();
+        Show(InfoBarSeverity.Success, "Standard Studio-Effektkette (6 integrierte DSPs) geladen und live auf GoXLR angewendet.");
+    }
+
+    private void SyncAllDSPs_Click(object sender, RoutedEventArgs e)
+    {
+        VstPluginService.SyncAllToHardware();
+        Show(InfoBarSeverity.Success, "Alle Studio-DSPs erfolgreich mit dem GoXLR Hardware-DSP synchronisiert.");
+    }
+
+    private void AddSpecificPlugin_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: string tag })
+        {
+            var plugin = VstPluginService.CreateIntegratedPlugin(tag);
+            VstPluginService.Instance.AddPlugin(plugin);
+            VstPluginService.SyncToHardware(plugin);
+            Show(InfoBarSeverity.Success, $"{plugin.Name} zum Rack hinzugefügt und aktiviert.");
         }
     }
 

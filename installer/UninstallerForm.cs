@@ -24,10 +24,10 @@ public partial class UninstallerForm : Form
     private Panel pageProgress = null!;
     private Panel pageDone = null!;
 
-    private CheckBox chkRemoveService = null!;
-    private CheckBox chkRemoveShortcuts = null!;
-    private CheckBox chkRemoveData = null!;
-    private CheckBox chkRemoveDrivers = null!;
+    private ModernCheckBox chkRemoveService = null!;
+    private ModernCheckBox chkRemoveShortcuts = null!;
+    private ModernCheckBox chkRemoveData = null!;
+    private ModernCheckBox chkRemoveDrivers = null!;
 
     private Label lblProgressStatus = null!;
     private ModernProgressBar progressBar = null!;
@@ -76,6 +76,7 @@ public partial class UninstallerForm : Form
 
         var appIcon = NextXLRTheme.GetAppIcon();
         if (appIcon != null) this.Icon = appIcon;
+        NextXLRTheme.ApplyNativeWinUIStyle(this);
 
         // Header
         headerPanel = new Panel
@@ -226,43 +227,43 @@ public partial class UninstallerForm : Form
             Location = new Point(16, 12)
         };
 
-        chkRemoveService = new CheckBox
+        chkRemoveService = new ModernCheckBox
         {
             Text = "mixforge Hintergrunddienst stoppen & aus Windows-Autostart austragen",
             Checked = true,
             Font = NextXLRTheme.BodyFont,
             ForeColor = NextXLRTheme.TextPrimary,
-            AutoSize = true,
+            Size = new Size(610, 26),
             Location = new Point(18, 44)
         };
 
-        chkRemoveShortcuts = new CheckBox
+        chkRemoveShortcuts = new ModernCheckBox
         {
             Text = "Desktop- und Startmenü-Verknüpfungen entfernen",
             Checked = true,
             Font = NextXLRTheme.BodyFont,
             ForeColor = NextXLRTheme.TextPrimary,
-            AutoSize = true,
+            Size = new Size(610, 26),
             Location = new Point(18, 76)
         };
 
-        chkRemoveData = new CheckBox
+        chkRemoveData = new ModernCheckBox
         {
             Text = "Benutzerprofile, Equalizer-Setups & Konfigurationen ebenfalls löschen",
             Checked = false,
             Font = NextXLRTheme.BodyFont,
             ForeColor = NextXLRTheme.TextPrimary,
-            AutoSize = true,
+            Size = new Size(610, 26),
             Location = new Point(18, 108)
         };
 
-        chkRemoveDrivers = new CheckBox
+        chkRemoveDrivers = new ModernCheckBox
         {
             Text = "TC-Helicon GoXLR USB-Audiotreiber deinstallieren (pnputil)",
             Checked = false,
             Font = NextXLRTheme.BodyFont,
             ForeColor = NextXLRTheme.TextMuted,
-            AutoSize = true,
+            Size = new Size(610, 26),
             Location = new Point(18, 140)
         };
 

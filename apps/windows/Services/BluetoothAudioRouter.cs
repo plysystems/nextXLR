@@ -587,10 +587,18 @@ public sealed class BluetoothAudioRouter : IDisposable
                     ReadOnlySpan<float> floatSpan = MemoryMarshal.Cast<byte, float>(byteSpan);
                     samplesToAdd = floatSpan.Length;
                     PruneExcess(samplesToAdd);
-                    for (int i = 0; i < samplesToAdd; i++)
+
+                    if (_writePos + samplesToAdd <= _capacity)
                     {
-                        _ringBuffer[_writePos] = floatSpan[i];
-                        _writePos = (_writePos + 1) % _capacity;
+                        floatSpan.CopyTo(_ringBuffer.AsSpan(_writePos));
+                        _writePos = (_writePos + samplesToAdd) % _capacity;
+                    }
+                    else
+                    {
+                        int first = _capacity - _writePos;
+                        floatSpan[..first].CopyTo(_ringBuffer.AsSpan(_writePos));
+                        floatSpan[first..].CopyTo(_ringBuffer.AsSpan(0));
+                        _writePos = samplesToAdd - first;
                     }
                 }
                 else if (inputFormat.BitsPerSample == 16)
@@ -637,10 +645,17 @@ public sealed class BluetoothAudioRouter : IDisposable
                 }
 
                 int toRead = Math.Min(count, _bufferedSamples);
-                for (int i = 0; i < toRead; i++)
+                if (_readPos + toRead <= _capacity)
                 {
-                    buffer[offset + i] = _ringBuffer[_readPos];
-                    _readPos = (_readPos + 1) % _capacity;
+                    Array.Copy(_ringBuffer, _readPos, buffer, offset, toRead);
+                    _readPos = (_readPos + toRead) % _capacity;
+                }
+                else
+                {
+                    int first = _capacity - _readPos;
+                    Array.Copy(_ringBuffer, _readPos, buffer, offset, first);
+                    Array.Copy(_ringBuffer, 0, buffer, offset + first, toRead - first);
+                    _readPos = toRead - first;
                 }
                 _bufferedSamples -= toRead;
 

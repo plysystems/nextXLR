@@ -76,8 +76,11 @@ public sealed class ProfileLibrary(string folder, string defaultFile, string kin
             ["saved"] = DateTime.Now.ToString("o"),
             ["profile"] = profile.DeepClone(),
         };
-        Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, doc.ToJsonString(Pretty));
+        var dir = System.IO.Path.GetDirectoryName(path)!;
+        Directory.CreateDirectory(dir);
+        var tempPath = path + ".tmp";
+        File.WriteAllText(tempPath, doc.ToJsonString(Pretty));
+        File.Move(tempPath, path, true);
     }
 
     /// <summary>Reads a profile file (wrapped, bare, or legacy GoXLR .goxlr / XML). Throws with a readable message.</summary>
@@ -125,7 +128,7 @@ public sealed class ProfileLibrary(string folder, string defaultFile, string kin
     private static string SafeFileName(string name)
     {
         var invalid = System.IO.Path.GetInvalidFileNameChars();
-        var cleaned = new string(name.Trim().Select(c => invalid.Contains(c) ? '_' : c).ToArray());
+        var cleaned = new string(name.Trim().Select(c => invalid.Contains(c) || c == '.' || c == '/' || c == '\\' ? '_' : c).ToArray());
         return string.IsNullOrWhiteSpace(cleaned) ? "profile" : cleaned;
     }
 }

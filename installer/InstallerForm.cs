@@ -33,13 +33,13 @@ public partial class InstallerForm : Form
     private Panel pageProgress = null!;
     private Panel pageComplete = null!;
 
-    private CheckBox chkLicense = null!;
+    private ModernCheckBox chkLicense = null!;
     private TextBox txtInstallPath = null!;
-    private CheckBox chkInstallDriver = null!;
-    private CheckBox chkInstallService = null!;
-    private CheckBox chkDesktopShortcut = null!;
-    private CheckBox chkStartMenuShortcut = null!;
-    private CheckBox chkLaunchApp = null!;
+    private ModernCheckBox chkInstallDriver = null!;
+    private ModernCheckBox chkInstallService = null!;
+    private ModernCheckBox chkDesktopShortcut = null!;
+    private ModernCheckBox chkStartMenuShortcut = null!;
+    private ModernCheckBox chkLaunchApp = null!;
 
     private ModernProgressBar progressBar = null!;
     private Label lblProgressStatus = null!;
@@ -68,6 +68,7 @@ public partial class InstallerForm : Form
 
         var appIcon = NextXLRTheme.GetAppIcon();
         if (appIcon != null) this.Icon = appIcon;
+        NextXLRTheme.ApplyNativeWinUIStyle(this);
 
         // Header Panel
         headerPanel = new Panel
@@ -298,12 +299,12 @@ LIZENZBEDINGUNGEN:
      NICHT FÜR SCHÄDEN AUS DER NUTZUNG DIESER SOFTWARE."
         };
 
-        chkLicense = new CheckBox
+        chkLicense = new ModernCheckBox
         {
             Text = "Ich akzeptiere die Lizenzvereinbarung von plysystems",
             Font = NextXLRTheme.BoldFont,
             ForeColor = NextXLRTheme.Brand,
-            AutoSize = true,
+            Size = new Size(540, 26),
             Location = new Point(20, 318)
         };
         chkLicense.CheckedChanged += (s, e) => { btnNext.Enabled = chkLicense.Checked; };
@@ -383,43 +384,43 @@ LIZENZBEDINGUNGEN:
             Location = new Point(16, 12)
         };
 
-        chkInstallDriver = new CheckBox
+        chkInstallDriver = new ModernCheckBox
         {
             Text = "TC-Helicon GoXLR USB-Audiotreiber installieren (für 8 Windows-Audiokanäle)",
             Checked = true,
             Font = NextXLRTheme.BodyFont,
             ForeColor = NextXLRTheme.TextPrimary,
-            AutoSize = true,
+            Size = new Size(610, 26),
             Location = new Point(18, 44)
         };
 
-        chkInstallService = new CheckBox
+        chkInstallService = new ModernCheckBox
         {
             Text = "mixforge Hintergrunddienst einrichten (Automatischer Start mit Windows)",
             Checked = true,
             Font = NextXLRTheme.BodyFont,
             ForeColor = NextXLRTheme.TextPrimary,
-            AutoSize = true,
+            Size = new Size(610, 26),
             Location = new Point(18, 76)
         };
 
-        chkDesktopShortcut = new CheckBox
+        chkDesktopShortcut = new ModernCheckBox
         {
             Text = "Desktop-Verknüpfung erstellen",
             Checked = true,
             Font = NextXLRTheme.BodyFont,
             ForeColor = NextXLRTheme.TextPrimary,
-            AutoSize = true,
+            Size = new Size(610, 26),
             Location = new Point(18, 108)
         };
 
-        chkStartMenuShortcut = new CheckBox
+        chkStartMenuShortcut = new ModernCheckBox
         {
             Text = "Startmenü-Eintrag erstellen",
             Checked = true,
             Font = NextXLRTheme.BodyFont,
             ForeColor = NextXLRTheme.TextPrimary,
-            AutoSize = true,
+            Size = new Size(610, 26),
             Location = new Point(18, 140)
         };
 
@@ -519,13 +520,13 @@ LIZENZBEDINGUNGEN:
             Location = new Point(22, 60)
         };
 
-        chkLaunchApp = new CheckBox
+        chkLaunchApp = new ModernCheckBox
         {
             Text = "NEXT : XLR jetzt starten",
             Checked = true,
             Font = NextXLRTheme.BoldFont,
             ForeColor = NextXLRTheme.Brand,
-            AutoSize = true,
+            Size = new Size(300, 26),
             Location = new Point(24, 180)
         };
 

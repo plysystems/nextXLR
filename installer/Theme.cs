@@ -101,6 +101,105 @@ public static class NextXLRTheme
         path.CloseFigure();
         return path;
     }
+
+    [System.Runtime.InteropServices.DllImport("dwmapi.dll", PreserveSig = true)]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+    /// <summary>
+    /// Applies native Windows 11/10 Immersive Dark Mode, rounded corners, and Mica backdrop to the Form.
+    /// </summary>
+    public static void ApplyNativeWinUIStyle(Form form)
+    {
+        try
+        {
+            int darkMode = 1;
+            DwmSetWindowAttribute(form.Handle, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, ref darkMode, sizeof(int));
+            DwmSetWindowAttribute(form.Handle, 19 /* DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 */, ref darkMode, sizeof(int));
+
+            int corner = 2; // DWMWCP_ROUND
+            DwmSetWindowAttribute(form.Handle, 33 /* DWMWA_WINDOW_CORNER_PREFERENCE */, ref corner, sizeof(int));
+
+            int backdrop = 2; // DWMSBT_MAINWINDOW (Mica)
+            DwmSetWindowAttribute(form.Handle, 38 /* DWMWA_SYSTEMBACKDROP_TYPE */, ref backdrop, sizeof(int));
+        }
+        catch { }
+    }
+}
+
+public class ModernCheckBox : Control
+{
+    private bool _checked = false;
+    public bool Checked
+    {
+        get => _checked;
+        set
+        {
+            if (_checked != value)
+            {
+                _checked = value;
+                CheckedChanged?.Invoke(this, EventArgs.Empty);
+                Invalidate();
+            }
+        }
+    }
+
+    public event EventHandler? CheckedChanged;
+    private bool _isHovered = false;
+
+    public ModernCheckBox()
+    {
+        SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.SupportsTransparentBackColor, true);
+        this.DoubleBuffered = true;
+        this.Cursor = Cursors.Hand;
+        this.Font = NextXLRTheme.BodyFont;
+        this.ForeColor = NextXLRTheme.TextPrimary;
+        this.Height = 26;
+    }
+
+    protected override void OnMouseEnter(EventArgs e) { _isHovered = true; Invalidate(); base.OnMouseEnter(e); }
+    protected override void OnMouseLeave(EventArgs e) { _isHovered = false; Invalidate(); base.OnMouseLeave(e); }
+    protected override void OnClick(EventArgs e) { Checked = !Checked; base.OnClick(e); }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        var g = e.Graphics;
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
+        int boxSize = 18;
+        int boxY = (Height - boxSize) / 2;
+        var boxRect = new Rectangle(0, boxY, boxSize, boxSize);
+
+        using (var boxPath = NextXLRTheme.CreateRoundedRectangle(boxRect, 4))
+        {
+            if (_checked)
+            {
+                using var fill = new SolidBrush(NextXLRTheme.BrandAccent);
+                g.FillPath(fill, boxPath);
+
+                // Draw crisp dark checkmark
+                using var pen = new Pen(Color.FromArgb(12, 15, 20), 2.2f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
+                g.DrawLines(pen, new[]
+                {
+                    new PointF(boxRect.X + 4f, boxRect.Y + 9.5f),
+                    new PointF(boxRect.X + 7.5f, boxRect.Y + 13f),
+                    new PointF(boxRect.X + 14f, boxRect.Y + 5.5f)
+                });
+            }
+            else
+            {
+                using var fill = new SolidBrush(_isHovered ? NextXLRTheme.SurfaceL4 : NextXLRTheme.SurfaceL3);
+                g.FillPath(fill, boxPath);
+                using var stroke = new Pen(_isHovered ? NextXLRTheme.Brand : NextXLRTheme.Stroke, 1.2f);
+                g.DrawPath(stroke, boxPath);
+            }
+        }
+
+        // Draw label text
+        int textX = boxSize + 10;
+        var textRect = new Rectangle(textX, 0, Width - textX, Height);
+        TextRenderer.DrawText(g, Text, Font, textRect, ForeColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+    }
 }
 
 public class RoundedCard : Panel

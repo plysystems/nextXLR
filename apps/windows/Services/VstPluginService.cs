@@ -13,6 +13,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
+using NextXLR.ViewModels;
 using Windows.Graphics;
 
 namespace NextXLR.Services;
@@ -110,10 +111,16 @@ public partial class VstPluginItem : ObservableObject
         }
     }
 
+    private void NotifyHardwareSync()
+    {
+        VstPluginService.SyncToHardware(this);
+    }
+
     partial void OnIsEnabledChanged(bool value)
     {
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(StatusBrush));
+        NotifyHardwareSync();
         VstPluginService.Instance.SaveRack();
     }
 
@@ -121,8 +128,41 @@ public partial class VstPluginItem : ObservableObject
     {
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(StatusBrush));
+        NotifyHardwareSync();
         VstPluginService.Instance.SaveRack();
     }
+
+    partial void OnLowCutFreqChanged(double value) => NotifyHardwareSync();
+    partial void OnLowGainChanged(double value) => NotifyHardwareSync();
+    partial void OnMid1GainChanged(double value) => NotifyHardwareSync();
+    partial void OnMid2GainChanged(double value) => NotifyHardwareSync();
+    partial void OnHighShelfGainChanged(double value) => NotifyHardwareSync();
+    partial void OnAirBandGainChanged(double value) => NotifyHardwareSync();
+
+    partial void OnDetectionFreqChanged(double value) => NotifyHardwareSync();
+    partial void OnDeEssThresholdChanged(double value) => NotifyHardwareSync();
+    partial void OnDeEssDepthChanged(double value) => NotifyHardwareSync();
+
+    partial void OnOptoPeakReductionChanged(double value) => NotifyHardwareSync();
+    partial void OnOptoGainChanged(double value) => NotifyHardwareSync();
+    partial void OnOptoSpeedChanged(string value) => NotifyHardwareSync();
+    partial void OnOptoWarmthChanged(double value) => NotifyHardwareSync();
+
+    partial void OnSatDriveChanged(double value) => NotifyHardwareSync();
+    partial void OnSatHarmonicsChanged(string value) => NotifyHardwareSync();
+    partial void OnSatTapeSpeedChanged(string value) => NotifyHardwareSync();
+    partial void OnSatHeadroomChanged(double value) => NotifyHardwareSync();
+
+    partial void OnExpanderThresholdChanged(double value) => NotifyHardwareSync();
+    partial void OnExpanderRatioChanged(double value) => NotifyHardwareSync();
+    partial void OnExpanderAttackChanged(double value) => NotifyHardwareSync();
+    partial void OnExpanderReleaseChanged(double value) => NotifyHardwareSync();
+    partial void OnExpanderHysteresisChanged(double value) => NotifyHardwareSync();
+
+    partial void OnLimiterCeilingChanged(double value) => NotifyHardwareSync();
+    partial void OnLimiterLookaheadChanged(double value) => NotifyHardwareSync();
+    partial void OnLimiterReleaseChanged(double value) => NotifyHardwareSync();
+    partial void OnTargetLufsChanged(double value) => NotifyHardwareSync();
 
     public string[] GetAvailablePresets()
     {
@@ -372,6 +412,8 @@ public sealed class VstPluginService
     private static readonly Lazy<VstPluginService> _instance = new(() => new VstPluginService());
     public static VstPluginService Instance => _instance.Value;
 
+    public static MicSettingsViewModel? ActiveMicViewModel { get; set; }
+
     private static readonly string SettingsFile = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "NextXLR",
@@ -484,19 +526,160 @@ public sealed class VstPluginService
     }
 
     /// <summary>
-    /// Returns the complete suite of all 6 integrated Studio DSP plugins.
+    /// Returns the complete suite of all 6 integrated Studio DSP plugins in optimal broadcast signal-flow order:
+    /// Gate/Expander -> De-Esser -> EQ -> Compressor -> Saturation -> Limiter.
     /// </summary>
     public static List<VstPluginItem> GetIntegratedPlugins()
     {
         return
         [
-            CreateIntegratedPlugin("EQ"),
+            CreateIntegratedPlugin("GATE"),
             CreateIntegratedPlugin("DE-ESS"),
+            CreateIntegratedPlugin("EQ"),
             CreateIntegratedPlugin("COMP"),
             CreateIntegratedPlugin("WARMTH"),
-            CreateIntegratedPlugin("GATE"),
             CreateIntegratedPlugin("LIMITER")
         ];
+    }
+
+    /// <summary>
+    /// Resets the active effect rack to the default 6 studio broadcast plugins and synchronizes them with the GoXLR hardware.
+    /// </summary>
+    public void ResetToIntegratedPlugins()
+    {
+        RackPlugins.Clear();
+        foreach (var p in GetIntegratedPlugins())
+        {
+            RackPlugins.Add(p);
+        }
+        SaveRack();
+        SyncAllToHardware();
+    }
+
+    /// <summary>
+    /// Synchronizes a DSP plugin's parameter state directly to the GoXLR hardware via MicSettingsViewModel in real time.
+    /// </summary>
+    public static void SyncToHardware(VstPluginItem plugin)
+    {
+        var mic = ActiveMicViewModel;
+        if (mic == null) return;
+
+        if (plugin.Name.Contains("Pro-EQ", StringComparison.OrdinalIgnoreCase))
+        {
+            if (plugin.IsBypassed || !plugin.IsEnabled)
+            {
+                foreach (var b in mic.EqBands) b.Gain = 0;
+            }
+            else
+            {
+                double subCut = plugin.LowCutFreq >= 100 ? -5.0 : (plugin.LowCutFreq >= 60 ? -2.0 : 0.0);
+                if (mic.EqBands.Count >= 10)
+                {
+                    mic.EqBands[0].Gain = Math.Clamp(plugin.LowGain + subCut - 3.0, -9.0, 9.0); // 31 Hz
+                    mic.EqBands[1].Gain = Math.Clamp(plugin.LowGain + subCut, -9.0, 9.0);       // 63 Hz
+                    mic.EqBands[2].Gain = Math.Clamp(plugin.LowGain, -9.0, 9.0);                // 125 Hz
+                    mic.EqBands[3].Gain = Math.Clamp(plugin.Mid1Gain * 0.8, -9.0, 9.0);         // 250 Hz
+                    mic.EqBands[4].Gain = Math.Clamp(plugin.Mid1Gain, -9.0, 9.0);               // 500 Hz
+                    mic.EqBands[5].Gain = Math.Clamp(plugin.Mid2Gain * 0.7, -9.0, 9.0);         // 1000 Hz
+                    mic.EqBands[6].Gain = Math.Clamp(plugin.Mid2Gain, -9.0, 9.0);               // 2000 Hz
+                    mic.EqBands[7].Gain = Math.Clamp(plugin.HighShelfGain, -9.0, 9.0);          // 4000 Hz
+                    mic.EqBands[8].Gain = Math.Clamp(plugin.HighShelfGain + 0.5, -9.0, 9.0);    // 8000 Hz
+                    mic.EqBands[9].Gain = Math.Clamp(plugin.AirBandGain, -9.0, 9.0);            // 16000 Hz
+                }
+            }
+        }
+        else if (plugin.Name.Contains("Opto", StringComparison.OrdinalIgnoreCase))
+        {
+            if (plugin.IsBypassed || !plugin.IsEnabled)
+            {
+                mic.CompThreshold = 0;
+                mic.CompMakeup = 0;
+            }
+            else
+            {
+                // Peak Reduction: 0..100% -> -40 dB to 0 dB
+                mic.CompThreshold = Math.Clamp(-(plugin.OptoPeakReduction * 0.38), -40, 0);
+                mic.CompMakeup = Math.Clamp(plugin.OptoGain, -6, 24);
+                mic.CompRatio = 9; // 4.0:1
+                if (plugin.OptoSpeed.Contains("Fast", StringComparison.OrdinalIgnoreCase))
+                {
+                    mic.CompAttack = 4;
+                    mic.CompRelease = 5;
+                }
+                else if (plugin.OptoSpeed.Contains("Slow", StringComparison.OrdinalIgnoreCase))
+                {
+                    mic.CompAttack = 12;
+                    mic.CompRelease = 14;
+                }
+                else
+                {
+                    mic.CompAttack = 7;
+                    mic.CompRelease = 9;
+                }
+            }
+        }
+        else if (plugin.Name.Contains("DeEsser", StringComparison.OrdinalIgnoreCase))
+        {
+            if (plugin.IsBypassed || !plugin.IsEnabled)
+            {
+                mic.DeEsser = 0;
+            }
+            else
+            {
+                // DeEssDepth: -24 dB to 0 dB -> 0 to 100%
+                mic.DeEsser = Math.Clamp(-plugin.DeEssDepth / 24.0 * 100.0, 0, 100);
+            }
+        }
+        else if (plugin.Name.Contains("Expander", StringComparison.OrdinalIgnoreCase))
+        {
+            if (plugin.IsBypassed || !plugin.IsEnabled)
+            {
+                mic.GateEnabled = false;
+            }
+            else
+            {
+                mic.GateEnabled = true;
+                mic.GateThreshold = Math.Clamp(plugin.ExpanderThreshold, -59, 0);
+                mic.GateAttenuation = Math.Clamp(plugin.ExpanderRatio * 16.0, 10, 100);
+                mic.GateAttack = Math.Clamp(plugin.ExpanderAttack / 1.5, 0, 45);
+                mic.GateRelease = Math.Clamp(plugin.ExpanderRelease / 20.0, 0, 45);
+            }
+        }
+        else if (plugin.Name.Contains("Tube", StringComparison.OrdinalIgnoreCase) || plugin.Name.Contains("Sat", StringComparison.OrdinalIgnoreCase))
+        {
+            if (plugin.IsBypassed || !plugin.IsEnabled)
+            {
+                mic.VoiceMorphDrive = 0;
+            }
+            else
+            {
+                mic.VoiceMorphDrive = Math.Clamp(plugin.SatDrive, 0, 100);
+            }
+        }
+        else if (plugin.Name.Contains("Limiter", StringComparison.OrdinalIgnoreCase) || plugin.Name.Contains("Master", StringComparison.OrdinalIgnoreCase))
+        {
+            if (plugin.IsBypassed || !plugin.IsEnabled)
+            {
+                // Limiter bypass
+            }
+            else
+            {
+                double boost = (plugin.TargetLufs + 18.0) * 0.4;
+                mic.CompMakeup = Math.Clamp(mic.CompMakeup + boost, -6, 24);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Synchronizes all active plugins in the rack to the GoXLR hardware DSP.
+    /// </summary>
+    public static void SyncAllToHardware()
+    {
+        if (ActiveMicViewModel == null) return;
+        foreach (var p in Instance.RackPlugins)
+        {
+            SyncToHardware(p);
+        }
     }
 
     /// <summary>
@@ -638,7 +821,9 @@ public sealed class VstPluginService
             Directory.CreateDirectory(Path.GetDirectoryName(SettingsFile)!);
             var list = RackPlugins.ToList();
             var json = JsonSerializer.Serialize(list, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(SettingsFile, json);
+            string tempFile = SettingsFile + ".tmp";
+            File.WriteAllText(tempFile, json);
+            File.Move(tempFile, SettingsFile, true);
         }
         catch (Exception ex)
         {
@@ -1090,6 +1275,7 @@ public sealed class VstPluginService
                         plugin.PresetName = imported.PresetName;
 
                         Instance.SaveRack();
+                        SyncToHardware(plugin);
                         editorWin.Close();
                         OpenEditor(parentWindow, plugin);
                     }
@@ -1112,6 +1298,7 @@ public sealed class VstPluginService
         saveBtn.Click += (_, _) =>
         {
             Instance.SaveRack();
+            SyncToHardware(plugin);
             editorWin.Close();
         };
 
