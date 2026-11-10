@@ -65,25 +65,36 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private double _bleepVolume = 100;
     public string BleepVolumeText => $"{Math.Round(BleepVolume)} %";
 
-    /// <summary>Dual-Mix Submix: 0 = Stream-Mix (Broadcast), 1 = Kopfhörer-Mix (Headphones Submix).</summary>
+    /// <summary>Dual-Mix Mode: 0 = Beide Mixe gleichzeitig (Dual-View), 1 = Nur Stream-Mix, 2 = Nur Kopfhörer-Mix.</summary>
     [ObservableProperty] private int _activeMixIndex = 0;
     [ObservableProperty] private bool _isSubmixActive;
 
     partial void OnActiveMixIndexChanged(int value)
     {
-        IsSubmixActive = (value == 1);
+        bool showDual = (value == 0);
+        IsSubmixActive = (value == 2);
         foreach (var ch in Channels)
         {
+            ch.ShowDualMix = showDual;
             ch.IsSubmixActive = IsSubmixActive;
         }
         OnPropertyChanged(nameof(MixModeTitle));
         OnPropertyChanged(nameof(MixModeDescription));
     }
 
-    public string MixModeTitle => IsSubmixActive ? "Kopfhörer-Submix" : "Stream-Mix (Broadcast)";
-    public string MixModeDescription => IsSubmixActive
-        ? "Unabhängiger Kopfhörer-Submix (dein persönlicher Monitor-Mix)."
-        : "Haupt-Broadcast-Mix (das, was Stream & Zuschauer hören).";
+    public string MixModeTitle => ActiveMixIndex switch
+    {
+        0 => "Dual-Mix Ansicht (Stream-Mix & Kopfhörer-Mix)",
+        1 => "Stream-Mix (Broadcast)",
+        _ => "Kopfhörer-Submix (Monitor)"
+    };
+
+    public string MixModeDescription => ActiveMixIndex switch
+    {
+        0 => "Simultane Anzeige beider Mixe für alle Regler (Stream & Kopfhörer gleichzeitig steuerbar).",
+        1 => "Haupt-Broadcast-Mix (das, was Stream & Zuschauer hören).",
+        _ => "Unabhängiger Kopfhörer-Submix (dein persönlicher Monitor-Mix)."
+    };
 
     partial void OnBleepVolumeChanged(double value)
     {
@@ -324,7 +335,15 @@ public partial class MainViewModel : ObservableObject
                 _profileRequest?.TrySetResult(p.Profile);
                 break;
             case MetersMessage m:
-                foreach (var l in m.Levels) Find(l.Channel)?.PushPeak(l.Peak);
+                foreach (var l in m.Levels)
+                {
+                    var ch = Find(l.Channel);
+                    ch?.PushPeak(l.Peak);
+                    if (l.Channel == 11 || (ch != null && (ch.Name == "Stream" || ch.Name == "Broadcast")))
+                    {
+                        SafetyLimiterService.Instance.UpdateMeters(l.Peak);
+                    }
+                }
                 break;
             case ButtonMessage b:
                 Sampler.HandleButton(b.Id, b.Pressed);

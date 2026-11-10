@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 echo ==============================================================================
-echo   NEXT : XLR v0.1.6-alpha - Setup ^& Installer
+echo   NEXT : XLR v0.1.7-alpha - Setup ^& Installer
 echo   (c) 2026 plysystems. Alle Rechte vorbehalten.
 echo ==============================================================================
 echo.
@@ -66,7 +66,7 @@ powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = 
 
 echo.
 echo ==============================================================================
-echo   NEXT : XLR v0.1.6-alpha wurde erfolgreich installiert!
+echo   NEXT : XLR v0.1.7-alpha wurde erfolgreich installiert!
 echo   Zielverzeichnis: %TARGET_DIR%
 echo ==============================================================================
 echo.

@@ -54,6 +54,16 @@ public sealed class MeterAnimator : IDisposable
                 _channels[i].Tick(dt);
             }
         }
+
+        // Feature 02: Real-time sidechain auto-ducking tick
+        try
+        {
+            if (MainViewModel.Instance is { } vm)
+            {
+                AutoDuckingService.Instance.Tick(dt * 1000.0, vm);
+            }
+        }
+        catch { }
     }
 
     public void Pause() => IsActive = false;

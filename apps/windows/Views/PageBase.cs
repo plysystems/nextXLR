@@ -101,14 +101,21 @@ public partial class MixerPage : Page
 
     public string MicGlyph(bool muted) => muted ? "\uF781" : "\uE720";
 
-    private void StreamMix_Click(object sender, RoutedEventArgs e)
+    public AutoDuckingService AutoDucking => AutoDuckingService.Instance;
+
+    private void BothMixes_Click(object sender, RoutedEventArgs e)
     {
         if (ViewModel != null) ViewModel.ActiveMixIndex = 0;
     }
 
-    private void HeadphonesMix_Click(object sender, RoutedEventArgs e)
+    private void StreamMix_Click(object sender, RoutedEventArgs e)
     {
         if (ViewModel != null) ViewModel.ActiveMixIndex = 1;
+    }
+
+    private void HeadphonesMix_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel != null) ViewModel.ActiveMixIndex = 2;
     }
 
     private void MixerPage1_Click(object sender, RoutedEventArgs e)
@@ -133,17 +140,23 @@ public partial class MixerPage : Page
     public Microsoft.UI.Xaml.Media.Brush Page2Foreground(int activePage) =>
         activePage == 2 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 14, 16, 21)) : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextMutedBrush"];
 
-    public Microsoft.UI.Xaml.Media.Brush StreamMixBackground(bool submix) =>
-        !submix ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["BrandBrush"] : new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
+    public Microsoft.UI.Xaml.Media.Brush BothMixesBackground(int index) =>
+        index == 0 ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["BrandBrush"] : new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
 
-    public Microsoft.UI.Xaml.Media.Brush StreamMixForeground(bool submix) =>
-        !submix ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 14, 16, 21)) : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextMutedBrush"];
+    public Microsoft.UI.Xaml.Media.Brush BothMixesForeground(int index) =>
+        index == 0 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 14, 16, 21)) : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextMutedBrush"];
 
-    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixBackground(bool submix) =>
-        submix ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 210, 255)) : new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
+    public Microsoft.UI.Xaml.Media.Brush StreamMixBackground(int index) =>
+        index == 1 ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["BrandBrush"] : new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
 
-    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixForeground(bool submix) =>
-        submix ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 14, 16, 21)) : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextMutedBrush"];
+    public Microsoft.UI.Xaml.Media.Brush StreamMixForeground(int index) =>
+        index == 1 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 14, 16, 21)) : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextMutedBrush"];
+
+    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixBackground(int index) =>
+        index == 2 ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["HeadphoneBrush"] : new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
+
+    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixForeground(int index) =>
+        index == 2 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 14, 16, 21)) : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextMutedBrush"];
 
     private static double RowWidth(int n, double strip) => n * strip + Math.Max(0, n - 1) * Gap;
 
@@ -160,9 +173,12 @@ public partial class MixerPage : Page
         if (w <= 0) return;
 
         var chrome = MidWidth + 2 * SectionGap;
-        InLayout.MinItemWidth = OutLayout.MinItemWidth = MinStrip;
+        double effectiveStrip = ViewModel.ActiveMixIndex == 0 ? 104 : MinStrip;
+        double effectiveOneRow = ViewModel.ActiveMixIndex == 0 ? 104 : OneRowStrip;
+        InLayout.MinItemWidth = effectiveStrip;
+        OutLayout.MinItemWidth = MinStrip;
         OutLayout.ItemsStretch = UniformGridLayoutItemsStretch.Fill;
-        if (RowWidth(nIn, OneRowStrip) + RowWidth(nOut, OneRowStrip) + chrome <= w)
+        if (RowWidth(nIn, effectiveOneRow) + RowWidth(nOut, OneRowStrip) + chrome <= w)
         {
             // 1) One row: Inputs | censor | Outputs, full height.
             var strip = (w - chrome - (nIn - 1) * Gap - (nOut - 1) * Gap) / (nIn + nOut);
@@ -173,7 +189,8 @@ public partial class MixerPage : Page
             BleepSection.Margin = new Thickness(SectionGap, 0, SectionGap, 0);
             OutputsSection.Margin = new Thickness(0);
             BleepButtons.Orientation = Orientation.Vertical;
-            InLayout.MinItemWidth = OutLayout.MinItemWidth = OneRowStrip;
+            InLayout.MinItemWidth = effectiveOneRow;
+            OutLayout.MinItemWidth = OneRowStrip;
             InLayout.MaximumRowsOrColumns = nIn;
             OutLayout.MaximumRowsOrColumns = nOut;
             var height = Math.Max(MinRowHeight, h - Header - 2);
@@ -295,6 +312,7 @@ public partial class MicPage : Page
     public MainViewModel ViewModel { get; private set; } = null!;
     public MicSettingsViewModel Mic => ViewModel.Mic;
     public VstPluginService Vst => VstPluginService.Instance;
+    public SafetyLimiterService SafetyLimiter => SafetyLimiterService.Instance;
     public Visibility Visible(bool b) => b ? Visibility.Visible : Visibility.Collapsed;
     public MicPage()
     {
@@ -1004,6 +1022,44 @@ public partial class SamplerPage : Page
         var voice = Sampler.Voice(Sampler.ActivePage, pad.Index);
         if (voice.IsPlaying) { voice.Stop(); return; }
         if (Sampler.Store.Find(pad.Config.SampleId) is { } s) voice.Play(s.File, pad.Config.Start, pad.Config.End, pad.Config.GainDb);
+    }
+}
+
+public partial class VirtualChannelsPage : Page
+{
+    public VirtualChannelsService Service => VirtualChannelsService.Instance;
+    public string VirtualChannelsCountText => $"{Service.Channels.Count} virtuelle Kabel aktiv";
+
+    public VirtualChannelsPage()
+    {
+        NavigationCacheMode = NavigationCacheMode.Required;
+        InitializeComponent();
+    }
+
+    private void AddChannel_Click(object sender, RoutedEventArgs e)
+    {
+        string name = ChannelNameBox?.Text?.Trim() ?? "";
+        string target = (TargetChannelCombo?.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Music";
+        int buffer = 128;
+        if (BufferSizeCombo?.SelectedIndex == 0) buffer = 64;
+        else if (BufferSizeCombo?.SelectedIndex == 2) buffer = 256;
+        else if (BufferSizeCombo?.SelectedIndex == 3) buffer = 512;
+
+        Service.CreateChannel(name, target, 48000, buffer);
+        if (ChannelNameBox != null) ChannelNameBox.Text = "";
+    }
+
+    private void DeleteChannel_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: VirtualChannelItem item })
+        {
+            Service.RemoveChannel(item);
+        }
+    }
+
+    private void ReSync_Click(object sender, RoutedEventArgs e)
+    {
+        Service.Load();
     }
 }
 

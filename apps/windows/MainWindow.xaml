@@ -67,6 +67,9 @@
                 <NavigationViewItem x:Uid="NavLighting" Tag="lighting" x:Name="LightingItem">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE781;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem Content="Virtuelle Kanäle" Tag="virtual" x:Name="VirtualChannelsItem">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE7F4;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
                 <NavigationViewItem x:Uid="NavSettings" Tag="settings" x:Name="SettingsItem">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE713;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>

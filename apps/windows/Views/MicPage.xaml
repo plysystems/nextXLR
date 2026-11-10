@@ -205,9 +205,19 @@
                         <TextBlock x:Uid="MicEqHeader" Grid.Column="1" Style="{StaticResource CardTitle}" />
                     </Grid>
                 </Expander.Header>
-                <StackPanel Spacing="10" HorizontalAlignment="Center">
+                <StackPanel Spacing="14" HorizontalAlignment="Center">
                     <TextBlock x:Uid="MicEqMiniNote" Style="{StaticResource Caption}"
                                Visibility="{x:Bind Visible(ViewModel.Hardware.IsMini), Mode=OneWay}" />
+
+                    <!-- Feature 03: Real-Time Spectrum Analyzer (RTA) -->
+                    <StackPanel Spacing="6" HorizontalAlignment="Center" Width="784">
+                        <Grid>
+                            <TextBlock Text="Echtzeit-Spektrumanalysator (RTA Live-FFT)" Style="{StaticResource Overline}" />
+                            <TextBlock Text="10 Terz-Bänder · Peak-Hold" HorizontalAlignment="Right" Style="{StaticResource Caption}" Foreground="{StaticResource BrandBrush}" />
+                        </Grid>
+                        <controls:RtaSpectrumVisualizer Height="85" Channel="{x:Bind ViewModel.MicChannel, Mode=OneWay}" />
+                    </StackPanel>
+
                     <ItemsControl ItemsSource="{x:Bind Mic.EqBands}" HorizontalAlignment="Center">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center" /></ItemsPanelTemplate>
@@ -448,6 +458,94 @@
                             <TextBlock Text="Drive / Verzerrung (0 - 100%)" FontWeight="SemiBold" />
                             <Slider Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind Mic.VoiceMorphDrive, Mode=TwoWay}" />
                         </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Expander>
+
+            <!-- Feature 11: Gehörschutz & Broadcast True-Peak Master (EBU R128) -->
+            <Expander IsExpanded="True">
+                <Expander.Header>
+                    <Grid Padding="0,10" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon Glyph="&#xE7EF;" Foreground="{StaticResource BrandBrush}" />
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Gehörschutz &amp; Broadcast True-Peak Limiter" Style="{StaticResource CardTitle}" />
+                                <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="10" Padding="8,2">
+                                    <TextBlock Text="EBU R128 Standard" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Text="Kopfhörer-Schutz vor extremen Lautstärkespitzen + normkonformer Broadcast-Master" Style="{StaticResource Caption}" />
+                        </StackPanel>
+                        <ToggleSwitch Grid.Column="2" IsOn="{x:Bind SafetyLimiter.EarGuardEnabled, Mode=TwoWay}"
+                                      OnContent="Schutz Aktiv" OffContent="Bypass" MinWidth="0" VerticalAlignment="Center" />
+                    </Grid>
+                </Expander.Header>
+                <StackPanel Spacing="16" Padding="4">
+                    <Grid ColumnSpacing="24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Left: Ear Guard (Kopfhörer-Schutz) -->
+                        <Border Background="{StaticResource SurfaceL2Brush}" CornerRadius="10" Padding="14">
+                            <StackPanel Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE7F6;" Foreground="{StaticResource HeadphoneBrush}" FontSize="15" />
+                                    <TextBlock Text="Gehörschutz (Kopfhörer Ear-Guard)" FontWeight="SemiBold" FontSize="13" />
+                                </StackPanel>
+                                <TextBlock Text="Begrenzt die Kopfhörer-Ausgabelautstärke hart, damit laute Discord-Trolle oder Spielbugs dein Gehör nicht schädigen."
+                                           Style="{StaticResource Caption}" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
+                                <Grid>
+                                    <TextBlock Text="Maximaler Kopfhörerpegel (Ceiling)" Style="{StaticResource Caption}" />
+                                    <TextBlock Text="{x:Bind SafetyLimiter.EarGuardCeilingLabel, Mode=OneWay}" HorizontalAlignment="Right"
+                                               FontFamily="Consolas" Foreground="{StaticResource HeadphoneBrush}" FontWeight="SemiBold" />
+                                </Grid>
+                                <Slider Minimum="-12" Maximum="0" StepFrequency="0.5" Value="{x:Bind SafetyLimiter.EarGuardCeilingDb, Mode=TwoWay}" />
+                                <TextBlock Text="{x:Bind SafetyLimiter.EarGuardStatus, Mode=OneWay}" Style="{StaticResource Caption}" Foreground="{StaticResource HeadphoneBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Right: Broadcast True-Peak Master (Stream) -->
+                        <Border Grid.Column="1" Background="{StaticResource SurfaceL2Brush}" CornerRadius="10" Padding="14">
+                            <StackPanel Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE774;" Foreground="{StaticResource BrandBrush}" FontSize="15" />
+                                    <TextBlock Text="Broadcast True-Peak Limiter (Stream)" FontWeight="SemiBold" FontSize="13" />
+                                </StackPanel>
+                                <TextBlock Text="Sorgt für normgerechte Twitch- und YouTube-Aussteuerung (-14 LUFS / -1.0 dBTP) ohne Übersteuern."
+                                           Style="{StaticResource Caption}" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
+                                <Grid>
+                                    <TextBlock Text="True-Peak Decke (Ceiling)" Style="{StaticResource Caption}" />
+                                    <TextBlock Text="{x:Bind SafetyLimiter.TruePeakCeilingLabel, Mode=OneWay}" HorizontalAlignment="Right"
+                                               FontFamily="Consolas" Foreground="{StaticResource BrandBrush}" FontWeight="SemiBold" />
+                                </Grid>
+                                <Slider Minimum="-3.0" Maximum="0.0" StepFrequency="0.1" Value="{x:Bind SafetyLimiter.TruePeakCeilingDb, Mode=TwoWay}" />
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="6" Padding="8,4">
+                                        <StackPanel>
+                                            <TextBlock Text="Loudness (LUFS)" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
+                                            <TextBlock Text="{x:Bind SafetyLimiter.LufsDisplay, Mode=OneWay}" FontFamily="Consolas" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Column="1" Background="{StaticResource SurfaceL3Brush}" CornerRadius="6" Padding="8,4">
+                                        <StackPanel>
+                                            <TextBlock Text="True-Peak" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
+                                            <TextBlock Text="{x:Bind SafetyLimiter.TruePeakDisplay, Mode=OneWay}" FontFamily="Consolas" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
                     </Grid>
                 </StackPanel>
             </Expander>

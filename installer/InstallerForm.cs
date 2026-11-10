@@ -926,7 +926,7 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
 
             using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\NextXLR");
             key.SetValue("DisplayName", "NEXT : XLR");
-            key.SetValue("DisplayVersion", "0.1.6-alpha");
+            key.SetValue("DisplayVersion", "0.1.7-alpha");
             key.SetValue("Publisher", "plysystems");
             key.SetValue("UninstallString", $"\"{uninstExe}\" --uninstall");
             key.SetValue("QuietUninstallString", $"\"{uninstExe}\" --uninstall --quiet");

@@ -91,7 +91,7 @@ Die Suite steuert sowohl die physische GoXLR- und GoXLR Mini-Hardware (Motorfade
 ## Installation & Setup
 
 ### Empfohlener Weg: Installationsassistent
-1. Lade das neueste Release `NextXLR-Setup-0.1.6-alpha.exe` von den [Releases](https://github.com/plysystems/nextXLR/releases) herunter.
+1. Lade das neueste Release `NextXLR-Setup-0.1.7-alpha.exe` von den [Releases](https://github.com/plysystems/nextXLR/releases) herunter.
 2. Starte die Setup-Datei.
 3. Akzeptiere die Lizenzvereinbarung von plysystems.
 4. Wähle die gewünschten Optionen:
@@ -218,7 +218,7 @@ The software manages physical TC-Helicon GoXLR and GoXLR Mini hardware (motorize
 ## Installation & Setup
 
 ### Recommended: Setup Wizard
-1. Download `NextXLR-Setup-0.1.6-alpha.exe` from [GitHub Releases](https://github.com/plysystems/nextXLR/releases).
+1. Download `NextXLR-Setup-0.1.7-alpha.exe` from [GitHub Releases](https://github.com/plysystems/nextXLR/releases).
 2. Run the installer executable.
 3. Review and accept the plysystems License Agreement.
 4. Select desired options (Driver installation, background service autostart, desktop shortcuts).

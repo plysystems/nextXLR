@@ -51,6 +51,7 @@ public partial class ChannelViewModel : ObservableObject
     [ObservableProperty] private double _submixVolume = 0.8; // Dual-mix submix fader
     [ObservableProperty] private bool _submixMuted;
     [ObservableProperty] private bool _isSubmixActive;
+    [ObservableProperty] private bool _showDualMix = true;
     [ObservableProperty] private double? _restoreVolume;
     [ObservableProperty] private bool _metered = true;
     /// <summary>Meter-only (no level control on the GoXLR): Broadcast Stream Mix, Chat Mic.</summary>
@@ -103,6 +104,20 @@ public partial class ChannelViewModel : ObservableObject
     }
 
     public string VolumeLabel => $"{Math.Round((IsSubmixActive ? SubmixVolume : Volume) * 100)}";
+
+    public double StreamVolumePercent
+    {
+        get => Math.Round(Volume * 100, 1);
+        set => Volume = Math.Clamp(value / 100.0, 0.0, 1.0);
+    }
+    public string StreamVolumeLabel => $"{Math.Round(Volume * 100)}";
+
+    public double SubmixVolumePercent
+    {
+        get => Math.Round(SubmixVolume * 100, 1);
+        set => SubmixVolume = Math.Clamp(value / 100.0, 0.0, 1.0);
+    }
+    public string SubmixVolumeLabel => $"{Math.Round(SubmixVolume * 100)}";
 
     public bool ActiveMuted
     {
@@ -200,6 +215,8 @@ public partial class ChannelViewModel : ObservableObject
     partial void OnVolumeChanged(double value)
     {
         UpdateRouterLevels();
+        OnPropertyChanged(nameof(StreamVolumePercent));
+        OnPropertyChanged(nameof(StreamVolumeLabel));
         if (!IsSubmixActive)
         {
             OnPropertyChanged(nameof(VolumePercent));
@@ -224,6 +241,8 @@ public partial class ChannelViewModel : ObservableObject
     partial void OnSubmixVolumeChanged(double value)
     {
         UpdateRouterLevels();
+        OnPropertyChanged(nameof(SubmixVolumePercent));
+        OnPropertyChanged(nameof(SubmixVolumeLabel));
         if (IsSubmixActive)
         {
             OnPropertyChanged(nameof(VolumePercent));

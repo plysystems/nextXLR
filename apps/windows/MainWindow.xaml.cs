@@ -27,6 +27,7 @@ public sealed partial class MainWindow : Window
         ["effects"] = typeof(EffectsPage),
         ["sampler"] = typeof(SamplerPage),
         ["lighting"] = typeof(LightingPage),
+        ["virtual"] = typeof(VirtualChannelsPage),
         ["settings"] = typeof(SettingsPage),
     };
 
