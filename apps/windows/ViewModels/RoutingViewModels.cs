@@ -100,6 +100,7 @@ public partial class AppSessionItemViewModel : ObservableObject
     [ObservableProperty] private bool _isMuted;
     [ObservableProperty] private double _peakPercent;
 
+    public bool IsInitialized { get; private set; }
     public string VolumeText => $"{(int)Math.Round(Volume)}%";
 
     public AppSessionItemViewModel(AppAudioSessionInfo info, List<AudioEndpointChoice> outChoices, List<AudioEndpointChoice> inChoices)
@@ -134,6 +135,7 @@ public partial class AppSessionItemViewModel : ObservableObject
             }
         }
         _selectedInputIndex = inIdx;
+        IsInitialized = true;
     }
 
     public void UpdatePeak()
@@ -142,8 +144,14 @@ public partial class AppSessionItemViewModel : ObservableObject
         {
             try
             {
-                float peak = _info.MeterInformation.MasterPeakValue;
-                PeakPercent = Math.Clamp(peak * 100.0, 0.0, 100.0);
+                if (_info.MeterInformation.GetPeakValue(out float peak) == 0)
+                {
+                    PeakPercent = Math.Clamp(peak * 100.0, 0.0, 100.0);
+                }
+                else
+                {
+                    PeakPercent = 0.0;
+                }
             }
             catch
             {
@@ -158,11 +166,13 @@ public partial class AppSessionItemViewModel : ObservableObject
 
     partial void OnSelectedOutputIndexChanged(int value)
     {
+        if (!IsInitialized) return;
         ApplyOutputRouting(value);
     }
 
     partial void OnSelectedInputIndexChanged(int value)
     {
+        if (!IsInitialized) return;
         ApplyInputRouting(value);
     }
 
@@ -176,9 +186,14 @@ public partial class AppSessionItemViewModel : ObservableObject
             }
             var choice = _outputChoices[index];
             string? devId = string.IsNullOrEmpty(choice.Id) ? null : choice.Id;
-            WindowsAppAudioRouter.SetAppEndpoint(ProcessId, ProcessName, false, devId);
+            uint pid = ProcessId;
+            string pName = ProcessName;
             string? inDevId = SelectedInputIndex >= 0 && SelectedInputIndex < _inputChoices.Count ? (string.IsNullOrEmpty(_inputChoices[SelectedInputIndex].Id) ? null : _inputChoices[SelectedInputIndex].Id) : null;
-            WindowsAppAudioRouter.SaveRule(ProcessName, devId, inDevId);
+            Task.Run(() =>
+            {
+                WindowsAppAudioRouter.SetAppEndpoint(pid, pName, false, devId);
+                WindowsAppAudioRouter.SaveRule(pName, devId, inDevId);
+            });
         }
     }
 
@@ -192,9 +207,14 @@ public partial class AppSessionItemViewModel : ObservableObject
             }
             var choice = _inputChoices[index];
             string? devId = string.IsNullOrEmpty(choice.Id) ? null : choice.Id;
-            WindowsAppAudioRouter.SetAppEndpoint(ProcessId, ProcessName, true, devId);
+            uint pid = ProcessId;
+            string pName = ProcessName;
             string? outDevId = SelectedOutputIndex >= 0 && SelectedOutputIndex < _outputChoices.Count ? (string.IsNullOrEmpty(_outputChoices[SelectedOutputIndex].Id) ? null : _outputChoices[SelectedOutputIndex].Id) : null;
-            WindowsAppAudioRouter.SaveRule(ProcessName, outDevId, devId);
+            Task.Run(() =>
+            {
+                WindowsAppAudioRouter.SetAppEndpoint(pid, pName, true, devId);
+                WindowsAppAudioRouter.SaveRule(pName, outDevId, devId);
+            });
         }
     }
 
@@ -203,7 +223,7 @@ public partial class AppSessionItemViewModel : ObservableObject
         OnPropertyChanged(nameof(VolumeText));
         if (_info.VolumeControl != null)
         {
-            try { _info.VolumeControl.Volume = (float)System.Math.Clamp(value / 100.0, 0.0, 1.0); } catch { }
+            try { _info.VolumeControl.SetMasterVolume((float)Math.Clamp(value / 100.0, 0.0, 1.0), IntPtr.Zero); } catch { }
         }
     }
 
@@ -211,7 +231,7 @@ public partial class AppSessionItemViewModel : ObservableObject
     {
         if (_info.VolumeControl != null)
         {
-            try { _info.VolumeControl.Mute = value; } catch { }
+            try { _info.VolumeControl.SetMute(value, IntPtr.Zero); } catch { }
         }
     }
 }

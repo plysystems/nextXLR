@@ -29,10 +29,15 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<BusView> Buses { get; } = new();
     public ObservableCollection<RouteRowViewModel> RouteRows { get; } = new();
     public AppRoutingManagerViewModel AppRouting { get; } = new();
+    public StreamDeckStatusService StreamDeck => StreamDeckStatusService.Instance;
 
     public void SetMetersActive(bool active) => _meterAnimator.IsActive = active;
 
-    public void Dispose() => _meterAnimator.Dispose();
+    public void Dispose()
+    {
+        _meterAnimator.Dispose();
+        StreamDeckStatusService.Instance.StopMonitoring();
+    }
     [ObservableProperty] private string _samplerBusName = "";
     public int RoutingColumnCount => Buses.Count > 0 ? Buses.Count : 4;
 
@@ -212,6 +217,8 @@ public partial class MainViewModel : ObservableObject
             _activeMixerPage = settings.ActiveMixerPage;
         }
         catch { }
+
+        StreamDeckStatusService.Instance.StartMonitoring(_ui);
     }
 
     private TaskCompletionSource<System.Text.Json.Nodes.JsonNode>? _profileRequest;

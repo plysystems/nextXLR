@@ -13,6 +13,8 @@ public sealed partial class SettingsPage : Page
     private bool _loading = true;
 
     public MainViewModel ViewModel { get; private set; } = null!;
+    public StreamDeckStatusService StreamDeckService => StreamDeckStatusService.Instance;
+    public string StreamDeckAppStatusText => StreamDeckService.IsAppRunning ? "Software läuft im Hintergrund" : "Software ist aktuell nicht gestartet";
 
     public SettingsPage()
     {
@@ -52,6 +54,8 @@ public sealed partial class SettingsPage : Page
         GeneralPanel.Visibility = tag == "general" ? Visibility.Visible : Visibility.Collapsed;
         AudioPanel.Visibility = tag == "audio" ? Visibility.Visible : Visibility.Collapsed;
         if (tag == "audio") UpdateDriverStatus();
+        StreamDeckPanel.Visibility = tag == "streamdeck" ? Visibility.Visible : Visibility.Collapsed;
+        if (tag == "streamdeck") _ = StreamDeckService.CheckStatusAsync();
         ProfilesPanel.Visibility = tag == "profiles" ? Visibility.Visible : Visibility.Collapsed;
         if (tag == "profiles") RefreshProfiles();
         UpdatesPanel.Visibility = tag == "updates" ? Visibility.Visible : Visibility.Collapsed;
@@ -935,6 +939,98 @@ public sealed partial class SettingsPage : Page
             BluetoothStatusInfo.Severity = InfoBarSeverity.Warning;
             BluetoothStatusInfo.Message = "Bitte wähle oben deine externe Output-Quelle aus der Liste.";
         }
+    }
+
+    #endregion
+
+    #region Stream Deck Actions
+
+    private async void CheckStreamDeckStatus_Click(object sender, RoutedEventArgs e)
+    {
+        await StreamDeckService.CheckStatusAsync();
+        StreamDeckTestResult.Severity = StreamDeckService.IsApiOnline ? InfoBarSeverity.Success : InfoBarSeverity.Error;
+        StreamDeckTestResult.Title = StreamDeckService.StatusText;
+        StreamDeckTestResult.Message = StreamDeckService.StatusDetail;
+        StreamDeckTestResult.IsOpen = true;
+    }
+
+    private void OpenStreamDeckApp_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("streamdeck:") { UseShellExecute = true });
+        }
+        catch
+        {
+            try
+            {
+                var localApp = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Elgato", "StreamDeck", "StreamDeck.exe");
+                if (System.IO.File.Exists(localApp))
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(localApp) { UseShellExecute = true });
+                }
+            }
+            catch { }
+        }
+    }
+
+    private async void TestBleep_Click(object sender, RoutedEventArgs e)
+    {
+        bool ok = await StreamDeckService.SendTestBleepAsync(true);
+        StreamDeckTestResult.Severity = ok ? InfoBarSeverity.Success : InfoBarSeverity.Error;
+        StreamDeckTestResult.Title = ok ? "Zensur-Bleep aktiviert" : "Fehler beim Senden";
+        StreamDeckTestResult.Message = ok ? "Befehl /api/bleep?active=true erfolgreich ausgeführt. (Schalte nach 500ms ab)" : "Konnte /api/bleep nicht erreichen.";
+        StreamDeckTestResult.IsOpen = true;
+
+        if (ok)
+        {
+            await Task.Delay(500);
+            await StreamDeckService.SendTestBleepAsync(false);
+        }
+    }
+
+    private async void TestMicMute_Click(object sender, RoutedEventArgs e)
+    {
+        bool ok = await StreamDeckService.SendTestMuteToggleAsync("Mic");
+        StreamDeckTestResult.Severity = ok ? InfoBarSeverity.Success : InfoBarSeverity.Error;
+        StreamDeckTestResult.Title = ok ? "Mic Mute umgeschaltet" : "Fehler beim Senden";
+        StreamDeckTestResult.Message = ok ? "Befehl /api/mute?channel=Mic&action=toggle erfolgreich ausgeführt." : "Konnte /api/mute nicht erreichen.";
+        StreamDeckTestResult.IsOpen = true;
+    }
+
+    private async void TestFaderA_Click(object sender, RoutedEventArgs e)
+    {
+        bool ok = await StreamDeckService.SendTestFaderAsync("A", 0.75f);
+        StreamDeckTestResult.Severity = ok ? InfoBarSeverity.Success : InfoBarSeverity.Error;
+        StreamDeckTestResult.Title = ok ? "Fader A auf 75% gesetzt" : "Fehler beim Senden";
+        StreamDeckTestResult.Message = ok ? "Befehl /api/fader?channel=A&volume=0.75 erfolgreich an Engine gesendet." : "Konnte /api/fader nicht erreichen.";
+        StreamDeckTestResult.IsOpen = true;
+    }
+
+    private void OpenStreamDeckDoc_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var baseDir = AppContext.BaseDirectory;
+            var docPath = System.IO.Path.Combine(baseDir, "docs", "STREAMDECK.md");
+            if (!System.IO.File.Exists(docPath))
+            {
+                _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/plysystems/nextXLR/blob/main/docs/STREAMDECK.md"));
+            }
+            else
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(docPath) { UseShellExecute = true });
+            }
+        }
+        catch
+        {
+            _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/plysystems/nextXLR/blob/main/docs/STREAMDECK.md"));
+        }
+    }
+
+    private void OpenApiStatusBrowser_Click(object sender, RoutedEventArgs e)
+    {
+        _ = Windows.System.Launcher.LaunchUriAsync(new Uri("http://127.0.0.1:48500/api/status"));
     }
 
     #endregion

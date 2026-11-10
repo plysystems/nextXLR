@@ -265,7 +265,7 @@ public partial class RoutingPage : Page
 
     private void OutputComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (sender is Microsoft.UI.Xaml.Controls.ComboBox cb && cb.DataContext is ViewModels.AppSessionItemViewModel vm && cb.SelectedIndex >= 0)
+        if (sender is Microsoft.UI.Xaml.Controls.ComboBox cb && cb.DataContext is ViewModels.AppSessionItemViewModel vm && vm.IsInitialized && cb.SelectedIndex >= 0)
         {
             vm.ApplyOutputRouting(cb.SelectedIndex);
         }
@@ -273,7 +273,7 @@ public partial class RoutingPage : Page
 
     private void InputComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (sender is Microsoft.UI.Xaml.Controls.ComboBox cb && cb.DataContext is ViewModels.AppSessionItemViewModel vm && cb.SelectedIndex >= 0)
+        if (sender is Microsoft.UI.Xaml.Controls.ComboBox cb && cb.DataContext is ViewModels.AppSessionItemViewModel vm && vm.IsInitialized && cb.SelectedIndex >= 0)
         {
             vm.ApplyInputRouting(cb.SelectedIndex);
         }

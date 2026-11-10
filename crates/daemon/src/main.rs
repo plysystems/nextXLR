@@ -154,6 +154,7 @@ async fn main() -> Result<()> {
         .route("/dev/sim/fader", post(sim_fader))
         .route("/dev/sim/mute", post(sim_mute))
         .route("/dev/sim/received", get(sim_received))
+        .layer(axum::middleware::from_fn(cors_middleware))
         .with_state(app);
 
     let bind =
@@ -722,4 +723,25 @@ async fn api_profile(
     let _ = rx.await;
 
     axum::Json(json!({ "ok": true, "profile": q.name }))
+}
+
+async fn cors_middleware(
+    req: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    let mut response = next.run(req).await;
+    let headers = response.headers_mut();
+    headers.insert(
+        axum::http::header::ACCESS_CONTROL_ALLOW_ORIGIN,
+        axum::http::HeaderValue::from_static("*"),
+    );
+    headers.insert(
+        axum::http::header::ACCESS_CONTROL_ALLOW_METHODS,
+        axum::http::HeaderValue::from_static("GET, POST, OPTIONS"),
+    );
+    headers.insert(
+        axum::http::header::ACCESS_CONTROL_ALLOW_HEADERS,
+        axum::http::HeaderValue::from_static("*"),
+    );
+    response
 }

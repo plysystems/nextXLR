@@ -99,6 +99,7 @@ GET http://127.0.0.1:14565/api/status
 
 Für bidirektionale Integrationen und Echtzeit-Displays steht die WebSocket-Schnittstelle zur Verfügung:
 ```
-ws://127.0.0.1:14565/ws
+ws://127.0.0.1:48500/ws
 ```
 Alle Ereignisse (Faderbewegungen, Tastenanschläge, Metering) werden im JSON-Format in Echtzeit gestreamt.
+

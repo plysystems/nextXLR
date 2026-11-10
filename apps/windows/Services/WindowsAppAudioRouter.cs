@@ -11,35 +11,88 @@ namespace NextXLR.Services;
 public enum EDataFlow { eRender = 0, eCapture = 1, eAll = 2 }
 public enum ERole { eConsole = 0, eMultimedia = 1, eCommunications = 2 }
 
+[Guid("D666063F-1587-4E43-81F1-B948E807363F")]
+[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+internal interface IMMDeviceNative
+{
+    [PreserveSig] int Activate(ref Guid id, int clsCtx, IntPtr activationParams, [MarshalAs(UnmanagedType.IUnknown)] out object interfacePointer);
+    [PreserveSig] int OpenPropertyStore(int stgmAccess, out IntPtr properties);
+    [PreserveSig] int GetId([MarshalAs(UnmanagedType.LPWStr)] out string id);
+    [PreserveSig] int GetState(out int state);
+}
+
+[Guid("77AA99A0-1BD6-484F-8BC7-2C654C9A9B6F")]
+[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+internal interface IAudioSessionManager2Native
+{
+    [PreserveSig] int GetAudioSessionControl(IntPtr AudioSessionGuid, int StreamFlags, out IntPtr SessionControl);
+    [PreserveSig] int GetSimpleAudioVolume(IntPtr AudioSessionGuid, int StreamFlags, out IntPtr AudioVolume);
+    [PreserveSig] int GetSessionEnumerator(out IAudioSessionEnumeratorNative SessionEnum);
+    [PreserveSig] int RegisterSessionNotification(IntPtr SessionNotification);
+    [PreserveSig] int UnregisterSessionNotification(IntPtr SessionNotification);
+    [PreserveSig] int RegisterDuckNotification(string sessionID, IntPtr duckNotification);
+    [PreserveSig] int UnregisterDuckNotification(IntPtr duckNotification);
+}
+
+[Guid("E2F5BB11-0570-40CA-ACDD-3AA01277DEE8")]
+[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+internal interface IAudioSessionEnumeratorNative
+{
+    [PreserveSig] int GetCount(out int SessionCount);
+    [PreserveSig] int GetSession(int SessionIndex, out IntPtr Session);
+}
+
+[Guid("bfb7ff88-7239-4fc9-8fa2-07c950be9c6d")]
+[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+internal interface IAudioSessionControl2Native
+{
+    [PreserveSig] int GetState(out int pRetVal);
+    [PreserveSig] int GetDisplayName([MarshalAs(UnmanagedType.LPWStr)] out string pRetVal);
+    [PreserveSig] int SetDisplayName([MarshalAs(UnmanagedType.LPWStr)] string Value, IntPtr EventContext);
+    [PreserveSig] int GetIconPath([MarshalAs(UnmanagedType.LPWStr)] out string pRetVal);
+    [PreserveSig] int SetIconPath([MarshalAs(UnmanagedType.LPWStr)] string Value, IntPtr EventContext);
+    [PreserveSig] int GetGroupingParam(out Guid pRetVal);
+    [PreserveSig] int SetGroupingParam(ref Guid Override, IntPtr EventContext);
+    [PreserveSig] int RegisterAudioSessionNotification(IntPtr NewNotifications);
+    [PreserveSig] int UnregisterAudioSessionNotification(IntPtr NewNotifications);
+    [PreserveSig] int GetSessionIdentifier([MarshalAs(UnmanagedType.LPWStr)] out string pRetVal);
+    [PreserveSig] int GetSessionInstanceIdentifier([MarshalAs(UnmanagedType.LPWStr)] out string pRetVal);
+    [PreserveSig] int GetProcessId(out uint pRetVal);
+    [PreserveSig] int IsSystemSoundsSession();
+    [PreserveSig] int SetDuckingPreference(bool optOut);
+}
+
+[Guid("87CE5498-68D6-44E5-9215-6DA47EF883D8")]
+[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+public interface ISimpleAudioVolumeNative
+{
+    [PreserveSig] int SetMasterVolume(float fLevel, IntPtr EventContext);
+    [PreserveSig] int GetMasterVolume(out float pfLevel);
+    [PreserveSig] int SetMute([MarshalAs(UnmanagedType.Bool)] bool bMute, IntPtr EventContext);
+    [PreserveSig] int GetMute([MarshalAs(UnmanagedType.Bool)] out bool pbMute);
+}
+
+[Guid("C02216F6-8C67-4B5B-9D00-D008E73E0064")]
+[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+public interface IAudioMeterInformationNative
+{
+    [PreserveSig] int GetPeakValue(out float pfPeak);
+    [PreserveSig] int GetMeteringChannelCount(out uint pnChannelCount);
+    [PreserveSig] int GetChannelsPeakValues(uint u32ChannelCount, [Out, MarshalAs(UnmanagedType.LPArray)] float[] afPeakValues);
+    [PreserveSig] int QueryHardwareSupport(out uint pdwHardwareSupportMask);
+}
+
 [Guid("ab3d4648-e242-459f-b02f-541c70306324")]
 [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 internal interface IAudioPolicyConfigFactoryVariantFor21H2
 {
-    // IInspectable methods
     int GetIids(out uint iidCount, out IntPtr iids);
     int GetRuntimeClassName(out IntPtr className);
     int GetTrustLevel(out int trustLevel);
 
-    // 19 dummy methods
-    int __incomplete__add_CtxVolumeChange();
-    int __incomplete__remove_CtxVolumeChanged();
-    int __incomplete__add_RingerVibrateStateChanged();
-    int __incomplete__remove_RingerVibrateStateChange();
-    int __incomplete__SetVolumeGroupGainForId();
-    int __incomplete__GetVolumeGroupGainForId();
-    int __incomplete__GetActiveVolumeGroupForEndpointId();
-    int __incomplete__GetVolumeGroupsForEndpoint();
-    int __incomplete__GetCurrentVolumeContext();
-    int __incomplete__SetVolumeGroupMuteForId();
-    int __incomplete__GetVolumeGroupMuteForId();
-    int __incomplete__SetRingerVibrateState();
-    int __incomplete__GetRingerVibrateState();
-    int __incomplete__SetPreferredChatApplication();
-    int __incomplete__ResetPreferredChatApplication();
-    int __incomplete__GetPreferredChatApplication();
-    int __incomplete__GetCurrentChatApplications();
-    int __incomplete__add_ChatContextChanged();
-    int __incomplete__remove_ChatContextChanged();
+    int m01(); int m02(); int m03(); int m04(); int m05(); int m06();
+    int m07(); int m08(); int m09(); int m10(); int m11(); int m12();
+    int m13(); int m14(); int m15(); int m16(); int m17(); int m18(); int m19();
 
     [PreserveSig]
     int SetPersistedDefaultAudioEndpoint(uint processId, EDataFlow flow, ERole role, IntPtr deviceId);
@@ -53,31 +106,13 @@ internal interface IAudioPolicyConfigFactoryVariantFor21H2
 [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 internal interface IAudioPolicyConfigFactoryVariantForDownlevel
 {
-    // IInspectable methods
     int GetIids(out uint iidCount, out IntPtr iids);
     int GetRuntimeClassName(out IntPtr className);
     int GetTrustLevel(out int trustLevel);
 
-    // 19 dummy methods
-    int __incomplete__add_CtxVolumeChange();
-    int __incomplete__remove_CtxVolumeChanged();
-    int __incomplete__add_RingerVibrateStateChanged();
-    int __incomplete__remove_RingerVibrateStateChange();
-    int __incomplete__SetVolumeGroupGainForId();
-    int __incomplete__GetVolumeGroupGainForId();
-    int __incomplete__GetActiveVolumeGroupForEndpointId();
-    int __incomplete__GetVolumeGroupsForEndpoint();
-    int __incomplete__GetCurrentVolumeContext();
-    int __incomplete__SetVolumeGroupMuteForId();
-    int __incomplete__GetVolumeGroupMuteForId();
-    int __incomplete__SetRingerVibrateState();
-    int __incomplete__GetRingerVibrateState();
-    int __incomplete__SetPreferredChatApplication();
-    int __incomplete__ResetPreferredChatApplication();
-    int __incomplete__GetPreferredChatApplication();
-    int __incomplete__GetCurrentChatApplications();
-    int __incomplete__add_ChatContextChanged();
-    int __incomplete__remove_ChatContextChanged();
+    int m01(); int m02(); int m03(); int m04(); int m05(); int m06();
+    int m07(); int m08(); int m09(); int m10(); int m11(); int m12();
+    int m13(); int m14(); int m15(); int m16(); int m17(); int m18(); int m19();
 
     [PreserveSig]
     int SetPersistedDefaultAudioEndpoint(uint processId, EDataFlow flow, ERole role, IntPtr deviceId);
@@ -107,8 +142,8 @@ public sealed class AppAudioSessionInfo
     public string CurrentInputDeviceId { get; set; } = "";
     public float Volume { get; set; } = 1.0f;
     public bool IsMuted { get; set; }
-    public SimpleAudioVolume? VolumeControl { get; set; }
-    public AudioMeterInformation? MeterInformation { get; set; }
+    public ISimpleAudioVolumeNative? VolumeControl { get; set; }
+    public IAudioMeterInformationNative? MeterInformation { get; set; }
 }
 
 /// <summary>
@@ -249,7 +284,7 @@ public static class WindowsAppAudioRouter
     {
         var list = new List<AudioEndpointChoice>
         {
-            new("", "Windows-Standard (Default)", "Standard", "\uE774") // Globe / Default
+            new("", "Windows-Standard (Default)", "Standard", "\uE774")
         };
 
         try
@@ -257,7 +292,6 @@ public static class WindowsAppAudioRouter
             using var enumerator = new MMDeviceEnumerator();
             var renderDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active).ToList();
 
-            // Order: System, Game, Chat, Music, Sample
             var preferred = new[] { "System", "Game", "Chat", "Music", "Sample" };
             foreach (var pref in preferred)
             {
@@ -273,18 +307,17 @@ public static class WindowsAppAudioRouter
                 {
                     var glyph = pref switch
                     {
-                        "System" => "\uE7F8",  // PC
-                        "Game" => "\uE7FC",    // Game controller
-                        "Chat" => "\uE8BD",    // Chat bubble
-                        "Music" => "\uEC4F",   // Music note
-                        "Sample" => "\uEA38",  // Audio waveform
+                        "System" => "\uE7F8",
+                        "Game" => "\uE7FC",
+                        "Chat" => "\uE8BD",
+                        "Music" => "\uEC4F",
+                        "Sample" => "\uEA38",
                         _ => "\uE7F6"
                     };
                     list.Add(new AudioEndpointChoice(dev.ID, $"{pref} (TC-Helicon GoXLR)", pref, glyph));
                 }
             }
 
-            // Fallback: If no GoXLR channels detected, add active render devices
             if (list.Count == 1)
             {
                 foreach (var d in renderDevices)
@@ -319,7 +352,7 @@ public static class WindowsAppAudioRouter
                 d.FriendlyName.Contains("Chat", StringComparison.OrdinalIgnoreCase));
             if (chatMic != null)
             {
-                list.Add(new AudioEndpointChoice(chatMic.ID, "Chat Mic (TC-Helicon GoXLR) — Voice-Chat", "Chat Mic", "\uE720")); // Microphone
+                list.Add(new AudioEndpointChoice(chatMic.ID, "Chat Mic (TC-Helicon GoXLR) — Voice-Chat", "Chat Mic", "\uE720"));
             }
 
             var broadcast = captureDevices.FirstOrDefault(d =>
@@ -330,7 +363,7 @@ public static class WindowsAppAudioRouter
                 (d.FriendlyName.Contains("Broadcast", StringComparison.OrdinalIgnoreCase) || d.FriendlyName.Contains("Stream", StringComparison.OrdinalIgnoreCase)));
             if (broadcast != null)
             {
-                list.Add(new AudioEndpointChoice(broadcast.ID, "Broadcast Stream Mix (TC-Helicon GoXLR) — OBS / Stream", "Broadcast Mix", "\uE93C")); // Broadcast radio
+                list.Add(new AudioEndpointChoice(broadcast.ID, "Broadcast Stream Mix (TC-Helicon GoXLR) — OBS / Stream", "Broadcast Mix", "\uE93C"));
             }
 
             var sample = captureDevices.FirstOrDefault(d =>
@@ -357,7 +390,9 @@ public static class WindowsAppAudioRouter
         return list;
     }
 
-    /// <summary>Scans active applications playing audio in Windows.</summary>
+    /// <summary>
+    /// Scans active applications playing audio in Windows via high-performance direct COM interop.
+    /// </summary>
     public static List<AppAudioSessionInfo> GetActiveAppSessions()
     {
         var results = new Dictionary<uint, AppAudioSessionInfo>();
@@ -368,103 +403,129 @@ public static class WindowsAppAudioRouter
             using var enumerator = new MMDeviceEnumerator();
             var renderDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active).ToList();
 
+            var devInterfaceField = typeof(MMDevice).GetField("deviceInterface", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            Guid iidMgr2 = typeof(IAudioSessionManager2Native).GUID;
+
             foreach (var dev in renderDevices)
             {
-                AudioSessionManager? mgr = null;
                 try
                 {
-                    mgr = dev.AudioSessionManager;
-                }
-                catch { continue; }
+                    var rawImmObj = devInterfaceField?.GetValue(dev);
+                    if (rawImmObj is not IMMDeviceNative imm) continue;
 
-                if (mgr == null) continue;
-
-                int sessionCount = 0;
-                try { sessionCount = mgr.Sessions.Count; } catch { }
-
-                for (int i = 0; i < sessionCount; i++)
-                {
-                    AudioSessionControl? s = null;
-                    try { s = mgr.Sessions[i]; } catch { continue; }
-                    if (s == null) continue;
-
-                    uint pid = 0;
-                    try { pid = s.GetProcessID; } catch { continue; }
-                    if (pid == 0) continue; // system sound session
-                    if (results.ContainsKey(pid)) continue;
-
-                    string procName = "";
-                    string windowTitle = "";
-                    try
-                    {
-                        using var p = Process.GetProcessById((int)pid);
-                        procName = p.ProcessName;
-                        windowTitle = p.MainWindowTitle;
-                    }
-                    catch { procName = $"App (PID {pid})"; }
-
-                    // Skip our own app processes
-                    if (procName.Equals("NextXLR", StringComparison.OrdinalIgnoreCase) ||
-                        procName.Equals("mixforged", StringComparison.OrdinalIgnoreCase) ||
-                        procName.Equals("mixforge", StringComparison.OrdinalIgnoreCase))
+                    if (imm.Activate(ref iidMgr2, 23 /* CLSCTX_ALL */, IntPtr.Zero, out object objMgr2) != 0 ||
+                        objMgr2 is not IAudioSessionManager2Native mgr2)
                     {
                         continue;
                     }
 
-                    float vol = 1.0f;
-                    bool muted = false;
-                    SimpleAudioVolume? volCtrl = null;
-                    AudioMeterInformation? meterInfo = null;
-                    try
+                    if (mgr2.GetSessionEnumerator(out var sEnum) != 0 || sEnum == null)
                     {
-                        volCtrl = s.SimpleAudioVolume;
-                        if (volCtrl != null)
+                        continue;
+                    }
+
+                    if (sEnum.GetCount(out int sessionCount) != 0)
+                    {
+                        sessionCount = 0;
+                    }
+
+                    for (int i = 0; i < sessionCount; i++)
+                    {
+                        if (sEnum.GetSession(i, out IntPtr pSession) != 0 || pSession == IntPtr.Zero)
                         {
-                            vol = volCtrl.Volume;
-                            muted = volCtrl.Mute;
+                            continue;
                         }
-                    }
-                    catch { }
 
-                    try
-                    {
-                        meterInfo = s.AudioMeterInformation;
-                    }
-                    catch { }
-
-                    var info = new AppAudioSessionInfo
-                    {
-                        ProcessId = pid,
-                        ProcessName = procName,
-                        DisplayName = !string.IsNullOrWhiteSpace(windowTitle) ? windowTitle : procName,
-                        Glyph = DetectGlyph(procName),
-                        CurrentOutputDeviceId = dev.ID,
-                        CurrentOutputName = dev.FriendlyName,
-                        Volume = vol,
-                        IsMuted = muted,
-                        VolumeControl = volCtrl,
-                        MeterInformation = meterInfo
-                    };
-
-                    // Check if an explicit persisted endpoint is assigned via Windows Policy
-                    if (factory != null)
-                    {
                         try
                         {
-                            if (factory.GetPersistedDefaultAudioEndpoint(pid, EDataFlow.eRender, ERole.eMultimedia, out var outDevId) == 0 && !string.IsNullOrEmpty(outDevId))
-                            {
-                                info.CurrentOutputDeviceId = UnpackDeviceId(outDevId);
-                            }
-                            if (factory.GetPersistedDefaultAudioEndpoint(pid, EDataFlow.eCapture, ERole.eMultimedia, out var inDevId) == 0 && !string.IsNullOrEmpty(inDevId))
-                            {
-                                info.CurrentInputDeviceId = UnpackDeviceId(inDevId);
-                            }
-                        }
-                        catch { }
-                    }
+                            var sc2 = (IAudioSessionControl2Native)Marshal.GetObjectForIUnknown(pSession);
+                            sc2.GetProcessId(out uint pid);
+                            if (pid == 0) continue; // system sound session
+                            if (results.ContainsKey(pid)) continue;
 
-                    results[pid] = info;
+                            string procName = "";
+                            string windowTitle = "";
+                            try
+                            {
+                                using var p = Process.GetProcessById((int)pid);
+                                procName = p.ProcessName;
+                                windowTitle = p.MainWindowTitle;
+                            }
+                            catch { procName = $"App (PID {pid})"; }
+
+                            // Skip our own background & app processes
+                            if (procName.Equals("NextXLR", StringComparison.OrdinalIgnoreCase) ||
+                                procName.Equals("mixforged", StringComparison.OrdinalIgnoreCase) ||
+                                procName.Equals("mixforge", StringComparison.OrdinalIgnoreCase))
+                            {
+                                continue;
+                            }
+
+                            float vol = 1.0f;
+                            bool muted = false;
+                            ISimpleAudioVolumeNative? volCtrl = null;
+                            IAudioMeterInformationNative? meterInfo = null;
+
+                            try
+                            {
+                                if (Marshal.GetObjectForIUnknown(pSession) is ISimpleAudioVolumeNative sav)
+                                {
+                                    volCtrl = sav;
+                                    sav.GetMasterVolume(out vol);
+                                    sav.GetMute(out muted);
+                                }
+                            }
+                            catch { }
+
+                            try
+                            {
+                                if (Marshal.GetObjectForIUnknown(pSession) is IAudioMeterInformationNative ami)
+                                {
+                                    meterInfo = ami;
+                                }
+                            }
+                            catch { }
+
+                            var info = new AppAudioSessionInfo
+                            {
+                                ProcessId = pid,
+                                ProcessName = procName,
+                                DisplayName = !string.IsNullOrWhiteSpace(windowTitle) ? windowTitle : procName,
+                                Glyph = DetectGlyph(procName),
+                                CurrentOutputDeviceId = dev.ID,
+                                CurrentOutputName = dev.FriendlyName,
+                                Volume = vol,
+                                IsMuted = muted,
+                                VolumeControl = volCtrl,
+                                MeterInformation = meterInfo
+                            };
+
+                            // Query Windows Policy for explicit assigned device
+                            if (factory != null)
+                            {
+                                try
+                                {
+                                    if (factory.GetPersistedDefaultAudioEndpoint(pid, EDataFlow.eRender, ERole.eMultimedia, out var outDevId) == 0 && !string.IsNullOrEmpty(outDevId))
+                                    {
+                                        info.CurrentOutputDeviceId = UnpackDeviceId(outDevId);
+                                    }
+                                    if (factory.GetPersistedDefaultAudioEndpoint(pid, EDataFlow.eCapture, ERole.eCommunications, out var inDevId) == 0 && !string.IsNullOrEmpty(inDevId))
+                                    {
+                                        info.CurrentInputDeviceId = UnpackDeviceId(inDevId);
+                                    }
+                                }
+                                catch { }
+                            }
+
+                            results[pid] = info;
+                        }
+                        finally
+                        {
+                            Marshal.Release(pSession);
+                        }
+                    }
                 }
+                catch { }
             }
         }
         catch { }
@@ -474,6 +535,7 @@ public static class WindowsAppAudioRouter
 
     /// <summary>
     /// Routes an application (and all of its child/sibling processes) to a specific audio output or microphone endpoint.
+    /// Sets all 3 roles: Multimedia, Console, and Communications.
     /// </summary>
     public static bool SetAppEndpoint(uint processId, string processName, bool isCapture, string? endpointDeviceId)
     {
@@ -489,6 +551,11 @@ public static class WindowsAppAudioRouter
             {
                 var fullId = FormatFullDeviceId(endpointDeviceId, isCapture);
                 WindowsCreateString(fullId, (uint)fullId.Length, out hStr);
+            }
+            else
+            {
+                // Windows requires empty string HSTRING to reset to system default
+                WindowsCreateString("", 0, out hStr);
             }
 
             // Gather all process IDs related to this application (audio helper processes like Spotify, Chrome, Discord)
@@ -513,10 +580,7 @@ public static class WindowsAppAudioRouter
                 {
                     factory.SetPersistedDefaultAudioEndpoint(pid, flow, ERole.eMultimedia, hStr);
                     factory.SetPersistedDefaultAudioEndpoint(pid, flow, ERole.eConsole, hStr);
-                    if (isCapture)
-                    {
-                        factory.SetPersistedDefaultAudioEndpoint(pid, flow, ERole.eCommunications, hStr);
-                    }
+                    factory.SetPersistedDefaultAudioEndpoint(pid, flow, ERole.eCommunications, hStr);
                 }
                 catch { }
             }
@@ -562,11 +626,13 @@ public static class WindowsAppAudioRouter
                             {
                                 try { subKey.DeleteValue("000_001", false); } catch { }
                                 try { subKey.DeleteValue("001_001", false); } catch { }
+                                try { subKey.DeleteValue("002_001", false); } catch { }
                             }
                             else
                             {
                                 subKey.SetValue("000_001", fullId, Microsoft.Win32.RegistryValueKind.String);
                                 subKey.SetValue("001_001", fullId, Microsoft.Win32.RegistryValueKind.String);
+                                subKey.SetValue("002_001", fullId, Microsoft.Win32.RegistryValueKind.String);
                             }
                         }
                         else
@@ -575,11 +641,13 @@ public static class WindowsAppAudioRouter
                             {
                                 try { subKey.DeleteValue("000_000", false); } catch { }
                                 try { subKey.DeleteValue("001_000", false); } catch { }
+                                try { subKey.DeleteValue("002_000", false); } catch { }
                             }
                             else
                             {
                                 subKey.SetValue("000_000", fullId, Microsoft.Win32.RegistryValueKind.String);
                                 subKey.SetValue("001_000", fullId, Microsoft.Win32.RegistryValueKind.String);
+                                subKey.SetValue("002_000", fullId, Microsoft.Win32.RegistryValueKind.String);
                             }
                         }
                     }

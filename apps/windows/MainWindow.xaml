@@ -93,6 +93,27 @@
                         <Ellipse Fill="{x:Bind StatusBrush(ViewModel.IsConnected), Mode=OneWay}" Width="7" Height="7" />
                     </Grid>
 
+                    <!-- Stream Deck integration status -->
+                    <Border Margin="10,0" Padding="12,8" CornerRadius="10"
+                            Background="{StaticResource SurfaceL2Brush}" BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}"
+                            BorderThickness="1" Visibility="{x:Bind Nav.IsPaneOpen, Mode=OneWay}"
+                            ToolTipService.ToolTip="{x:Bind ViewModel.StreamDeck.StatusDetail, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Grid Width="10" Height="10" VerticalAlignment="Center">
+                                <Ellipse Fill="{x:Bind ViewModel.StreamDeck.StatusBrush, Mode=OneWay}" Opacity="0.35" Width="10" Height="10" />
+                                <Ellipse Fill="{x:Bind ViewModel.StreamDeck.StatusBrush, Mode=OneWay}" Width="6" Height="6" />
+                            </Grid>
+                            <FontIcon Glyph="&#xE93C;" FontSize="13" Foreground="{StaticResource BrandBrush}" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Bind ViewModel.StreamDeck.StatusText, Mode=OneWay}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                    <Grid Width="40" Height="28" HorizontalAlignment="Left" Margin="4,0,0,0"
+                          Visibility="{x:Bind VisibleIfNot(Nav.IsPaneOpen), Mode=OneWay}"
+                          ToolTipService.ToolTip="{x:Bind ViewModel.StreamDeck.StatusDetail, Mode=OneWay}">
+                        <Ellipse Fill="{x:Bind ViewModel.StreamDeck.StatusBrush, Mode=OneWay}" Opacity="0.35" Width="12" Height="12" />
+                        <Ellipse Fill="{x:Bind ViewModel.StreamDeck.StatusBrush, Mode=OneWay}" Width="7" Height="7" />
+                    </Grid>
+
                     <!-- Detected device (USB PID → GoXLR / GoXLR Mini); only when the pane is open. -->
                     <Border Margin="10,0" Padding="14,12" CornerRadius="12"
                             Visibility="{x:Bind Nav.IsPaneOpen, Mode=OneWay}"
