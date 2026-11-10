@@ -386,6 +386,10 @@ impl Hub {
                     if let Some(ch) = self.channel(fader) {
                         let pos = if self.fader_target_submix { ch.submix_volume } else { ch.volume };
                         let muted = if self.fader_target_submix { ch.submix_muted } else { ch.muted };
+                        out.push(Effect::Hardware(HardwareCommand::ChannelVolume {
+                            channel: ch.id.0,
+                            volume: pos,
+                        }));
                         out.push(Effect::Hardware(HardwareCommand::FaderDisplay {
                             fader,
                             position: pos,

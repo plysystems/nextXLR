@@ -52,6 +52,21 @@ public partial class ChannelViewModel : ObservableObject
     [ObservableProperty] private bool _submixMuted;
     [ObservableProperty] private bool _isSubmixActive;
     [ObservableProperty] private bool _showDualMix = true;
+    [ObservableProperty] private bool _dualFaderIsKopfhoerer = true;
+
+    partial void OnDualFaderIsKopfhoererChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowFaderOnStream));
+        OnPropertyChanged(nameof(ShowFaderOnPhones));
+    }
+    partial void OnShowDualMixChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowFaderOnStream));
+        OnPropertyChanged(nameof(ShowFaderOnPhones));
+    }
+
+    public bool ShowFaderOnStream => HasFader && (!ShowDualMix || !DualFaderIsKopfhoerer);
+    public bool ShowFaderOnPhones => HasFader && ShowDualMix && DualFaderIsKopfhoerer;
     [ObservableProperty] private double? _restoreVolume;
     [ObservableProperty] private bool _metered = true;
     /// <summary>Meter-only (no level control on the GoXLR): Broadcast Stream Mix, Chat Mic.</summary>

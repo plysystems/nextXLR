@@ -67,21 +67,44 @@ public partial class MainViewModel : ObservableObject
 
     /// <summary>Dual-Mix Mode: 0 = Beide Mixe gleichzeitig (Dual-View), 1 = Nur Stream-Mix, 2 = Nur Kopfhörer-Mix.</summary>
     [ObservableProperty] private int _activeMixIndex = 0;
+    /// <summary>In Dual view: which mix physical GoXLR hardware faders control (0 = Kopfhörer, 1 = Stream).</summary>
+    [ObservableProperty] private int _dualFaderTarget = 0; // 0 = Kopfhörer, 1 = Stream
     [ObservableProperty] private bool _isSubmixActive = true;
 
-    partial void OnActiveMixIndexChanged(int value)
+    public bool IsDualMode => ActiveMixIndex == 0;
+    public bool IsDualKopfhoererTarget => ActiveMixIndex == 0 && DualFaderTarget == 0;
+    public bool IsDualStreamTarget => ActiveMixIndex == 0 && DualFaderTarget == 1;
+
+    public bool TargetSubmix => ActiveMixIndex switch
     {
-        bool showDual = (value == 0);
-        bool targetSubmix = (value == 0 || value == 2);
+        0 => (DualFaderTarget == 0), // in Dual: user chooses Kopfhörer or Stream
+        1 => false,                  // in Stream: always Stream
+        _ => true                    // in Kopfhörer: always Kopfhörer
+    };
+
+    partial void OnActiveMixIndexChanged(int value) => ApplyFaderTargetAndMixMode();
+    partial void OnDualFaderTargetChanged(int value) => ApplyFaderTargetAndMixMode();
+
+    public void SetDualFaderTargetKopfhoerer() => DualFaderTarget = 0;
+    public void SetDualFaderTargetStream() => DualFaderTarget = 1;
+
+    public void ApplyFaderTargetAndMixMode()
+    {
+        bool showDual = (ActiveMixIndex == 0);
+        bool targetSubmix = TargetSubmix;
         IsSubmixActive = targetSubmix;
         foreach (var ch in Channels)
         {
             ch.ShowDualMix = showDual;
             ch.IsSubmixActive = targetSubmix;
+            ch.DualFaderIsKopfhoerer = (DualFaderTarget == 0);
         }
         _transport.Send(new SetFaderTargetSubmix(targetSubmix));
         OnPropertyChanged(nameof(MixModeTitle));
         OnPropertyChanged(nameof(MixModeDescription));
+        OnPropertyChanged(nameof(IsDualMode));
+        OnPropertyChanged(nameof(IsDualKopfhoererTarget));
+        OnPropertyChanged(nameof(IsDualStreamTarget));
     }
 
     public string MixModeTitle => ActiveMixIndex switch
@@ -93,9 +116,11 @@ public partial class MainViewModel : ObservableObject
 
     public string MixModeDescription => ActiveMixIndex switch
     {
-        0 => "Simultane Steuerung beider Mixe (GoXLR-Fader steuern den Kopfhörer-Mix).",
-        1 => "Haupt-Broadcast-Mix (das, was Stream & Zuschauer hören).",
-        _ => "Unabhängiger Kopfhörer-Mix (dein persönlicher Monitor-Mix)."
+        0 => DualFaderTarget == 0
+            ? "Dual-Mix aktiv: Physische GoXLR-Fader steuern den Kopfhörer-Mix."
+            : "Dual-Mix aktiv: Physische GoXLR-Fader steuern den Stream-Mix.",
+        1 => "Stream-Mix aktiv: Physische GoXLR-Fader steuern den Stream-Broadcast.",
+        _ => "Kopfhörer-Mix aktiv: Physische GoXLR-Fader steuern das persönliche Monitoring."
     };
 
     partial void OnBleepVolumeChanged(double value)
@@ -428,11 +453,18 @@ public partial class MainViewModel : ObservableObject
             if (Find(c.Id) is { } vm)
             {
                 vm.IsSubmixActive = IsSubmixActive;
+                vm.ShowDualMix = (ActiveMixIndex == 0);
+                vm.DualFaderIsKopfhoerer = (DualFaderTarget == 0);
                 vm.ApplyFromServer(c);
             }
             else
             {
-                var newVm = new ChannelViewModel(c, _transport) { IsSubmixActive = IsSubmixActive };
+                var newVm = new ChannelViewModel(c, _transport)
+                {
+                    IsSubmixActive = IsSubmixActive,
+                    ShowDualMix = (ActiveMixIndex == 0),
+                    DualFaderIsKopfhoerer = (DualFaderTarget == 0)
+                };
                 Channels.Add(newVm);
             }
         }

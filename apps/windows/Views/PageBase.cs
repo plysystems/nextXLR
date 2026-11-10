@@ -136,6 +136,16 @@ public partial class MixerPage : Page
         if (ViewModel != null) ViewModel.ActiveMixIndex = 2;
     }
 
+    private void DualTargetPhones_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.SetDualFaderTargetKopfhoerer();
+    }
+
+    private void DualTargetStream_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.SetDualFaderTargetStream();
+    }
+
     private void MixerPage1_Click(object sender, RoutedEventArgs e)
     {
         ViewModel?.SwitchMixerPage(1);
@@ -162,6 +172,10 @@ public partial class MixerPage : Page
     public Microsoft.UI.Xaml.Media.Brush StreamMixForeground(int index) => index == 1 ? ActiveTextFg : MutedTextFg;
     public Microsoft.UI.Xaml.Media.Brush HeadphonesMixBackground(int index) => index == 2 ? ActiveHeadphonesBg : TransparentBg;
     public Microsoft.UI.Xaml.Media.Brush HeadphonesMixForeground(int index) => index == 2 ? ActiveTextFg : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush DualPhonesBackground(int target) => target == 0 ? ActiveHeadphonesBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush DualPhonesForeground(int target) => target == 0 ? ActiveTextFg : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush DualStreamBackground(int target) => target == 1 ? ActiveBrandBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush DualStreamForeground(int target) => target == 1 ? ActiveTextFg : MutedTextFg;
 
     private static double RowWidth(int n, double strip) => n * strip + Math.Max(0, n - 1) * Gap;
 

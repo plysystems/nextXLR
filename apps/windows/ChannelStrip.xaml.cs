@@ -236,6 +236,7 @@ public sealed partial class ChannelStrip : UserControl
     public Visibility HideIf(bool value) => value ? Visibility.Collapsed : Visibility.Visible;
     public Visibility ShowIfDual(bool showDual, bool isFixed) => (showDual && !isFixed) ? Visibility.Visible : Visibility.Collapsed;
     public Visibility ShowIfSingle(bool showDual, bool isFixed) => (!showDual && !isFixed) ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility ShowSingleBadge(bool hasFader, bool showDual) => (hasFader && !showDual) ? Visibility.Visible : Visibility.Collapsed;
     public string MeterTooltip(bool metered) => Loc.Get(metered ? "MixerMeterTooltip" : "MixerNoMeterTooltip");
     public string EditTooltip(bool isFixed) => isFixed ? Loc.Get("MixerMeterOnly") : Loc.Get("MixerClickToEdit");
 }

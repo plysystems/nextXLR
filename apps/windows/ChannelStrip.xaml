@@ -6,8 +6,9 @@
     xmlns:local="using:NextXLR"
     xmlns:controls="using:NextXLR.Controls">
 
-    <!-- Responsive channel strip: width comes from the mixer grid, height fills the window. -->
-    <Border Style="{StaticResource Card}" Padding="8,16,8,14" MinWidth="80">
+    <!-- Responsive channel strip: sleek unboxed design with subtle separation and ergonomic fader layout -->
+    <Border Background="{StaticResource SurfaceL1Brush}" CornerRadius="14" Padding="8,14,8,12" MinWidth="84"
+            BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
         <Grid RowSpacing="10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -17,7 +18,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Row 0: Icon Button + Edit + Hardware Fader Letter Badge -->
+            <!-- Row 0: Icon Button + Edit + Hardware Fader Letter Badge (Single-mode) -->
             <Grid Height="42">
                 <Button x:Name="CustomizeButton" x:Uid="MixerCustomize" Width="40" Height="40" Padding="0"
                         CornerRadius="20" HorizontalAlignment="Center" BorderThickness="1"
@@ -67,11 +68,11 @@
                     <FontIcon Glyph="&#xE70F;" FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
                 </Button>
 
-                <!-- Hardware fader letter badge (A–D) -->
+                <!-- Hardware fader letter badge (Single-Mix mode only; in Dual-Mix mode it's placed on the active mix column) -->
                 <Border HorizontalAlignment="Right" VerticalAlignment="Top" CornerRadius="6" Padding="6,1"
                         Background="{StaticResource SurfaceL3Brush}" BorderBrush="{StaticResource SurfaceStrokeBrush}"
                         BorderThickness="1"
-                        Visibility="{x:Bind ViewModel.HasFader, Mode=OneWay}">
+                        Visibility="{x:Bind ShowSingleBadge(ViewModel.HasFader, ViewModel.ShowDualMix), Mode=OneWay}">
                     <TextBlock Text="{x:Bind ViewModel.FaderLetter, Mode=OneWay}" FontSize="10" FontWeight="Bold"
                                Foreground="{x:Bind ViewModel.Accent, Mode=OneWay}" />
                 </Border>
@@ -83,10 +84,11 @@
                        TextWrapping="Wrap" MaxLines="2" />
 
             <!-- Row 2: Dual-Mix Fader Assembly OR Single Fader Assembly -->
-            <!-- Dual-Mix Mode: Stream-Mix & Kopfhörer-Mix side-by-side -->
+            <!-- Dual-Mix Mode: Stream-Mix & Kopfhörer-Mix side-by-side with sleek central separation -->
             <Grid Grid.Row="2" Grid.RowSpan="3" Visibility="{x:Bind ShowIfDual(ViewModel.ShowDualMix, ViewModel.IsFixed), Mode=OneWay}"
-                  ColumnSpacing="6" HorizontalAlignment="Center">
+                  ColumnSpacing="8" HorizontalAlignment="Center">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
@@ -101,12 +103,20 @@
                                     MeterLevel="{x:Bind ViewModel.Meter, Mode=OneWay}"
                                     PeakHold="{x:Bind ViewModel.PeakHold, Mode=OneWay}"
                                     IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}" />
-                    <StackPanel Spacing="1" HorizontalAlignment="Center">
+                    <StackPanel Spacing="2" HorizontalAlignment="Center">
                         <TextBlock Text="{x:Bind ViewModel.StreamVolumeLabel, Mode=OneWay}"
                                    FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center" />
-                        <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="3" Padding="3,1">
-                            <TextBlock Text="STREAM" FontSize="8" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
-                        </Border>
+                        <StackPanel Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
+                            <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="4" Padding="4,1">
+                                <TextBlock Text="STREAM" FontSize="8" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                            </Border>
+                            <Border Visibility="{x:Bind ViewModel.ShowFaderOnStream, Mode=OneWay}"
+                                    Background="{StaticResource SurfaceL3Brush}" CornerRadius="4" Padding="4,1"
+                                    BorderBrush="{StaticResource BrandBrush}" BorderThickness="1">
+                                <TextBlock Text="{x:Bind ViewModel.FaderLetter, Mode=OneWay}" FontSize="8" FontWeight="Bold"
+                                           Foreground="{StaticResource BrandBrush}" />
+                            </Border>
+                        </StackPanel>
                     </StackPanel>
                     <ToggleButton Height="28" Width="36" Padding="0" HorizontalAlignment="Center"
                                   Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
@@ -116,8 +126,12 @@
                     </ToggleButton>
                 </StackPanel>
 
+                <!-- Subtle vertical divider between Stream and Kopfhörer tracks -->
+                <Border Grid.Column="1" Width="1" Background="{StaticResource SurfaceStrokeSubtleBrush}"
+                        VerticalAlignment="Stretch" Margin="0,4" />
+
                 <!-- Right Column: Kopfhörer-Mix (Submix) -->
-                <StackPanel Grid.Column="1" Spacing="6" HorizontalAlignment="Center">
+                <StackPanel Grid.Column="2" Spacing="6" HorizontalAlignment="Center">
                     <controls:Fader x:Name="PhonesFader" Width="44" Height="180"
                                     Minimum="{x:Bind ViewModel.MinVolumePercent, Mode=OneWay}"
                                     Maximum="{x:Bind ViewModel.MaxVolumePercent, Mode=OneWay}"
@@ -126,15 +140,16 @@
                                     MeterLevel="{x:Bind ViewModel.Meter, Mode=OneWay}"
                                     PeakHold="{x:Bind ViewModel.PeakHold, Mode=OneWay}"
                                     IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}" />
-                    <StackPanel Spacing="1" HorizontalAlignment="Center">
+                    <StackPanel Spacing="2" HorizontalAlignment="Center">
                         <TextBlock Text="{x:Bind ViewModel.SubmixVolumeLabel, Mode=OneWay}"
                                    FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center" />
                         <StackPanel Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
-                            <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="3" Padding="3,1">
+                            <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="4" Padding="4,1">
                                 <TextBlock Text="KOPFHÖRER" FontSize="8" FontWeight="Bold" Foreground="{StaticResource HeadphoneBrush}" />
                             </Border>
-                            <Border Visibility="{x:Bind ViewModel.HasFader, Mode=OneWay}"
-                                    Background="{StaticResource SurfaceL3Brush}" CornerRadius="3" Padding="4,1">
+                            <Border Visibility="{x:Bind ViewModel.ShowFaderOnPhones, Mode=OneWay}"
+                                    Background="{StaticResource SurfaceL3Brush}" CornerRadius="4" Padding="4,1"
+                                    BorderBrush="{StaticResource HeadphoneBrush}" BorderThickness="1">
                                 <TextBlock Text="{x:Bind ViewModel.FaderLetter, Mode=OneWay}" FontSize="8" FontWeight="Bold"
                                            Foreground="{StaticResource HeadphoneBrush}" />
                             </Border>
