@@ -37,6 +37,7 @@
             <SolidColorBrush x:Key="TextMutedBrush" Color="#8B93A3" />
             <SolidColorBrush x:Key="MutedTextBrush" Color="#8B93A3" />
             <SolidColorBrush x:Key="HeadphoneBrush" Color="#58A6FF" />
+            <SolidColorBrush x:Key="StreamBrush" Color="#4FE0B8" />
 
             <LinearGradientBrush x:Key="MeterBrush" StartPoint="0,1" EndPoint="0,0">
                 <GradientStop Color="#1BB38C" Offset="0" />

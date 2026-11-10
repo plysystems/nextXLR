@@ -226,7 +226,8 @@
 
                 <StackPanel x:Name="InputsSection" Spacing="10">
                     <TextBlock x:Uid="MixerInputs" Style="{StaticResource Overline}" Height="18" />
-                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.InputStrips}">
+                    <ItemsRepeater x:Name="InputsRepeater" ItemsSource="{x:Bind ViewModel.InputStrips}"
+                                   ElementPrepared="InputsRepeater_ElementPrepared">
                         <ItemsRepeater.Layout>
                             <UniformGridLayout x:Name="InLayout" MinItemWidth="84" MinItemHeight="440"
                                                MinColumnSpacing="8" MinRowSpacing="8"
@@ -278,7 +279,8 @@
 
                 <StackPanel x:Name="OutputsSection" Grid.Column="2" Spacing="10">
                     <TextBlock x:Uid="MixerOutputs" Style="{StaticResource Overline}" Height="18" />
-                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.OutputStrips}">
+                    <ItemsRepeater x:Name="OutputsRepeater" ItemsSource="{x:Bind ViewModel.OutputStrips}"
+                                   ElementPrepared="OutputsRepeater_ElementPrepared">
                         <ItemsRepeater.Layout>
                             <UniformGridLayout x:Name="OutLayout" MinItemWidth="84" MinItemHeight="440"
                                                MinColumnSpacing="8" MinRowSpacing="8"

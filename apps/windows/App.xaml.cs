@@ -19,6 +19,7 @@ public partial class App : Application
         try
         {
             Services.CrashHandler.Initialize();
+            Services.CrashHandler.LogStartup("1. App.OnLaunched entered");
 
             // Asynchronous non-blocking background tasks so the UI window opens instantly
             Task.Run(() =>
@@ -31,9 +32,12 @@ public partial class App : Application
                 catch { }
             });
 
+            Services.CrashHandler.LogStartup("2. Creating MainWindow");
             _window = new MainWindow();
             MainWindowInstance = _window;
+            Services.CrashHandler.LogStartup("3. Activating MainWindow");
             _window.Activate();
+            Services.CrashHandler.LogStartup("4. MainWindow Activated");
         }
         catch (Exception ex)
         {

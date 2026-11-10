@@ -3,7 +3,7 @@
     x:Class="NextXLR.Controls.Fader"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    IsTabStop="True" UseSystemFocusVisuals="True" Width="60" MinHeight="140">
+    Width="60" MinHeight="140">
 
     <Grid x:Name="Root" Background="Transparent">
         <!-- Level Meter on the left (runs parallel to the fader track) -->

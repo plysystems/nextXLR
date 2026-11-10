@@ -26,6 +26,27 @@ public static class CrashHandler
         "NextXLR",
         "crashlogs");
 
+    private static readonly string StartupDiagLog = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "NextXLR",
+        "startup_diag.log");
+
+    public static void LogStartup(string msg)
+    {
+        try
+        {
+            var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [Thread {Environment.CurrentManagedThreadId}] {msg}{Environment.NewLine}";
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(StartupDiagLog)!);
+                File.AppendAllText(StartupDiagLog, line);
+            }
+            catch { }
+            Debug.WriteLine(line);
+        }
+        catch { }
+    }
+
     private static bool _hasCrashed = false;
     private static readonly object _crashLock = new();
 
@@ -77,6 +98,24 @@ public static class CrashHandler
 
     public static void Initialize()
     {
+#if DEBUG
+        try
+        {
+            AppDomain.CurrentDomain.FirstChanceException += (s, e) =>
+            {
+                try
+                {
+                    if (e.Exception != null && e.Exception is not System.IO.FileNotFoundException && e.Exception is not TaskCanceledException)
+                    {
+                        LogStartup($"[FirstChance] {e.Exception.GetType().FullName}: {e.Exception.Message}");
+                    }
+                }
+                catch { }
+            };
+        }
+        catch { }
+#endif
+
         // 0. Native Vectored Exception Handler (catches native Access Violations 0xC0000005, XAML crashes, etc.)
         try
         {
@@ -119,16 +158,12 @@ public static class CrashHandler
             {
                 Application.Current.UnhandledException += (s, e) =>
                 {
-                    // Catch and suppress benign/internal WinRT E_NOINTERFACE (0x80004002) exceptions
-                    // (e.g. from Windows 11 24H2 composition, touch, or UI automation query interface probes)
-                    if (e.Exception is InvalidCastException ice && ice.HResult == unchecked((int)0x80004002))
-                    {
-                        e.Handled = true;
-                        try { Debug.WriteLine($"[CrashHandler] Safely suppressed benign WinUI 3 E_NOINTERFACE (0x80004002): {e.Message}"); } catch { }
-                        return;
-                    }
+                    LogStartup($"[WinUI 3.UnhandledException] {e.Exception?.GetType().FullName}: {e.Exception?.Message}\nHResult: 0x{e.Exception?.HResult:X8}\nDetails:\n{e.Exception}");
 
-                    HandleException(e.Exception, "WinUI 3 XAML UnhandledException");
+                    if (e.Exception != null)
+                    {
+                        HandleException(e.Exception, "WinUI 3 XAML UnhandledException");
+                    }
                     e.Handled = true; // Prevent instant process termination so crash dialog can display
                 };
             }

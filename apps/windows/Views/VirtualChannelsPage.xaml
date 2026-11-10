@@ -83,7 +83,8 @@
                                     <Grid ColumnSpacing="16">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="44" />
-                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" MinWidth="180" />
+                                            <ColumnDefinition Width="150" />
                                             <ColumnDefinition Width="200" />
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="Auto" />
@@ -98,7 +99,7 @@
 
                                         <!-- Name & Badges -->
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
-                                            <TextBlock Text="{x:Bind Name, Mode=TwoWay}" FontWeight="SemiBold" FontSize="14" />
+                                            <TextBlock Text="{x:Bind Name, Mode=OneWay}" FontWeight="SemiBold" FontSize="14" />
                                             <StackPanel Orientation="Horizontal" Spacing="8">
                                                 <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="6" Padding="6,2">
                                                     <TextBlock Text="{x:Bind FormatText, Mode=OneWay}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
@@ -106,14 +107,19 @@
                                                 <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="6" Padding="6,2">
                                                     <TextBlock Text="{x:Bind LatencyText, Mode=OneWay}" FontSize="11" Foreground="{StaticResource BrandBrush}" />
                                                 </Border>
-                                                <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="6" Padding="6,2">
-                                                    <TextBlock Text="{x:Bind TargetText, Mode=OneWay}" FontSize="11" Foreground="{StaticResource TextPrimaryBrush}" />
-                                                </Border>
                                             </StackPanel>
                                         </StackPanel>
 
-                                        <!-- Volume Slider -->
+                                        <!-- GoXLR Target Channel ComboBox -->
                                         <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock Text="GoXLR-Kanal" Style="{StaticResource Caption}" Foreground="{StaticResource TextMutedBrush}" />
+                                            <ComboBox ItemsSource="{x:Bind TargetOptions}"
+                                                      SelectedItem="{x:Bind TargetChannel, Mode=TwoWay}"
+                                                      HorizontalAlignment="Stretch" />
+                                        </StackPanel>
+
+                                        <!-- Volume Slider -->
+                                        <StackPanel Grid.Column="3" VerticalAlignment="Center" Spacing="2">
                                             <Grid>
                                                 <TextBlock Text="Lautstärke" Style="{StaticResource Caption}" />
                                                 <TextBlock Text="{x:Bind VolumeLabel, Mode=OneWay}" HorizontalAlignment="Right"
@@ -123,11 +129,11 @@
                                         </StackPanel>
 
                                         <!-- Toggle Status -->
-                                        <ToggleSwitch Grid.Column="3" IsOn="{x:Bind IsActive, Mode=TwoWay}"
+                                        <ToggleSwitch Grid.Column="4" IsOn="{x:Bind IsActive, Mode=TwoWay}"
                                                       OnContent="Aktiv" OffContent="Mute" MinWidth="0" VerticalAlignment="Center" Margin="10,0" />
 
                                         <!-- Delete -->
-                                        <Button Grid.Column="4" Padding="8" Background="Transparent" BorderThickness="0"
+                                        <Button Grid.Column="5" Padding="8" Background="Transparent" BorderThickness="0"
                                                 VerticalAlignment="Center" Tag="{x:Bind}" Click="DeleteChannel_Click"
                                                 ToolTipService.ToolTip="Kabel entfernen">
                                             <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="{StaticResource DangerBrush}" />

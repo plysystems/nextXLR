@@ -93,15 +93,14 @@
 
                 <!-- Left Column: Stream-Mix -->
                 <StackPanel Spacing="6" HorizontalAlignment="Center">
-                    <controls:Fader Width="44"
+                    <controls:Fader x:Name="StreamFader" Width="44" Height="180"
                                     Minimum="{x:Bind ViewModel.MinVolumePercent, Mode=OneWay}"
                                     Maximum="{x:Bind ViewModel.MaxVolumePercent, Mode=OneWay}"
-                                    Value="{x:Bind ViewModel.StreamVolumePercent, Mode=TwoWay}"
+                                    Value="{x:Bind ViewModel.StreamVolumePercent, Mode=OneWay}"
+                                    Accent="{x:Bind ViewModel.Accent, Mode=OneWay}"
                                     MeterLevel="{x:Bind ViewModel.Meter, Mode=OneWay}"
                                     PeakHold="{x:Bind ViewModel.PeakHold, Mode=OneWay}"
-                                    IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}"
-                                    Accent="{x:Bind ViewModel.Accent, Mode=OneWay}"
-                                    AutomationProperties.Name="Stream-Mix" />
+                                    IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}" />
                     <StackPanel Spacing="1" HorizontalAlignment="Center">
                         <TextBlock Text="{x:Bind ViewModel.StreamVolumeLabel, Mode=OneWay}"
                                    FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center" />
@@ -119,15 +118,14 @@
 
                 <!-- Right Column: Kopfhörer-Mix (Submix) -->
                 <StackPanel Grid.Column="1" Spacing="6" HorizontalAlignment="Center">
-                    <controls:Fader Width="44"
+                    <controls:Fader x:Name="PhonesFader" Width="44" Height="180"
                                     Minimum="{x:Bind ViewModel.MinVolumePercent, Mode=OneWay}"
                                     Maximum="{x:Bind ViewModel.MaxVolumePercent, Mode=OneWay}"
-                                    Value="{x:Bind ViewModel.SubmixVolumePercent, Mode=TwoWay}"
+                                    Value="{x:Bind ViewModel.SubmixVolumePercent, Mode=OneWay}"
+                                    Accent="{StaticResource HeadphoneBrush}"
                                     MeterLevel="{x:Bind ViewModel.Meter, Mode=OneWay}"
                                     PeakHold="{x:Bind ViewModel.PeakHold, Mode=OneWay}"
-                                    IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}"
-                                    Accent="{StaticResource HeadphoneBrush}"
-                                    AutomationProperties.Name="Kopfhörer-Mix" />
+                                    IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}" />
                     <StackPanel Spacing="1" HorizontalAlignment="Center">
                         <TextBlock Text="{x:Bind ViewModel.SubmixVolumeLabel, Mode=OneWay}"
                                    FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center" />
@@ -149,12 +147,11 @@
                             Visibility="{x:Bind ShowIfSingle(ViewModel.ShowDualMix, ViewModel.IsFixed), Mode=OneWay}"
                             Minimum="{x:Bind ViewModel.MinVolumePercent, Mode=OneWay}"
                             Maximum="{x:Bind ViewModel.MaxVolumePercent, Mode=OneWay}"
-                            Value="{x:Bind ViewModel.VolumePercent, Mode=TwoWay}"
+                            Value="{x:Bind ViewModel.VolumePercent, Mode=OneWay}"
                             MeterLevel="{x:Bind ViewModel.Meter, Mode=OneWay}"
                             PeakHold="{x:Bind ViewModel.PeakHold, Mode=OneWay}"
                             IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}"
-                            Accent="{x:Bind ViewModel.Accent, Mode=OneWay}"
-                            AutomationProperties.Name="{x:Bind ViewModel.Name, Mode=OneWay}" />
+                            Accent="{x:Bind ViewModel.Accent, Mode=OneWay}" />
 
             <!-- Row 3: Level readout & dB sub-label (Single-Mix mode) -->
             <StackPanel Grid.Row="3" Spacing="2" Visibility="{x:Bind ShowIfSingle(ViewModel.ShowDualMix, ViewModel.IsFixed), Mode=OneWay}">

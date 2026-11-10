@@ -31,6 +31,13 @@ public sealed partial class ChannelStrip : UserControl
         set => SetValue(ViewModelProperty, value);
     }
 
+    public void SetViewModel(ChannelViewModel? vm)
+    {
+        if (ReferenceEquals(ViewModel, vm)) return;
+        ViewModel = vm!;
+        if (DataContext != vm) DataContext = vm;
+    }
+
     public IReadOnlyList<IconCatalogEntry> Icons { get; } =
         IconCatalog.All.Select(e => new IconCatalogEntry(e.Id, e.Glyph)).ToList();
 
@@ -41,7 +48,33 @@ public sealed partial class ChannelStrip : UserControl
     {
         InitializeComponent();
 
-        // While the user holds the fader, server updates for this channel are deferred.
+        DataContextChanged += (_, _) =>
+        {
+            if (DataContext is ChannelViewModel vm && !ReferenceEquals(ViewModel, vm))
+            {
+                ViewModel = vm;
+            }
+        };
+
+        // While the user holds any fader, server updates for this channel are deferred.
+        StreamFader.ValueChangedByUser = v =>
+        {
+            if (ViewModel is { } vm) vm.StreamVolumePercent = v;
+        };
+        StreamFader.DragStarted += (_, _) => SetDragging(true);
+        StreamFader.DragCompleted += (_, _) => SetDragging(false);
+
+        PhonesFader.ValueChangedByUser = v =>
+        {
+            if (ViewModel is { } vm) vm.SubmixVolumePercent = v;
+        };
+        PhonesFader.DragStarted += (_, _) => SetDragging(true);
+        PhonesFader.DragCompleted += (_, _) => SetDragging(false);
+
+        Fader.ValueChangedByUser = v =>
+        {
+            if (ViewModel is { } vm) vm.VolumePercent = v;
+        };
         Fader.DragStarted += (_, _) => SetDragging(true);
         Fader.DragCompleted += (_, _) => SetDragging(false);
     }
@@ -192,7 +225,7 @@ public sealed partial class ChannelStrip : UserControl
         return DarkIcon;
     }
 
-    public string ChannelTooltip(bool canEdit, string name) => canEdit ? Loc.Get("MixerCustomize") : name;
+    public string ChannelTooltip(bool canEdit, string name) => canEdit ? Loc.Get("MixerCustomizeTitle.Text") : name;
     public string MuteGlyph(bool muted) => muted ? "\uE74F" : "\uE767";
     public string MuteText(bool muted) => Loc.Get(muted ? "MixerMuted" : "MixerMute");
     public string MuteName(string name) => Loc.Format("MixerMuteName", name);

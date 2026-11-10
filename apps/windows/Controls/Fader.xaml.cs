@@ -41,6 +41,7 @@ public sealed partial class Fader : UserControl
 
     public event EventHandler? DragStarted;
     public event EventHandler? DragCompleted;
+    public Action<double>? ValueChangedByUser;
 
     public Fader()
     {
@@ -58,7 +59,11 @@ public sealed partial class Fader : UserControl
         Root.SizeChanged += (_, _) => { DrawTicks(); Layout(); };
         MeterHost.SizeChanged += (_, _) => UpdateMeterLevels();
         KeyDown += OnKey;
-        ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.SizeNorthSouth);
+        try
+        {
+            ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.SizeNorthSouth);
+        }
+        catch { }
         Unloaded += (_, _) => StopAnimation();
     }
 
@@ -303,7 +308,11 @@ public sealed partial class Fader : UserControl
         Root.CapturePointer(e.Pointer);
         Focus(FocusState.Pointer);
         DragStarted?.Invoke(this, EventArgs.Empty);
-        if (_grabOffset == CapHeight / 2) Value = TopToValue(y - _grabOffset);
+        if (_grabOffset == CapHeight / 2)
+        {
+            Value = TopToValue(y - _grabOffset);
+            ValueChangedByUser?.Invoke(Value);
+        }
         e.Handled = true;
     }
 
@@ -325,6 +334,7 @@ public sealed partial class Fader : UserControl
         }
         _fine = fine;
         _lastY = y;
+        ValueChangedByUser?.Invoke(Value);
         e.Handled = true;
     }
 
@@ -354,6 +364,7 @@ public sealed partial class Fader : UserControl
         var delta = e.GetCurrentPoint(this).Properties.MouseWheelDelta;
         var step = (e.KeyModifiers & VirtualKeyModifiers.Control) != 0 ? 0.1 : 1;
         Value += Math.Sign(delta) * step;
+        ValueChangedByUser?.Invoke(Value);
         e.Handled = true;
     }
 
@@ -369,6 +380,11 @@ public sealed partial class Fader : UserControl
             VirtualKey.End => Maximum,
             _ => null,
         };
-        if (next is { } v) { Value = v; e.Handled = true; }
+        if (next is { } v)
+        {
+            Value = v;
+            ValueChangedByUser?.Invoke(Value);
+            e.Handled = true;
+        }
     }
 }

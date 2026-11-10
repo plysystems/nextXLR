@@ -27,6 +27,7 @@ public static class Program
         try
         {
             Services.CrashHandler.Initialize();
+            Services.CrashHandler.LogStartup("Program.Main started");
 
             // 1. First line of defense: Check existing processes
             var currentProc = Process.GetCurrentProcess();
@@ -36,7 +37,7 @@ public static class Program
 
             if (existingProcesses.Count > 0)
             {
-                // Another instance is definitely already executing!
+                Services.CrashHandler.LogStartup($"Existing NextXLR processes found ({existingProcesses.Count}), exiting");
                 WakeUpExistingInstance(existingProcesses);
                 return;
             }
@@ -54,9 +55,12 @@ public static class Program
 
             if (!createdNew)
             {
+                Services.CrashHandler.LogStartup("Single-instance mutex already held, exiting");
                 WakeUpExistingInstance(existingProcesses);
                 return;
             }
+
+            Services.CrashHandler.LogStartup("Acquired single-instance mutex successfully");
 
             // 3. Start listener for future instance wake-up signals
             try

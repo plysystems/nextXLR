@@ -12,6 +12,9 @@ public sealed class VirtualChannelItem : ObservableObject
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
 
+    public static readonly string[] AvailableTargets = ["Chat", "Music", "Game", "System", "Sample", "Line In"];
+    public string[] TargetOptions => AvailableTargets;
+
     private string _name = "Virtueller Kanal";
     public string Name
     {
@@ -23,7 +26,13 @@ public sealed class VirtualChannelItem : ObservableObject
     public string TargetChannel
     {
         get => _targetChannel;
-        set => SetProperty(ref _targetChannel, value);
+        set
+        {
+            if (SetProperty(ref _targetChannel, value))
+            {
+                OnPropertyChanged(nameof(TargetText));
+            }
+        }
     }
 
     private int _sampleRate = 48000;
@@ -130,6 +139,12 @@ public sealed class VirtualChannelsService
         Load();
     }
 
+    private void AttachItem(VirtualChannelItem it)
+    {
+        it.PropertyChanged += (_, _) => Save();
+        Channels.Add(it);
+    }
+
     public void Load()
     {
         try
@@ -141,7 +156,7 @@ public sealed class VirtualChannelsService
                 var items = JsonSerializer.Deserialize<List<VirtualChannelItem>>(json);
                 if (items != null && items.Count > 0)
                 {
-                    foreach (var it in items) Channels.Add(it);
+                    foreach (var it in items) AttachItem(it);
                     return;
                 }
             }
@@ -149,7 +164,7 @@ public sealed class VirtualChannelsService
         catch { }
 
         // Default standard virtual cables
-        Channels.Add(new VirtualChannelItem
+        AttachItem(new VirtualChannelItem
         {
             Name = "Virtueller Browser & Medien",
             TargetChannel = "Music",
@@ -158,7 +173,7 @@ public sealed class VirtualChannelsService
             BitDepth = 24,
             Glyph = "\uE774"
         });
-        Channels.Add(new VirtualChannelItem
+        AttachItem(new VirtualChannelItem
         {
             Name = "Gaming Secondary (Aux)",
             TargetChannel = "Game",
@@ -167,7 +182,7 @@ public sealed class VirtualChannelsService
             BitDepth = 24,
             Glyph = "\uE7FC"
         });
-        Channels.Add(new VirtualChannelItem
+        AttachItem(new VirtualChannelItem
         {
             Name = "VoIP / Discord Alt",
             TargetChannel = "Chat",
@@ -176,7 +191,7 @@ public sealed class VirtualChannelsService
             BitDepth = 24,
             Glyph = "\uE717"
         });
-        Channels.Add(new VirtualChannelItem
+        AttachItem(new VirtualChannelItem
         {
             Name = "Soundboard Aux Cable",
             TargetChannel = "Sample",
