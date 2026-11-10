@@ -269,22 +269,6 @@ public partial class RoutingPage : Page
         ViewModel.AppRouting.OpenWindowsMixer();
     }
 
-    private void OutputComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (sender is Microsoft.UI.Xaml.Controls.ComboBox cb && cb.DataContext is ViewModels.AppSessionItemViewModel vm && vm.IsInitialized && cb.SelectedIndex >= 0)
-        {
-            vm.ApplyOutputRouting(cb.SelectedIndex);
-        }
-    }
-
-    private void InputComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (sender is Microsoft.UI.Xaml.Controls.ComboBox cb && cb.DataContext is ViewModels.AppSessionItemViewModel vm && vm.IsInitialized && cb.SelectedIndex >= 0)
-        {
-            vm.ApplyInputRouting(cb.SelectedIndex);
-        }
-    }
-
     // Row highlight; the Border's BrushTransition makes it a 200 ms fade.
     private void Row_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {

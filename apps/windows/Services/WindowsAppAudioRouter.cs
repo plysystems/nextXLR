@@ -15,7 +15,7 @@ public enum ERole { eConsole = 0, eMultimedia = 1, eCommunications = 2 }
 [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 internal interface IMMDeviceNative
 {
-    [PreserveSig] int Activate(ref Guid id, int clsCtx, IntPtr activationParams, [MarshalAs(UnmanagedType.IUnknown)] out object interfacePointer);
+    [PreserveSig] int Activate(ref Guid id, int clsCtx, IntPtr activationParams, out IntPtr interfacePointer);
     [PreserveSig] int OpenPropertyStore(int stgmAccess, out IntPtr properties);
     [PreserveSig] int GetId([MarshalAs(UnmanagedType.LPWStr)] out string id);
     [PreserveSig] int GetState(out int state);
@@ -160,7 +160,7 @@ public static class WindowsAppAudioRouter
     private static extern int RoGetActivationFactory(
         IntPtr activatableClassId,
         ref Guid iid,
-        [MarshalAs(UnmanagedType.IUnknown)] out object factory);
+        out IntPtr factory);
 
     [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
     private static extern int WindowsCreateString(
@@ -230,11 +230,22 @@ public static class WindowsAppAudioRouter
             {
                 // Primary: Windows 11 / Windows 10 21H2+
                 Guid iid21H2 = typeof(IAudioPolicyConfigFactoryVariantFor21H2).GUID;
-                if (RoGetActivationFactory(hClass, ref iid21H2, out var f21H2) == 0 &&
-                    f21H2 is IAudioPolicyConfigFactoryVariantFor21H2 v21H2)
+                if (RoGetActivationFactory(hClass, ref iid21H2, out IntPtr pFactory21H2) == 0 && pFactory21H2 != IntPtr.Zero)
                 {
-                    _cachedFactory = new PolicyConfig21H2Adapter(v21H2);
-                    return _cachedFactory;
+                    try
+                    {
+                        var obj = Marshal.GetObjectForIUnknown(pFactory21H2);
+                        if (obj is IAudioPolicyConfigFactoryVariantFor21H2 v21H2)
+                        {
+                            _cachedFactory = new PolicyConfig21H2Adapter(v21H2);
+                            return _cachedFactory;
+                        }
+                    }
+                    catch { }
+                    finally
+                    {
+                        Marshal.Release(pFactory21H2);
+                    }
                 }
             }
             catch { }
@@ -243,11 +254,22 @@ public static class WindowsAppAudioRouter
             {
                 // Fallback: Windows 10 Downlevel
                 Guid iidDl = typeof(IAudioPolicyConfigFactoryVariantForDownlevel).GUID;
-                if (RoGetActivationFactory(hClass, ref iidDl, out var fDl) == 0 &&
-                    fDl is IAudioPolicyConfigFactoryVariantForDownlevel vDl)
+                if (RoGetActivationFactory(hClass, ref iidDl, out IntPtr pFactoryDl) == 0 && pFactoryDl != IntPtr.Zero)
                 {
-                    _cachedFactory = new PolicyConfigDownlevelAdapter(vDl);
-                    return _cachedFactory;
+                    try
+                    {
+                        var obj = Marshal.GetObjectForIUnknown(pFactoryDl);
+                        if (obj is IAudioPolicyConfigFactoryVariantForDownlevel vDl)
+                        {
+                            _cachedFactory = new PolicyConfigDownlevelAdapter(vDl);
+                            return _cachedFactory;
+                        }
+                    }
+                    catch { }
+                    finally
+                    {
+                        Marshal.Release(pFactoryDl);
+                    }
                 }
             }
             catch { }
@@ -413,81 +435,87 @@ public static class WindowsAppAudioRouter
                     var rawImmObj = devInterfaceField?.GetValue(dev);
                     if (rawImmObj is not IMMDeviceNative imm) continue;
 
-                    if (imm.Activate(ref iidMgr2, 23 /* CLSCTX_ALL */, IntPtr.Zero, out object objMgr2) != 0 ||
-                        objMgr2 is not IAudioSessionManager2Native mgr2)
+                    if (imm.Activate(ref iidMgr2, 23 /* CLSCTX_ALL */, IntPtr.Zero, out IntPtr pMgr2) != 0 || pMgr2 == IntPtr.Zero)
                     {
                         continue;
                     }
 
-                    if (mgr2.GetSessionEnumerator(out var sEnum) != 0 || sEnum == null)
+                    try
                     {
-                        continue;
-                    }
-
-                    if (sEnum.GetCount(out int sessionCount) != 0)
-                    {
-                        sessionCount = 0;
-                    }
-
-                    for (int i = 0; i < sessionCount; i++)
-                    {
-                        if (sEnum.GetSession(i, out IntPtr pSession) != 0 || pSession == IntPtr.Zero)
+                        object? objMgr2 = null;
+                        try { objMgr2 = Marshal.GetObjectForIUnknown(pMgr2); } catch { }
+                        if (objMgr2 is not IAudioSessionManager2Native mgr2)
                         {
                             continue;
                         }
 
-                        try
+                        if (mgr2.GetSessionEnumerator(out var sEnum) != 0 || sEnum == null)
                         {
-                            if (Marshal.GetObjectForIUnknown(pSession) is not IAudioSessionControl2Native sc2)
-                            {
-                                continue;
-                            }
-                            sc2.GetProcessId(out uint pid);
-                            if (pid == 0) continue; // system sound session
-                            if (results.ContainsKey(pid)) continue;
+                            continue;
+                        }
 
-                            string procName = "";
-                            string windowTitle = "";
-                            try
-                            {
-                                using var p = Process.GetProcessById((int)pid);
-                                procName = p.ProcessName;
-                                windowTitle = p.MainWindowTitle;
-                            }
-                            catch { procName = $"App (PID {pid})"; }
+                        if (sEnum.GetCount(out int sessionCount) != 0)
+                        {
+                            sessionCount = 0;
+                        }
 
-                            // Skip our own background & app processes
-                            if (procName.Equals("NextXLR", StringComparison.OrdinalIgnoreCase) ||
-                                procName.Equals("mixforged", StringComparison.OrdinalIgnoreCase) ||
-                                procName.Equals("mixforge", StringComparison.OrdinalIgnoreCase))
+                        for (int i = 0; i < sessionCount; i++)
+                        {
+                            if (sEnum.GetSession(i, out IntPtr pSession) != 0 || pSession == IntPtr.Zero)
                             {
                                 continue;
                             }
 
-                            float vol = 1.0f;
-                            bool muted = false;
-                            ISimpleAudioVolumeNative? volCtrl = null;
-                            IAudioMeterInformationNative? meterInfo = null;
-
                             try
                             {
-                                if (Marshal.GetObjectForIUnknown(pSession) is ISimpleAudioVolumeNative sav)
+                                object? sessionObj = null;
+                                try { sessionObj = Marshal.GetObjectForIUnknown(pSession); } catch { }
+                                if (sessionObj is not IAudioSessionControl2Native sc2)
+                                {
+                                    continue;
+                                }
+                                sc2.GetProcessId(out uint pid);
+                                if (pid == 0) continue; // system sound session
+                                if (results.ContainsKey(pid)) continue;
+
+                                string procName = "";
+                                string windowTitle = "";
+                                try
+                                {
+                                    using var p = Process.GetProcessById((int)pid);
+                                    procName = p.ProcessName;
+                                    windowTitle = p.MainWindowTitle;
+                                }
+                                catch { procName = $"App (PID {pid})"; }
+
+                                // Skip our own background & app processes
+                                if (procName.Equals("NextXLR", StringComparison.OrdinalIgnoreCase) ||
+                                    procName.Equals("mixforged", StringComparison.OrdinalIgnoreCase) ||
+                                    procName.Equals("mixforge", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    continue;
+                                }
+
+                                float vol = 1.0f;
+                                bool muted = false;
+                                ISimpleAudioVolumeNative? volCtrl = null;
+                                IAudioMeterInformationNative? meterInfo = null;
+
+                                if (sessionObj is ISimpleAudioVolumeNative sav)
                                 {
                                     volCtrl = sav;
-                                    sav.GetMasterVolume(out vol);
-                                    sav.GetMute(out muted);
+                                    try
+                                    {
+                                        sav.GetMasterVolume(out vol);
+                                        sav.GetMute(out muted);
+                                    }
+                                    catch { }
                                 }
-                            }
-                            catch { }
 
-                            try
-                            {
-                                if (Marshal.GetObjectForIUnknown(pSession) is IAudioMeterInformationNative ami)
+                                if (sessionObj is IAudioMeterInformationNative ami)
                                 {
                                     meterInfo = ami;
                                 }
-                            }
-                            catch { }
 
                             var info = new AppAudioSessionInfo
                             {
@@ -528,7 +556,12 @@ public static class WindowsAppAudioRouter
                         }
                     }
                 }
-                catch { }
+                finally
+                {
+                    Marshal.Release(pMgr2);
+                }
+            }
+            catch { }
             }
         }
         catch { }
@@ -677,6 +710,8 @@ public static class WindowsAppAudioRouter
         "app_routing_rules.json"
     );
 
+    private static readonly object _rulesLock = new();
+
     public record AppRoutingRule(string ProcessName, string? OutputEndpointId, string? InputEndpointId);
 
     public static Dictionary<string, AppRoutingRule> LoadRules()
@@ -687,7 +722,10 @@ public static class WindowsAppAudioRouter
             {
                 var json = File.ReadAllText(RulesFilePath);
                 var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, AppRoutingRule>>(json);
-                if (dict != null) return dict;
+                if (dict != null)
+                {
+                    return new Dictionary<string, AppRoutingRule>(dict, StringComparer.OrdinalIgnoreCase);
+                }
             }
         }
         catch { }
@@ -696,21 +734,29 @@ public static class WindowsAppAudioRouter
 
     public static void SaveRule(string processName, string? outputEndpointId, string? inputEndpointId)
     {
-        try
+        if (string.IsNullOrWhiteSpace(processName)) return;
+        lock (_rulesLock)
         {
-            if (string.IsNullOrWhiteSpace(processName)) return;
-            var rules = LoadRules();
-            rules[processName] = new AppRoutingRule(processName, outputEndpointId, inputEndpointId);
-
-            var dir = Path.GetDirectoryName(RulesFilePath);
-            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            try
             {
-                Directory.CreateDirectory(dir);
-            }
+                var rules = LoadRules();
+                var existing = rules.TryGetValue(processName, out var r) ? r : null;
 
-            var json = System.Text.Json.JsonSerializer.Serialize(rules, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(RulesFilePath, json);
+                string? finalOut = outputEndpointId ?? existing?.OutputEndpointId;
+                string? finalIn = inputEndpointId ?? existing?.InputEndpointId;
+
+                rules[processName] = new AppRoutingRule(processName, finalOut, finalIn);
+
+                var dir = Path.GetDirectoryName(RulesFilePath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                var json = System.Text.Json.JsonSerializer.Serialize(rules, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(RulesFilePath, json);
+            }
+            catch { }
         }
-        catch { }
     }
 }

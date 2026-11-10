@@ -67,7 +67,7 @@ public partial class RouteCellViewModel : ObservableObject
     }
 }
 
-public sealed class RouteRowViewModel
+public sealed class RouteRowViewModel : ObservableObject
 {
     public required uint ChannelId { get; init; }
     public required string ChannelName { get; init; }
@@ -103,7 +103,11 @@ public partial class AppSessionItemViewModel : ObservableObject
     public bool IsInitialized { get; private set; }
     public string VolumeText => $"{(int)Math.Round(Volume)}%";
 
-    public AppSessionItemViewModel(AppAudioSessionInfo info, List<AudioEndpointChoice> outChoices, List<AudioEndpointChoice> inChoices)
+    public AppSessionItemViewModel(
+        AppAudioSessionInfo info,
+        List<AudioEndpointChoice> outChoices,
+        List<AudioEndpointChoice> inChoices,
+        WindowsAppAudioRouter.AppRoutingRule? rule = null)
     {
         _info = info;
         _outputChoices = outChoices;
@@ -112,29 +116,26 @@ public partial class AppSessionItemViewModel : ObservableObject
         _volume = Math.Round(info.Volume * 100);
         _isMuted = info.IsMuted;
 
+        // 1. Output choice priority: saved rule -> detected current endpoint -> default (0)
         int outIdx = 0;
-        for (int i = 0; i < outChoices.Count; i++)
+        string? targetOutId = !string.IsNullOrEmpty(rule?.OutputEndpointId) ? rule.OutputEndpointId : info.CurrentOutputDeviceId;
+        if (!string.IsNullOrEmpty(targetOutId))
         {
-            if (!string.IsNullOrEmpty(info.CurrentOutputDeviceId) &&
-                outChoices[i].Id.Equals(info.CurrentOutputDeviceId, System.StringComparison.OrdinalIgnoreCase))
-            {
-                outIdx = i;
-                break;
-            }
+            int found = outChoices.FindIndex(c => c.Id.Equals(targetOutId, StringComparison.OrdinalIgnoreCase));
+            if (found >= 0) outIdx = found;
         }
         _selectedOutputIndex = outIdx;
 
+        // 2. Input choice priority: saved rule -> detected current endpoint -> default (0)
         int inIdx = 0;
-        for (int i = 0; i < inChoices.Count; i++)
+        string? targetInId = !string.IsNullOrEmpty(rule?.InputEndpointId) ? rule.InputEndpointId : info.CurrentInputDeviceId;
+        if (!string.IsNullOrEmpty(targetInId))
         {
-            if (!string.IsNullOrEmpty(info.CurrentInputDeviceId) &&
-                inChoices[i].Id.Equals(info.CurrentInputDeviceId, System.StringComparison.OrdinalIgnoreCase))
-            {
-                inIdx = i;
-                break;
-            }
+            int found = inChoices.FindIndex(c => c.Id.Equals(targetInId, StringComparison.OrdinalIgnoreCase));
+            if (found >= 0) inIdx = found;
         }
         _selectedInputIndex = inIdx;
+
         IsInitialized = true;
     }
 
@@ -298,33 +299,32 @@ public partial class AppRoutingManagerViewModel : ObservableObject
             OutputChoices = outChoices;
             InputChoices = inChoices;
 
-            AppSessions.Clear();
+            var existingByPid = AppSessions.ToDictionary(a => a.ProcessId);
+            var currentPids = new HashSet<uint>(sessions.Select(s => s.ProcessId));
+
+            // Remove apps that have closed
+            for (int i = AppSessions.Count - 1; i >= 0; i--)
+            {
+                if (!currentPids.Contains(AppSessions[i].ProcessId))
+                {
+                    AppSessions.RemoveAt(i);
+                }
+            }
+
+            // Update existing or add new apps
             foreach (var s in sessions)
             {
-                var vm = new AppSessionItemViewModel(s, OutputChoices, InputChoices);
-
-                // Auto-apply saved rule if configured
-                if (rules.TryGetValue(s.ProcessName, out var rule))
+                rules.TryGetValue(s.ProcessName, out var rule);
+                if (existingByPid.TryGetValue(s.ProcessId, out var existing))
                 {
-                    if (!string.IsNullOrEmpty(rule.OutputEndpointId))
-                    {
-                        var outIdx = OutputChoices.FindIndex(c => c.Id.Equals(rule.OutputEndpointId, StringComparison.OrdinalIgnoreCase));
-                        if (outIdx >= 0 && vm.SelectedOutputIndex != outIdx)
-                        {
-                            vm.SelectedOutputIndex = outIdx;
-                        }
-                    }
-                    if (!string.IsNullOrEmpty(rule.InputEndpointId))
-                    {
-                        var inIdx = InputChoices.FindIndex(c => c.Id.Equals(rule.InputEndpointId, StringComparison.OrdinalIgnoreCase));
-                        if (inIdx >= 0 && vm.SelectedInputIndex != inIdx)
-                        {
-                            vm.SelectedInputIndex = inIdx;
-                        }
-                    }
+                    existing.Volume = Math.Round(s.Volume * 100);
+                    existing.IsMuted = s.IsMuted;
                 }
-
-                AppSessions.Add(vm);
+                else
+                {
+                    var vm = new AppSessionItemViewModel(s, OutputChoices, InputChoices, rule);
+                    AppSessions.Add(vm);
+                }
             }
 
             HasApps = AppSessions.Count > 0;
