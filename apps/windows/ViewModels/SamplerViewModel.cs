@@ -113,7 +113,7 @@ public partial class SamplerViewModel : ObservableObject
         }
         var voice = Voice(ActivePage, pad.Index);
         if (cfg.Mode == PadMode.PlayStop && voice.IsPlaying) { voice.Stop(); return; }
-        voice.Play(sample.File, cfg.Start, cfg.End);
+        voice.Play(sample.File, cfg.Start, cfg.End, cfg.GainDb);
         Status = "";
     }
 
@@ -296,6 +296,9 @@ public partial class PadViewModel(int index, SamplerViewModel owner) : Observabl
     [ObservableProperty] private double _trimEnd = 1;
     /// <summary>Playback cursor 0..1, or -1 when stopped.</summary>
     [ObservableProperty] private double _cursor = -1;
+    [ObservableProperty] private double _gainDb;
+    [ObservableProperty] private bool _isProcessing;
+    [ObservableProperty] private string _processStatus = "";
 
     public string Title => Loc.Format("SamplerPadTitle", Number, Owner.PageLetter);
     public string ModeGlyph => (PadMode)ModeIndex switch { PadMode.PlayRestart => "", PadMode.Hold => "", _ => "" };
@@ -303,6 +306,7 @@ public partial class PadViewModel(int index, SamplerViewModel owner) : Observabl
     public string StartText => Time(TrimStart * Duration);
     public string EndText => Time(TrimEnd * Duration);
     public string LengthText => Time((TrimEnd - TrimStart) * Duration);
+    public string GainLabel => $"{GainDb:+0.0;-0.0;0.0} dB";
 
     private static string Time(double s) => TimeSpan.FromSeconds(Math.Max(0, s)).ToString(s >= 60 ? @"m\:ss\.f" : @"s\.ff") + (s >= 60 ? "" : " s");
 
@@ -316,10 +320,12 @@ public partial class PadViewModel(int index, SamplerViewModel owner) : Observabl
         Peaks = sample?.Peaks ?? [];
         Duration = sample?.Duration ?? 0;
         ModeIndex = (int)cfg.Mode;
+        GainDb = cfg.GainDb;
         TrimStart = Duration > 0 ? Math.Clamp(cfg.Start / Duration, 0, 1) : 0;
         TrimEnd = Duration > 0 && cfg.End > 0 ? Math.Clamp(cfg.End / Duration, 0, 1) : 1;
         IsPlaying = Owner.Voice(Owner.ActivePage, Index).IsPlaying;
         OnPropertyChanged(nameof(Title));
+        OnPropertyChanged(nameof(GainLabel));
         _loading = false;
         UpdateCursor();
     }
@@ -353,10 +359,63 @@ public partial class PadViewModel(int index, SamplerViewModel owner) : Observabl
         Owner.ScheduleSave();
     }
 
+    partial void OnGainDbChanged(double value)
+    {
+        OnPropertyChanged(nameof(GainLabel));
+        if (_loading) return;
+        Config.GainDb = Math.Round(value, 1);
+        Owner.ScheduleSave();
+    }
+
+    public async Task<bool> NormalizeAsync()
+    {
+        var sample = Owner.Store.Find(Config.SampleId);
+        if (sample == null || IsProcessing) return false;
+        try
+        {
+            IsProcessing = true;
+            ProcessStatus = "Normalisiere...";
+            var (ok, gainDb) = await SamplerStore.NormalizeAudioAsync(sample, targetDb: -1.0);
+            if (ok)
+            {
+                Peaks = sample.Peaks;
+                Duration = sample.Duration;
+                ProcessStatus = $"Normalisiert auf -1.0 dBFS ({gainDb:+0.0;-0.0;0.0} dB)";
+                Owner.ScheduleSave();
+                return true;
+            }
+            ProcessStatus = "Bereits maximal ausgesteuert";
+            return false;
+        }
+        catch (Exception ex)
+        {
+            ProcessStatus = $"Fehler: {ex.Message}";
+            return false;
+        }
+        finally
+        {
+            IsProcessing = false;
+        }
+    }
+
+    public void AutoTrim()
+    {
+        var sample = Owner.Store.Find(Config.SampleId);
+        if (sample == null || Duration <= 0) return;
+        var (startSec, endSec) = SamplerStore.AutoTrimSilence(sample);
+        if (endSec > startSec)
+        {
+            TrimStart = Math.Clamp(startSec / Duration, 0.0, 1.0);
+            TrimEnd = Math.Clamp(endSec / Duration, 0.0, 1.0);
+            ProcessStatus = $"Auto-Trim: {startSec:0.00}s bis {endSec:0.00}s";
+        }
+    }
+
     public void ResetTrim()
     {
         TrimStart = 0;
         TrimEnd = 1;
+        ProcessStatus = "";
     }
 }
 

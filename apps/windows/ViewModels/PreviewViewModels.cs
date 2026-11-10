@@ -55,6 +55,15 @@ public partial class MicSettingsViewModel : ObservableObject
     public string[] Ratios { get; } =
         ["1.0:1", "1.1:1", "1.2:1", "1.4:1", "1.6:1", "1.8:1", "2.0:1", "2.5:1", "3.2:1", "4.0:1", "5.6:1", "8:1", "16:1", "32:1", "64:1"];
 
+    public static readonly double[] RatioValues = [1.0, 1.1, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.2, 4.0, 5.6, 8.0, 16.0, 32.0, 64.0];
+    public double CompRatioNumeric => RatioValues[Math.Clamp(CompRatio, 0, RatioValues.Length - 1)];
+
+    public string RnnoiseIntensityLabel => $"{(int)Math.Round(RnnoiseIntensity)} %";
+    public string RnnoiseStatusBadge => RnnoiseEnabled ? "KI Aktiv (Live)" : "Bypass";
+    public string RnnoiseStatusMessage => RnnoiseEnabled 
+        ? $"Aktiv ({RnnoiseModel}): Filtert mechanische Tastaturgeräusche, Mausklicks und Raumhall in Echtzeit heraus." 
+        : "Bypass: Die KI-Rauschunterdrückung ist deaktiviert. Schalte den Schalter ein, um Hintergrundlärm herauszufiltern.";
+
     private static readonly int[] GateTimes =
         [.. Enumerable.Range(1, 20).Select(i => i * 10), .. Enumerable.Range(1, 16).Select(i => 200 + i * 50),
          .. Enumerable.Range(1, 10).Select(i => 1000 + i * 100)];
@@ -93,6 +102,15 @@ public partial class MicSettingsViewModel : ObservableObject
             case nameof(GateRelease): OnPropertyChanged(nameof(GateReleaseLabel)); break;
             case nameof(CompAttack): OnPropertyChanged(nameof(CompAttackLabel)); break;
             case nameof(CompRelease): OnPropertyChanged(nameof(CompReleaseLabel)); break;
+            case nameof(CompRatio): OnPropertyChanged(nameof(CompRatioNumeric)); break;
+            case nameof(RnnoiseIntensity): OnPropertyChanged(nameof(RnnoiseIntensityLabel)); break;
+            case nameof(RnnoiseEnabled):
+                OnPropertyChanged(nameof(RnnoiseStatusBadge));
+                OnPropertyChanged(nameof(RnnoiseStatusMessage));
+                break;
+            case nameof(RnnoiseModel):
+                OnPropertyChanged(nameof(RnnoiseStatusMessage));
+                break;
         }
         if (e.PropertyName is { } n && DeviceProps.Contains(n)) Changed();
     }

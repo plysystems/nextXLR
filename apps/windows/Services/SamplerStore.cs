@@ -45,6 +45,7 @@ public sealed class PadConfig
     public double End { get; set; }
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public PadMode Mode { get; set; } = PadMode.PlayStop;
+    public double GainDb { get; set; } = 0.0;
 }
 
 /// <summary>
@@ -181,6 +182,126 @@ public sealed class SamplerStore
         }
         return [];
     }
+
+    /// <summary>
+    /// Normalizes the sample to target dBFS (default -1.0 dBFS) using 32-bit floating point PCM scaling.
+    /// </summary>
+    public static async Task<(bool Success, double GainDb)> NormalizeAudioAsync(SampleEntry entry, double targetDb = -1.0)
+    {
+        if (string.IsNullOrEmpty(entry.File) || !System.IO.File.Exists(entry.File)) return (false, 0.0);
+
+        var tempOut = Path.Combine(Path.GetTempPath(), $"norm-{Guid.NewGuid():N}.wav");
+        try
+        {
+            float maxPeak = 0f;
+            int sampleRate;
+            int channels;
+            List<float> allSamples = [];
+
+            using (var reader = new MediaFoundationReader(entry.File))
+            {
+                sampleRate = reader.WaveFormat.SampleRate;
+                channels = reader.WaveFormat.Channels;
+                var sampleProvider = reader.ToSampleProvider();
+                float[] buf = new float[sampleRate * channels];
+                int read;
+                while ((read = sampleProvider.Read(buf, 0, buf.Length)) > 0)
+                {
+                    for (int i = 0; i < read; i++)
+                    {
+                        float abs = Math.Abs(buf[i]);
+                        if (abs > maxPeak) maxPeak = abs;
+                        allSamples.Add(buf[i]);
+                    }
+                }
+            }
+
+            if (maxPeak < 0.0001f || allSamples.Count == 0) return (false, 0.0);
+
+            float targetAmp = (float)Math.Pow(10.0, targetDb / 20.0);
+            float multiplier = targetAmp / maxPeak;
+            double gainDb = 20.0 * Math.Log10(multiplier);
+
+            short[] pcm16 = new short[allSamples.Count];
+            for (int i = 0; i < allSamples.Count; i++)
+            {
+                pcm16[i] = (short)Math.Clamp(Math.Round(allSamples[i] * multiplier * 32767.0), -32768, 32767);
+            }
+
+            WriteWav16(tempOut, pcm16, sampleRate, (short)channels);
+
+            var targetPath = Path.ChangeExtension(entry.File, ".wav");
+            if (targetPath != entry.File && System.IO.File.Exists(entry.File))
+            {
+                try { System.IO.File.Delete(entry.File); } catch { }
+            }
+            entry.File = targetPath;
+            System.IO.File.Copy(tempOut, entry.File, overwrite: true);
+
+            (entry.Duration, entry.Peaks) = await AnalyzeAsync(entry.File);
+            return (true, gainDb);
+        }
+        catch
+        {
+            return (false, 0.0);
+        }
+        finally
+        {
+            try { System.IO.File.Delete(tempOut); } catch { }
+        }
+    }
+
+    public static (double Start, double End) AutoTrimSilence(SampleEntry entry, double silenceThresholdDb = -36.0)
+    {
+        if (entry.Peaks.Length == 0 || entry.Duration <= 0) return (0, 0);
+
+        byte thresh = (byte)Math.Clamp((int)(Math.Pow(10.0, silenceThresholdDb / 20.0) * 255.0), 3, 25);
+        int startIdx = 0;
+        while (startIdx < entry.Peaks.Length && entry.Peaks[startIdx] < thresh)
+        {
+            startIdx++;
+        }
+
+        int endIdx = entry.Peaks.Length - 1;
+        while (endIdx > startIdx && entry.Peaks[endIdx] < thresh)
+        {
+            endIdx--;
+        }
+
+        double stepSec = entry.Duration / entry.Peaks.Length;
+        double startSec = Math.Max(0.0, (startIdx * stepSec) - 0.02);
+        double endSec = Math.Min(entry.Duration, ((endIdx + 1) * stepSec) + 0.04);
+
+        return (Math.Round(startSec, 3), Math.Round(endSec, 3));
+    }
+
+    public static void WriteWav16(string filePath, short[] samples, int sampleRate = 48000, short channels = 2)
+    {
+        using var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+        using var bw = new BinaryWriter(fs);
+        int byteRate = sampleRate * channels * 2;
+        short blockAlign = (short)(channels * 2);
+        int subchunk2Size = samples.Length * 2;
+        int chunkSize = 36 + subchunk2Size;
+
+        bw.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"));
+        bw.Write(chunkSize);
+        bw.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"));
+        bw.Write(System.Text.Encoding.ASCII.GetBytes("fmt "));
+        bw.Write(16);
+        bw.Write((short)1);
+        bw.Write(channels);
+        bw.Write(sampleRate);
+        bw.Write(byteRate);
+        bw.Write(blockAlign);
+        bw.Write((short)16);
+        bw.Write(System.Text.Encoding.ASCII.GetBytes("data"));
+        bw.Write(subchunk2Size);
+
+        byte[] bytes = new byte[samples.Length * 2];
+        Buffer.BlockCopy(samples, 0, bytes, 0, bytes.Length);
+        bw.Write(bytes);
+    }
 }
 
 /// <summary>
@@ -237,7 +358,7 @@ public sealed class SamplePlayer : IDisposable
         }
     }
 
-    public void Play(string file, double start = 0, double end = 0)
+    public void Play(string file, double start = 0, double end = 0, double gainDb = 0.0)
     {
         lock (_lock)
         {
@@ -252,6 +373,9 @@ public sealed class SamplePlayer : IDisposable
                     _reader.CurrentTime = TimeSpan.FromSeconds(start);
                 }
 
+                float vol = (float)Math.Pow(10.0, gainDb / 20.0);
+                IWaveProvider provider = Math.Abs(gainDb) > 0.01 ? new VolumeProvider(_reader, vol) : _reader;
+
                 MMDevice? targetDevice = null;
                 if (_toSampleChannel)
                 {
@@ -263,13 +387,13 @@ public sealed class SamplePlayer : IDisposable
                     try
                     {
                         _output = new WasapiOut(targetDevice, AudioClientShareMode.Shared, true, 20);
-                        _output.Init(_reader);
+                        _output.Init(provider);
                     }
                     catch
                     {
                         _output?.Dispose();
                         _output = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 30);
-                        _output.Init(_reader);
+                        _output.Init(provider);
                     }
                 }
                 else
@@ -281,19 +405,19 @@ public sealed class SamplePlayer : IDisposable
                         try
                         {
                             _output = new WasapiOut(defDev, AudioClientShareMode.Shared, true, 20);
-                            _output.Init(_reader);
+                            _output.Init(provider);
                         }
                         catch
                         {
                             _output?.Dispose();
                             _output = new WasapiOut(defDev, AudioClientShareMode.Shared, false, 30);
-                            _output.Init(_reader);
+                            _output.Init(provider);
                         }
                     }
                     else
                     {
                         _output = new WasapiOut(AudioClientShareMode.Shared, 30);
-                        _output.Init(_reader);
+                        _output.Init(provider);
                     }
                 }
 
@@ -370,5 +494,46 @@ public sealed class SamplePlayer : IDisposable
         {
             StopInternal();
         }
+    }
+}
+
+public sealed class VolumeProvider : IWaveProvider
+{
+    private readonly IWaveProvider _source;
+    public float Volume { get; set; } = 1.0f;
+    public WaveFormat WaveFormat => _source.WaveFormat;
+
+    public VolumeProvider(IWaveProvider source, float volume = 1.0f)
+    {
+        _source = source;
+        Volume = volume;
+    }
+
+    public int Read(byte[] buffer, int offset, int count)
+    {
+        int read = _source.Read(buffer, offset, count);
+        if (Math.Abs(Volume - 1.0f) < 0.005f || read <= 0) return read;
+
+        if (WaveFormat.BitsPerSample == 16)
+        {
+            for (int i = 0; i < read; i += 2)
+            {
+                short sample = BitConverter.ToInt16(buffer, offset + i);
+                short scaled = (short)Math.Clamp(Math.Round(sample * Volume), short.MinValue, short.MaxValue);
+                buffer[offset + i] = (byte)(scaled & 0xFF);
+                buffer[offset + i + 1] = (byte)((scaled >> 8) & 0xFF);
+            }
+        }
+        else if (WaveFormat.BitsPerSample == 32 && WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat)
+        {
+            for (int i = 0; i < read; i += 4)
+            {
+                float sample = BitConverter.ToSingle(buffer, offset + i);
+                float scaled = sample * Volume;
+                byte[] bytes = BitConverter.GetBytes(scaled);
+                Buffer.BlockCopy(bytes, 0, buffer, offset + i, 4);
+            }
+        }
+        return read;
     }
 }

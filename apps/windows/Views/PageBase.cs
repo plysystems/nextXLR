@@ -4,8 +4,10 @@ using NextXLR.Services;
 using NextXLR.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Windows.Storage.Pickers;
+using Windows.UI;
 
 namespace NextXLR.Views;
 
@@ -579,6 +581,18 @@ public partial class MicPage : Page
         }
     }
 
+    public Brush RnnoiseBadgeBackground(bool enabled) =>
+        enabled ? new SolidColorBrush(Color.FromArgb(50, 0x1F, 0xC7, 0x9A)) : (Brush)Application.Current.Resources["SurfaceL3Brush"];
+
+    public Brush RnnoiseBadgeBorder(bool enabled) =>
+        enabled ? (Brush)Application.Current.Resources["BrandBrush"] : new SolidColorBrush(Color.FromArgb(60, 255, 255, 255));
+
+    public Brush RnnoiseBadgeForeground(bool enabled) =>
+        enabled ? (Brush)Application.Current.Resources["BrandBrush"] : (Brush)Application.Current.Resources["TextMutedBrush"];
+
+    public InfoBarSeverity RnnoiseInfoSeverity(bool enabled) =>
+        enabled ? InfoBarSeverity.Success : InfoBarSeverity.Informational;
+
     private void RnnoiseModel_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button { Tag: string model })
@@ -966,7 +980,22 @@ public partial class SamplerPage : Page
         Sampler.Press(pad);   // same path as Clear + pad
     }
 
+    public bool NotProcessing(bool b) => !b;
+
     private void ResetTrim_Click(object sender, RoutedEventArgs e) => Sampler.SelectedPad?.ResetTrim();
+
+    private async void NormalizePad_Click(object sender, RoutedEventArgs e)
+    {
+        if (Sampler.SelectedPad is { } pad)
+        {
+            await pad.NormalizeAsync();
+        }
+    }
+
+    private void AutoTrimPad_Click(object sender, RoutedEventArgs e)
+    {
+        Sampler.SelectedPad?.AutoTrim();
+    }
 
     /// <summary>Plays the trimmed region on the pad's own voice (toggle).</summary>
     private void PreviewPad_Click(object sender, RoutedEventArgs e)
@@ -974,7 +1003,7 @@ public partial class SamplerPage : Page
         if (Sampler.SelectedPad is not { } pad) return;
         var voice = Sampler.Voice(Sampler.ActivePage, pad.Index);
         if (voice.IsPlaying) { voice.Stop(); return; }
-        if (Sampler.Store.Find(pad.Config.SampleId) is { } s) voice.Play(s.File, pad.Config.Start, pad.Config.End);
+        if (Sampler.Store.Find(pad.Config.SampleId) is { } s) voice.Play(s.File, pad.Config.Start, pad.Config.End, pad.Config.GainDb);
     }
 }
 

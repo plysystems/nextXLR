@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="using:NextXLR.ViewModels"
     xmlns:services="using:NextXLR.Services"
+    xmlns:controls="using:NextXLR.Controls"
     Background="Transparent">
 
     <Page.Resources>
@@ -227,7 +228,7 @@
             </Expander>
 
             <!-- Compressor -->
-            <Expander>
+            <Expander IsExpanded="True">
                 <Expander.Header>
                     <Grid Padding="0,10" ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
@@ -238,31 +239,51 @@
                         <TextBlock x:Uid="MicCompHeader" Grid.Column="1" Style="{StaticResource CardTitle}" />
                     </Grid>
                 </Expander.Header>
-                <Grid ColumnSpacing="32" RowSpacing="12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Slider x:Uid="MicCompThreshold" Minimum="-40" Maximum="0" StepFrequency="1" Value="{x:Bind Mic.CompThreshold, Mode=TwoWay}" />
-                    <ComboBox x:Uid="MicCompRatio" Grid.Column="1" ItemsSource="{x:Bind Mic.Ratios}" HorizontalAlignment="Stretch"
-                              SelectedIndex="{x:Bind Mic.CompRatio, Mode=TwoWay}" />
-                    <Slider x:Uid="MicCompMakeup" Grid.Column="2" Minimum="-6" Maximum="24" StepFrequency="1" Value="{x:Bind Mic.CompMakeup, Mode=TwoWay}" />
-                    <Grid Grid.Row="1">
-                        <Slider x:Uid="MicCompAttack" Minimum="0" Maximum="19" StepFrequency="1" IsThumbToolTipEnabled="False"
-                                Value="{x:Bind Mic.CompAttack, Mode=TwoWay}" />
-                        <TextBlock Text="{x:Bind Mic.CompAttackLabel, Mode=OneWay}" Style="{StaticResource Caption}" HorizontalAlignment="Right" />
+                <StackPanel Spacing="16">
+                    <!-- Feature 10: Live Visual Compression & Gain Reduction Graph -->
+                    <StackPanel Spacing="6">
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Echtzeit Dynamik- &amp; Gain-Reduction-Verlauf (Eingang vs. Reduktion)" Style="{StaticResource Overline}" />
+                            <TextBlock Grid.Column="1" Text="Live-Analyse (30 FPS)" Style="{StaticResource Caption}" Foreground="{StaticResource MutedTextBrush}" />
+                        </Grid>
+                        <controls:CompressionHistoryGraph
+                            Height="140"
+                            Channel="{x:Bind ViewModel.MicChannel, Mode=OneWay}"
+                            Threshold="{x:Bind Mic.CompThreshold, Mode=OneWay}"
+                            Ratio="{x:Bind Mic.CompRatioNumeric, Mode=OneWay}"
+                            Makeup="{x:Bind Mic.CompMakeup, Mode=OneWay}" />
+                    </StackPanel>
+
+                    <Grid ColumnSpacing="32" RowSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Slider x:Uid="MicCompThreshold" Minimum="-40" Maximum="0" StepFrequency="1" Value="{x:Bind Mic.CompThreshold, Mode=TwoWay}" />
+                        <ComboBox x:Uid="MicCompRatio" Grid.Column="1" ItemsSource="{x:Bind Mic.Ratios}" HorizontalAlignment="Stretch"
+                                  SelectedIndex="{x:Bind Mic.CompRatio, Mode=TwoWay}" />
+                        <Slider x:Uid="MicCompMakeup" Grid.Column="2" Minimum="-6" Maximum="24" StepFrequency="1" Value="{x:Bind Mic.CompMakeup, Mode=TwoWay}" />
+                        <Grid Grid.Row="1">
+                            <Slider x:Uid="MicCompAttack" Minimum="0" Maximum="19" StepFrequency="1" IsThumbToolTipEnabled="False"
+                                    Value="{x:Bind Mic.CompAttack, Mode=TwoWay}" />
+                            <TextBlock Text="{x:Bind Mic.CompAttackLabel, Mode=OneWay}" Style="{StaticResource Caption}" HorizontalAlignment="Right" />
+                        </Grid>
+                        <Grid Grid.Row="1" Grid.Column="1">
+                            <Slider x:Uid="MicCompRelease" Minimum="0" Maximum="19" StepFrequency="1" IsThumbToolTipEnabled="False"
+                                    Value="{x:Bind Mic.CompRelease, Mode=TwoWay}" />
+                            <TextBlock Text="{x:Bind Mic.CompReleaseLabel, Mode=OneWay}" Style="{StaticResource Caption}" HorizontalAlignment="Right" />
+                        </Grid>
                     </Grid>
-                    <Grid Grid.Row="1" Grid.Column="1">
-                        <Slider x:Uid="MicCompRelease" Minimum="0" Maximum="19" StepFrequency="1" IsThumbToolTipEnabled="False"
-                                Value="{x:Bind Mic.CompRelease, Mode=TwoWay}" />
-                        <TextBlock Text="{x:Bind Mic.CompReleaseLabel, Mode=OneWay}" Style="{StaticResource Caption}" HorizontalAlignment="Right" />
-                    </Grid>
-                </Grid>
+                </StackPanel>
             </Expander>
 
             <!-- De-esser -->
@@ -282,7 +303,7 @@
             </Expander>
 
             <!-- KI-Rauschunterdrückung -->
-            <Expander IsExpanded="False">
+            <Expander IsExpanded="True">
                 <Expander.Header>
                     <Grid Padding="0,10" ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
@@ -293,35 +314,46 @@
                         <FontIcon Glyph="&#xE9F5;" Foreground="{StaticResource BrandBrush}" />
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                <TextBlock Text="KI-Rauschunterdrückung" Style="{StaticResource CardTitle}" />
-                                <Border Background="{StaticResource SurfaceL3Brush}" BorderBrush="{StaticResource BrandBrush}" BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
-                                    <TextBlock Text="Upcoming" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                                <TextBlock Text="KI-Rauschunterdrückung (AI Noise Reduction)" Style="{StaticResource CardTitle}" />
+                                <Border Background="{x:Bind RnnoiseBadgeBackground(Mic.RnnoiseEnabled), Mode=OneWay}"
+                                        BorderBrush="{x:Bind RnnoiseBadgeBorder(Mic.RnnoiseEnabled), Mode=OneWay}"
+                                        BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+                                    <TextBlock Text="{x:Bind Mic.RnnoiseStatusBadge, Mode=OneWay}" FontSize="10" FontWeight="Bold"
+                                               Foreground="{x:Bind RnnoiseBadgeForeground(Mic.RnnoiseEnabled), Mode=OneWay}" />
                                 </Border>
                             </StackPanel>
                             <TextBlock Text="Entfernt mechanische Tastaturgeräusche, Mausklicks und Lüfterlärm in Echtzeit" Style="{StaticResource Caption}" />
                         </StackPanel>
-                        <ToggleSwitch Grid.Column="2" IsOn="False" IsEnabled="False"
+                        <ToggleSwitch Grid.Column="2" IsOn="{x:Bind Mic.RnnoiseEnabled, Mode=TwoWay}" IsEnabled="True"
                                       OnContent="Aktiv" OffContent="Bypass" MinWidth="0" VerticalAlignment="Center" />
                     </Grid>
                 </Expander.Header>
-                <StackPanel Spacing="16" Padding="4" IsHitTestVisible="False" Opacity="0.6">
-                    <InfoBar Severity="Informational" IsOpen="True" IsClosable="False"
-                             Message="Upcoming: Die KI-Rauschunterdrückung (RNNoise / DeepFilterNet) wird in einem kommenden Update freigeschaltet." />
+                <StackPanel Spacing="16" Padding="4">
+                    <InfoBar Severity="{x:Bind RnnoiseInfoSeverity(Mic.RnnoiseEnabled), Mode=OneWay}" IsOpen="True" IsClosable="False"
+                             Title="{x:Bind Mic.RnnoiseStatusBadge, Mode=OneWay}"
+                             Message="{x:Bind Mic.RnnoiseStatusMessage, Mode=OneWay}" />
                     <Grid ColumnSpacing="24">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="280" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Spacing="6">
-                            <TextBlock Text="KI-Entrauschungs-Intensität (0% - 100%)" FontWeight="SemiBold" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                                <TextBlock Text="KI-Entrauschungs-Intensität" FontWeight="SemiBold" />
+                                <TextBlock Text="{x:Bind Mic.RnnoiseIntensityLabel, Mode=OneWay}" Style="{StaticResource Caption}"
+                                           Foreground="{StaticResource BrandBrush}" Margin="12,0,0,0" FontWeight="Bold" />
+                            </StackPanel>
                             <Slider Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind Mic.RnnoiseIntensity, Mode=TwoWay}" />
+                            <TextBlock Text="Höhere Werte filtern aggressiver, niedrigere Werte erhalten leises Flüstern unverändert." Style="{StaticResource Caption}" Foreground="{StaticResource MutedTextBrush}" />
                         </StackPanel>
                         <StackPanel Grid.Column="1" Spacing="6">
                             <TextBlock Text="Neuronales KI-Modell" FontWeight="SemiBold" />
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <Button Content="DeepFilterNet 3" Style="{StaticResource SmoothButton}" Tag="DeepFilterNet3" Click="RnnoiseModel_Click" />
                                 <Button Content="RNNoise" Style="{StaticResource SmoothButton}" Tag="RNNoise" Click="RnnoiseModel_Click" />
+                                <Button Content="VoiceClear" Style="{StaticResource SmoothButton}" Tag="VoiceClear" Click="RnnoiseModel_Click" />
                             </StackPanel>
+                            <TextBlock Text="Latenz: &lt; 10 ms · SIMD AVX2 beschleunigt" Style="{StaticResource Caption}" Foreground="{StaticResource MutedTextBrush}" />
                         </StackPanel>
                     </Grid>
                 </StackPanel>

@@ -175,6 +175,52 @@
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
+                        <!-- Feature 06: Soundboard & Waveform Editor Tools -->
+                        <Border Background="{StaticResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12">
+                            <StackPanel Spacing="12">
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="220" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Sound-Optimierung &amp; Bearbeitung" Style="{StaticResource Overline}" />
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Button Click="NormalizePad_Click" IsEnabled="{x:Bind NotProcessing(Sampler.SelectedPad.IsProcessing), Mode=OneWay}"
+                                                    ToolTipService.ToolTip="Hebt die Lautstärke verzerrungsfrei auf -1.0 dBFS an">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <FontIcon Glyph="&#xE9E9;" FontSize="14" Foreground="{StaticResource BrandBrush}" />
+                                                    <TextBlock Text="Normalisieren (-1 dBFS)" />
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Click="AutoTrimPad_Click" ToolTipService.ToolTip="Erkennt und schneidet Stille am Anfang und Ende automatisch ab">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <FontIcon Glyph="&#xE74E;" FontSize="14" />
+                                                    <TextBlock Text="Auto-Trim (Stille)" />
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                        <TextBlock Text="{x:Bind Sampler.SelectedPad.ProcessStatus, Mode=OneWay}" Style="{StaticResource Caption}" Foreground="{StaticResource BrandBrush}" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Spacing="4">
+                                        <Grid>
+                                            <TextBlock Text="Pad-Lautstärke (Gain)" FontWeight="SemiBold" FontSize="12" />
+                                            <TextBlock Text="{x:Bind Sampler.SelectedPad.GainLabel, Mode=OneWay}" HorizontalAlignment="Right"
+                                                       FontFamily="Consolas" FontSize="12" Foreground="{StaticResource BrandBrush}" />
+                                        </Grid>
+                                        <Slider Minimum="-12" Maximum="12" StepFrequency="0.5" Value="{x:Bind Sampler.SelectedPad.GainDb, Mode=TwoWay}" Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="8" Padding="10,6">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <FontIcon Glyph="&#xE8B5;" Foreground="{StaticResource BrandBrush}" FontSize="13" />
+                                        <TextBlock Text="Drag &amp; Drop: Ziehe Audiodateien (.wav, .mp3, .flac) direkt hierher oder auf die Pads 1–4." Style="{StaticResource Caption}" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Border>
             </StackPanel>
