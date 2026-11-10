@@ -26,7 +26,6 @@ public partial class StreamDeckStatusService : ObservableObject
     [ObservableProperty] private bool _isAppRunning;
     [ObservableProperty] private string _statusText = "Stream Deck: Prüfe...";
     [ObservableProperty] private string _statusDetail = "Prüfe Verbindung zu mixforged Port 48500...";
-    [ObservableProperty] private Brush _statusBrush;
 
     public bool IsFullyActive => IsApiOnline && IsAppRunning;
 
@@ -40,7 +39,6 @@ public partial class StreamDeckStatusService : ObservableObject
         {
             Timeout = TimeSpan.FromSeconds(1)
         };
-        _statusBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 120, 130, 145)); // Initial gray
     }
 
     public void StartMonitoring(DispatcherQueue uiQueue)
@@ -97,19 +95,16 @@ public partial class StreamDeckStatusService : ObservableObject
                     {
                         StatusText = "Stream Deck: Aktiv";
                         StatusDetail = "Elgato Stream Deck ist aktiv und mit der NextXLR Engine verbunden (Port 48500).";
-                        StatusBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 16, 185, 129)); // Emerald Green
                     }
                     else if (apiOnline)
                     {
                         StatusText = "Stream Deck: Bereit";
                         StatusDetail = "NextXLR REST & WebSocket API ist auf Port 48500 bereit (Stream Deck Software nicht gestartet).";
-                        StatusBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0x4F, 0xE0, 0xB8)); // Brand Turquoise
                     }
                     else
                     {
                         StatusText = "Stream Deck: Offline";
                         StatusDetail = "Die NextXLR Engine API auf Port 48500 ist momentan nicht erreichbar.";
-                        StatusBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 120, 130, 145)); // Gray Muted
                     }
 
                     OnPropertyChanged(nameof(IsFullyActive));

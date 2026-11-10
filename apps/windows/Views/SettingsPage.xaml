@@ -239,7 +239,7 @@
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
                                         <StackPanel Orientation="Horizontal" Spacing="10">
                                             <TextBlock Text="{x:Bind StreamDeckService.StatusText, Mode=OneWay}" FontWeight="SemiBold" FontSize="16" />
-                                            <Ellipse Fill="{x:Bind StreamDeckService.StatusBrush, Mode=OneWay}" Width="10" Height="10" VerticalAlignment="Center" />
+                                            <Ellipse Fill="{x:Bind StreamDeckStatusBrush(StreamDeckService.IsApiOnline, StreamDeckService.IsAppRunning), Mode=OneWay}" Width="10" Height="10" VerticalAlignment="Center" />
                                         </StackPanel>
                                         <TextBlock Text="{x:Bind StreamDeckService.StatusDetail, Mode=OneWay}" Style="{StaticResource Caption}" />
                                     </StackPanel>

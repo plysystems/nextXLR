@@ -1,7 +1,9 @@
 using NextXLR.Services;
 using NextXLR.ViewModels;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 
 namespace NextXLR.Views;
@@ -15,6 +17,17 @@ public sealed partial class SettingsPage : Page
     public MainViewModel ViewModel { get; private set; } = null!;
     public StreamDeckStatusService StreamDeckService => StreamDeckStatusService.Instance;
     public string StreamDeckAppStatusText => StreamDeckService.IsAppRunning ? "Software läuft im Hintergrund" : "Software ist aktuell nicht gestartet";
+
+    private static readonly SolidColorBrush StreamDeckActiveBrush = new(ColorHelper.FromArgb(255, 16, 185, 129));
+    private static readonly SolidColorBrush StreamDeckReadyBrush = new(ColorHelper.FromArgb(255, 0x4F, 0xE0, 0xB8));
+    private static readonly SolidColorBrush StreamDeckOfflineBrush = new(ColorHelper.FromArgb(255, 120, 130, 145));
+
+    public SolidColorBrush StreamDeckStatusBrush(bool isApiOnline, bool isAppRunning)
+    {
+        if (isApiOnline && isAppRunning) return StreamDeckActiveBrush;
+        if (isApiOnline) return StreamDeckReadyBrush;
+        return StreamDeckOfflineBrush;
+    }
 
     private bool _isLoadingEndpoints = false;
 

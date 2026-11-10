@@ -434,6 +434,17 @@ public sealed partial class MainWindow : Window
 
     // x:Bind helper functions
     public SolidColorBrush StatusBrush(bool connected) => connected ? Online : Offline;
+
+    private static readonly SolidColorBrush StreamDeckActiveBrush = new(ColorHelper.FromArgb(255, 16, 185, 129));
+    private static readonly SolidColorBrush StreamDeckReadyBrush = new(ColorHelper.FromArgb(255, 0x4F, 0xE0, 0xB8));
+    private static readonly SolidColorBrush StreamDeckOfflineBrush = new(ColorHelper.FromArgb(255, 120, 130, 145));
+
+    public SolidColorBrush StreamDeckStatusBrush(bool isApiOnline, bool isAppRunning)
+    {
+        if (isApiOnline && isAppRunning) return StreamDeckActiveBrush;
+        if (isApiOnline) return StreamDeckReadyBrush;
+        return StreamDeckOfflineBrush;
+    }
     public bool HasText(string? s) => !string.IsNullOrEmpty(s);
     public bool Not(bool b) => !b;
     public Visibility VisibleIfNot(bool b) => b ? Visibility.Collapsed : Visibility.Visible;

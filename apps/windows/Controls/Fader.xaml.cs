@@ -164,8 +164,6 @@ public sealed partial class Fader : UserControl
         var f = (Fader)d;
         if (f._dragging || !f.IsLoaded) { f._shown = f.Value; f.Layout(); }
         else f.StartAnimation();   // glide to externally set values
-        if (FrameworkElementAutomationPeer.FromElement(f) is FaderPeer peer)
-            peer.RaisePropertyChangedEvent(RangeValuePatternIdentifiers.ValueProperty, e.OldValue, e.NewValue);
     }
 
     // ---- Geometry -----------------------------------------------------------------------
@@ -372,22 +370,5 @@ public sealed partial class Fader : UserControl
             _ => null,
         };
         if (next is { } v) { Value = v; e.Handled = true; }
-    }
-
-    protected override AutomationPeer OnCreateAutomationPeer() => new FaderPeer(this);
-
-    private sealed partial class FaderPeer(Fader owner) : FrameworkElementAutomationPeer(owner), IRangeValueProvider
-    {
-        private Fader F => (Fader)Owner;
-        protected override AutomationControlType GetAutomationControlTypeCore() => AutomationControlType.Slider;
-        protected override string GetClassNameCore() => nameof(Fader);
-        protected override object GetPatternCore(PatternInterface p) => p == PatternInterface.RangeValue ? this : base.GetPatternCore(p);
-        public bool IsReadOnly => false;
-        public double LargeChange => 10;
-        public double SmallChange => 1;
-        public double Maximum => F.Maximum;
-        public double Minimum => F.Minimum;
-        public double Value => F.Value;
-        public void SetValue(double value) => F.Value = value;
     }
 }

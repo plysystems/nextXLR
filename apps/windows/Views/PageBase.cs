@@ -128,11 +128,11 @@ public partial class MixerPage : Page
         ViewModel?.SwitchMixerPage(2);
     }
 
-    private static readonly SolidColorBrush ActiveBrandBg = new(Windows.UI.Color.FromArgb(255, 0x4F, 0xE0, 0xB8));
-    private static readonly SolidColorBrush ActiveHeadphonesBg = new(Windows.UI.Color.FromArgb(255, 0x58, 0xA6, 0xFF));
-    private static readonly SolidColorBrush ActiveTextFg = new(Windows.UI.Color.FromArgb(255, 14, 16, 21));
-    private static readonly SolidColorBrush TransparentBg = new(Windows.UI.Color.FromArgb(0, 0, 0, 0));
-    private static readonly SolidColorBrush MutedTextFg = new(Windows.UI.Color.FromArgb(255, 0x8B, 0x93, 0xA3));
+    private readonly SolidColorBrush ActiveBrandBg = new(Windows.UI.Color.FromArgb(255, 0x4F, 0xE0, 0xB8));
+    private readonly SolidColorBrush ActiveHeadphonesBg = new(Windows.UI.Color.FromArgb(255, 0x58, 0xA6, 0xFF));
+    private readonly SolidColorBrush ActiveTextFg = new(Windows.UI.Color.FromArgb(255, 14, 16, 21));
+    private readonly SolidColorBrush TransparentBg = new(Windows.UI.Color.FromArgb(0, 0, 0, 0));
+    private readonly SolidColorBrush MutedTextFg = new(Windows.UI.Color.FromArgb(255, 0x8B, 0x93, 0xA3));
 
     public Microsoft.UI.Xaml.Media.Brush Page1Background(int activePage) => activePage == 1 ? ActiveBrandBg : TransparentBg;
     public Microsoft.UI.Xaml.Media.Brush Page1Foreground(int activePage) => activePage == 1 ? ActiveTextFg : MutedTextFg;

@@ -119,6 +119,15 @@ public static class CrashHandler
             {
                 Application.Current.UnhandledException += (s, e) =>
                 {
+                    // Catch and suppress benign/internal WinRT E_NOINTERFACE (0x80004002) exceptions
+                    // (e.g. from Windows 11 24H2 composition, touch, or UI automation query interface probes)
+                    if (e.Exception is InvalidCastException ice && ice.HResult == unchecked((int)0x80004002))
+                    {
+                        e.Handled = true;
+                        try { Debug.WriteLine($"[CrashHandler] Safely suppressed benign WinUI 3 E_NOINTERFACE (0x80004002): {e.Message}"); } catch { }
+                        return;
+                    }
+
                     HandleException(e.Exception, "WinUI 3 XAML UnhandledException");
                     e.Handled = true; // Prevent instant process termination so crash dialog can display
                 };
@@ -250,6 +259,12 @@ public static class CrashHandler
 
     public static void HandleException(Exception ex, string source)
     {
+        // Never terminate or popup for benign E_NOINTERFACE queries
+        if (ex is InvalidCastException ice && ice.HResult == unchecked((int)0x80004002))
+        {
+            return;
+        }
+
         lock (_crashLock)
         {
             if (_hasCrashed) return; // Prevent cascading dialog popups
