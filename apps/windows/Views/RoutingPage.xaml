@@ -90,7 +90,7 @@
                                         </ItemsRepeater.Layout>
                                         <ItemsRepeater.ItemTemplate>
                                             <DataTemplate x:DataType="vm:RouteCellViewModel">
-                                                <ToggleButton Style="{StaticResource SmoothToggle}" CornerRadius="10"
+                                                <ToggleButton Style="{StaticResource SmoothToggle}" CornerRadius="10" IsThreeState="False"
                                                               IsChecked="{x:Bind IsRouted, Mode=TwoWay}" IsEnabled="{x:Bind IsEnabled}"
                                                               ToolTipService.ToolTip="{x:Bind Tooltip}"
                                                               AutomationProperties.Name="{x:Bind Tooltip}">
@@ -102,7 +102,7 @@
                                     <!-- Sampler column -->
                                     <Border Grid.Column="2" Background="#1F2A2F" BorderBrush="#2E4A45" BorderThickness="1,0,1,0"
                                             Padding="12,5">
-                                        <ToggleButton Style="{StaticResource SmoothToggle}" CornerRadius="10" Height="44"
+                                        <ToggleButton Style="{StaticResource SmoothToggle}" CornerRadius="10" Height="44" IsThreeState="False"
                                                       IsChecked="{x:Bind SamplerCell.IsRouted, Mode=TwoWay}"
                                                       IsEnabled="{x:Bind SamplerCell.IsEnabled}"
                                                       ToolTipService.ToolTip="{x:Bind SamplerCell.Tooltip}"

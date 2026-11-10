@@ -230,6 +230,17 @@ public sealed class BluetoothAudioRouter : IDisposable
     {
         lock (_lock)
         {
+            // If already running on this exact device with identical parameters, do not interrupt audio signal!
+            if (IsRunning &&
+                !string.IsNullOrWhiteSpace(CurrentDeviceId) &&
+                (CurrentDeviceId.Equals(targetDeviceId, StringComparison.OrdinalIgnoreCase) ||
+                 (!string.IsNullOrWhiteSpace(targetDeviceName) && CurrentDeviceName != null && CurrentDeviceName.Equals(targetDeviceName, StringComparison.OrdinalIgnoreCase))) &&
+                _lastMuteMicSidetone == muteMicSidetone &&
+                _lastSourceMode == sourceMode)
+            {
+                return;
+            }
+
             StopInternal();
             try { TimeBeginPeriod(1); } catch { }
             _reconnectTimer?.Dispose();
@@ -693,11 +704,18 @@ public sealed class BluetoothAudioRouter : IDisposable
     {
         try
         {
-            return new LowLatencyWasapiLoopbackCapture(device, 10);
+            return new WasapiLoopbackCapture(device);
         }
         catch
         {
-            return new PollingWasapiLoopbackCapture(device, 15);
+            try
+            {
+                return new LowLatencyWasapiLoopbackCapture(device, 15);
+            }
+            catch
+            {
+                return new PollingWasapiLoopbackCapture(device, 20);
+            }
         }
     }
 

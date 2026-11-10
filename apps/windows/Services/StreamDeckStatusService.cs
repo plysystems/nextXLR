@@ -103,7 +103,7 @@ public partial class StreamDeckStatusService : ObservableObject
                     {
                         StatusText = "Stream Deck: Bereit";
                         StatusDetail = "NextXLR REST & WebSocket API ist auf Port 48500 bereit (Stream Deck Software nicht gestartet).";
-                        StatusBrush = (Brush)Application.Current.Resources["BrandBrush"]; // Brand Yellow
+                        StatusBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0x4F, 0xE0, 0xB8)); // Brand Turquoise
                     }
                     else
                     {

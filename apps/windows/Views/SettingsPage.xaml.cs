@@ -16,6 +16,8 @@ public sealed partial class SettingsPage : Page
     public StreamDeckStatusService StreamDeckService => StreamDeckStatusService.Instance;
     public string StreamDeckAppStatusText => StreamDeckService.IsAppRunning ? "Software läuft im Hintergrund" : "Software ist aktuell nicht gestartet";
 
+    private bool _isLoadingEndpoints = false;
+
     public SettingsPage()
     {
         NavigationCacheMode = NavigationCacheMode.Required;
@@ -831,24 +833,33 @@ public sealed partial class SettingsPage : Page
 
             // Bluetooth/Wireless Geräte nach oben sortieren
             var ordered = items.OrderByDescending(x => x.IsBluetooth).ThenBy(x => x.Name).ToList();
-            BluetoothDeviceBox.ItemsSource = ordered;
 
-            if (ordered.Count > 0)
+            _isLoadingEndpoints = true;
+            try
             {
-                var match = ordered.FirstOrDefault(x =>
-                    (!string.IsNullOrEmpty(_settings.BluetoothHeadsetDeviceId) && x.Id.Equals(_settings.BluetoothHeadsetDeviceId, StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrEmpty(_settings.BluetoothHeadsetDeviceName) && x.Name.Equals(_settings.BluetoothHeadsetDeviceName, StringComparison.OrdinalIgnoreCase)));
+                BluetoothDeviceBox.ItemsSource = ordered;
 
-                if (match != null)
+                if (ordered.Count > 0)
                 {
-                    BluetoothDeviceBox.SelectedItem = match;
+                    var match = ordered.FirstOrDefault(x =>
+                        (!string.IsNullOrEmpty(_settings.BluetoothHeadsetDeviceId) && x.Id.Equals(_settings.BluetoothHeadsetDeviceId, StringComparison.OrdinalIgnoreCase)) ||
+                        (!string.IsNullOrEmpty(_settings.BluetoothHeadsetDeviceName) && x.Name.Equals(_settings.BluetoothHeadsetDeviceName, StringComparison.OrdinalIgnoreCase)));
+
+                    if (match != null)
+                    {
+                        BluetoothDeviceBox.SelectedItem = match;
+                    }
+                    else if (_settings.EnableBluetoothHeadset)
+                    {
+                        // Fallback zum ersten erkannten Bluetooth-Gerät oder ersten Gerät
+                        var firstBt = ordered.FirstOrDefault(x => x.IsBluetooth) ?? ordered.First();
+                        BluetoothDeviceBox.SelectedItem = firstBt;
+                    }
                 }
-                else if (_settings.EnableBluetoothHeadset)
-                {
-                    // Fallback zum ersten erkannten Bluetooth-Gerät oder ersten Gerät
-                    var firstBt = ordered.FirstOrDefault(x => x.IsBluetooth) ?? ordered.First();
-                    BluetoothDeviceBox.SelectedItem = firstBt;
-                }
+            }
+            finally
+            {
+                _isLoadingEndpoints = false;
             }
 
             UpdateBluetoothStatus();
@@ -862,18 +873,18 @@ public sealed partial class SettingsPage : Page
 
     private void BluetoothToggle_Toggled(object sender, RoutedEventArgs e)
     {
-        if (_loading) return;
+        if (_loading || _isLoadingEndpoints) return;
         _settings.EnableBluetoothHeadset = BluetoothToggle.IsOn;
         _settings.Save();
         ViewModel?.RefreshRouting();
 
         if (BluetoothToggle.IsOn && BluetoothDeviceBox.SelectedItem is AudioEndpointItem selected)
         {
-            BluetoothAudioRouter.Instance.Start(selected.Id, selected.Name, _settings.BluetoothMuteMicSidetone);
+            Task.Run(() => BluetoothAudioRouter.Instance.Start(selected.Id, selected.Name, _settings.BluetoothMuteMicSidetone));
         }
         else
         {
-            BluetoothAudioRouter.Instance.Stop();
+            Task.Run(() => BluetoothAudioRouter.Instance.Stop());
         }
 
         UpdateBluetoothStatus();
@@ -881,16 +892,19 @@ public sealed partial class SettingsPage : Page
 
     private void BluetoothDeviceBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_loading) return;
+        if (_loading || _isLoadingEndpoints) return;
         if (BluetoothDeviceBox.SelectedItem is AudioEndpointItem selected)
         {
+            bool isAlreadyActive = string.Equals(_settings.BluetoothHeadsetDeviceId, selected.Id, StringComparison.OrdinalIgnoreCase) &&
+                                   BluetoothAudioRouter.Instance.IsRunning;
+
             _settings.BluetoothHeadsetDeviceId = selected.Id;
             _settings.BluetoothHeadsetDeviceName = selected.Name;
             _settings.Save();
 
-            if (BluetoothToggle.IsOn)
+            if (BluetoothToggle.IsOn && !isAlreadyActive)
             {
-                BluetoothAudioRouter.Instance.Start(selected.Id, selected.Name, _settings.BluetoothMuteMicSidetone);
+                Task.Run(() => BluetoothAudioRouter.Instance.Start(selected.Id, selected.Name, _settings.BluetoothMuteMicSidetone));
             }
         }
         UpdateBluetoothStatus();
@@ -898,13 +912,13 @@ public sealed partial class SettingsPage : Page
 
     private void BluetoothSidetone_Changed(object sender, RoutedEventArgs e)
     {
-        if (_loading) return;
+        if (_loading || _isLoadingEndpoints) return;
         _settings.BluetoothMuteMicSidetone = BluetoothSidetoneCheck.IsChecked == true;
         _settings.Save();
 
         if (BluetoothToggle.IsOn && BluetoothDeviceBox.SelectedItem is AudioEndpointItem selected)
         {
-            BluetoothAudioRouter.Instance.Start(selected.Id, selected.Name, _settings.BluetoothMuteMicSidetone);
+            Task.Run(() => BluetoothAudioRouter.Instance.Start(selected.Id, selected.Name, _settings.BluetoothMuteMicSidetone));
         }
     }
 

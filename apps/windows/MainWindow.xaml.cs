@@ -131,14 +131,17 @@ public sealed partial class MainWindow : Window
                     DriverMissingBar.IsOpen = true;
                 }
 
-                // Autostart Bluetooth / Wireless Headset routing if enabled
+                // Autostart Bluetooth / Wireless Headset routing if enabled (on background task to never block WinUI 3 startup)
                 if (settings.EnableBluetoothHeadset && !string.IsNullOrWhiteSpace(settings.BluetoothHeadsetDeviceId))
                 {
-                    BluetoothAudioRouter.Instance.Start(
-                        settings.BluetoothHeadsetDeviceId,
-                        settings.BluetoothHeadsetDeviceName ?? "",
-                        settings.BluetoothMuteMicSidetone
-                    );
+                    Task.Run(() =>
+                    {
+                        BluetoothAudioRouter.Instance.Start(
+                            settings.BluetoothHeadsetDeviceId,
+                            settings.BluetoothHeadsetDeviceName ?? "",
+                            settings.BluetoothMuteMicSidetone
+                        );
+                    });
                 }
             }
             catch { }
