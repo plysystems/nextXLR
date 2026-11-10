@@ -335,22 +335,9 @@ public static class CrashHandler
 
     private static void ShowCrashDialog(Exception ex, string crashLog, string logFilePath)
     {
-        try
-        {
-            // Run on UI thread if possible
-            if (App.MainWindowInstance?.DispatcherQueue is { } dispatcher && !dispatcher.HasThreadAccess)
-            {
-                dispatcher.TryEnqueue(() => CreateAndShowCrashWindow(ex, crashLog, logFilePath));
-                return;
-            }
-
-            CreateAndShowCrashWindow(ex, crashLog, logFilePath);
-        }
-        catch
-        {
-            // If WinUI window creation fails, fall back to native Win32 dialog
-            ShowNativeFallbackDialog(ex, crashLog, logFilePath);
-        }
+        // When WinUI 3 crashes, creating another WinUI 3 Window results in a black screen
+        // because the XAML compositor swapchain is faulted. Always use native Win32 dialog!
+        ShowNativeFallbackDialog(ex, crashLog, logFilePath);
     }
 
     private static void CreateAndShowCrashWindow(Exception ex, string crashLog, string logFilePath)
@@ -751,17 +738,44 @@ public static class CrashHandler
     {
         try
         {
-            MessageBoxW(
+            // Close / hide main window immediately so no frozen black window remains on screen
+            try
+            {
+                if (App.MainWindowInstance != null)
+                {
+                    App.MainWindowInstance.AppWindow.Hide();
+                }
+            }
+            catch { }
+
+            int res = MessageBoxW(
                 nint.Zero,
-                $"Ein unerwarteter Fehler ist in NEXT : XLR aufgetreten:\n\n{ex.Message}\n\nEin vollständiger Crashlog wurde gespeichert unter:\n{logFilePath}\n\nDas Protokoll wird jetzt im Editor geöffnet.",
-                "NEXT : XLR — Unerwarteter Fehler",
-                0x00000010 | 0x00010000 | 0x00040000 // MB_ICONERROR | MB_SETFOREGROUND | MB_TOPMOST
+                $"Ein unerwarteter Fehler ist in NEXT : XLR aufgetreten:\n\n" +
+                $"• Fehler: {ex.GetType().Name}: {ex.Message}\n" +
+                $"• Ein vollständiger Crashlog wurde gespeichert unter:\n{logFilePath}\n\n" +
+                $"Möchten Sie NEXT : XLR jetzt neu starten?\n" +
+                $"[Ja] App sofort neu starten\n" +
+                $"[Nein] Crashlog im Editor öffnen\n" +
+                $"[Abbrechen] Beenden",
+                "NEXT : XLR — Fehler-Handling",
+                0x00000003 | 0x00000010 | 0x00010000 | 0x00040000 // MB_YESNOCANCEL | MB_ICONERROR | MB_SETFOREGROUND | MB_TOPMOST
             );
 
-            // Open log in notepad
-            if (File.Exists(logFilePath))
+            // 6 = IDYES, 7 = IDNO, 2 = IDCANCEL
+            if (res == 7) // Nein -> open notepad
             {
-                Process.Start(new ProcessStartInfo { FileName = "notepad.exe", Arguments = $"\"{logFilePath}\"", UseShellExecute = true });
+                if (File.Exists(logFilePath))
+                {
+                    Process.Start(new ProcessStartInfo { FileName = "notepad.exe", Arguments = $"\"{logFilePath}\"", UseShellExecute = true });
+                }
+            }
+            else if (res == 6) // Ja -> restart app
+            {
+                var currentExe = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName;
+                if (currentExe != null)
+                {
+                    Process.Start(new ProcessStartInfo { FileName = currentExe, UseShellExecute = true });
+                }
             }
         }
         catch { }

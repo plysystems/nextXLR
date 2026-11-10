@@ -438,7 +438,10 @@ public static class WindowsAppAudioRouter
 
                         try
                         {
-                            var sc2 = (IAudioSessionControl2Native)Marshal.GetObjectForIUnknown(pSession);
+                            if (Marshal.GetObjectForIUnknown(pSession) is not IAudioSessionControl2Native sc2)
+                            {
+                                continue;
+                            }
                             sc2.GetProcessId(out uint pid);
                             if (pid == 0) continue; // system sound session
                             if (results.ContainsKey(pid)) continue;

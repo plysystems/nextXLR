@@ -50,7 +50,14 @@ public sealed partial class MainWindow : Window
 
         Title = Loc.Get("AppTitle");
         Handle = WinRT.Interop.WindowNative.GetWindowHandle(this);
-        SystemBackdrop = new MicaBackdrop();
+        try
+        {
+            if (Microsoft.UI.Composition.SystemBackdrops.MicaController.IsSupported())
+            {
+                SystemBackdrop = new MicaBackdrop();
+            }
+        }
+        catch { }
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
         AppWindow.Resize(new SizeInt32(1440, 920));

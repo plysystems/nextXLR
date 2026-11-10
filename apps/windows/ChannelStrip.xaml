@@ -110,7 +110,7 @@
                         </Border>
                     </StackPanel>
                     <ToggleButton Height="28" Width="36" Padding="0" HorizontalAlignment="Center"
-                                  Style="{StaticResource SmoothDangerToggle}"
+                                  Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
                                   IsChecked="{x:Bind ViewModel.Muted, Mode=TwoWay}"
                                   ToolTipService.ToolTip="Stream stummschalten">
                         <FontIcon Glyph="{x:Bind MuteGlyph(ViewModel.Muted), Mode=OneWay}" FontSize="11" />
@@ -136,7 +136,7 @@
                         </Border>
                     </StackPanel>
                     <ToggleButton Height="28" Width="36" Padding="0" HorizontalAlignment="Center"
-                                  Style="{StaticResource SmoothDangerToggle}"
+                                  Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
                                   IsChecked="{x:Bind ViewModel.SubmixMuted, Mode=TwoWay}"
                                   ToolTipService.ToolTip="Kopfhörer stummschalten">
                         <FontIcon Glyph="{x:Bind MuteGlyph(ViewModel.SubmixMuted), Mode=OneWay}" FontSize="11" />
@@ -177,7 +177,7 @@
 
             <!-- Row 4: Smart Mute toggle button (Single-Mix mode) -->
             <ToggleButton Grid.Row="4" Height="32" Width="40" Padding="0" HorizontalAlignment="Center"
-                          Style="{StaticResource SmoothDangerToggle}"
+                          Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
                           Visibility="{x:Bind ShowIfSingle(ViewModel.ShowDualMix, ViewModel.IsFixed), Mode=OneWay}"
                           IsChecked="{x:Bind ViewModel.ActiveMuted, Mode=TwoWay}"
                           ToolTipService.ToolTip="{x:Bind ViewModel.ActiveMuteTooltip, Mode=OneWay}"

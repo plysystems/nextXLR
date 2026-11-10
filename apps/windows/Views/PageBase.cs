@@ -128,35 +128,22 @@ public partial class MixerPage : Page
         ViewModel?.SwitchMixerPage(2);
     }
 
-    public Microsoft.UI.Xaml.Media.Brush Page1Background(int activePage) =>
-        activePage == 1 ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["BrandBrush"] : new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
+    private static readonly SolidColorBrush ActiveBrandBg = new(Windows.UI.Color.FromArgb(255, 0x4F, 0xE0, 0xB8));
+    private static readonly SolidColorBrush ActiveHeadphonesBg = new(Windows.UI.Color.FromArgb(255, 0x58, 0xA6, 0xFF));
+    private static readonly SolidColorBrush ActiveTextFg = new(Windows.UI.Color.FromArgb(255, 14, 16, 21));
+    private static readonly SolidColorBrush TransparentBg = new(Windows.UI.Color.FromArgb(0, 0, 0, 0));
+    private static readonly SolidColorBrush MutedTextFg = new(Windows.UI.Color.FromArgb(255, 0x8B, 0x93, 0xA3));
 
-    public Microsoft.UI.Xaml.Media.Brush Page1Foreground(int activePage) =>
-        activePage == 1 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 14, 16, 21)) : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextMutedBrush"];
-
-    public Microsoft.UI.Xaml.Media.Brush Page2Background(int activePage) =>
-        activePage == 2 ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["BrandBrush"] : new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
-
-    public Microsoft.UI.Xaml.Media.Brush Page2Foreground(int activePage) =>
-        activePage == 2 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 14, 16, 21)) : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextMutedBrush"];
-
-    public Microsoft.UI.Xaml.Media.Brush BothMixesBackground(int index) =>
-        index == 0 ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["BrandBrush"] : new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
-
-    public Microsoft.UI.Xaml.Media.Brush BothMixesForeground(int index) =>
-        index == 0 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 14, 16, 21)) : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextMutedBrush"];
-
-    public Microsoft.UI.Xaml.Media.Brush StreamMixBackground(int index) =>
-        index == 1 ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["BrandBrush"] : new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
-
-    public Microsoft.UI.Xaml.Media.Brush StreamMixForeground(int index) =>
-        index == 1 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 14, 16, 21)) : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextMutedBrush"];
-
-    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixBackground(int index) =>
-        index == 2 ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["HeadphoneBrush"] : new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
-
-    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixForeground(int index) =>
-        index == 2 ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 14, 16, 21)) : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextMutedBrush"];
+    public Microsoft.UI.Xaml.Media.Brush Page1Background(int activePage) => activePage == 1 ? ActiveBrandBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush Page1Foreground(int activePage) => activePage == 1 ? ActiveTextFg : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush Page2Background(int activePage) => activePage == 2 ? ActiveBrandBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush Page2Foreground(int activePage) => activePage == 2 ? ActiveTextFg : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush BothMixesBackground(int index) => index == 0 ? ActiveBrandBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush BothMixesForeground(int index) => index == 0 ? ActiveTextFg : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush StreamMixBackground(int index) => index == 1 ? ActiveBrandBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush StreamMixForeground(int index) => index == 1 ? ActiveTextFg : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixBackground(int index) => index == 2 ? ActiveHeadphonesBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixForeground(int index) => index == 2 ? ActiveTextFg : MutedTextFg;
 
     private static double RowWidth(int n, double strip) => n * strip + Math.Max(0, n - 1) * Gap;
 
@@ -299,10 +286,15 @@ public partial class RoutingPage : Page
     }
 
     // Row highlight; the Border's BrushTransition makes it a 200 ms fade.
-    private void Row_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e) =>
-        ((Microsoft.UI.Xaml.Controls.Border)sender).Background = RowHover;
-    private void Row_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e) =>
-        ((Microsoft.UI.Xaml.Controls.Border)sender).Background = RowIdle;
+    private void Row_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (sender is Microsoft.UI.Xaml.Controls.Border b) b.Background = RowHover;
+    }
+
+    private void Row_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (sender is Microsoft.UI.Xaml.Controls.Border b) b.Background = RowIdle;
+    }
 }
 
 public partial class MicPage : Page

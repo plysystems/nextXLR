@@ -39,7 +39,7 @@ public partial class MainViewModel : ObservableObject
         StreamDeckStatusService.Instance.StopMonitoring();
     }
     [ObservableProperty] private string _samplerBusName = "";
-    public int RoutingColumnCount => Buses.Count > 0 ? Buses.Count : 4;
+    [ObservableProperty] private int _routingColumnCount = 4;
 
     private RouteCellViewModel Cell(Channel c, Bus b)
     {
@@ -495,6 +495,7 @@ public partial class MainViewModel : ObservableObject
         {
             Buses.Clear();
             foreach (var b in columns) Buses.Add(new BusView(b.Id, b.Name));
+            RoutingColumnCount = Buses.Count > 0 ? Buses.Count : 4;
             SamplerBusName = sampler is null ? "" : BusView.Localize(sampler.Id, sampler.Name);
             RouteRows.Clear();
             foreach (var c in inputs)
@@ -682,13 +683,13 @@ public sealed class BusView(uint id, string fallbackName)
     public string Name { get; } = Localize(id, fallbackName);
     public string Glyph { get; } = id switch
     {
-        0 => "",   // headphones
-        888 => "", // wireless headphones
-        1 => "",   // broadcast
-        2 => "",   // line out (speakers)
-        3 => "",   // chat mic
-        4 => "",   // sampler
-        _ => "",
+        0 => "\uE7F6",   // headphones
+        888 => "\uE702", // wireless / bluetooth headphones
+        1 => "\uE774",   // broadcast
+        2 => "\uE7F5",   // line out (speakers)
+        3 => "\uE8BD",   // chat mic
+        4 => "\uE7C8",   // sampler
+        _ => "\uE767",
     };
 
     public static string Localize(uint id, string fallback)
