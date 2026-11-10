@@ -144,6 +144,13 @@ async fn main() -> Result<()> {
     let router = Router::new()
         .route("/ws", get(session::ws_handler))
         .route("/health", get(|| async { "ok" }))
+        .route("/api/status", get(api_status))
+        .route("/api/fader", get(api_fader).post(api_fader))
+        .route("/api/mute", get(api_mute).post(api_mute))
+        .route("/api/route", get(api_route).post(api_route))
+        .route("/api/bleep", get(api_bleep).post(api_bleep))
+        .route("/api/mic-mute", get(api_mic_mute).post(api_mic_mute))
+        .route("/api/profile", get(api_profile).post(api_profile))
         .route("/dev/sim/fader", post(sim_fader))
         .route("/dev/sim/mute", post(sim_mute))
         .route("/dev/sim/received", get(sim_received))
@@ -386,4 +393,333 @@ async fn sim_received(State(app): State<AppState>) -> impl IntoResponse {
         .map(|c| format!("{c:?}"))
         .collect();
     axum::Json(json!({ "ok": true, "commands": cmds }))
+}
+
+// -------------------------------------------------------------------------------------------------
+// Stream Deck & HTTP REST API Handlers
+// -------------------------------------------------------------------------------------------------
+
+async fn get_current_mixer_state(app: &AppState) -> Option<mixforge_protocol::MixerState> {
+    let (tx, rx) = oneshot::channel();
+    let _ = app.hub.send(HubMsg::Client {
+        msg: ClientMessage::GetState,
+        reply: tx,
+    });
+    let replies = rx.await.ok()?;
+    for r in replies {
+        if let ServerMessage::State(s) = r {
+            return Some(s);
+        }
+    }
+    None
+}
+
+fn resolve_channel_id(
+    input: &str,
+    state: Option<&mixforge_protocol::MixerState>,
+) -> Option<mixforge_protocol::ChannelId> {
+    let clean = input.trim();
+    if let Ok(id) = clean.parse::<u32>() {
+        return Some(mixforge_protocol::ChannelId(id));
+    }
+    if let Some(st) = state {
+        // Match fader letter A, B, C, D
+        if clean.len() == 1 {
+            let ch = clean.chars().next().unwrap().to_ascii_uppercase().to_string();
+            if let Some(fa) = st.faders.iter().find(|f| f.fader.eq_ignore_ascii_case(&ch)) {
+                return Some(fa.channel);
+            }
+        }
+        // Match by channel name
+        let clean_norm = clean.to_lowercase().replace(['_', ' ', '-'], "");
+        for c in &st.channels {
+            let name_norm = c.name.to_lowercase().replace(['_', ' ', '-'], "");
+            if name_norm == clean_norm || name_norm.contains(&clean_norm) || clean_norm.contains(&name_norm) {
+                return Some(c.id);
+            }
+        }
+    }
+    None
+}
+
+fn resolve_bus_id(
+    input: &str,
+    state: Option<&mixforge_protocol::MixerState>,
+) -> Option<mixforge_protocol::BusId> {
+    let clean = input.trim();
+    if let Ok(id) = clean.parse::<u32>() {
+        return Some(mixforge_protocol::BusId(id));
+    }
+    if let Some(st) = state {
+        let clean_norm = clean.to_lowercase().replace(['_', ' ', '-'], "");
+        for b in &st.buses {
+            let name_norm = b.name.to_lowercase().replace(['_', ' ', '-'], "");
+            if name_norm == clean_norm || name_norm.contains(&clean_norm) || clean_norm.contains(&name_norm) {
+                return Some(b.id);
+            }
+        }
+    }
+    None
+}
+
+async fn api_status(State(app): State<AppState>) -> impl IntoResponse {
+    let (tx, rx) = oneshot::channel();
+    let _ = app.hub.send(HubMsg::Client {
+        msg: ClientMessage::GetState,
+        reply: tx,
+    });
+    match rx.await {
+        Ok(replies) => {
+            for r in replies {
+                if let ServerMessage::State(state) = r {
+                    return axum::Json(json!({ "ok": true, "state": state }));
+                }
+            }
+            axum::Json(json!({ "ok": true }))
+        }
+        Err(e) => axum::Json(json!({ "ok": false, "error": e.to_string() })),
+    }
+}
+
+#[derive(serde::Deserialize)]
+struct ApiFaderQuery {
+    channel: String,
+    volume: Option<f32>,
+    delta: Option<f32>,
+}
+
+async fn api_fader(
+    State(app): State<AppState>,
+    Query(q): Query<ApiFaderQuery>,
+) -> impl IntoResponse {
+    let state = get_current_mixer_state(&app).await;
+    let Some(ch_id) = resolve_channel_id(&q.channel, state.as_ref()) else {
+        return axum::Json(json!({ "ok": false, "error": format!("unknown channel '{}'", q.channel) }));
+    };
+
+    let target_vol = if let Some(delta) = q.delta {
+        let cur = state
+            .as_ref()
+            .and_then(|s| s.channels.iter().find(|c| c.id == ch_id))
+            .map(|c| c.volume)
+            .unwrap_or(0.8);
+        (cur + delta).clamp(0.0, 1.0)
+    } else if let Some(mut vol) = q.volume {
+        if vol > 1.0 {
+            vol /= 100.0;
+        }
+        vol.clamp(0.0, 1.0)
+    } else {
+        return axum::Json(json!({ "ok": false, "error": "either 'volume' or 'delta' required" }));
+    };
+
+    let (tx, rx) = oneshot::channel();
+    let _ = app.hub.send(HubMsg::Client {
+        msg: ClientMessage::SetVolume {
+            channel: ch_id,
+            volume: target_vol,
+        },
+        reply: tx,
+    });
+    let _ = rx.await;
+
+    axum::Json(json!({ "ok": true, "channel": ch_id.0, "volume": target_vol }))
+}
+
+#[derive(serde::Deserialize)]
+struct ApiMuteQuery {
+    channel: String,
+    muted: Option<bool>,
+    action: Option<String>,
+}
+
+async fn api_mute(
+    State(app): State<AppState>,
+    Query(q): Query<ApiMuteQuery>,
+) -> impl IntoResponse {
+    let state = get_current_mixer_state(&app).await;
+    let Some(ch_id) = resolve_channel_id(&q.channel, state.as_ref()) else {
+        return axum::Json(json!({ "ok": false, "error": format!("unknown channel '{}'", q.channel) }));
+    };
+
+    let target_muted = if q.action.as_deref() == Some("toggle") {
+        let cur = state
+            .as_ref()
+            .and_then(|s| s.channels.iter().find(|c| c.id == ch_id))
+            .map(|c| c.muted)
+            .unwrap_or(false);
+        !cur
+    } else if let Some(m) = q.muted {
+        m
+    } else if q.action.as_deref() == Some("mute") {
+        true
+    } else if q.action.as_deref() == Some("unmute") {
+        false
+    } else {
+        let cur = state
+            .as_ref()
+            .and_then(|s| s.channels.iter().find(|c| c.id == ch_id))
+            .map(|c| c.muted)
+            .unwrap_or(false);
+        !cur
+    };
+
+    let (tx, rx) = oneshot::channel();
+    let _ = app.hub.send(HubMsg::Client {
+        msg: ClientMessage::SetMute {
+            channel: ch_id,
+            muted: target_muted,
+        },
+        reply: tx,
+    });
+    let _ = rx.await;
+
+    axum::Json(json!({ "ok": true, "channel": ch_id.0, "muted": target_muted }))
+}
+
+#[derive(serde::Deserialize)]
+struct ApiRouteQuery {
+    channel: String,
+    bus: String,
+    gain: Option<f32>,
+    action: Option<String>,
+}
+
+async fn api_route(
+    State(app): State<AppState>,
+    Query(q): Query<ApiRouteQuery>,
+) -> impl IntoResponse {
+    let state = get_current_mixer_state(&app).await;
+    let Some(ch_id) = resolve_channel_id(&q.channel, state.as_ref()) else {
+        return axum::Json(json!({ "ok": false, "error": format!("unknown channel '{}'", q.channel) }));
+    };
+    let Some(b_id) = resolve_bus_id(&q.bus, state.as_ref()) else {
+        return axum::Json(json!({ "ok": false, "error": format!("unknown bus '{}'", q.bus) }));
+    };
+
+    let target_gain = if q.action.as_deref() == Some("toggle") {
+        let routed = state
+            .as_ref()
+            .and_then(|s| s.routes.iter().find(|r| r.channel == ch_id && r.bus == b_id))
+            .map(|r| r.gain > 0.0)
+            .unwrap_or(false);
+        if routed { 0.0 } else { 1.0 }
+    } else if let Some(g) = q.gain {
+        g
+    } else {
+        1.0
+    };
+
+    let (tx, rx) = oneshot::channel();
+    let _ = app.hub.send(HubMsg::Client {
+        msg: ClientMessage::SetRoute {
+            channel: ch_id,
+            bus: b_id,
+            gain: target_gain,
+        },
+        reply: tx,
+    });
+    let _ = rx.await;
+
+    axum::Json(json!({ "ok": true, "channel": ch_id.0, "bus": b_id.0, "gain": target_gain }))
+}
+
+#[derive(serde::Deserialize)]
+struct ApiBleepQuery {
+    active: Option<bool>,
+    pressed: Option<bool>,
+}
+
+async fn api_bleep(
+    State(app): State<AppState>,
+    Query(q): Query<ApiBleepQuery>,
+) -> impl IntoResponse {
+    let is_pressed = q.pressed.or(q.active).unwrap_or(true);
+    let (tx, rx) = oneshot::channel();
+    let _ = app.hub.send(HubMsg::Client {
+        msg: ClientMessage::Bleep { pressed: is_pressed },
+        reply: tx,
+    });
+    let _ = rx.await;
+
+    axum::Json(json!({ "ok": true, "bleep": is_pressed }))
+}
+
+#[derive(serde::Deserialize)]
+struct ApiMicMuteQuery {
+    muted: Option<bool>,
+    action: Option<String>,
+}
+
+async fn api_mic_mute(
+    State(app): State<AppState>,
+    Query(q): Query<ApiMicMuteQuery>,
+) -> impl IntoResponse {
+    let target_muted = if q.action.as_deref() == Some("toggle") {
+        let state = get_current_mixer_state(&app).await;
+        let cur = state
+            .as_ref()
+            .and_then(|s| s.channels.iter().find(|c| c.name.eq_ignore_ascii_case("Mic")))
+            .map(|c| c.muted)
+            .unwrap_or(false);
+        !cur
+    } else {
+        q.muted.unwrap_or(true)
+    };
+
+    let (tx, rx) = oneshot::channel();
+    let _ = app.hub.send(HubMsg::Client {
+        msg: ClientMessage::SetMicMute { muted: target_muted },
+        reply: tx,
+    });
+    let _ = rx.await;
+
+    axum::Json(json!({ "ok": true, "mic_muted": target_muted }))
+}
+
+#[derive(serde::Deserialize)]
+struct ApiProfileQuery {
+    name: String,
+}
+
+async fn api_profile(
+    State(app): State<AppState>,
+    Query(q): Query<ApiProfileQuery>,
+) -> impl IntoResponse {
+    let Ok(base) = std::env::var("LOCALAPPDATA") else {
+        return axum::Json(json!({ "ok": false, "error": "LOCALAPPDATA not set" }));
+    };
+    let dir = std::path::Path::new(&base).join("NextXLR");
+    let candidate_paths = [
+        dir.join("setups").join(format!("{}.json", q.name)),
+        dir.join("profiles").join(format!("{}.json", q.name)),
+        dir.join(format!("{}.json", q.name)),
+    ];
+
+    let found = candidate_paths.iter().find(|p| p.exists());
+    let Some(path) = found else {
+        return axum::Json(json!({ "ok": false, "error": format!("profile '{}' not found", q.name) }));
+    };
+
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return axum::Json(json!({ "ok": false, "error": "could not read profile file" }));
+    };
+
+    let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) else {
+        return axum::Json(json!({ "ok": false, "error": "invalid json in profile" }));
+    };
+
+    let profile_val = v.get("profile").cloned().unwrap_or(v);
+    let Ok(profile) = serde_json::from_value::<mixforge_protocol::Profile>(profile_val) else {
+        return axum::Json(json!({ "ok": false, "error": "could not parse Profile format" }));
+    };
+
+    let (tx, rx) = oneshot::channel();
+    let _ = app.hub.send(HubMsg::Client {
+        msg: ClientMessage::LoadProfile { profile },
+        reply: tx,
+    });
+    let _ = rx.await;
+
+    axum::Json(json!({ "ok": true, "profile": q.name }))
 }

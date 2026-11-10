@@ -279,39 +279,12 @@ public sealed partial class SettingsPage : Page
             }
             catch { }
 
-            // 2. Fetch latest commit on main for instant build updates
-            string? remoteSha = null;
-            string? remoteShort = null;
-            string commitMsg = "";
-            try
-            {
-                var commitUrl = "https://api.github.com/repos/plysystems/nextXLR/commits/main";
-                var commitResp = await client.GetAsync(commitUrl);
-                if (commitResp.IsSuccessStatusCode)
-                {
-                    var json = await commitResp.Content.ReadAsStringAsync();
-                    using var doc = System.Text.Json.JsonDocument.Parse(json);
-                    var root = doc.RootElement;
-                    remoteSha = root.TryGetProperty("sha", out var shaElem) ? shaElem.GetString() ?? "" : "";
-                    remoteShort = remoteSha.Length >= 7 ? remoteSha.Substring(0, 7) : remoteSha;
-
-                    if (root.TryGetProperty("commit", out var commitElem) &&
-                        commitElem.TryGetProperty("message", out var msgElem))
-                    {
-                        commitMsg = msgElem.GetString() ?? "";
-                        var firstLine = commitMsg.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
-                        if (!string.IsNullOrEmpty(firstLine)) commitMsg = firstLine;
-                    }
-                }
-            }
-            catch { }
-
             UpdateProgressBar.Visibility = Visibility.Collapsed;
 
             var currentVer = AppSettings.AppVersion.TrimStart('v', 'V');
             var localHash = AppSettings.BuildCommitHash;
 
-            // 1. Primary check: Official GitHub Releases
+            // Check official GitHub Releases
             if (!string.IsNullOrEmpty(latestReleaseTag))
             {
                 if (IsNewerRelease(latestReleaseTag, currentVer))
@@ -351,44 +324,11 @@ public sealed partial class SettingsPage : Page
                     return;
                 }
             }
-
-            // 2. Secondary fallback: Development commit comparison (only if no GitHub Releases exist)
-            bool hasNewerCommit = !string.IsNullOrEmpty(remoteShort) &&
-                                  !string.IsNullOrEmpty(remoteSha) &&
-                                  !remoteShort.Equals(localHash, StringComparison.OrdinalIgnoreCase) &&
-                                  !remoteSha.Equals(AppSettings.FullBuildCommitHash, StringComparison.OrdinalIgnoreCase);
-
-            if (hasNewerCommit)
-            {
-                var targetTag = "v" + currentVer;
-                if (string.IsNullOrEmpty(exeDownloadUrl))
-                {
-                    exeDownloadUrl = $"https://github.com/plysystems/nextXLR/releases/download/{targetTag}/NextXLR-Setup-{currentVer}.exe";
-                }
-
-                UpdateResult.Severity = InfoBarSeverity.Success;
-                UpdateResult.Title = $"Neuer Build verfügbar: {remoteShort}";
-                UpdateResult.Message = $"Neuer Build {remoteShort} ({commitMsg}) steht auf GitHub bereit.\n" +
-                    $"• Installiert: v{AppSettings.AppVersion} (Build {localHash})\n\n" +
-                    $"Klicke unten, um das Update im Hintergrund herunterzuladen und automatisch zu installieren.";
-
-                var btnAuto = new Button
-                {
-                    Content = "Update jetzt installieren & neu starten",
-                    Style = (Style)Application.Current.Resources["AccentButtonStyle"]
-                };
-                btnAuto.Click += async (_, _) =>
-                {
-                    await DownloadAndInstallUpdateAsync(exeDownloadUrl, targetTag);
-                };
-                UpdateResult.ActionButton = btnAuto;
-                return;
-            }
             else
             {
                 UpdateResult.Severity = InfoBarSeverity.Success;
                 UpdateResult.Title = "NextXLR ist auf dem neuesten Stand!";
-                UpdateResult.Message = $"Version v{AppSettings.AppVersion} (Build {localHash}) ist aktuell. Es liegen keine neueren Releases oder Commits vor.";
+                UpdateResult.Message = $"Version v{AppSettings.AppVersion} (Build {localHash}) ist aktuell. Es liegen keine neueren Releases vor.";
                 UpdateResult.ActionButton = null;
                 return;
             }

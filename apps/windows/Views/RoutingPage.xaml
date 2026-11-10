@@ -237,7 +237,8 @@
                                         <StackPanel Grid.Column="1" Spacing="2">
                                             <TextBlock Text="Ausgabe-Kanal (GoXLR)" Style="{StaticResource Overline}" FontSize="10" />
                                             <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Bind OutputChoices}"
-                                                      SelectedIndex="{x:Bind SelectedOutputIndex, Mode=TwoWay}">
+                                                      SelectedIndex="{x:Bind SelectedOutputIndex, Mode=TwoWay}"
+                                                      SelectionChanged="OutputComboBox_SelectionChanged">
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate x:DataType="services:AudioEndpointChoice">
                                                         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
@@ -254,7 +255,8 @@
                                         <StackPanel Grid.Column="2" Spacing="2">
                                             <TextBlock Text="Mikrofon-Eingang" Style="{StaticResource Overline}" FontSize="10" />
                                             <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Bind InputChoices}"
-                                                      SelectedIndex="{x:Bind SelectedInputIndex, Mode=TwoWay}">
+                                                      SelectedIndex="{x:Bind SelectedInputIndex, Mode=TwoWay}"
+                                                      SelectionChanged="InputComboBox_SelectionChanged">
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate x:DataType="services:AudioEndpointChoice">
                                                         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">

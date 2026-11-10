@@ -158,9 +158,23 @@ public partial class AppSessionItemViewModel : ObservableObject
 
     partial void OnSelectedOutputIndexChanged(int value)
     {
-        if (value >= 0 && value < _outputChoices.Count)
+        ApplyOutputRouting(value);
+    }
+
+    partial void OnSelectedInputIndexChanged(int value)
+    {
+        ApplyInputRouting(value);
+    }
+
+    public void ApplyOutputRouting(int index)
+    {
+        if (index >= 0 && index < _outputChoices.Count)
         {
-            var choice = _outputChoices[value];
+            if (SelectedOutputIndex != index)
+            {
+                SelectedOutputIndex = index;
+            }
+            var choice = _outputChoices[index];
             string? devId = string.IsNullOrEmpty(choice.Id) ? null : choice.Id;
             WindowsAppAudioRouter.SetAppEndpoint(ProcessId, ProcessName, false, devId);
             string? inDevId = SelectedInputIndex >= 0 && SelectedInputIndex < _inputChoices.Count ? (string.IsNullOrEmpty(_inputChoices[SelectedInputIndex].Id) ? null : _inputChoices[SelectedInputIndex].Id) : null;
@@ -168,11 +182,15 @@ public partial class AppSessionItemViewModel : ObservableObject
         }
     }
 
-    partial void OnSelectedInputIndexChanged(int value)
+    public void ApplyInputRouting(int index)
     {
-        if (value >= 0 && value < _inputChoices.Count)
+        if (index >= 0 && index < _inputChoices.Count)
         {
-            var choice = _inputChoices[value];
+            if (SelectedInputIndex != index)
+            {
+                SelectedInputIndex = index;
+            }
+            var choice = _inputChoices[index];
             string? devId = string.IsNullOrEmpty(choice.Id) ? null : choice.Id;
             WindowsAppAudioRouter.SetAppEndpoint(ProcessId, ProcessName, true, devId);
             string? outDevId = SelectedOutputIndex >= 0 && SelectedOutputIndex < _outputChoices.Count ? (string.IsNullOrEmpty(_outputChoices[SelectedOutputIndex].Id) ? null : _outputChoices[SelectedOutputIndex].Id) : null;
