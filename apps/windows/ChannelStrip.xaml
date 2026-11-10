@@ -129,9 +129,16 @@
                     <StackPanel Spacing="1" HorizontalAlignment="Center">
                         <TextBlock Text="{x:Bind ViewModel.SubmixVolumeLabel, Mode=OneWay}"
                                    FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center" />
-                        <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="3" Padding="3,1">
-                            <TextBlock Text="PHONES" FontSize="8" FontWeight="Bold" Foreground="{StaticResource HeadphoneBrush}" />
-                        </Border>
+                        <StackPanel Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
+                            <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="3" Padding="3,1">
+                                <TextBlock Text="KOPFHÖRER" FontSize="8" FontWeight="Bold" Foreground="{StaticResource HeadphoneBrush}" />
+                            </Border>
+                            <Border Visibility="{x:Bind ViewModel.HasFader, Mode=OneWay}"
+                                    Background="{StaticResource SurfaceL3Brush}" CornerRadius="3" Padding="4,1">
+                                <TextBlock Text="{x:Bind ViewModel.FaderLetter, Mode=OneWay}" FontSize="8" FontWeight="Bold"
+                                           Foreground="{StaticResource HeadphoneBrush}" />
+                            </Border>
+                        </StackPanel>
                     </StackPanel>
                     <ToggleButton Height="28" Width="36" Padding="0" HorizontalAlignment="Center"
                                   Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"

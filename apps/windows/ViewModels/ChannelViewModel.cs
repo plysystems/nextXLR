@@ -201,6 +201,15 @@ public partial class ChannelViewModel : ObservableObject
     {
         double v = IsSubmixActive ? SubmixVolume : Volume;
         bool m = IsSubmixActive ? SubmixMuted : Muted;
+
+        if (AutoDuckingService.Instance.IsEnabled &&
+            AutoDuckingService.Instance.CurrentAttenuationDb < -0.05 &&
+            AutoDuckingService.Instance.TargetChannel.Equals(Name, StringComparison.OrdinalIgnoreCase))
+        {
+            double factor = Math.Pow(10.0, AutoDuckingService.Instance.CurrentAttenuationDb / 20.0);
+            v *= factor;
+        }
+
         if (Id == 8)
         {
             BluetoothAudioRouter.Instance.Volume = (float)v;

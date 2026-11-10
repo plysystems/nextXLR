@@ -133,6 +133,7 @@ public sealed record ProfileMessage(System.Text.Json.Nodes.JsonNode Profile) : S
 [JsonDerivedType(typeof(SetButtonLeds), "set_button_leds")]
 [JsonDerivedType(typeof(SetSubmixVolume), "set_submix_volume")]
 [JsonDerivedType(typeof(SetSubmixMute), "set_submix_mute")]
+[JsonDerivedType(typeof(SetFaderTargetSubmix), "set_fader_target_submix")]
 [JsonDerivedType(typeof(SetVstPlugin), "set_vst_plugin")]
 [JsonDerivedType(typeof(RemoveVstPlugin), "remove_vst_plugin")]
 [JsonDerivedType(typeof(ScanVstPlugins), "scan_vst_plugins")]
@@ -143,6 +144,7 @@ public sealed record SetVolume(uint Channel, double Volume) : ClientMessage;
 public sealed record SetMute(uint Channel, bool Muted) : ClientMessage;
 public sealed record SetSubmixVolume(uint Channel, double Volume) : ClientMessage;
 public sealed record SetSubmixMute(uint Channel, bool Muted) : ClientMessage;
+public sealed record SetFaderTargetSubmix(bool Submix) : ClientMessage;
 public sealed record SetVstPlugin(VstPluginSlot Plugin) : ClientMessage;
 public sealed record RemoveVstPlugin(string Id) : ClientMessage;
 public sealed record ScanVstPlugins : ClientMessage;

@@ -22,6 +22,15 @@ public sealed class AppSettings
     public double BleepVolume { get; set; } = 100.0;
     public bool HasCompletedTour { get; set; }
 
+    // Auto-Ducking (Sidechain Speech Detection)
+    public bool AutoDuckingEnabled { get; set; } = false;
+    public string AutoDuckingTrigger { get; set; } = "Mic";
+    public string AutoDuckingTarget { get; set; } = "Music";
+    public double AutoDuckingThresholdDb { get; set; } = -32.0;
+    public double AutoDuckingDuckAmountDb { get; set; } = -12.0;
+    public double AutoDuckingHoldMs { get; set; } = 600.0;
+    public double AutoDuckingReleaseMs { get; set; } = 500.0;
+
     // Bluetooth / Wireless Headset Monitoring
     public bool EnableBluetoothHeadset { get; set; } = false;
     public string? BluetoothHeadsetDeviceId { get; set; }

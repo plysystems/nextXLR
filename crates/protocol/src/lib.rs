@@ -396,6 +396,8 @@ pub enum ClientMessage {
     SetMute { channel: ChannelId, muted: bool },
     SetSubmixVolume { channel: ChannelId, volume: f32 },
     SetSubmixMute { channel: ChannelId, muted: bool },
+    /// Whether hardware faders control the submix (Headphones) or the main stream mix.
+    SetFaderTargetSubmix { submix: bool },
     SetVstPlugin { plugin: VstPluginSlot },
     RemoveVstPlugin { id: String },
     ScanVstPlugins,

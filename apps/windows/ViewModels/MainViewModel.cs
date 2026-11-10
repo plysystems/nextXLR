@@ -67,33 +67,35 @@ public partial class MainViewModel : ObservableObject
 
     /// <summary>Dual-Mix Mode: 0 = Beide Mixe gleichzeitig (Dual-View), 1 = Nur Stream-Mix, 2 = Nur Kopfhörer-Mix.</summary>
     [ObservableProperty] private int _activeMixIndex = 0;
-    [ObservableProperty] private bool _isSubmixActive;
+    [ObservableProperty] private bool _isSubmixActive = true;
 
     partial void OnActiveMixIndexChanged(int value)
     {
         bool showDual = (value == 0);
-        IsSubmixActive = (value == 2);
+        bool targetSubmix = (value == 0 || value == 2);
+        IsSubmixActive = targetSubmix;
         foreach (var ch in Channels)
         {
             ch.ShowDualMix = showDual;
-            ch.IsSubmixActive = IsSubmixActive;
+            ch.IsSubmixActive = targetSubmix;
         }
+        _transport.Send(new SetFaderTargetSubmix(targetSubmix));
         OnPropertyChanged(nameof(MixModeTitle));
         OnPropertyChanged(nameof(MixModeDescription));
     }
 
     public string MixModeTitle => ActiveMixIndex switch
     {
-        0 => "Dual-Mix Ansicht (Stream-Mix & Kopfhörer-Mix)",
+        0 => "Dual-Mix Ansicht (Stream & Kopfhörer)",
         1 => "Stream-Mix (Broadcast)",
-        _ => "Kopfhörer-Submix (Monitor)"
+        _ => "Kopfhörer-Mix (Monitor)"
     };
 
     public string MixModeDescription => ActiveMixIndex switch
     {
-        0 => "Simultane Anzeige beider Mixe für alle Regler (Stream & Kopfhörer gleichzeitig steuerbar).",
+        0 => "Simultane Steuerung beider Mixe (GoXLR-Fader steuern den Kopfhörer-Mix).",
         1 => "Haupt-Broadcast-Mix (das, was Stream & Zuschauer hören).",
-        _ => "Unabhängiger Kopfhörer-Submix (dein persönlicher Monitor-Mix)."
+        _ => "Unabhängiger Kopfhörer-Mix (dein persönlicher Monitor-Mix)."
     };
 
     partial void OnBleepVolumeChanged(double value)
@@ -275,6 +277,7 @@ public partial class MainViewModel : ObservableObject
         IsConnected = s == ConnectionState.Connected;
         if (IsConnected)
         {
+            _transport.Send(new SetFaderTargetSubmix(ActiveMixIndex == 0 || ActiveMixIndex == 2));
             Sampler.PushLeds();   // the device's sampler LEDs follow the app
             SetBusy(false);
         }

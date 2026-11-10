@@ -128,6 +128,122 @@
                 </StackPanel>
             </Border>
 
+            <!-- ===== Feature 02: Auto-Ducking ===== -->
+            <Border Style="{StaticResource Card}" Padding="20">
+                <StackPanel Spacing="16">
+                    <!-- Header with Title, Status Badge, and On/Off Toggle -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Spacing="3">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE7F5;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
+                                <TextBlock Text="Auto-Ducking" Style="{StaticResource SectionTitle}" />
+                                <Border Background="{StaticResource SurfaceL3Brush}" BorderBrush="{StaticResource BrandBrush}"
+                                        BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+                                    <TextBlock Text="{x:Bind AutoDucking.StatusText, Mode=OneWay}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Text="Senkt Hintergrundmusik oder Spiele automatisch ab, sobald du sprichst (Sidechain-Ducking)."
+                                       Style="{StaticResource Caption}" />
+                        </StackPanel>
+
+                        <!-- Master Toggle -->
+                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind AutoDucking.IsEnabled, Mode=TwoWay}"
+                                      OnContent="Aktiv" OffContent="Bypass" MinWidth="0" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <!-- Control Grid: Channels Selection &amp; Ducking Parameters -->
+                    <Grid ColumnSpacing="20" RowSpacing="14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.2*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Column 1: Trigger &amp; Target Channel ComboBoxes -->
+                        <Border Background="{StaticResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
+                                BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Signal-Zuweisung" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource BrandBrush}" />
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Sprach-Quelle (Trigger):" Style="{StaticResource Caption}" />
+                                    <ComboBox ItemsSource="{x:Bind AutoDucking.AvailableTriggerChannels}"
+                                              SelectedItem="{x:Bind AutoDucking.TriggerChannel, Mode=TwoWay}"
+                                              HorizontalAlignment="Stretch" />
+                                </StackPanel>
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Zu dämpfender Kanal (Ziel):" Style="{StaticResource Caption}" />
+                                    <ComboBox ItemsSource="{x:Bind AutoDucking.AvailableTargetChannels}"
+                                              SelectedItem="{x:Bind AutoDucking.TargetChannel, Mode=TwoWay}"
+                                              HorizontalAlignment="Stretch" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Column 2: Ducking Amount (Absenkung) -->
+                        <Border Grid.Column="1" Background="{StaticResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
+                                BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                            <StackPanel Spacing="8">
+                                <Grid>
+                                    <TextBlock Text="Dämpfung (Tiefe)" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="{x:Bind AutoDucking.DuckAmountLabel, Mode=OneWay}" HorizontalAlignment="Right"
+                                               FontFamily="{StaticResource DisplayFont}" Foreground="{StaticResource BrandBrush}" FontWeight="Bold" />
+                                </Grid>
+                                <Slider Minimum="-30" Maximum="-6" StepFrequency="1"
+                                        Value="{x:Bind AutoDucking.DuckAmountDb, Mode=TwoWay}" />
+                                <TextBlock Text="Wie stark das Ziel gedämpft wird" Style="{StaticResource Caption}" Foreground="{StaticResource TextMutedBrush}" />
+                                <!-- Live Gain Reduction Indicator -->
+                                <StackPanel Spacing="2" Margin="0,4,0,0">
+                                    <TextBlock Text="Aktuelle Reduktion:" Style="{StaticResource Overline}" FontSize="9" />
+                                    <ProgressBar Minimum="0" Maximum="100" Value="{x:Bind AutoDucking.DuckReductionPercent, Mode=OneWay}"
+                                                 Height="4" CornerRadius="2" Foreground="{StaticResource WarningBrush}" Background="{StaticResource SurfaceL3Brush}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Column 3: Threshold (Ansprechschwelle) -->
+                        <Border Grid.Column="2" Background="{StaticResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
+                                BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                            <StackPanel Spacing="8">
+                                <Grid>
+                                    <TextBlock Text="Schwelle (Trigger)" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="{x:Bind AutoDucking.ThresholdLabel, Mode=OneWay}" HorizontalAlignment="Right"
+                                               FontFamily="{StaticResource DisplayFont}" Foreground="{StaticResource BrandBrush}" FontWeight="Bold" />
+                                </Grid>
+                                <Slider Minimum="-50" Maximum="-15" StepFrequency="1"
+                                        Value="{x:Bind AutoDucking.ThresholdDb, Mode=TwoWay}" />
+                                <TextBlock Text="Ab welchem Sprachpegel Ducking startet" Style="{StaticResource Caption}" Foreground="{StaticResource TextMutedBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Column 4: Hold &amp; Release Timers -->
+                        <Border Grid.Column="3" Background="{StaticResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
+                                BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                            <StackPanel Spacing="8">
+                                <Grid>
+                                    <TextBlock Text="Haltezeit (Hold)" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="{x:Bind AutoDucking.HoldLabel, Mode=OneWay}" HorizontalAlignment="Right"
+                                               FontFamily="{StaticResource DisplayFont}" Foreground="{StaticResource BrandBrush}" FontWeight="Bold" />
+                                </Grid>
+                                <Slider Minimum="100" Maximum="2000" StepFrequency="50"
+                                        Value="{x:Bind AutoDucking.HoldMs, Mode=TwoWay}" />
+                                <Grid Margin="0,2,0,0">
+                                    <TextBlock Text="Abklingzeit (Release)" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="{x:Bind AutoDucking.ReleaseLabel, Mode=OneWay}" HorizontalAlignment="Right"
+                                               FontFamily="{StaticResource DisplayFont}" Foreground="{StaticResource BrandBrush}" FontWeight="Bold" />
+                                </Grid>
+                                <Slider Minimum="100" Maximum="1500" StepFrequency="50"
+                                        Value="{x:Bind AutoDucking.ReleaseMs, Mode=TwoWay}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
             <!-- ===== Windows Lautstärkemixer ===== -->
             <Border Style="{StaticResource Card}" Padding="20">
                 <StackPanel Spacing="16">

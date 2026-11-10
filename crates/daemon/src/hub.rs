@@ -91,6 +91,8 @@ pub struct Hub {
     /// Mic DSP values set by the user or a profile. Until then the device keeps its own (we
     /// can't read them back), so profile syncs don't overwrite them with defaults.
     mic_dsp_known: bool,
+    /// Whether hardware faders control the submix (Headphones) or the main stream mix.
+    pub fader_target_submix: bool,
 }
 
 impl Hub {
@@ -108,6 +110,7 @@ impl Hub {
             lighting_synced: false,
             client_bleep: false,
             mic_dsp_known: false,
+            fader_target_submix: false,
         };
         hub.engine.disable_audio();
         hub
@@ -144,14 +147,16 @@ impl Hub {
         let mut out = Vec::new();
         for fader in Fader::ALL {
             if let Some(ch) = self.channel(fader) {
+                let pos = if self.fader_target_submix { ch.submix_volume } else { ch.volume };
+                let muted = if self.fader_target_submix { ch.submix_muted } else { ch.muted };
                 out.push(Effect::Hardware(HardwareCommand::FaderDisplay {
                     fader,
-                    position: ch.volume,
+                    position: pos,
                     label: ch.name.clone(),
                 }));
                 out.push(Effect::Hardware(HardwareCommand::MuteLed {
                     fader,
-                    on: ch.muted,
+                    on: muted,
                 }));
             }
             out.extend(self.scribble(fader).map(Effect::Hardware));
@@ -371,6 +376,26 @@ impl Hub {
             ClientMessage::SetMute { channel, muted } => Change::Mute(channel, muted),
             ClientMessage::SetSubmixVolume { channel, volume } => Change::SubmixVolume(channel, volume),
             ClientMessage::SetSubmixMute { channel, muted } => Change::SubmixMute(channel, muted),
+            ClientMessage::SetFaderTargetSubmix { submix } => {
+                self.fader_target_submix = submix;
+                for slot in &mut self.faders {
+                    slot.picked_up = false;
+                }
+                let mut out = Vec::new();
+                for fader in Fader::ALL {
+                    if let Some(ch) = self.channel(fader) {
+                        let pos = if self.fader_target_submix { ch.submix_volume } else { ch.volume };
+                        let muted = if self.fader_target_submix { ch.submix_muted } else { ch.muted };
+                        out.push(Effect::Hardware(HardwareCommand::FaderDisplay {
+                            fader,
+                            position: pos,
+                            label: ch.name.clone(),
+                        }));
+                        out.push(Effect::Hardware(HardwareCommand::MuteLed { fader, on: muted }));
+                    }
+                }
+                return out;
+            }
             ClientMessage::SetVstPlugin { plugin } => {
                 return match self.engine.set_vst_plugin(plugin) {
                     Ok(()) => vec![Effect::Broadcast(self.state_message())],
@@ -401,7 +426,14 @@ impl Hub {
     fn handle_hardware(&mut self, ev: HardwareEvent) -> Vec<Effect> {
         let result = match ev {
             HardwareEvent::FaderMoved { fader, position } => match self.takeover(fader, position) {
-                Some(ch) => self.apply(Change::Volume(ch, position), Origin::Hardware),
+                Some(ch) => {
+                    let change = if self.fader_target_submix {
+                        Change::SubmixVolume(ch, position)
+                    } else {
+                        Change::Volume(ch, position)
+                    };
+                    self.apply(change, Origin::Hardware)
+                }
                 None => Ok(Vec::new()),
             },
             HardwareEvent::MuteButton {
@@ -409,8 +441,17 @@ impl Hub {
                 pressed: true,
             } => match self.channel(fader) {
                 Some(ch) => {
-                    let (id, muted) = (ch.id, ch.muted);
-                    self.apply(Change::Mute(id, !muted), Origin::Hardware)
+                    let (id, muted) = if self.fader_target_submix {
+                        (ch.id, ch.submix_muted)
+                    } else {
+                        (ch.id, ch.muted)
+                    };
+                    let change = if self.fader_target_submix {
+                        Change::SubmixMute(id, !muted)
+                    } else {
+                        Change::Mute(id, !muted)
+                    };
+                    self.apply(change, Origin::Hardware)
                 }
                 None => Ok(Vec::new()),
             },
@@ -466,7 +507,8 @@ impl Hub {
     /// Soft takeover. Returns the bound channel if this physical move should apply.
     fn takeover(&mut self, fader: Fader, position: f32) -> Option<ChannelId> {
         let ch = self.channel(fader)?;
-        let (current, id) = (ch.volume, ch.id);
+        let current = if self.fader_target_submix { ch.submix_volume } else { ch.volume };
+        let id = ch.id;
         let slot = &mut self.faders[fader.index()];
         if !slot.picked_up {
             let near = (position - current).abs() <= PICKUP_TOLERANCE;
@@ -531,8 +573,8 @@ impl Hub {
                 let _ = self.engine.set_route(ChannelId(0), BusId(0), if active { 1.0 } else { 0.0 });
             }
             let fader = self.fader_of(id);
-            let device_moved_it =
-                origin == Origin::Hardware && matches!(change, Change::Volume(..));
+            let device_moved_it = origin == Origin::Hardware
+                && (matches!(change, Change::Volume(..)) || matches!(change, Change::SubmixVolume(..)));
             if v1 != v0 {
                 // Smart mute also lands here: muting drops the volume to 0, unmuting restores it.
                 if !device_moved_it {
@@ -627,14 +669,16 @@ impl Hub {
                 fader,
                 channel: ch.id.0,
             }));
+            let pos = if self.fader_target_submix { ch.submix_volume } else { ch.volume };
+            let muted = if self.fader_target_submix { ch.submix_muted } else { ch.muted };
             out.push(Effect::Hardware(HardwareCommand::FaderDisplay {
                 fader,
-                position: ch.volume,
+                position: pos,
                 label: ch.name.clone(),
             }));
             out.push(Effect::Hardware(HardwareCommand::MuteLed {
                 fader,
-                on: ch.muted,
+                on: muted,
             }));
             out.extend(self.scribble(fader).map(Effect::Hardware));
             // Without motors the physical fader no longer matches: require pickup.
@@ -919,7 +963,13 @@ impl Hub {
             .channels
             .iter()
             .find(|c| c.id == id)
-            .map(|c| (c.volume, c.muted, c.name.clone()))
+            .map(|c| {
+                if self.fader_target_submix {
+                    (c.submix_volume, c.submix_muted, c.name.clone())
+                } else {
+                    (c.volume, c.muted, c.name.clone())
+                }
+            })
     }
 
     fn channel(&self, fader: Fader) -> Option<&mixforge_protocol::Channel> {
