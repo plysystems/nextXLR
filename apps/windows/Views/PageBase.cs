@@ -251,9 +251,9 @@ public partial class MixerPage : Page
 
         Place(InputsSection, 0, 0);
         Place(DivCol1Rect, 0, 1);
-        Place(BleepSection, 0, 2);
+        Place(OutputsSection, 0, 2);
         Place(DivCol2Rect, 0, 3);
-        Place(OutputsSection, 0, 4);
+        Place(BleepSection, 0, 4);
 
         BleepButtons.Orientation = Orientation.Vertical;
 
