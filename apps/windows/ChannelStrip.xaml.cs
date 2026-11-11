@@ -1,5 +1,6 @@
 using NextXLR.Services;
 using NextXLR.ViewModels;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -224,6 +225,14 @@ public sealed partial class ChannelStrip : UserControl
             return NeutralIcon;
         return DarkIcon;
     }
+
+    public static readonly Brush ActiveTrackBg = new SolidColorBrush(ColorHelper.FromArgb(30, 255, 255, 255));
+    public static readonly Brush ActiveTrackBorder = new SolidColorBrush(ColorHelper.FromArgb(60, 255, 255, 255));
+    public static readonly Brush InactiveTrackBg = new SolidColorBrush(Colors.Transparent);
+    public static readonly Brush InactiveTrackBorder = new SolidColorBrush(Colors.Transparent);
+
+    public Brush TrackBackground(bool hasHardwareFader) => hasHardwareFader ? ActiveTrackBg : InactiveTrackBg;
+    public Brush TrackBorder(bool hasHardwareFader) => hasHardwareFader ? ActiveTrackBorder : InactiveTrackBorder;
 
     public string ChannelTooltip(bool canEdit, string name) => canEdit ? Loc.Get("MixerCustomizeTitle.Text") : name;
     public string MuteGlyph(bool muted) => muted ? "\uE74F" : "\uE767";

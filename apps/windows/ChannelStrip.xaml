@@ -84,7 +84,7 @@
                        TextWrapping="Wrap" MaxLines="2" />
 
             <!-- Row 2: Dual-Mix Fader Assembly OR Single Fader Assembly -->
-            <!-- Dual-Mix Mode: Stream-Mix & Kopfhörer-Mix side-by-side with sleek central separation -->
+            <!-- Dual-Mix Mode: Kopfhörer-Mix [Default/Links] & Stream-Mix [Rechts] side-by-side with sleek central separation -->
             <Grid Grid.Row="2" Grid.RowSpan="3" Visibility="{x:Bind ShowIfDual(ViewModel.ShowDualMix, ViewModel.IsFixed), Mode=OneWay}"
                   ColumnSpacing="8" HorizontalAlignment="Center">
                 <Grid.ColumnDefinitions>
@@ -93,75 +93,83 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Left Column: Stream-Mix -->
-                <StackPanel Spacing="6" HorizontalAlignment="Center">
-                    <controls:Fader x:Name="StreamFader" Width="44" Height="180"
-                                    Minimum="{x:Bind ViewModel.MinVolumePercent, Mode=OneWay}"
-                                    Maximum="{x:Bind ViewModel.MaxVolumePercent, Mode=OneWay}"
-                                    Value="{x:Bind ViewModel.StreamVolumePercent, Mode=OneWay}"
-                                    Accent="{x:Bind ViewModel.Accent, Mode=OneWay}"
-                                    MeterLevel="{x:Bind ViewModel.Meter, Mode=OneWay}"
-                                    PeakHold="{x:Bind ViewModel.PeakHold, Mode=OneWay}"
-                                    IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}" />
-                    <StackPanel Spacing="2" HorizontalAlignment="Center">
-                        <TextBlock Text="{x:Bind ViewModel.StreamVolumeLabel, Mode=OneWay}"
-                                   FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center" />
-                        <StackPanel Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
-                            <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="4" Padding="4,1">
-                                <TextBlock Text="STREAM" FontSize="8" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
-                            </Border>
-                            <Border Visibility="{x:Bind ViewModel.ShowFaderOnStream, Mode=OneWay}"
-                                    Background="{StaticResource SurfaceL3Brush}" CornerRadius="4" Padding="4,1"
-                                    BorderBrush="{StaticResource BrandBrush}" BorderThickness="1">
-                                <TextBlock Text="{x:Bind ViewModel.FaderLetter, Mode=OneWay}" FontSize="8" FontWeight="Bold"
-                                           Foreground="{StaticResource BrandBrush}" />
-                            </Border>
+                <!-- Left Column: Kopfhörer-Mix (Submix) -->
+                <Border CornerRadius="8" Padding="4,6"
+                        Background="{x:Bind TrackBackground(ViewModel.ShowFaderOnPhones), Mode=OneWay}"
+                        BorderBrush="{x:Bind TrackBorder(ViewModel.ShowFaderOnPhones), Mode=OneWay}" BorderThickness="1">
+                    <StackPanel Spacing="6" HorizontalAlignment="Center">
+                        <controls:Fader x:Name="PhonesFader" Width="44" Height="180"
+                                        Minimum="{x:Bind ViewModel.MinVolumePercent, Mode=OneWay}"
+                                        Maximum="{x:Bind ViewModel.MaxVolumePercent, Mode=OneWay}"
+                                        Value="{x:Bind ViewModel.SubmixVolumePercent, Mode=OneWay}"
+                                        Accent="{StaticResource HeadphoneBrush}"
+                                        MeterLevel="{x:Bind ViewModel.Meter, Mode=OneWay}"
+                                        PeakHold="{x:Bind ViewModel.PeakHold, Mode=OneWay}"
+                                        IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}" />
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <TextBlock Text="{x:Bind ViewModel.SubmixVolumeLabel, Mode=OneWay}"
+                                       FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
+                                <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="4" Padding="4,1">
+                                    <TextBlock Text="KOPFHÖRER" FontSize="8" FontWeight="Bold" Foreground="{StaticResource HeadphoneBrush}" />
+                                </Border>
+                                <Border Visibility="{x:Bind ViewModel.ShowFaderOnPhones, Mode=OneWay}"
+                                        Background="{StaticResource SurfaceL3Brush}" CornerRadius="4" Padding="4,1"
+                                        BorderBrush="{StaticResource HeadphoneBrush}" BorderThickness="1">
+                                    <TextBlock Text="{x:Bind ViewModel.FaderLetter, Mode=OneWay}" FontSize="8" FontWeight="Bold"
+                                               Foreground="{StaticResource HeadphoneBrush}" />
+                                </Border>
+                            </StackPanel>
                         </StackPanel>
+                        <ToggleButton Height="28" Width="36" Padding="0" HorizontalAlignment="Center"
+                                      Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
+                                      IsChecked="{x:Bind ViewModel.SubmixMuted, Mode=TwoWay}"
+                                      ToolTipService.ToolTip="Kopfhörer stummschalten">
+                            <FontIcon Glyph="{x:Bind MuteGlyph(ViewModel.SubmixMuted), Mode=OneWay}" FontSize="11" />
+                        </ToggleButton>
                     </StackPanel>
-                    <ToggleButton Height="28" Width="36" Padding="0" HorizontalAlignment="Center"
-                                  Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
-                                  IsChecked="{x:Bind ViewModel.Muted, Mode=TwoWay}"
-                                  ToolTipService.ToolTip="Stream stummschalten">
-                        <FontIcon Glyph="{x:Bind MuteGlyph(ViewModel.Muted), Mode=OneWay}" FontSize="11" />
-                    </ToggleButton>
-                </StackPanel>
+                </Border>
 
-                <!-- Subtle vertical divider between Stream and Kopfhörer tracks -->
+                <!-- Subtle vertical divider between Kopfhörer and Stream tracks -->
                 <Border Grid.Column="1" Width="1" Background="{StaticResource SurfaceStrokeSubtleBrush}"
                         VerticalAlignment="Stretch" Margin="0,4" />
 
-                <!-- Right Column: Kopfhörer-Mix (Submix) -->
-                <StackPanel Grid.Column="2" Spacing="6" HorizontalAlignment="Center">
-                    <controls:Fader x:Name="PhonesFader" Width="44" Height="180"
-                                    Minimum="{x:Bind ViewModel.MinVolumePercent, Mode=OneWay}"
-                                    Maximum="{x:Bind ViewModel.MaxVolumePercent, Mode=OneWay}"
-                                    Value="{x:Bind ViewModel.SubmixVolumePercent, Mode=OneWay}"
-                                    Accent="{StaticResource HeadphoneBrush}"
-                                    MeterLevel="{x:Bind ViewModel.Meter, Mode=OneWay}"
-                                    PeakHold="{x:Bind ViewModel.PeakHold, Mode=OneWay}"
-                                    IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}" />
-                    <StackPanel Spacing="2" HorizontalAlignment="Center">
-                        <TextBlock Text="{x:Bind ViewModel.SubmixVolumeLabel, Mode=OneWay}"
-                                   FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center" />
-                        <StackPanel Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
-                            <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="4" Padding="4,1">
-                                <TextBlock Text="KOPFHÖRER" FontSize="8" FontWeight="Bold" Foreground="{StaticResource HeadphoneBrush}" />
-                            </Border>
-                            <Border Visibility="{x:Bind ViewModel.ShowFaderOnPhones, Mode=OneWay}"
-                                    Background="{StaticResource SurfaceL3Brush}" CornerRadius="4" Padding="4,1"
-                                    BorderBrush="{StaticResource HeadphoneBrush}" BorderThickness="1">
-                                <TextBlock Text="{x:Bind ViewModel.FaderLetter, Mode=OneWay}" FontSize="8" FontWeight="Bold"
-                                           Foreground="{StaticResource HeadphoneBrush}" />
-                            </Border>
+                <!-- Right Column: Stream-Mix -->
+                <Border Grid.Column="2" CornerRadius="8" Padding="4,6"
+                        Background="{x:Bind TrackBackground(ViewModel.ShowFaderOnStream), Mode=OneWay}"
+                        BorderBrush="{x:Bind TrackBorder(ViewModel.ShowFaderOnStream), Mode=OneWay}" BorderThickness="1">
+                    <StackPanel Spacing="6" HorizontalAlignment="Center">
+                        <controls:Fader x:Name="StreamFader" Width="44" Height="180"
+                                        Minimum="{x:Bind ViewModel.MinVolumePercent, Mode=OneWay}"
+                                        Maximum="{x:Bind ViewModel.MaxVolumePercent, Mode=OneWay}"
+                                        Value="{x:Bind ViewModel.StreamVolumePercent, Mode=OneWay}"
+                                        Accent="{x:Bind ViewModel.Accent, Mode=OneWay}"
+                                        MeterLevel="{x:Bind ViewModel.Meter, Mode=OneWay}"
+                                        PeakHold="{x:Bind ViewModel.PeakHold, Mode=OneWay}"
+                                        IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}" />
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <TextBlock Text="{x:Bind ViewModel.StreamVolumeLabel, Mode=OneWay}"
+                                       FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
+                                <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="4" Padding="4,1">
+                                    <TextBlock Text="STREAM" FontSize="8" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                                </Border>
+                                <Border Visibility="{x:Bind ViewModel.ShowFaderOnStream, Mode=OneWay}"
+                                        Background="{StaticResource SurfaceL3Brush}" CornerRadius="4" Padding="4,1"
+                                        BorderBrush="{StaticResource BrandBrush}" BorderThickness="1">
+                                    <TextBlock Text="{x:Bind ViewModel.FaderLetter, Mode=OneWay}" FontSize="8" FontWeight="Bold"
+                                               Foreground="{StaticResource BrandBrush}" />
+                                </Border>
+                            </StackPanel>
                         </StackPanel>
+                        <ToggleButton Height="28" Width="36" Padding="0" HorizontalAlignment="Center"
+                                      Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
+                                      IsChecked="{x:Bind ViewModel.Muted, Mode=TwoWay}"
+                                      ToolTipService.ToolTip="Stream stummschalten">
+                            <FontIcon Glyph="{x:Bind MuteGlyph(ViewModel.Muted), Mode=OneWay}" FontSize="11" />
+                        </ToggleButton>
                     </StackPanel>
-                    <ToggleButton Height="28" Width="36" Padding="0" HorizontalAlignment="Center"
-                                  Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
-                                  IsChecked="{x:Bind ViewModel.SubmixMuted, Mode=TwoWay}"
-                                  ToolTipService.ToolTip="Kopfhörer stummschalten">
-                        <FontIcon Glyph="{x:Bind MuteGlyph(ViewModel.SubmixMuted), Mode=OneWay}" FontSize="11" />
-                    </ToggleButton>
-                </StackPanel>
+                </Border>
             </Grid>
 
             <!-- Single-Mix Mode OR Fixed Meter Channels -->

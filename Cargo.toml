@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/protocol", "crates/engine", "crates/usb", "crates/daemon"]
 
 [workspace.package]
-version = "0.1.7-alpha"
+version = "0.1.8-alpha"
 edition = "2021"
 authors = ["plysystems"]
 license = "MIT"

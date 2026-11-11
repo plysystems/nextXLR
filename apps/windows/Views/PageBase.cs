@@ -121,7 +121,7 @@ public partial class MixerPage : Page
 
     public AutoDuckingService AutoDucking => AutoDuckingService.Instance;
 
-    private void BothMixes_Click(object sender, RoutedEventArgs e)
+    private void HeadphonesMix_Click(object sender, RoutedEventArgs e)
     {
         if (ViewModel != null) ViewModel.ActiveMixIndex = 0;
     }
@@ -131,7 +131,7 @@ public partial class MixerPage : Page
         if (ViewModel != null) ViewModel.ActiveMixIndex = 1;
     }
 
-    private void HeadphonesMix_Click(object sender, RoutedEventArgs e)
+    private void BothMixes_Click(object sender, RoutedEventArgs e)
     {
         if (ViewModel != null) ViewModel.ActiveMixIndex = 2;
     }
@@ -166,12 +166,12 @@ public partial class MixerPage : Page
     public Microsoft.UI.Xaml.Media.Brush Page1Foreground(int activePage) => activePage == 1 ? ActiveTextFg : MutedTextFg;
     public Microsoft.UI.Xaml.Media.Brush Page2Background(int activePage) => activePage == 2 ? ActiveBrandBg : TransparentBg;
     public Microsoft.UI.Xaml.Media.Brush Page2Foreground(int activePage) => activePage == 2 ? ActiveTextFg : MutedTextFg;
-    public Microsoft.UI.Xaml.Media.Brush BothMixesBackground(int index) => index == 0 ? ActiveBrandBg : TransparentBg;
-    public Microsoft.UI.Xaml.Media.Brush BothMixesForeground(int index) => index == 0 ? ActiveTextFg : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixBackground(int index) => index == 0 ? ActiveHeadphonesBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixForeground(int index) => index == 0 ? ActiveTextFg : MutedTextFg;
     public Microsoft.UI.Xaml.Media.Brush StreamMixBackground(int index) => index == 1 ? ActiveBrandBg : TransparentBg;
     public Microsoft.UI.Xaml.Media.Brush StreamMixForeground(int index) => index == 1 ? ActiveTextFg : MutedTextFg;
-    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixBackground(int index) => index == 2 ? ActiveHeadphonesBg : TransparentBg;
-    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixForeground(int index) => index == 2 ? ActiveTextFg : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush BothMixesBackground(int index) => index == 2 ? ActiveBrandBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush BothMixesForeground(int index) => index == 2 ? ActiveTextFg : MutedTextFg;
     public Microsoft.UI.Xaml.Media.Brush DualPhonesBackground(int target) => target == 0 ? ActiveHeadphonesBg : TransparentBg;
     public Microsoft.UI.Xaml.Media.Brush DualPhonesForeground(int target) => target == 0 ? ActiveTextFg : MutedTextFg;
     public Microsoft.UI.Xaml.Media.Brush DualStreamBackground(int target) => target == 1 ? ActiveBrandBg : TransparentBg;
@@ -1038,38 +1038,40 @@ public partial class SamplerPage : Page
 public partial class VirtualChannelsPage : Page
 {
     public VirtualChannelsService Service => VirtualChannelsService.Instance;
-    public string VirtualChannelsCountText => $"{Service.Channels.Count} virtuelle Kabel aktiv";
+    public AppRoutingManagerViewModel AppRouting { get; } = new();
+    public string VirtualChannelsCountText => $"{Service.Channels.Count} zusätzliche Kabel konfiguriert";
 
     public VirtualChannelsPage()
     {
         NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
-    }
-
-    private void AddChannel_Click(object sender, RoutedEventArgs e)
-    {
-        string name = ChannelNameBox?.Text?.Trim() ?? "";
-        string target = (TargetChannelCombo?.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Music";
-        int buffer = 128;
-        if (BufferSizeCombo?.SelectedIndex == 0) buffer = 64;
-        else if (BufferSizeCombo?.SelectedIndex == 2) buffer = 256;
-        else if (BufferSizeCombo?.SelectedIndex == 3) buffer = 512;
-
-        Service.CreateChannel(name, target, 48000, buffer);
-        if (ChannelNameBox != null) ChannelNameBox.Text = "";
-    }
-
-    private void DeleteChannel_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement { Tag: VirtualChannelItem item })
+        Loaded += (_, _) =>
         {
-            Service.RemoveChannel(item);
-        }
+            Service.ScanWindowsEndpoints();
+            AppRouting.Refresh();
+        };
     }
 
     private void ReSync_Click(object sender, RoutedEventArgs e)
     {
+        Service.ScanWindowsEndpoints();
         Service.Load();
+        AppRouting.Refresh();
+    }
+
+    private void OpenSoundControlPanel_Click(object sender, RoutedEventArgs e)
+    {
+        VirtualChannelsService.OpenSoundControlPanel();
+    }
+
+    private void OpenWindowsVolumeMixer_Click(object sender, RoutedEventArgs e)
+    {
+        VirtualChannelsService.OpenWindowsVolumeMixer();
+    }
+
+    private void DownloadVbCable_Click(object sender, RoutedEventArgs e)
+    {
+        VirtualChannelsService.OpenVbCableWebsite();
     }
 }
 

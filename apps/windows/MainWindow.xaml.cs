@@ -50,22 +50,36 @@ public sealed partial class MainWindow : Window
 
         Title = Loc.Get("AppTitle");
         Handle = WinRT.Interop.WindowNative.GetWindowHandle(this);
+
+        if (Content == null && RootWindowGrid != null)
+        {
+            Content = RootWindowGrid;
+        }
+
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
-        if (Microsoft.UI.Windowing.AppWindowTitleBar.IsCustomizationSupported())
+        try
         {
-            var titleBar = AppWindow.TitleBar;
-            titleBar.ButtonBackgroundColor = Colors.Transparent;
-            titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-            titleBar.ButtonHoverBackgroundColor = ColorHelper.FromArgb(30, 255, 255, 255);
-            titleBar.ButtonPressedBackgroundColor = ColorHelper.FromArgb(50, 255, 255, 255);
-            titleBar.ButtonForegroundColor = Colors.White;
-            titleBar.ButtonInactiveForegroundColor = ColorHelper.FromArgb(180, 255, 255, 255);
+            if (Microsoft.UI.Windowing.AppWindowTitleBar.IsCustomizationSupported())
+            {
+                var titleBar = AppWindow.TitleBar;
+                titleBar.ButtonBackgroundColor = Colors.Transparent;
+                titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+                titleBar.ButtonHoverBackgroundColor = ColorHelper.FromArgb(30, 255, 255, 255);
+                titleBar.ButtonPressedBackgroundColor = ColorHelper.FromArgb(50, 255, 255, 255);
+                titleBar.ButtonForegroundColor = Colors.White;
+                titleBar.ButtonInactiveForegroundColor = ColorHelper.FromArgb(180, 255, 255, 255);
+            }
         }
+        catch { }
         AppWindow.Resize(new SizeInt32(1440, 920));
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "nextXLR_icon.ico"));
 
         ViewModel.Hardware.PropertyChanged += OnHardwareChanged;
+
+        // Guaranteed initial page navigation so the window is never blank or black
+        Activated += (_, _) => EnsureInitialPageLoaded();
+        DispatcherQueue.TryEnqueue(() => EnsureInitialPageLoaded());
 
         // Tray Icon Service
         _trayService = new TrayIconService(
@@ -111,47 +125,50 @@ public sealed partial class MainWindow : Window
             }
         };
 
-        RootWindowGrid.Loaded += (_, _) =>
+        if (RootWindowGrid != null)
         {
-            try
+            RootWindowGrid.Loaded += (_, _) =>
             {
-                if (Nav.SelectedItem == null)
+                try
                 {
-                    Nav.SelectedItem = MixerItem;
-                }
-
-                if (!ViewModel.IsConnected)
-                {
-                    ViewModel.SetBusy(true, "Verbinde mit GoXLR Audio-Engine...");
-                }
-
-                var settings = AppSettings.Load();
-                if (!settings.HasCompletedTour)
-                {
-                    StartTour();
-                }
-
-                // Check if GoXLR driver is installed so Windows audio endpoints work
-                if (!DriverInstaller.IsDriverInstalled())
-                {
-                    DriverMissingBar.IsOpen = true;
-                }
-
-                // Autostart Bluetooth / Wireless Headset routing if enabled (on background task to never block WinUI 3 startup)
-                if (settings.EnableBluetoothHeadset && !string.IsNullOrWhiteSpace(settings.BluetoothHeadsetDeviceId))
-                {
-                    Task.Run(() =>
+                    if (Nav.SelectedItem == null)
                     {
-                        BluetoothAudioRouter.Instance.Start(
-                            settings.BluetoothHeadsetDeviceId,
-                            settings.BluetoothHeadsetDeviceName ?? "",
-                            settings.BluetoothMuteMicSidetone
-                        );
-                    });
+                        Nav.SelectedItem = MixerItem;
+                    }
+
+                    if (!ViewModel.IsConnected)
+                    {
+                        ViewModel.SetBusy(true, "Verbinde mit GoXLR Audio-Engine...");
+                    }
+
+                    var settings = AppSettings.Load();
+                    if (!settings.HasCompletedTour)
+                    {
+                        StartTour();
+                    }
+
+                    // Check if GoXLR driver is installed so Windows audio endpoints work
+                    if (!DriverInstaller.IsDriverInstalled())
+                    {
+                        DriverMissingBar.IsOpen = true;
+                    }
+
+                    // Autostart Bluetooth / Wireless Headset routing if enabled (on background task to never block WinUI 3 startup)
+                    if (settings.EnableBluetoothHeadset && !string.IsNullOrWhiteSpace(settings.BluetoothHeadsetDeviceId))
+                    {
+                        Task.Run(() =>
+                        {
+                            BluetoothAudioRouter.Instance.Start(
+                                settings.BluetoothHeadsetDeviceId,
+                                settings.BluetoothHeadsetDeviceName ?? "",
+                                settings.BluetoothMuteMicSidetone
+                            );
+                        });
+                    }
                 }
-            }
-            catch { }
-        };
+                catch { }
+            };
+        }
 
         Closed += async (_, _) =>
         {
@@ -411,6 +428,24 @@ public sealed partial class MainWindow : Window
     }
 
     private bool _isInitialNavigation = true;
+
+    public void EnsureInitialPageLoaded()
+    {
+        try
+        {
+            if (ContentFrame.Content == null)
+            {
+                if (Nav.SelectedItem == null)
+                {
+                    Nav.SelectedItem = MixerItem;
+                }
+                _isInitialNavigation = false;
+                ContentFrame.Navigate(typeof(MixerPage), ViewModel, new SuppressNavigationTransitionInfo());
+                ViewModel.SetMetersActive(true);
+            }
+        }
+        catch { }
+    }
 
     private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {

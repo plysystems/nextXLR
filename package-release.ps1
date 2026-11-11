@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 $root = $PSScriptRoot
 $distDir = Join-Path $root "dist"
-$version = "0.1.7-alpha"
+$version = "0.1.8-alpha"
 $releaseDir = Join-Path $distDir "NextXLR-v$version"
 $appDir = Join-Path $releaseDir "app"
 $gitSha = try { (git rev-parse HEAD).Trim() } catch { "release" }
@@ -79,14 +79,15 @@ Sign-Binary (Join-Path $appDir "mixforge.exe")
 $payloadZip = Join-Path $root "installer\payload.zip"
 Write-Host "Packaging payload for embedded standalone installer..."
 if (Test-Path $payloadZip) { Remove-Item $payloadZip -Force }
-Compress-Archive -Path "$appDir\*" -DestinationPath $payloadZip -Force
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[System.IO.Compression.ZipFile]::CreateFromDirectory($appDir, $payloadZip, [System.IO.Compression.CompressionLevel]::Optimal, $false)
 Write-Host "Payload archive created ($([math]::Round((Get-Item $payloadZip).Length / 1MB, 2)) MB)."
 
 # 5. Build & Publish Standalone Single-File Installer with embedded payload
 Write-Host "Building & Publishing Standalone Self-Contained Installer..."
 $installerPublishDir = Join-Path $root "installer\bin\Publish"
 if (Test-Path $installerPublishDir) { Remove-Item $installerPublishDir -Recurse -Force }
-dotnet publish (Join-Path $root "installer\NextXLR.Installer.csproj") -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:SourceRevisionId=$gitSha -p:InformationalVersion="$version+$gitSha" --no-restore -o $installerPublishDir
+dotnet publish (Join-Path $root "installer\NextXLR.Installer.csproj") -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:AssemblyName="NextXLR-Setup-$version" -p:SourceRevisionId=$gitSha -p:InformationalVersion="$version+$gitSha" --no-restore -o $installerPublishDir
 
 $standaloneInstaller = Join-Path $installerPublishDir "NextXLR-Setup-$version.exe"
 if (-not (Test-Path $standaloneInstaller)) {
@@ -131,15 +132,12 @@ Write-Host "Compressing to $zipPath..."
 $compressed = $false
 for ($attempt = 1; $attempt -le 5 -and -not $compressed; $attempt++) {
     try {
-        Compress-Archive -Path "$releaseDir\*" -DestinationPath $zipPath -Force
+        [System.IO.Compression.ZipFile]::CreateFromDirectory($releaseDir, $zipPath, [System.IO.Compression.CompressionLevel]::Optimal, $false)
         $compressed = $true
     } catch {
         Write-Host "Waiting for file unlock (attempt $attempt)..."
         Start-Sleep -Seconds 1
     }
-}
-if (-not $compressed) {
-    Compress-Archive -Path "$releaseDir\*" -DestinationPath $zipPath -Force
 }
 
 Write-Host "Release package created successfully at: $zipPath"

@@ -1,12 +1,43 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
+using NAudio.CoreAudioApi;
 
 namespace NextXLR.Services;
+
+public sealed class WindowsAudioTrackInfo : ObservableObject
+{
+    public string ChannelKey { get; set; } = "";
+    public string DisplayName { get; set; } = "";
+    public string RoleDescription { get; set; } = "";
+    public string Glyph { get; set; } = "\uE7F6";
+    public string EndpointId { get; set; } = "";
+
+    private bool _isDetected;
+    public bool IsDetected
+    {
+        get => _isDetected;
+        set
+        {
+            if (SetProperty(ref _isDetected, value))
+            {
+                OnPropertyChanged(nameof(StatusText));
+                OnPropertyChanged(nameof(StatusBrush));
+            }
+        }
+    }
+
+    public string StatusText => IsDetected ? "In Windows erkannt & bereit" : "Nicht erkannt (Treiber prüfen)";
+
+    public Microsoft.UI.Xaml.Media.Brush StatusBrush => IsDetected
+        ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 0x22, 0xD3, 0xA6))
+        : new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 0xF5, 0xB9, 0x42));
+}
 
 public sealed class VirtualChannelItem : ObservableObject
 {
@@ -133,10 +164,135 @@ public sealed class VirtualChannelsService
     private static readonly string ConfigFile = Path.Combine(ConfigDir, "virtual_channels.json");
 
     public ObservableCollection<VirtualChannelItem> Channels { get; } = [];
+    public ObservableCollection<WindowsAudioTrackInfo> GoXlrTracks { get; } = [];
+
+    private bool _hasVirtualCableDriver;
+    public bool HasVirtualCableDriver
+    {
+        get => _hasVirtualCableDriver;
+        private set
+        {
+            _hasVirtualCableDriver = value;
+            VirtualCableStatusText = value
+                ? "Virtueller Treiber (VB-CABLE / Virtual Cable) erkannt"
+                : "Kein zusätzlicher Virtueller Kabel-Treiber installiert";
+        }
+    }
+
+    public string VirtualCableStatusText { get; private set; } = "Prüfe Treiber-Status...";
 
     private VirtualChannelsService()
     {
+        InitializeGoXlrTracks();
         Load();
+        ScanWindowsEndpoints();
+    }
+
+    private void InitializeGoXlrTracks()
+    {
+        GoXlrTracks.Clear();
+        GoXlrTracks.Add(new WindowsAudioTrackInfo
+        {
+            ChannelKey = "System",
+            DisplayName = "System (TC-Helicon GoXLR)",
+            RoleDescription = "Standard-Ausgabe für Windows-Sounds, Systemsounds und allgemeine Apps",
+            Glyph = "\uE7F6"
+        });
+        GoXlrTracks.Add(new WindowsAudioTrackInfo
+        {
+            ChannelKey = "Game",
+            DisplayName = "Game (TC-Helicon GoXLR)",
+            RoleDescription = "Spur für Gaming-Audio (Steam, Riot, EA, Blizzard, usw.)",
+            Glyph = "\uE7FC"
+        });
+        GoXlrTracks.Add(new WindowsAudioTrackInfo
+        {
+            ChannelKey = "Chat",
+            DisplayName = "Chat (TC-Helicon GoXLR)",
+            RoleDescription = "Spur für Sprachkommunikation (Discord, Teams, TeamSpeak, Zoom)",
+            Glyph = "\uE717"
+        });
+        GoXlrTracks.Add(new WindowsAudioTrackInfo
+        {
+            ChannelKey = "Music",
+            DisplayName = "Music (TC-Helicon GoXLR)",
+            RoleDescription = "Spur für Medienwiedergabe (Spotify, Apple Music, YouTube / Browser)",
+            Glyph = "\uE774"
+        });
+        GoXlrTracks.Add(new WindowsAudioTrackInfo
+        {
+            ChannelKey = "Sample",
+            DisplayName = "Sample (TC-Helicon GoXLR)",
+            RoleDescription = "Spur für Soundboard, Jingles und Einspieler",
+            Glyph = "\uE93C"
+        });
+    }
+
+    public void ScanWindowsEndpoints()
+    {
+        try
+        {
+            using var enumerator = new MMDeviceEnumerator();
+            var renderDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active).ToList();
+
+            foreach (var track in GoXlrTracks)
+            {
+                var match = renderDevices.FirstOrDefault(d =>
+                    d.FriendlyName.Contains(track.ChannelKey, StringComparison.OrdinalIgnoreCase) &&
+                    (d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
+                     d.FriendlyName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase)));
+
+                if (match != null)
+                {
+                    track.IsDetected = true;
+                    track.EndpointId = match.ID;
+                }
+                else
+                {
+                    track.IsDetected = false;
+                    track.EndpointId = "";
+                }
+            }
+
+            var virtualDriver = renderDevices.FirstOrDefault(d =>
+                d.FriendlyName.Contains("CABLE", StringComparison.OrdinalIgnoreCase) ||
+                d.FriendlyName.Contains("VB-Audio", StringComparison.OrdinalIgnoreCase) ||
+                d.FriendlyName.Contains("VoiceMeeter", StringComparison.OrdinalIgnoreCase) ||
+                d.FriendlyName.Contains("Virtual", StringComparison.OrdinalIgnoreCase));
+
+            HasVirtualCableDriver = (virtualDriver != null);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"ScanWindowsEndpoints error: {ex}");
+        }
+    }
+
+    public static void OpenSoundControlPanel()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("control.exe", "mmsys.cpl sounds") { UseShellExecute = true });
+        }
+        catch { }
+    }
+
+    public static void OpenWindowsVolumeMixer()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("ms-settings:apps-volume") { UseShellExecute = true });
+        }
+        catch { }
+    }
+
+    public static void OpenVbCableWebsite()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("https://vb-audio.com/Cable/") { UseShellExecute = true });
+        }
+        catch { }
     }
 
     private void AttachItem(VirtualChannelItem it)

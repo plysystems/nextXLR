@@ -438,8 +438,8 @@ public sealed class BluetoothAudioRouter : IDisposable
                     streamProvider = new SampleToWaveProvider16(pipeline);
                 }
 
-                // 5. Initialize Output: WASAPI Shared with hardware Event Sync (15ms buffer for minimal latency)
-                int bufferLatencyMs = 15;
+                // 5. Initialize Output: WASAPI Shared with optimal buffer (30ms for crystal-clear playback without dropouts)
+                int bufferLatencyMs = 30;
                 try
                 {
                     _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, true, bufferLatencyMs);
@@ -450,7 +450,7 @@ public sealed class BluetoothAudioRouter : IDisposable
                     try
                     {
                         _player?.Dispose();
-                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 20);
+                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 40);
                         _player.Init(streamProvider);
                     }
                     catch
@@ -460,7 +460,7 @@ public sealed class BluetoothAudioRouter : IDisposable
                             ? pipeline.ToWaveProvider()
                             : new SampleToWaveProvider16(pipeline);
 
-                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 30);
+                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 50);
                         _player.Init(fallbackProvider);
                     }
                 }
@@ -557,9 +557,9 @@ public sealed class BluetoothAudioRouter : IDisposable
 
     private void AddCaptureToMixer(WasapiCapture capture, MixingSampleProvider mixer, string fullName, string shortName)
     {
-        // Real-time jitter buffer with active ultra-low-latency pruning (20ms max lag, 8ms initial cushion)
-        // completely eliminating delay while guaranteeing stable, glitch-free audio output.
-        var jitterBuffer = new RealtimeJitterBuffer(capture.WaveFormat, maxLatencyMs: 20, prebufferMs: 8);
+        // Real-time jitter buffer with active drift compensation and micro-crossfades (60ms max lag, 25ms cushion)
+        // guaranteeing pristine, glitch-free audio output without dropouts or crackles.
+        var jitterBuffer = new RealtimeJitterBuffer(capture.WaveFormat, maxLatencyMs: 60, prebufferMs: 25);
 
         capture.DataAvailable += (s, e) =>
         {
@@ -776,13 +776,13 @@ public sealed class BluetoothAudioRouter : IDisposable
 
         public WaveFormat WaveFormat { get; }
 
-        public RealtimeJitterBuffer(WaveFormat format, int maxLatencyMs = 20, int prebufferMs = 8)
+        public RealtimeJitterBuffer(WaveFormat format, int maxLatencyMs = 60, int prebufferMs = 25)
         {
             WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(format.SampleRate, format.Channels);
             int samplesPerMs = Math.Max((format.SampleRate * format.Channels) / 1000, 1);
-            _maxTargetLatencySamples = Math.Max(samplesPerMs * maxLatencyMs, 480);
-            _prebufferSamples = Math.Max(samplesPerMs * prebufferMs, 192); // 8ms initial cushion
-            _capacity = samplesPerMs * 250; // 250ms ring buffer capacity
+            _maxTargetLatencySamples = Math.Max(samplesPerMs * maxLatencyMs, 960);
+            _prebufferSamples = Math.Max(samplesPerMs * prebufferMs, 480);
+            _capacity = samplesPerMs * 500; // 500ms ring buffer capacity
             _ringBuffer = new float[_capacity];
         }
 
@@ -851,6 +851,15 @@ public sealed class BluetoothAudioRouter : IDisposable
                 excess = (excess / channels) * channels; // preserve stereo frame boundaries!
                 if (excess > 0)
                 {
+                    // Smooth micro-crossfade over 64 samples at the splice boundary to eliminate clicks and pops
+                    int fadeSamples = Math.Min(64 * channels, Math.Min(_bufferedSamples, excess));
+                    for (int i = 0; i < fadeSamples; i++)
+                    {
+                        float factor = (float)i / fadeSamples;
+                        int oldIdx = (_readPos + i) % _capacity;
+                        int newIdx = (_readPos + excess + i) % _capacity;
+                        _ringBuffer[newIdx] = _ringBuffer[oldIdx] * (1f - factor) + _ringBuffer[newIdx] * factor;
+                    }
                     _readPos = (_readPos + excess) % _capacity;
                     _bufferedSamples -= excess;
                 }
@@ -957,13 +966,13 @@ public sealed class BluetoothAudioRouter : IDisposable
             for (int i = 0; i < span.Length; i++)
             {
                 float s = span[i];
-                if (s > 0.98f)
+                if (s > 0.85f)
                 {
-                    span[i] = 0.98f + 0.02f * (float)Math.Tanh((s - 0.98f) / 0.02f);
+                    span[i] = 0.85f + 0.14f * (float)Math.Tanh((s - 0.85f) / 0.14f);
                 }
-                else if (s < -0.98f)
+                else if (s < -0.85f)
                 {
-                    span[i] = -0.98f + 0.02f * (float)Math.Tanh((s + 0.98f) / 0.02f);
+                    span[i] = -0.85f + 0.14f * (float)Math.Tanh((s + 0.85f) / 0.14f);
                 }
             }
         }
