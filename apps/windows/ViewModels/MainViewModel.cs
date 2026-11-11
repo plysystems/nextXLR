@@ -399,11 +399,12 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    /// <summary>GoXLR routing table order: Mic, Chat, Music, Game, Console, Line In, System, Samples.</summary>
-    private static readonly uint[] RoutingOrder = [0, 1, 2, 3, 7, 6, 4, 5];
+    /// <summary>Canonical studio console order: Mic (0), Chat (1), Music (2), System (4), Game (3), Console (7), Line In (6), Samples (5).</summary>
+    private static readonly uint[] RoutingOrder = [0, 1, 2, 4, 3, 7, 6, 5];
     private const uint SamplerBus = 4;
     private static bool IsBlocked(uint ch, uint bus) => (ch, bus) is (5, 4) or (1, 3);
 
+    /// <summary>Canonical outputs order: Headphones (8), Broadcast Stream Mix (11), Line Out (10), Chat Mic (12), Monitor (9).</summary>
     private static readonly uint[] OutputOrder = [8, 11, 10, 12, 9];
 
     private IReadOnlyList<FaderAssignment>? _pendingFaderArrangement;
@@ -426,9 +427,8 @@ public partial class MainViewModel : ObservableObject
             return;
         }
         static int Rank(uint[] order, uint id) { var i = Array.IndexOf(order, id); return i < 0 ? 100 + (int)id : i; }
-        int FaderRank(uint id) => faders.FirstOrDefault(f => f.Channel == id)?.Fader is { Length: 1 } l ? l[0] - 'A' : 99;
         var inputs = Channels.Where(c => !c.IsOutput)
-            .OrderBy(c => FaderRank(c.Id)).ThenBy(c => Rank(RoutingOrder, c.Id)).ToList();
+            .OrderBy(c => Rank(RoutingOrder, c.Id)).ToList();
         var outputs = Channels.Where(c => c.IsOutput).OrderBy(c => Rank(OutputOrder, c.Id)).ToList();
         SyncOrder(InputStrips, inputs);
         SyncOrder(OutputStrips, outputs);
