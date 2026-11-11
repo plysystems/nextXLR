@@ -198,7 +198,7 @@ public sealed partial class ChannelStrip : UserControl
             var clamped = Math.Clamp(val, min, max);
             if (ViewModel is not null)
             {
-                ViewModel.Volume = clamped / 100.0;
+                ViewModel.VolumePercent = clamped;
             }
         }
         LevelInputBox.Visibility = Visibility.Collapsed;
@@ -231,6 +231,36 @@ public sealed partial class ChannelStrip : UserControl
 
     public Brush TrackBorderStream(bool hasHardwareFader) =>
         hasHardwareFader ? (Brush)Application.Current.Resources["BrandBrush"] : (Brush)Application.Current.Resources["SurfaceStrokeSubtleBrush"];
+
+    public Brush SingleTrackBorder(bool hasHardwareFader, bool isSubmixActive, Brush? accent)
+    {
+        if (!hasHardwareFader)
+            return (Brush)Application.Current.Resources["SurfaceStrokeSubtleBrush"];
+        return isSubmixActive
+            ? (Brush)Application.Current.Resources["HeadphoneBrush"]
+            : (Brush)Application.Current.Resources["BrandBrush"];
+    }
+
+    public Brush SingleFaderAccent(bool isSubmixActive, Brush? accent)
+    {
+        return isSubmixActive
+            ? (Brush)Application.Current.Resources["HeadphoneBrush"]
+            : (accent ?? (Brush)Application.Current.Resources["BrandBrush"]);
+    }
+
+    public string SingleMixGlyph(bool isOutput, bool isSubmixActive) =>
+        isOutput ? "\uE767" : (isSubmixActive ? "\uE7F6" : "\uE774");
+
+    public string SingleMixBadgeText(bool isOutput, bool isSubmixActive) =>
+        isOutput ? "OUTPUT" : (isSubmixActive ? "PHONES" : "STREAM");
+
+    public Brush SingleMixForeground(bool isOutput, bool isSubmixActive) =>
+        (isOutput || isSubmixActive)
+            ? (Brush)Application.Current.Resources["HeadphoneBrush"]
+            : (Brush)Application.Current.Resources["BrandBrush"];
+
+    public Visibility SingleFaderBadgeVisibility(bool hasFader) =>
+        hasFader ? Visibility.Visible : Visibility.Collapsed;
 
     public string ChannelTooltip(bool canEdit, string name) => canEdit ? Loc.Get("MixerCustomizeTitle.Text") : name;
     public string MuteGlyph(bool muted) => muted ? "\uE74F" : "\uE767";
