@@ -1,0 +1,65 @@
+name: Build & Verify NEXT:XLR
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build NEXT:XLR (Daemon, Windows App & Installer)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Node.js for Stream Deck CLI
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build Rust Audio Engine (mixforged)
+        run: |
+          cargo build --release --bin mixforged
+
+      - name: Package Stream Deck Plugin
+        run: |
+          npm install -g @elgato/cli
+          streamdeck pack plugins/streamdeck/com.plysystems.nextxlr.sdPlugin -o dist -f --ignore-validation
+          mkdir -p apps/windows/Assets/StreamDeck
+          cp dist/com.plysystems.nextxlr.streamDeckPlugin apps/windows/Assets/StreamDeck/
+
+      - name: Build Windows WinUI 3 Application (NextXLR)
+        run: |
+          dotnet build apps/windows/NextXLR.csproj -c Release
+
+      - name: Build Standalone Installer
+        run: |
+          dotnet publish installer/NextXLR.Installer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o installer/bin/Publish
+

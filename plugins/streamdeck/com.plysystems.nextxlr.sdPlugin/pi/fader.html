@@ -21,10 +21,26 @@
                     <option value="console">Console</option>
                     <option value="linein">Line In</option>
                     <option value="samples">Samples</option>
+                    <option value="headphones">Kopfhörer (Phones)</option>
+                    <option value="stream">Broadcast Stream Mix</option>
+                    <option value="lineout">Line Out</option>
+                    <option value="chatmic">Chat Mic</option>
+                    <option value="monitor">Mic Monitor</option>
                     <option value="A">Hardware Fader A</option>
                     <option value="B">Hardware Fader B</option>
                     <option value="C">Hardware Fader C</option>
                     <option value="D">Hardware Fader D</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="sdpi-item">
+            <div class="sdpi-item-label">Mix-Ziel:</div>
+            <div class="sdpi-item-value">
+                <select id="mix">
+                    <option value="auto">Auto (Aktiver Modus)</option>
+                    <option value="stream">Stream-Mix</option>
+                    <option value="headphones">Kopfhörer-Mix (Submix)</option>
                 </select>
             </div>
         </div>
@@ -65,6 +81,7 @@
     <script>
         function initUI() {
             document.getElementById("channel").value = settings.channel || "music";
+            document.getElementById("mix").value = settings.mix || "auto";
             document.getElementById("mode").value = settings.mode || "increase";
             document.getElementById("step").value = settings.step || "0.05";
             if (settings.volume !== undefined) {
@@ -73,6 +90,7 @@
             updateVisibility();
 
             document.getElementById("channel").onchange = onChange;
+            document.getElementById("mix").onchange = onChange;
             document.getElementById("mode").onchange = onChange;
             document.getElementById("step").onchange = onChange;
             document.getElementById("volume").oninput = onChange;
@@ -86,6 +104,7 @@
 
         function onChange() {
             settings.channel = document.getElementById("channel").value;
+            settings.mix = document.getElementById("mix").value;
             settings.mode = document.getElementById("mode").value;
             settings.step = document.getElementById("step").value;
             settings.volume = (parseFloat(document.getElementById("volume").value || 75) / 100.0).toString();

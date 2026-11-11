@@ -1,9 +1,12 @@
+param(
+    [string]$version = "0.1.8.9-alpha"
+)
+
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 $root = $PSScriptRoot
 Set-Location $root
 $distDir = Join-Path $root "dist"
-$version = "0.1.9.0-alpha"
 $releaseDir = Join-Path $distDir "NextXLR-v$version"
 $appDir = Join-Path $releaseDir "app"
 $gitSha = try { (git rev-parse HEAD).Trim() } catch { "release" }
@@ -196,3 +199,9 @@ for ($attempt = 1; $attempt -le 5 -and -not $compressed; $attempt++) {
 Write-Host "Release package created successfully at: $zipPath"
 Copy-Item $installerDst (Join-Path $distDir "NextXLR-Setup-$version.exe") -Force
 Write-Host "Standalone installer copied to dist/NextXLR-Setup-$version.exe"
+
+# Also ensure compatibility names for both 0.1.8.9-alpha and 0.1.9.0-alpha
+Copy-Item (Join-Path $distDir "NextXLR-Setup-$version.exe") (Join-Path $distDir "NextXLR-Setup-0.1.8.9-alpha.exe") -Force -ErrorAction SilentlyContinue
+Copy-Item (Join-Path $distDir "NextXLR-Setup-$version.exe") (Join-Path $distDir "NextXLR-Setup-0.1.9.0-alpha.exe") -Force -ErrorAction SilentlyContinue
+Copy-Item $zipPath (Join-Path $distDir "NextXLR-v0.1.8.9-alpha.zip") -Force -ErrorAction SilentlyContinue
+Copy-Item $zipPath (Join-Path $distDir "NextXLR-v0.1.9.0-alpha.zip") -Force -ErrorAction SilentlyContinue

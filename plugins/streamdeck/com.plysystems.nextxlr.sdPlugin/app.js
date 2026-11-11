@@ -157,6 +157,10 @@ function setTitle(context, title) {
     sendToStreamDeck("setTitle", context, { payload: { title, target: 0 } });
 }
 
+function setImage(context, image) {
+    sendToStreamDeck("setImage", context, { payload: { image, target: 0 } });
+}
+
 function setState(context, state) {
     sendToStreamDeck("setState", context, { payload: { state } });
 }
@@ -171,6 +175,80 @@ function showOk(context) {
 
 function setFeedback(context, feedback) {
     sendToStreamDeck("setFeedback", context, { payload: feedback });
+}
+
+// In-memory Canvas renderer for beautiful dynamic studio Scribble keys
+function renderCanvasFader(channelName, volPct, isMuted, isSubmix) {
+    try {
+        let canvas = document.getElementById("renderCanvas");
+        if (!canvas) {
+            canvas = document.createElement("canvas");
+            canvas.id = "renderCanvas";
+            canvas.width = 144;
+            canvas.height = 144;
+            document.body.appendChild(canvas);
+        }
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, 144, 144);
+
+        // Sleek dark panel with studio console aesthetic
+        ctx.fillStyle = "#0E1015";
+        ctx.beginPath();
+        ctx.roundRect(4, 4, 136, 136, 18);
+        ctx.fill();
+
+        // High-contrast accent border
+        ctx.strokeStyle = isMuted ? "#EF4444" : (isSubmix ? "#3B82F6" : "#00D2B4");
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // Channel title
+        ctx.fillStyle = "#94A3B8";
+        ctx.font = "bold 16px sans-serif";
+        ctx.textAlign = "center";
+        const shortName = channelName.length > 9 ? channelName.slice(0, 8) + ".." : channelName;
+        ctx.fillText(shortName.toUpperCase(), 72, 34);
+
+        if (isSubmix) {
+            ctx.fillStyle = "#3B82F6";
+            ctx.font = "bold 11px sans-serif";
+            ctx.fillText("PHONES", 72, 50);
+        }
+
+        // Center Level / Mute
+        if (isMuted) {
+            ctx.fillStyle = "#EF4444";
+            ctx.font = "900 24px sans-serif";
+            ctx.fillText("MUTED", 72, isSubmix ? 82 : 78);
+
+            // Red mute bar
+            ctx.fillStyle = "rgba(239, 68, 68, 0.25)";
+            ctx.beginPath();
+            ctx.roundRect(18, 102, 108, 16, 8);
+            ctx.fill();
+        } else {
+            ctx.fillStyle = "#FFFFFF";
+            ctx.font = "900 28px sans-serif";
+            ctx.fillText(`${volPct}%`, 72, isSubmix ? 84 : 78);
+
+            // Progress bar background
+            ctx.fillStyle = "#1E293B";
+            ctx.beginPath();
+            ctx.roundRect(18, 102, 108, 16, 8);
+            ctx.fill();
+
+            // Active fill
+            const fillW = Math.max(10, Math.round((Math.min(volPct, 100) / 100) * 108));
+            ctx.fillStyle = isSubmix ? "#3B82F6" : "#00D2B4";
+            ctx.beginPath();
+            ctx.roundRect(18, 102, fillW, 16, 8);
+            ctx.fill();
+        }
+
+        return canvas.toDataURL("image/png");
+    } catch (e) {
+        return null;
+    }
 }
 
 // --- Event Handling ---
@@ -242,16 +320,17 @@ async function handleKeyDown(context, action, settings) {
         case "com.plysystems.nextxlr.fader": {
             const mode = settings.mode || "increase";
             const step = parseFloat(settings.step || "0.05");
+            const mix = settings.mix || "auto";
             let res;
             if (mode === "increase") {
-                res = await callEngineApi("/api/fader", { channel, delta: step });
+                res = await callEngineApi("/api/fader", { channel, delta: step, mix });
             } else if (mode === "decrease") {
-                res = await callEngineApi("/api/fader", { channel, delta: -step });
+                res = await callEngineApi("/api/fader", { channel, delta: -step, mix });
             } else if (mode === "set") {
                 const vol = parseFloat(settings.volume || "0.75");
-                res = await callEngineApi("/api/fader", { channel, volume: vol });
+                res = await callEngineApi("/api/fader", { channel, volume: vol, mix });
             } else if (mode === "toggle_mute") {
-                res = await callEngineApi("/api/mute", { channel, action: "toggle" });
+                res = await callEngineApi("/api/mute", { channel, action: "toggle", mix });
             }
             if (res && res.ok) showOk(context); else showAlert(context);
             await refreshEngineState();
@@ -371,7 +450,8 @@ async function handleDialRotate(context, action, settings, ticks) {
     if (action === "com.plysystems.nextxlr.fader" || action === "com.plysystems.nextxlr.encoder") {
         const channel = settings.channel || "music";
         const delta = (ticks * 0.02);
-        await callEngineApi("/api/fader", { channel, delta });
+        const mix = settings.mix || "auto";
+        await callEngineApi("/api/fader", { channel, delta, mix });
         await refreshEngineState();
     }
 }
@@ -379,7 +459,8 @@ async function handleDialRotate(context, action, settings, ticks) {
 async function handleDialPress(context, action, settings) {
     if (action === "com.plysystems.nextxlr.fader" || action === "com.plysystems.nextxlr.encoder") {
         const channel = settings.channel || "music";
-        await callEngineApi("/api/mute", { channel, action: "toggle" });
+        const mix = settings.mix || "auto";
+        await callEngineApi("/api/mute", { channel, action: "toggle", mix });
         await refreshEngineState();
     }
 }
@@ -387,7 +468,8 @@ async function handleDialPress(context, action, settings) {
 async function handleTouchTap(context, action, settings) {
     if (action === "com.plysystems.nextxlr.fader" || action === "com.plysystems.nextxlr.encoder") {
         const channel = settings.channel || "music";
-        await callEngineApi("/api/fader", { channel, volume: 1.0 });
+        const mix = settings.mix || "auto";
+        await callEngineApi("/api/fader", { channel, volume: 1.0, mix });
         await refreshEngineState();
     }
 }
@@ -415,16 +497,30 @@ function updateContextDisplay(context, action, settings) {
         case "com.plysystems.nextxlr.encoder":
         case "com.plysystems.nextxlr.fader": {
             if (channelObj) {
-                const volPct = Math.round(channelObj.volume * 100);
-                const title = channelObj.muted ? `${channelObj.name}\nMUTE` : `${channelObj.name}\n${volPct}%`;
-                setTitle(context, title);
+                const targetSubmix = settings.mix === "headphones" || (settings.mix !== "stream" && (lastMixerState && lastMixerState.fader_target_submix));
+                const volPct = Math.round((targetSubmix ? channelObj.submix_volume : channelObj.volume) * 100);
+                const isMuted = targetSubmix ? channelObj.submix_muted : channelObj.muted;
+
+                // Render dynamic high-res console Scribble key
+                const dataUrl = renderCanvasFader(channelObj.name, volPct, isMuted, targetSubmix);
+                if (dataUrl) {
+                    setImage(context, dataUrl);
+                    setTitle(context, "");
+                } else {
+                    const title = isMuted ? `${channelObj.name}\nMUTE` : `${channelObj.name}\n${volPct}%`;
+                    setTitle(context, title);
+                }
 
                 // Stream Deck + Encoder feedback
                 setFeedback(context, {
                     title: channelObj.name,
-                    value: channelObj.muted ? "MUTE" : `${volPct}%`,
-                    indicator: volPct,
-                    icon: channelObj.muted ? "assets/muteOn.png" : "assets/faderAction.png"
+                    value: isMuted ? "MUTE" : `${volPct}%`,
+                    indicator: {
+                        value: volPct,
+                        enabled: true,
+                        bar_fill_c: isMuted ? "#EF4444" : (targetSubmix ? "#3B82F6" : "#00D2B4")
+                    },
+                    icon: isMuted ? "assets/muteOn.png" : "assets/faderAction.png"
                 });
             }
             break;

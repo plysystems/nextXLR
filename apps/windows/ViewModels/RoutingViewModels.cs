@@ -150,7 +150,7 @@ public partial class AppSessionItemViewModel : ObservableObject
                 if (_info.MeterInformation.GetPeakValue(out float peak) == 0)
                 {
                     var newPeak = Math.Clamp(peak * 100.0, 0.0, 100.0);
-                    if (Math.Abs(PeakPercent - newPeak) > 0.5 || (newPeak == 0 && PeakPercent != 0))
+                    if (Math.Abs(PeakPercent - newPeak) > 1.5 || (newPeak == 0 && PeakPercent != 0))
                     {
                         PeakPercent = newPeak;
                     }
@@ -264,7 +264,7 @@ public partial class AppRoutingManagerViewModel : ObservableObject
             if (queue != null)
             {
                 _meterTimer = queue.CreateTimer();
-                _meterTimer.Interval = TimeSpan.FromMilliseconds(75);
+                _meterTimer.Interval = TimeSpan.FromMilliseconds(150);
                 _meterTimer.Tick += (_, _) =>
                 {
                     foreach (var s in AppSessions)

@@ -545,6 +545,7 @@ struct ApiFaderQuery {
     channel: String,
     volume: Option<f32>,
     delta: Option<f32>,
+    mix: Option<String>,
 }
 
 async fn api_fader(
@@ -556,11 +557,17 @@ async fn api_fader(
         return axum::Json(json!({ "ok": false, "error": format!("unknown channel '{}'", q.channel) }));
     };
 
+    let is_submix = match q.mix.as_deref() {
+        Some("submix") | Some("headphones") | Some("phones") => true,
+        Some("stream") | Some("main") => false,
+        _ => state.as_ref().map(|s| s.fader_target_submix).unwrap_or(false),
+    };
+
     let target_vol = if let Some(delta) = q.delta {
         let cur = state
             .as_ref()
             .and_then(|s| s.channels.iter().find(|c| c.id == ch_id))
-            .map(|c| c.volume)
+            .map(|c| if is_submix { c.submix_volume } else { c.volume })
             .unwrap_or(0.8);
         (cur + delta).clamp(0.0, 1.0)
     } else if let Some(mut vol) = q.volume {
@@ -573,16 +580,24 @@ async fn api_fader(
     };
 
     let (tx, rx) = oneshot::channel();
-    let _ = app.hub.send(HubMsg::Client {
-        msg: ClientMessage::SetVolume {
+    let msg = if is_submix {
+        ClientMessage::SetSubmixVolume {
             channel: ch_id,
             volume: target_vol,
-        },
+        }
+    } else {
+        ClientMessage::SetVolume {
+            channel: ch_id,
+            volume: target_vol,
+        }
+    };
+    let _ = app.hub.send(HubMsg::Client {
+        msg,
         reply: tx,
     });
     let _ = rx.await;
 
-    axum::Json(json!({ "ok": true, "channel": ch_id.0, "volume": target_vol }))
+    axum::Json(json!({ "ok": true, "channel": ch_id.0, "volume": target_vol, "submix": is_submix }))
 }
 
 #[derive(serde::Deserialize)]
@@ -590,6 +605,7 @@ struct ApiMuteQuery {
     channel: String,
     muted: Option<bool>,
     action: Option<String>,
+    mix: Option<String>,
 }
 
 async fn api_mute(
@@ -601,13 +617,20 @@ async fn api_mute(
         return axum::Json(json!({ "ok": false, "error": format!("unknown channel '{}'", q.channel) }));
     };
 
+    let is_submix = match q.mix.as_deref() {
+        Some("submix") | Some("headphones") | Some("phones") => true,
+        Some("stream") | Some("main") => false,
+        _ => state.as_ref().map(|s| s.fader_target_submix).unwrap_or(false),
+    };
+
+    let current_muted = state
+        .as_ref()
+        .and_then(|s| s.channels.iter().find(|c| c.id == ch_id))
+        .map(|c| if is_submix { c.submix_muted } else { c.muted })
+        .unwrap_or(false);
+
     let target_muted = if q.action.as_deref() == Some("toggle") {
-        let cur = state
-            .as_ref()
-            .and_then(|s| s.channels.iter().find(|c| c.id == ch_id))
-            .map(|c| c.muted)
-            .unwrap_or(false);
-        !cur
+        !current_muted
     } else if let Some(m) = q.muted {
         m
     } else if q.action.as_deref() == Some("mute") {
@@ -615,25 +638,28 @@ async fn api_mute(
     } else if q.action.as_deref() == Some("unmute") {
         false
     } else {
-        let cur = state
-            .as_ref()
-            .and_then(|s| s.channels.iter().find(|c| c.id == ch_id))
-            .map(|c| c.muted)
-            .unwrap_or(false);
-        !cur
+        !current_muted
     };
 
     let (tx, rx) = oneshot::channel();
-    let _ = app.hub.send(HubMsg::Client {
-        msg: ClientMessage::SetMute {
+    let msg = if is_submix {
+        ClientMessage::SetSubmixMute {
             channel: ch_id,
             muted: target_muted,
-        },
+        }
+    } else {
+        ClientMessage::SetMute {
+            channel: ch_id,
+            muted: target_muted,
+        }
+    };
+    let _ = app.hub.send(HubMsg::Client {
+        msg,
         reply: tx,
     });
     let _ = rx.await;
 
-    axum::Json(json!({ "ok": true, "channel": ch_id.0, "muted": target_muted }))
+    axum::Json(json!({ "ok": true, "channel": ch_id.0, "muted": target_muted, "submix": is_submix }))
 }
 
 #[derive(serde::Deserialize)]

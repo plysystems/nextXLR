@@ -152,6 +152,9 @@ public sealed class AppAudioSessionInfo
 /// </summary>
 public static class WindowsAppAudioRouter
 {
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<uint, (string Name, string Title)> _procCache = new();
+    private static readonly System.Reflection.FieldInfo? _devInterfaceField = typeof(MMDevice).GetField("deviceInterface", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+    private static readonly Guid _iidMgr2 = typeof(IAudioSessionManager2Native).GUID;
     private const string DEVINTERFACE_AUDIO_RENDER = "#{e6327cad-dcec-4949-ae8a-991e976a79d2}";
     private const string DEVINTERFACE_AUDIO_CAPTURE = "#{2eef81be-33fa-4800-9670-1cd474972c3f}";
     private const string MMDEVAPI_TOKEN = @"\\?\SWD#MMDEVAPI#";
@@ -425,14 +428,13 @@ public static class WindowsAppAudioRouter
             using var enumerator = new MMDeviceEnumerator();
             var renderDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active).ToList();
 
-            var devInterfaceField = typeof(MMDevice).GetField("deviceInterface", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            Guid iidMgr2 = typeof(IAudioSessionManager2Native).GUID;
+            Guid iidMgr2 = _iidMgr2;
 
             foreach (var dev in renderDevices)
             {
                 try
                 {
-                    var rawImmObj = devInterfaceField?.GetValue(dev);
+                    var rawImmObj = _devInterfaceField?.GetValue(dev);
                     if (rawImmObj is not IMMDeviceNative imm) continue;
 
                     if (imm.Activate(ref iidMgr2, 23 /* CLSCTX_ALL */, IntPtr.Zero, out IntPtr pMgr2) != 0 || pMgr2 == IntPtr.Zero)
@@ -478,15 +480,23 @@ public static class WindowsAppAudioRouter
                                 if (pid == 0) continue; // system sound session
                                 if (results.ContainsKey(pid)) continue;
 
-                                string procName = "";
-                                string windowTitle = "";
-                                try
+                                if (!_procCache.TryGetValue(pid, out var cachedInfo))
                                 {
-                                    using var p = Process.GetProcessById((int)pid);
-                                    procName = p.ProcessName;
-                                    windowTitle = p.MainWindowTitle;
+                                    try
+                                    {
+                                        using var p = Process.GetProcessById((int)pid);
+                                        cachedInfo = (p.ProcessName, p.MainWindowTitle);
+                                        _procCache[pid] = cachedInfo;
+                                    }
+                                    catch
+                                    {
+                                        cachedInfo = ($"App (PID {pid})", "");
+                                        _procCache[pid] = cachedInfo;
+                                    }
                                 }
-                                catch { procName = $"App (PID {pid})"; }
+
+                                string procName = cachedInfo.Name;
+                                string windowTitle = cachedInfo.Title;
 
                                 // Skip our own background & app processes
                                 if (procName.Equals("NextXLR", StringComparison.OrdinalIgnoreCase) ||
