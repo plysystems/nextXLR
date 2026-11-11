@@ -306,7 +306,43 @@ public sealed partial class SettingsPage : Page
             // Check official GitHub Releases
             if (!string.IsNullOrEmpty(latestReleaseTag))
             {
-                if (IsNewerRelease(latestReleaseTag, currentVer))
+                bool isNewerRelease = IsNewerRelease(latestReleaseTag, currentVer);
+                bool hasNewerCommit = false;
+                string? remoteCommitSha = null;
+                string? remoteCommitMsg = null;
+
+                if (!isNewerRelease)
+                {
+                    try
+                    {
+                        var commitsUrl = "https://api.github.com/repos/plysystems/nextXLR/commits/main";
+                        var commitResp = await client.GetAsync(commitsUrl);
+                        if (commitResp.IsSuccessStatusCode)
+                        {
+                            var cJson = await commitResp.Content.ReadAsStringAsync();
+                            using var cDoc = System.Text.Json.JsonDocument.Parse(cJson);
+                            if (cDoc.RootElement.TryGetProperty("sha", out var sElem))
+                            {
+                                remoteCommitSha = sElem.GetString();
+                                if (!string.IsNullOrEmpty(remoteCommitSha) &&
+                                    !remoteCommitSha.StartsWith(localHash, StringComparison.OrdinalIgnoreCase) &&
+                                    !remoteCommitSha.Equals(AppSettings.FullBuildCommitHash, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    hasNewerCommit = true;
+                                    if (cDoc.RootElement.TryGetProperty("commit", out var cmElem) &&
+                                        cmElem.TryGetProperty("message", out var mElem))
+                                    {
+                                        var msg = mElem.GetString() ?? "";
+                                        remoteCommitMsg = msg.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? msg;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                if (isNewerRelease || hasNewerCommit)
                 {
                     var targetTag = latestReleaseTag;
                     if (string.IsNullOrEmpty(exeDownloadUrl))
@@ -316,10 +352,12 @@ public sealed partial class SettingsPage : Page
                     }
 
                     UpdateResult.Severity = InfoBarSeverity.Success;
-                    UpdateResult.Title = $"Neues Update verfügbar: {latestReleaseTag}";
-                    UpdateResult.Message = $"Version {latestReleaseTag} ({latestReleaseName ?? "Release"}) steht auf GitHub bereit.\n" +
-                        $"• Installierte Version: v{AppSettings.AppVersion}\n\n" +
-                        $"Klicke unten, um das Update im Hintergrund herunterzuladen und automatisch zu installieren.";
+                    UpdateResult.Title = isNewerRelease
+                        ? $"Neues Update verfügbar: {latestReleaseTag}"
+                        : $"Neuer Build verfügbar: {latestReleaseTag} ({remoteCommitSha?[..Math.Min(7, remoteCommitSha.Length)]})";
+                    UpdateResult.Message = isNewerRelease
+                        ? $"Version {latestReleaseTag} ({latestReleaseName ?? "Release"}) steht auf GitHub bereit.\n• Installierte Version: v{AppSettings.AppVersion}\n\nKlicke unten, um das Update im Hintergrund herunterzuladen und automatisch zu installieren."
+                        : $"Ein aktualisierter Build für Version {latestReleaseTag} steht auf GitHub bereit ({remoteCommitMsg}).\n• Installiert: Build {localHash}\n• GitHub: Build {remoteCommitSha?[..Math.Min(7, remoteCommitSha.Length)]}\n\nKlicke unten, um den neuesten Stand zu laden.";
 
                     var btnAuto = new Button
                     {
@@ -339,7 +377,17 @@ public sealed partial class SettingsPage : Page
                     UpdateResult.Severity = InfoBarSeverity.Success;
                     UpdateResult.Title = "NextXLR ist auf dem neuesten Stand!";
                     UpdateResult.Message = $"Version v{AppSettings.AppVersion} (Build {localHash}) ist aktuell. Es liegen keine neueren Releases vor.";
-                    UpdateResult.ActionButton = null;
+                    var btnReinstall = new Button
+                    {
+                        Content = "Diesen Build neu installieren / reparieren",
+                    };
+                    btnReinstall.Click += async (_, _) =>
+                    {
+                        var cleanTarget = latestReleaseTag.TrimStart('v', 'V');
+                        var dlUrl = exeDownloadUrl ?? $"https://github.com/plysystems/nextXLR/releases/download/{latestReleaseTag}/NextXLR-Setup-{cleanTarget}.exe";
+                        await DownloadAndInstallUpdateAsync(dlUrl, latestReleaseTag);
+                    };
+                    UpdateResult.ActionButton = btnReinstall;
                     return;
                 }
             }
@@ -431,7 +479,7 @@ public sealed partial class SettingsPage : Page
                     UpdateProgressBar.Value = 0;
                 }
 
-                var tempExe = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "NextXLR-Setup-Update.exe");
+                var tempExe = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"NextXLR-Setup-{Guid.NewGuid():N}.exe");
 
                 await using (var contentStream = await response.Content.ReadAsStreamAsync())
                 await using (var fileStream = new System.IO.FileStream(tempExe, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None, 81920, true))
@@ -472,10 +520,11 @@ public sealed partial class SettingsPage : Page
 
                 await Task.Delay(1000);
 
+                var currentAppDir = AppContext.BaseDirectory.TrimEnd('\\', '/');
                 var psi = new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = tempExe,
-                    Arguments = $"--silent --restart --wait-pid {System.Diagnostics.Process.GetCurrentProcess().Id}",
+                    Arguments = $"--silent --restart --wait-pid {System.Diagnostics.Process.GetCurrentProcess().Id} --target \"{currentAppDir}\"",
                     UseShellExecute = true,
                 };
                 System.Diagnostics.Process.Start(psi);

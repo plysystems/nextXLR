@@ -18,6 +18,20 @@ public sealed class SilentInstallRunner
 
     public SilentInstallRunner(string? targetDir, int waitPid, bool restart)
     {
+        if (string.IsNullOrWhiteSpace(targetDir))
+        {
+            try
+            {
+                using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\NextXLR");
+                var loc = key?.GetValue("InstallLocation") as string;
+                if (!string.IsNullOrWhiteSpace(loc) && Directory.Exists(loc))
+                {
+                    targetDir = loc;
+                }
+            }
+            catch { }
+        }
+
         _targetDir = !string.IsNullOrWhiteSpace(targetDir)
             ? targetDir
             : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "NextXLR");
@@ -137,7 +151,7 @@ public sealed class SilentInstallRunner
 
                 using var uninstKey = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\NextXLR");
                 uninstKey.SetValue("DisplayName", "NEXT : XLR");
-                uninstKey.SetValue("DisplayVersion", "0.1.7-alpha");
+                uninstKey.SetValue("DisplayVersion", "0.1.8-alpha");
                 uninstKey.SetValue("Publisher", "plysystems");
                 uninstKey.SetValue("UninstallString", $"\"{uninstExe}\" --uninstall");
                 uninstKey.SetValue("QuietUninstallString", $"\"{uninstExe}\" --uninstall --quiet");

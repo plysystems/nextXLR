@@ -180,8 +180,8 @@ public partial class MixerPage : Page
     private static double RowWidth(int n, double strip) => n * strip + Math.Max(0, n - 1) * Gap;
 
     /// <summary>
-    /// Professional studio mixing console: Inputs, Master Controls, and Outputs always side-by-side.
-    /// Strips maintain ergonomic channel widths with harmonious centering on large/fullscreen displays.
+    /// Professional studio mixing console: Inputs, Master Controls, and Outputs always side-by-side in Fullwidth-Layout.
+    /// Channel strips dynamically expand to fill the console bays with intelligent clamping to prevent distortion.
     /// </summary>
     private void Layout()
     {
@@ -192,25 +192,31 @@ public partial class MixerPage : Page
         if (w <= 0) return;
 
         double minStrip = ViewModel.ActiveMixIndex == 2 ? 104 : MinStrip;
-        double maxStrip = ViewModel.ActiveMixIndex == 2 ? 120 : 100;
+        double maxStrip = ViewModel.ActiveMixIndex == 2 ? 160 : 136;
         double chrome = MidWidth + 48; // Controls + Dividers + margins
 
-        double availableForStrips = w - chrome - Math.Max(0, nIn - 1) * Gap - Math.Max(0, nOut - 1) * Gap;
-        double targetStrip = Math.Max(minStrip, availableForStrips / (nIn + nOut));
+        double availableForStrips = Math.Max(0, w - chrome);
+        double targetStrip = availableForStrips / (nIn + nOut);
         targetStrip = Math.Clamp(targetStrip, minStrip, maxStrip);
 
-        double totalDeskWidth = RowWidth(nIn, targetStrip) + chrome + RowWidth(nOut, targetStrip);
-        Sections.MinWidth = totalDeskWidth;
-        Sections.HorizontalAlignment = HorizontalAlignment.Center;
+        double minDeskWidth = RowWidth(nIn, minStrip) + chrome + RowWidth(nOut, minStrip);
+        Sections.MinWidth = minDeskWidth;
+        Sections.HorizontalAlignment = HorizontalAlignment.Stretch;
 
-        InCol.Width = new GridLength(RowWidth(nIn, targetStrip));
+        // Proportional Fullwidth-Layout: Inputs and Outputs stretch to fill 100% of available screen width
+        InCol.Width = new GridLength(nIn, GridUnitType.Star);
         MidCol.Width = GridLength.Auto;
-        OutCol.Width = new GridLength(RowWidth(nOut, targetStrip));
+        OutCol.Width = new GridLength(nOut, GridUnitType.Star);
 
         InLayout.MinItemWidth = targetStrip;
         OutLayout.MinItemWidth = targetStrip;
-        InLayout.ItemsStretch = UniformGridLayoutItemsStretch.None;
-        OutLayout.ItemsStretch = UniformGridLayoutItemsStretch.None;
+
+        // When channels are present, fill bay; when only 1-2 placeholder channels, keep neat fixed width
+        InLayout.ItemsStretch = nIn > 2 ? UniformGridLayoutItemsStretch.Fill : UniformGridLayoutItemsStretch.None;
+        OutLayout.ItemsStretch = nOut > 2 ? UniformGridLayoutItemsStretch.Fill : UniformGridLayoutItemsStretch.None;
+
+        InLayout.ItemsJustification = UniformGridLayoutItemsJustification.Start;
+        OutLayout.ItemsJustification = UniformGridLayoutItemsJustification.Start;
 
         InLayout.MaximumRowsOrColumns = nIn;
         OutLayout.MaximumRowsOrColumns = nOut;
