@@ -151,6 +151,8 @@ async fn main() -> Result<()> {
         .route("/api/bleep", get(api_bleep).post(api_bleep))
         .route("/api/mic-mute", get(api_mic_mute).post(api_mic_mute))
         .route("/api/profile", get(api_profile).post(api_profile))
+        .route("/api/page", get(api_page).post(api_page))
+        .route("/api/mix-mode", get(api_mix_mode).post(api_mix_mode))
         .route("/dev/sim/fader", post(sim_fader))
         .route("/dev/sim/mute", post(sim_mute))
         .route("/dev/sim/received", get(sim_received))
@@ -480,20 +482,59 @@ fn resolve_bus_id(
     None
 }
 
+fn get_app_settings_path() -> Option<std::path::PathBuf> {
+    std::env::var("LOCALAPPDATA")
+        .ok()
+        .map(|b| std::path::Path::new(&b).join("NextXLR").join("settings.json"))
+}
+
+fn load_app_settings() -> serde_json::Value {
+    if let Some(p) = get_app_settings_path() {
+        if let Ok(text) = std::fs::read_to_string(p) {
+            if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text) {
+                return val;
+            }
+        }
+    }
+    serde_json::json!({})
+}
+
+fn save_active_page_to_settings(page: u8) {
+    if let Some(p) = get_app_settings_path() {
+        let mut val = load_app_settings();
+        if let Some(obj) = val.as_object_mut() {
+            obj.insert("ActiveMixerPage".to_string(), serde_json::json!(page));
+            let _ = std::fs::write(&p, serde_json::to_string_pretty(&val).unwrap_or_default());
+        }
+    }
+}
+
 async fn api_status(State(app): State<AppState>) -> impl IntoResponse {
     let (tx, rx) = oneshot::channel();
     let _ = app.hub.send(HubMsg::Client {
         msg: ClientMessage::GetState,
         reply: tx,
     });
+    let settings = load_app_settings();
+    let current_page = settings
+        .get("ActiveMixerPage")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(1) as u8;
+
     match rx.await {
         Ok(replies) => {
             for r in replies {
                 if let ServerMessage::State(state) = r {
-                    return axum::Json(json!({ "ok": true, "state": state }));
+                    let submix = state.fader_target_submix;
+                    return axum::Json(json!({
+                        "ok": true,
+                        "state": state,
+                        "active_page": current_page,
+                        "fader_target_submix": submix
+                    }));
                 }
             }
-            axum::Json(json!({ "ok": true }))
+            axum::Json(json!({ "ok": true, "active_page": current_page }))
         }
         Err(e) => axum::Json(json!({ "ok": false, "error": e.to_string() })),
     }
@@ -740,6 +781,128 @@ async fn api_profile(
     let _ = rx.await;
 
     axum::Json(json!({ "ok": true, "profile": q.name }))
+}
+
+#[derive(serde::Deserialize)]
+struct ApiPageQuery {
+    page: Option<u8>,
+    action: Option<String>,
+}
+
+async fn api_page(
+    State(app): State<AppState>,
+    Query(q): Query<ApiPageQuery>,
+) -> impl IntoResponse {
+    let settings = load_app_settings();
+    let current_page = settings
+        .get("ActiveMixerPage")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(1) as u8;
+
+    let target_page = if q.action.as_deref() == Some("toggle") {
+        if current_page == 1 { 2 } else { 1 }
+    } else if let Some(p) = q.page {
+        if p == 2 { 2 } else { 1 }
+    } else if q.action.is_none() {
+        return axum::Json(json!({
+            "ok": true,
+            "page": current_page,
+            "page_name": format!("Seite {}", current_page)
+        }));
+    } else {
+        1
+    };
+
+    let default_p1 = [0u32, 1, 2, 4];
+    let default_p2 = [3u32, 7, 6, 5];
+    let target_channels = if target_page == 1 {
+        settings
+            .get("MixerPage1Channels")
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|x| x.as_u64().map(|n| n as u32))
+                    .collect::<Vec<_>>()
+            })
+            .filter(|v| v.len() == 4)
+            .unwrap_or_else(|| default_p1.to_vec())
+    } else {
+        settings
+            .get("MixerPage2Channels")
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|x| x.as_u64().map(|n| n as u32))
+                    .collect::<Vec<_>>()
+            })
+            .filter(|v| v.len() == 4)
+            .unwrap_or_else(|| default_p2.to_vec())
+    };
+
+    let letters = ["A", "B", "C", "D"];
+    for (i, &ch) in target_channels.iter().take(4).enumerate() {
+        let (tx, rx) = oneshot::channel();
+        let _ = app.hub.send(HubMsg::Client {
+            msg: ClientMessage::AssignFader {
+                fader: letters[i].to_string(),
+                channel: mixforge_protocol::ChannelId(ch),
+            },
+            reply: tx,
+        });
+        let _ = rx.await;
+    }
+
+    save_active_page_to_settings(target_page);
+
+    axum::Json(json!({
+        "ok": true,
+        "page": target_page,
+        "page_name": format!("Seite {}", target_page)
+    }))
+}
+
+#[derive(serde::Deserialize)]
+struct ApiMixModeQuery {
+    target: Option<String>,
+    action: Option<String>,
+}
+
+async fn api_mix_mode(
+    State(app): State<AppState>,
+    Query(q): Query<ApiMixModeQuery>,
+) -> impl IntoResponse {
+    let state = get_current_mixer_state(&app).await;
+    let current_submix = state.as_ref().map(|s| s.fader_target_submix).unwrap_or(true);
+
+    let target_submix = if q.action.as_deref() == Some("toggle") {
+        !current_submix
+    } else if let Some(ref t) = q.target {
+        let lower = t.to_lowercase();
+        lower.contains("phone") || lower.contains("kopf") || lower == "0"
+    } else if q.action.is_none() {
+        return axum::Json(json!({
+            "ok": true,
+            "submix": current_submix,
+            "target": if current_submix { "phones" } else { "stream" },
+            "target_name": if current_submix { "Kopfhörer" } else { "Stream" }
+        }));
+    } else {
+        !current_submix
+    };
+
+    let (tx, rx) = oneshot::channel();
+    let _ = app.hub.send(HubMsg::Client {
+        msg: ClientMessage::SetFaderTargetSubmix { submix: target_submix },
+        reply: tx,
+    });
+    let _ = rx.await;
+
+    axum::Json(json!({
+        "ok": true,
+        "submix": target_submix,
+        "target": if target_submix { "phones" } else { "stream" },
+        "target_name": if target_submix { "Kopfhörer" } else { "Stream" }
+    }))
 }
 
 async fn cors_middleware(

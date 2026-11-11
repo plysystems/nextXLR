@@ -14,7 +14,7 @@
     }
   ],
   "Software": {
-    "MinimumVersion": "6.0"
+    "MinimumVersion": "6.5"
   },
   "CodePath": "index.html",
   "Category": "NEXT : XLR",
@@ -44,6 +44,66 @@
           "Touch": "Auf 100% setzen"
         }
       }
+    },
+    {
+      "Icon": "assets/pageAction",
+      "Name": "Mixer Seite (Bank 1/2)",
+      "Tooltip": "Wechselt zwischen Fader-Bank 1 und 2 für GoXLR Hardware-Fader A–D",
+      "UUID": "com.plysystems.nextxlr.page",
+      "PropertyInspectorPath": "pi/page.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "assets/pageAction",
+          "TitleAlignment": "bottom"
+        },
+        {
+          "Image": "assets/pageAction",
+          "TitleAlignment": "bottom"
+        }
+      ]
+    },
+    {
+      "Icon": "assets/faderMuteAction",
+      "Name": "Fader A–D Mute",
+      "Tooltip": "Schaltet den aktuellen Kanal auf GoXLR Hardware-Fader A, B, C oder D stumm",
+      "UUID": "com.plysystems.nextxlr.fadermute",
+      "PropertyInspectorPath": "pi/fadermute.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "assets/faderMuteAction",
+          "TitleAlignment": "bottom"
+        },
+        {
+          "Image": "assets/faderMuteAction",
+          "TitleAlignment": "bottom"
+        }
+      ]
+    },
+    {
+      "Icon": "assets/mixModeAction",
+      "Name": "Mix-Modus (Kopfhörer/Stream)",
+      "Tooltip": "Wählt, ob die Hardware-Fader Kopfhörer oder Stream steuern",
+      "UUID": "com.plysystems.nextxlr.mixmode",
+      "PropertyInspectorPath": "pi/mixmode.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "assets/mixModeAction",
+          "TitleAlignment": "bottom"
+        },
+        {
+          "Image": "assets/mixModeAction",
+          "TitleAlignment": "bottom"
+        }
+      ]
     },
     {
       "Icon": "assets/muteOff",

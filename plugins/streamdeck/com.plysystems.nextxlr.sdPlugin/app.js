@@ -51,6 +51,12 @@ async function refreshEngineState() {
     const res = await callEngineApi("/api/status");
     if (res && res.ok && res.state) {
         lastMixerState = res.state;
+        if (res.active_page !== undefined) {
+            lastMixerState.active_page = res.active_page;
+        }
+        if (res.fader_target_submix !== undefined) {
+            lastMixerState.fader_target_submix = res.fader_target_submix;
+        }
         isEngineOnline = true;
         updateAllActiveContexts();
     } else {
@@ -205,6 +211,41 @@ async function handleKeyDown(context, action, settings) {
             break;
         }
 
+        case "com.plysystems.nextxlr.page": {
+            const mode = settings.mode || "toggle";
+            let res;
+            if (mode === "toggle") {
+                res = await callEngineApi("/api/page", { action: "toggle" });
+            } else {
+                res = await callEngineApi("/api/page", { page: parseInt(mode, 10) });
+            }
+            if (res && res.ok) showOk(context); else showAlert(context);
+            await refreshEngineState();
+            break;
+        }
+
+        case "com.plysystems.nextxlr.fadermute": {
+            const fader = (settings.fader || "A").toUpperCase();
+            const mode = settings.mode || "toggle";
+            const res = await callEngineApi("/api/mute", { channel: fader, action: mode });
+            if (res && res.ok) showOk(context); else showAlert(context);
+            await refreshEngineState();
+            break;
+        }
+
+        case "com.plysystems.nextxlr.mixmode": {
+            const target = settings.target || "toggle";
+            let res;
+            if (target === "toggle") {
+                res = await callEngineApi("/api/mix-mode", { action: "toggle" });
+            } else {
+                res = await callEngineApi("/api/mix-mode", { target });
+            }
+            if (res && res.ok) showOk(context); else showAlert(context);
+            await refreshEngineState();
+            break;
+        }
+
         case "com.plysystems.nextxlr.mute": {
             const mode = settings.mode || "toggle";
             const res = await callEngineApi("/api/mute", { channel, action: mode });
@@ -230,7 +271,7 @@ async function handleKeyDown(context, action, settings) {
         case "com.plysystems.nextxlr.bleep": {
             const mode = settings.mode || "hold";
             if (mode === "toggle") {
-                const isBleeping = lastMixerState && lastMixerState.bleep_active;
+                const isBleeping = lastMixerState ? (lastMixerState.bleep || lastMixerState.bleep_active) : false;
                 await callEngineApi("/api/bleep", { active: !isBleeping });
             } else {
                 await callEngineApi("/api/bleep", { active: true });
@@ -349,16 +390,43 @@ function updateContextDisplay(context, action, settings) {
             break;
         }
 
+        case "com.plysystems.nextxlr.fadermute": {
+            const faderLetter = (settings.fader || "A").toUpperCase();
+            const ch = findChannelInState(faderLetter);
+            if (ch) {
+                setState(context, ch.muted ? 1 : 0);
+                setTitle(context, `FADER ${faderLetter}\n${ch.name}\n${ch.muted ? "MUTED" : "ON"}`);
+            } else {
+                setTitle(context, `FADER ${faderLetter}\n--`);
+            }
+            break;
+        }
+
+        case "com.plysystems.nextxlr.page": {
+            const curPage = (lastMixerState && lastMixerState.active_page) || 1;
+            setState(context, curPage === 2 ? 1 : 0);
+            setTitle(context, `MIXER\nSEITE ${curPage}`);
+            break;
+        }
+
+        case "com.plysystems.nextxlr.mixmode": {
+            const isSubmix = (lastMixerState && lastMixerState.fader_target_submix !== undefined) ? lastMixerState.fader_target_submix : true;
+            setState(context, isSubmix ? 0 : 1);
+            setTitle(context, `MIX\n${isSubmix ? "KOPFHÖRER" : "STREAM"}`);
+            break;
+        }
+
         case "com.plysystems.nextxlr.micmute": {
-            const mic = findChannelInState("mic");
-            const isMuted = mic ? mic.muted : false;
+            const isMuted = (lastMixerState.mic_muted !== undefined)
+                ? lastMixerState.mic_muted
+                : (findChannelInState("mic") ? findChannelInState("mic").muted : false);
             setState(context, isMuted ? 1 : 0);
             setTitle(context, isMuted ? "MIC\nMUTED" : "MIC\nLIVE");
             break;
         }
 
         case "com.plysystems.nextxlr.bleep": {
-            const isBleep = lastMixerState.bleep_active || false;
+            const isBleep = (lastMixerState.bleep !== undefined) ? lastMixerState.bleep : (lastMixerState.bleep_active || false);
             setState(context, isBleep ? 1 : 0);
             setTitle(context, isBleep ? "BLEEP\nAKTIV" : "ZENSUR\nBLEEP");
             break;

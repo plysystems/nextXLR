@@ -378,6 +378,7 @@ impl Hub {
             ClientMessage::SetSubmixMute { channel, muted } => Change::SubmixMute(channel, muted),
             ClientMessage::SetFaderTargetSubmix { submix } => {
                 self.fader_target_submix = submix;
+                self.engine.set_fader_target_submix(submix);
                 for slot in &mut self.faders {
                     slot.picked_up = false;
                 }

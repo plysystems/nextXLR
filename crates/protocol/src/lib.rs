@@ -207,6 +207,8 @@ pub struct MixerState {
     pub mic: MicSettings,
     #[serde(default)]
     pub vst_plugins: Vec<VstPluginSlot>,
+    #[serde(default)]
+    pub fader_target_submix: bool,
 }
 
 /// One effect preset (GoXLR buttons 1–6). Knob positions as on the device:

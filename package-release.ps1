@@ -80,22 +80,36 @@ Copy-Item $sdPluginSrc (Join-Path $sdPluginDstDir "com.plysystems.nextxlr.sdPlug
 $sdPluginOut = Join-Path $distDir "com.plysystems.nextxlr.streamDeckPlugin"
 if (Test-Path $sdPluginOut) { Remove-Item $sdPluginOut -Force }
 
-Add-Type -AssemblyName System.IO.Compression
-$zipStream = [System.IO.File]::Create($sdPluginOut)
-$archive = New-Object System.IO.Compression.ZipArchive($zipStream, [System.IO.Compression.ZipArchiveMode]::Create)
-$files = Get-ChildItem -Path $sdPluginSrc -Recurse -File
-foreach ($file in $files) {
-    $relPath = $file.FullName.Substring($sdPluginSrc.Length).TrimStart('\', '/')
-    $entryName = "com.plysystems.nextxlr.sdPlugin/" + ($relPath -replace '\\', '/')
-    $entry = $archive.CreateEntry($entryName, [System.IO.Compression.CompressionLevel]::Optimal)
-    $entryStream = $entry.Open()
-    $fileStream = [System.IO.File]::OpenRead($file.FullName)
-    $fileStream.CopyTo($entryStream)
-    $fileStream.Dispose()
-    $entryStream.Dispose()
+$packed = $false
+try {
+    Write-Host "Packaging with official Elgato CLI..."
+    cmd /c "npx -y @elgato/cli pack `"$sdPluginSrc`" -o `"$distDir`" -f"
+    if (Test-Path $sdPluginOut) {
+        $packed = $true
+        Write-Host "Stream Deck plugin packaged with official Elgato CLI."
+    }
+} catch {
+    Write-Warning "Elgato CLI pack failed, falling back to internal packager: $_"
 }
-$archive.Dispose()
-$zipStream.Dispose()
+
+if (-not $packed) {
+    Add-Type -AssemblyName System.IO.Compression
+    $zipStream = [System.IO.File]::Create($sdPluginOut)
+    $archive = New-Object System.IO.Compression.ZipArchive($zipStream, [System.IO.Compression.ZipArchiveMode]::Create)
+    $files = Get-ChildItem -Path $sdPluginSrc -Recurse -File
+    foreach ($file in $files) {
+        $relPath = $file.FullName.Substring($sdPluginSrc.Length).TrimStart('\', '/')
+        $entryName = "com.plysystems.nextxlr.sdPlugin/" + ($relPath -replace '\\', '/')
+        $entry = $archive.CreateEntry($entryName, [System.IO.Compression.CompressionLevel]::Optimal)
+        $entryStream = $entry.Open()
+        $fileStream = [System.IO.File]::OpenRead($file.FullName)
+        $fileStream.CopyTo($entryStream)
+        $fileStream.Dispose()
+        $entryStream.Dispose()
+    }
+    $archive.Dispose()
+    $zipStream.Dispose()
+}
 
 Copy-Item $sdPluginOut (Join-Path $sdPluginDstDir "com.plysystems.nextxlr.streamDeckPlugin") -Force
 Copy-Item $sdPluginOut (Join-Path $releaseDir "com.plysystems.nextxlr.streamDeckPlugin") -Force

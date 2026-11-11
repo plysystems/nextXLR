@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>NEXT : XLR — Mixer Seitenwechsel</title>
+    <link rel="stylesheet" href="pi.css" />
+</head>
+<body>
+    <div class="sdpi-wrapper">
+        <div class="badge">NEXT : XLR FADER-BÄNKE</div>
+
+        <div class="sdpi-item">
+            <div class="sdpi-item-label">Aktion:</div>
+            <div class="sdpi-item-value">
+                <select id="mode">
+                    <option value="toggle">Seite umschalten (Toggle)</option>
+                    <option value="1">Seite 1 aktivieren</option>
+                    <option value="2">Seite 2 aktivieren</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="sdpi-item">
+            <div class="sdpi-item-label">Info:</div>
+            <div class="sdpi-item-value" style="font-size: 11px; color: #8B93A3; padding: 4px 0;">
+                Schaltet die GoXLR Hardware-Fader A–D zwischen Fader-Bank 1 und 2 um.
+            </div>
+        </div>
+    </div>
+
+    <script src="pi.js"></script>
+    <script>
+        function initUI() {
+            document.getElementById("mode").value = settings.mode || "toggle";
+            document.getElementById("mode").onchange = onChange;
+        }
+
+        function onChange() {
+            settings.mode = document.getElementById("mode").value;
+            saveSettings();
+        }
+    </script>
+</body>
+</html>

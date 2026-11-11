@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>NEXT : XLR — Mix-Modus</title>
+    <link rel="stylesheet" href="pi.css" />
+</head>
+<body>
+    <div class="sdpi-wrapper">
+        <div class="badge">NEXT : XLR MIX-AUSWAHL</div>
+
+        <div class="sdpi-item">
+            <div class="sdpi-item-label">Ziel-Mix:</div>
+            <div class="sdpi-item-value">
+                <select id="target">
+                    <option value="toggle">Umschalten (Kopfhörer ↔ Stream)</option>
+                    <option value="phones">Kopfhörer-Mix aktivieren</option>
+                    <option value="stream">Stream-Mix aktivieren</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="sdpi-item">
+            <div class="sdpi-item-label">Info:</div>
+            <div class="sdpi-item-value" style="font-size: 11px; color: #8B93A3; padding: 4px 0;">
+                Bestimmt, welchen Mix (Kopfhörer oder Broadcast Stream Mix) die Hardware-Fader steuern.
+            </div>
+        </div>
+    </div>
+
+    <script src="pi.js"></script>
+    <script>
+        function initUI() {
+            document.getElementById("target").value = settings.target || "toggle";
+            document.getElementById("target").onchange = onChange;
+        }
+
+        function onChange() {
+            settings.target = document.getElementById("target").value;
+            saveSettings();
+        }
+    </script>
+</body>
+</html>

@@ -257,6 +257,10 @@ impl Engine {
         Ok(())
     }
 
+    pub fn set_fader_target_submix(&mut self, submix: bool) {
+        self.state.fader_target_submix = submix;
+    }
+
     /// The current setup as a portable profile.
     pub fn profile(&self) -> Profile {
         Profile {
@@ -685,5 +689,6 @@ fn default_state() -> MixerState {
         channels, buses, routes, hardware: Vec::new(), lighting, faders,
         bleep: false, mic_muted: false, effects, mic: MicSettings::default(),
         vst_plugins: Vec::new(),
+        fader_target_submix: true,
     }
 }
