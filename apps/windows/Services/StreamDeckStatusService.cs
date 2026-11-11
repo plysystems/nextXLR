@@ -47,7 +47,7 @@ public partial class StreamDeckStatusService : ObservableObject
         if (_pollTimer == null)
         {
             _pollTimer = _uiQueue.CreateTimer();
-            _pollTimer.Interval = TimeSpan.FromSeconds(2.5);
+            _pollTimer.Interval = TimeSpan.FromSeconds(5.0);
             _pollTimer.Tick += async (_, _) => await CheckStatusAsync();
         }
         _pollTimer.Start();
@@ -72,6 +72,10 @@ public partial class StreamDeckStatusService : ObservableObject
             {
                 var procs = Process.GetProcessesByName("StreamDeck");
                 appRunning = procs.Length > 0;
+                foreach (var p in procs)
+                {
+                    try { p.Dispose(); } catch { }
+                }
             }
             catch { }
 
@@ -88,6 +92,8 @@ public partial class StreamDeckStatusService : ObservableObject
             {
                 _uiQueue.TryEnqueue(() =>
                 {
+                    if (IsApiOnline == apiOnline && IsAppRunning == appRunning) return;
+
                     IsApiOnline = apiOnline;
                     IsAppRunning = appRunning;
 

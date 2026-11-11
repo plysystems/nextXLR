@@ -238,12 +238,16 @@ public sealed partial class Fader : UserControl
 
         if (level <= 0.001)
         {
-            MeterGradient.Opacity = 0.0;
-            MeterMask.Height = h + 10;
+            if (MeterGradient.Opacity != 0.0) MeterGradient.Opacity = 0.0;
+            var targetH = h + 10;
+            if (double.IsNaN(MeterMask.Height) || Math.Abs(MeterMask.Height - targetH) >= 0.2)
+            {
+                MeterMask.Height = targetH;
+            }
         }
         else
         {
-            MeterGradient.Opacity = 1.0;
+            if (MeterGradient.Opacity != 1.0) MeterGradient.Opacity = 1.0;
             var maskH = (1 - level) * h;
             if (double.IsNaN(MeterMask.Height) || Math.Abs(MeterMask.Height - maskH) >= 0.2)
             {
@@ -258,11 +262,11 @@ public sealed partial class Fader : UserControl
             {
                 MeterHoldOffset.Y = holdY;
             }
-            MeterHold.Opacity = 0.9;
+            if (MeterHold.Opacity != 0.9) MeterHold.Opacity = 0.9;
         }
         else
         {
-            MeterHold.Opacity = 0.0;
+            if (MeterHold.Opacity != 0.0) MeterHold.Opacity = 0.0;
         }
     }
 

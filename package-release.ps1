@@ -1,8 +1,9 @@
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 $root = $PSScriptRoot
+Set-Location $root
 $distDir = Join-Path $root "dist"
-$version = "0.1.8.8-alpha"
+$version = "0.1.8.9-alpha"
 $releaseDir = Join-Path $distDir "NextXLR-v$version"
 $appDir = Join-Path $releaseDir "app"
 $gitSha = try { (git rev-parse HEAD).Trim() } catch { "release" }

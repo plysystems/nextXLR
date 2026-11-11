@@ -99,7 +99,6 @@ public partial class MixerPage : Page
 
     private void InputsRepeater_ElementPrepared(ItemsRepeater sender, ItemsRepeaterElementPreparedEventArgs args)
     {
-        Services.CrashHandler.LogStartup($"InputsRepeater_ElementPrepared [{args.Index}] Element: {args.Element?.GetType().FullName}");
         if (args.Element is ChannelStrip strip && ViewModel?.InputStrips != null && args.Index < ViewModel.InputStrips.Count)
         {
             strip.SetViewModel(ViewModel.InputStrips[args.Index]);
@@ -108,7 +107,6 @@ public partial class MixerPage : Page
 
     private void OutputsRepeater_ElementPrepared(ItemsRepeater sender, ItemsRepeaterElementPreparedEventArgs args)
     {
-        Services.CrashHandler.LogStartup($"OutputsRepeater_ElementPrepared [{args.Index}] Element: {args.Element?.GetType().FullName}");
         if (args.Element is ChannelStrip strip && ViewModel?.OutputStrips != null && args.Index < ViewModel.OutputStrips.Count)
         {
             strip.SetViewModel(ViewModel.OutputStrips[args.Index]);

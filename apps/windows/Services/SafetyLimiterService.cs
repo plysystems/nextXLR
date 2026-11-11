@@ -60,15 +60,26 @@ public sealed partial class SafetyLimiterService : ObservableObject
     {
         if (streamPeakLinear <= 0.0001)
         {
+            if (CurrentLufs == -48.0 && CurrentTruePeak == -48.0 && LimiterReductionDb == 0.0) return;
             CurrentLufs = -48.0;
             CurrentTruePeak = -48.0;
             LimiterReductionDb = 0.0;
+            OnPropertyChanged(nameof(LufsDisplay));
+            OnPropertyChanged(nameof(TruePeakDisplay));
             return;
         }
 
         double peakDb = 20.0 * Math.Log10(streamPeakLinear);
-        CurrentTruePeak = Math.Min(TruePeakCeilingDb, peakDb);
-        CurrentLufs = Math.Round(peakDb - 3.2, 1);
+        double truePeak = Math.Min(TruePeakCeilingDb, peakDb);
+        double lufs = Math.Round(peakDb - 3.2, 1);
+
+        if (Math.Abs(truePeak - CurrentTruePeak) < 0.2 && Math.Abs(lufs - CurrentLufs) < 0.2)
+        {
+            return;
+        }
+
+        CurrentTruePeak = truePeak;
+        CurrentLufs = lufs;
 
         if (BroadcastLimiterEnabled && peakDb > TruePeakCeilingDb)
         {

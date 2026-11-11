@@ -16,6 +16,7 @@ public partial class MainViewModel : ObservableObject
     private readonly DispatcherQueue _ui;
     private readonly PipeTransport _transport;
     private readonly MeterAnimator _meterAnimator;
+    private readonly ChannelViewModel?[] _channelLookup = new ChannelViewModel?[32];
 
     public static MainViewModel? Instance { get; private set; }
     public static bool HasPendingChanges { get; set; }
@@ -247,7 +248,7 @@ public partial class MainViewModel : ObservableObject
         Mic = new MicSettingsViewModel(transport);
         VstPluginService.ActiveMicViewModel = Mic;
         Sampler = new SamplerViewModel(transport, ui);
-        _transport.MessageReceived += m => _ui.TryEnqueue(() => Handle(m));
+        _transport.MessageReceived += OnTransportMessage;
         _transport.StateChanged += s => _ui.TryEnqueue(() => OnConnection(s));
 
         try
@@ -328,6 +329,36 @@ public partial class MainViewModel : ObservableObject
         else { Hardware.Apply(null); }
     }
 
+    private void OnTransportMessage(ServerMessage m)
+    {
+        if (m is MetersMessage meters)
+        {
+            HandleMetersFast(meters);
+        }
+        else
+        {
+            _ui.TryEnqueue(() => Handle(m));
+        }
+    }
+
+    private void HandleMetersFast(MetersMessage m)
+    {
+        if (!_meterAnimator.IsActive) return;
+
+        var levels = m.Levels;
+        var count = levels.Count;
+        for (int i = 0; i < count; i++)
+        {
+            var l = levels[i];
+            var ch = (l.Channel < _channelLookup.Length) ? _channelLookup[l.Channel] : null;
+            ch?.PushPeak(l.Peak);
+            if (l.Channel == 11)
+            {
+                SafetyLimiterService.Instance.UpdateMeters(l.Peak);
+            }
+        }
+    }
+
     private void Handle(ServerMessage msg)
     {
         switch (msg)
@@ -366,15 +397,7 @@ public partial class MainViewModel : ObservableObject
                 _profileRequest?.TrySetResult(p.Profile);
                 break;
             case MetersMessage m:
-                foreach (var l in m.Levels)
-                {
-                    var ch = Find(l.Channel);
-                    ch?.PushPeak(l.Peak);
-                    if (l.Channel == 11 || (ch != null && (ch.Name == "Stream" || ch.Name == "Broadcast")))
-                    {
-                        SafetyLimiterService.Instance.UpdateMeters(l.Peak);
-                    }
-                }
+                HandleMetersFast(m);
                 break;
             case ButtonMessage b:
                 Sampler.HandleButton(b.Id, b.Pressed);
@@ -482,12 +505,22 @@ public partial class MainViewModel : ObservableObject
             _muteOnStartupApplied = true;
             try
             {
-                if (AppSettings.Load().MuteOnStartup)
+                if (AppSettings.Current.MuteOnStartup)
                 {
                     MicMuted = true;
                 }
             }
             catch { }
+        }
+
+        Array.Clear(_channelLookup, 0, _channelLookup.Length);
+        for (int i = 0; i < Channels.Count; i++)
+        {
+            var ch = Channels[i];
+            if (ch.Id < _channelLookup.Length)
+            {
+                _channelLookup[ch.Id] = ch;
+            }
         }
     }
 

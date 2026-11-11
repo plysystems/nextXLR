@@ -128,12 +128,37 @@ public sealed partial class MainWindow : Window
         {
             if (args.DidPresenterChange && AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
             {
-                var settings = AppSettings.Load();
-                if (settings.MinimizeToTray && presenter.State == Microsoft.UI.Windowing.OverlappedPresenterState.Minimized)
+                var settings = AppSettings.Current;
+                if (presenter.State == Microsoft.UI.Windowing.OverlappedPresenterState.Minimized)
                 {
                     ViewModel.SetMetersActive(false);
-                    AppWindow.Hide();
+                    StreamDeckStatusService.Instance.StopMonitoring();
+                    if (settings.MinimizeToTray)
+                    {
+                        AppWindow.Hide();
+                    }
+                    TrimMemoryWorkingSet();
                 }
+                else
+                {
+                    ViewModel.SetMetersActive(ContentFrame.CurrentSourcePageType == typeof(MixerPage));
+                    StreamDeckStatusService.Instance.StartMonitoring(DispatcherQueue);
+                }
+            }
+        };
+
+        this.VisibilityChanged += (s, e) =>
+        {
+            if (!e.Visible)
+            {
+                ViewModel.SetMetersActive(false);
+                StreamDeckStatusService.Instance.StopMonitoring();
+                TrimMemoryWorkingSet();
+            }
+            else
+            {
+                ViewModel.SetMetersActive(ContentFrame.CurrentSourcePageType == typeof(MixerPage));
+                StreamDeckStatusService.Instance.StartMonitoring(DispatcherQueue);
             }
         };
 
@@ -238,6 +263,22 @@ public sealed partial class MainWindow : Window
 
     [DllImport("user32.dll")]
     private static extern bool SetForegroundWindow(nint hWnd);
+
+    [DllImport("psapi.dll")]
+    private static extern int EmptyWorkingSet(nint hwProc);
+
+    public static void TrimMemoryWorkingSet()
+    {
+        try
+        {
+            GC.Collect(2, GCCollectionMode.Aggressive, blocking: false, compacting: true);
+            GC.WaitForPendingFinalizers();
+            GC.Collect(2, GCCollectionMode.Aggressive, blocking: false, compacting: true);
+            using var proc = Process.GetCurrentProcess();
+            EmptyWorkingSet(proc.Handle);
+        }
+        catch { }
+    }
 
     public void NavigateToPage(string tag)
     {

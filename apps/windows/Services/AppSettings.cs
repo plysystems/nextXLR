@@ -97,38 +97,53 @@ public sealed class AppSettings
                !channelName.Equals("!@#$?*", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static AppSettings? _cachedSettings;
+    private static readonly object _settingsLock = new();
+
+    public static AppSettings Current => _cachedSettings ?? Load();
+
     public static AppSettings Load()
     {
-        try
+        lock (_settingsLock)
         {
-            AppSettings settings;
-            if (File.Exists(FilePath))
+            if (_cachedSettings != null) return _cachedSettings;
+            try
             {
-                settings = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new();
+                AppSettings settings;
+                if (File.Exists(FilePath))
+                {
+                    settings = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new();
+                }
+                else
+                {
+                    settings = new();
+                }
+                settings.EnsureDistinctMixerPages();
+                _cachedSettings = settings;
+                return settings;
             }
-            else
+            catch
             {
-                settings = new();
+                var fallback = new AppSettings();
+                fallback.EnsureDistinctMixerPages();
+                _cachedSettings = fallback;
+                return fallback;
             }
-            settings.EnsureDistinctMixerPages();
-            return settings;
-        }
-        catch
-        {
-            var fallback = new AppSettings();
-            fallback.EnsureDistinctMixerPages();
-            return fallback;
         }
     }
 
     public void Save()
     {
-        try
+        lock (_settingsLock)
         {
-            Directory.CreateDirectory(Dir);
-            File.WriteAllText(FilePath, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+            _cachedSettings = this;
+            try
+            {
+                Directory.CreateDirectory(Dir);
+                File.WriteAllText(FilePath, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+            }
+            catch { /* preferences are best-effort */ }
         }
-        catch { /* preferences are best-effort */ }
     }
 
     public static string AppVersion =>

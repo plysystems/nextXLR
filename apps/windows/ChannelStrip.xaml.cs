@@ -266,9 +266,13 @@ public sealed partial class ChannelStrip : UserControl
     public string MuteGlyph(bool muted) => muted ? "\uE74F" : "\uE767";
     public string MuteText(bool muted) => Loc.Get(muted ? "MixerMuted" : "MixerMute");
     public string MuteName(string name) => Loc.Format("MixerMuteName", name);
+
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> PeakStringCache = new();
+    private static string FormatPeak(string peak) => PeakStringCache.GetOrAdd(peak, p => Loc.Format("MixerPeak", p));
+
     public string SubLabel(bool muted, string restore, bool metered, string peak, bool isFixed) =>
         isFixed ? Loc.Get("MixerMeterOnly")
-        : muted ? restore : metered ? Loc.Format("MixerPeak", peak) : Loc.Get("MixerNoMeterShort");
+        : muted ? restore : metered ? FormatPeak(peak) : Loc.Get("MixerNoMeterShort");
     public string LevelText(bool isFixed, string level, string peak) => isFixed ? peak : level;
     public Visibility HideIf(bool value) => value ? Visibility.Collapsed : Visibility.Visible;
     public Visibility ShowIfDual(bool showDual, bool isFixed, bool isOutput) => (showDual && !isFixed && !isOutput) ? Visibility.Visible : Visibility.Collapsed;

@@ -367,19 +367,22 @@ public partial class ChannelViewModel : ObservableObject
     {
         if (Muted || Volume <= 0.001)
         {
-            _targetDb = FloorDb;
+            Volatile.Write(ref _targetDb, FloorDb);
             return;
         }
         var db = peak > 0 ? 20 * Math.Log10(peak) : FloorDb;
-        if (db > _targetDb) _targetDb = db;
+        if (db > Volatile.Read(ref _targetDb))
+        {
+            Volatile.Write(ref _targetDb, db);
+        }
     }
 
     /// <summary>Called every rendered frame: instant attack, linear-in-dB release, peak hold.</summary>
     public void Tick(double dt)
     {
         if (!Metered) return;
-        var target = Math.Max(_targetDb, FloorDb);
-        _targetDb = FloorDb;
+        var target = Math.Max(Volatile.Read(ref _targetDb), FloorDb);
+        Volatile.Write(ref _targetDb, FloorDb);
 
         // Fast path: idle/silent channel avoids continuous floating point work & allocations
         if (target <= FloorDb && _displayDb <= FloorDb && _holdDb <= FloorDb)
