@@ -151,7 +151,7 @@ public sealed class SilentInstallRunner
 
                 using var uninstKey = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\NextXLR");
                 uninstKey.SetValue("DisplayName", "NEXT : XLR");
-                uninstKey.SetValue("DisplayVersion", "0.1.8.1-alpha");
+                uninstKey.SetValue("DisplayVersion", "0.1.8.2-alpha");
                 uninstKey.SetValue("Publisher", "plysystems");
                 uninstKey.SetValue("UninstallString", $"\"{uninstExe}\" --uninstall");
                 uninstKey.SetValue("QuietUninstallString", $"\"{uninstExe}\" --uninstall --quiet");

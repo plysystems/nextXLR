@@ -96,7 +96,7 @@ public partial class MainViewModel : ObservableObject
         IsSubmixActive = targetSubmix;
         foreach (var ch in Channels)
         {
-            ch.ShowDualMix = showDual;
+            ch.ShowDualMix = showDual && !ch.IsOutput;
             ch.IsSubmixActive = targetSubmix;
             ch.DualFaderIsKopfhoerer = (DualFaderTarget == 0);
         }
@@ -456,7 +456,7 @@ public partial class MainViewModel : ObservableObject
             if (Find(c.Id) is { } vm)
             {
                 vm.IsSubmixActive = IsSubmixActive;
-                vm.ShowDualMix = (ActiveMixIndex == 2);
+                vm.ShowDualMix = (ActiveMixIndex == 2) && !vm.IsOutput;
                 vm.DualFaderIsKopfhoerer = (DualFaderTarget == 0);
                 vm.ApplyFromServer(c);
             }
@@ -465,7 +465,7 @@ public partial class MainViewModel : ObservableObject
                 var newVm = new ChannelViewModel(c, _transport)
                 {
                     IsSubmixActive = IsSubmixActive,
-                    ShowDualMix = (ActiveMixIndex == 2),
+                    ShowDualMix = (ActiveMixIndex == 2) && (c.Kind != "output"),
                     DualFaderIsKopfhoerer = (DualFaderTarget == 0)
                 };
                 Channels.Add(newVm);
