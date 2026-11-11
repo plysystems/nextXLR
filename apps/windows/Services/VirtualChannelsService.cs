@@ -34,6 +34,7 @@ public sealed class WindowsAudioTrackInfo : ObservableObject
 
     public string StatusText => IsDetected ? "In Windows erkannt & bereit" : "Nicht erkannt (Treiber prüfen)";
 
+    [System.Text.Json.Serialization.JsonIgnore]
     public Microsoft.UI.Xaml.Media.Brush StatusBrush => IsDetected
         ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 0x22, 0xD3, 0xA6))
         : new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 0xF5, 0xB9, 0x42));

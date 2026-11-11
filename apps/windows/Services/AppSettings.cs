@@ -20,7 +20,7 @@ public sealed class AppSettings
     public bool MuteOnStartup { get; set; } = false;
     public bool CheckForUpdatesOnStart { get; set; } = true;
     public double BleepVolume { get; set; } = 100.0;
-    public bool HasCompletedTour { get; set; }
+    public bool HasCompletedTour { get; set; } = true;
 
     // Auto-Ducking (Sidechain Speech Detection)
     public bool AutoDuckingEnabled { get; set; } = false;

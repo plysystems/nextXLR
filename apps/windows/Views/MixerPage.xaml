@@ -138,20 +138,20 @@
                     </Border>
                 </Grid>
 
-                <Grid ColumnSpacing="14">
+                <Grid ColumnSpacing="16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Uid="FaderAssignTitle" FontWeight="SemiBold" VerticalAlignment="Center" />
-                    <ItemsRepeater Grid.Column="1" ItemsSource="{x:Bind ViewModel.FaderSlots}">
+                    <ItemsRepeater Grid.Column="1" HorizontalAlignment="Left" ItemsSource="{x:Bind ViewModel.FaderSlots}">
                         <ItemsRepeater.Layout>
-                            <UniformGridLayout MinItemWidth="150" MinItemHeight="40" MinColumnSpacing="10"
-                                               MinRowSpacing="8" MaximumRowsOrColumns="4" ItemsStretch="Fill" />
+                            <UniformGridLayout MinItemWidth="180" MinItemHeight="38" MinColumnSpacing="12"
+                                               MinRowSpacing="8" MaximumRowsOrColumns="4" ItemsStretch="None" ItemsJustification="Start" />
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="vm:FaderSlotViewModel">
-                                <Grid ColumnSpacing="8">
+                                <Grid ColumnSpacing="8" Width="180">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
@@ -205,7 +205,7 @@
                         <ItemsRepeater.Layout>
                             <UniformGridLayout x:Name="InLayout" MinItemWidth="84" MinItemHeight="440"
                                                MinColumnSpacing="8" MinRowSpacing="8"
-                                               ItemsStretch="Fill" ItemsJustification="Start" />
+                                               ItemsStretch="None" ItemsJustification="Start" />
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="vm:ChannelViewModel">
@@ -269,7 +269,7 @@
                         <ItemsRepeater.Layout>
                             <UniformGridLayout x:Name="OutLayout" MinItemWidth="84" MinItemHeight="440"
                                                MinColumnSpacing="8" MinRowSpacing="8"
-                                               ItemsStretch="Fill" ItemsJustification="Start" />
+                                               ItemsStretch="None" ItemsJustification="Start" />
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="vm:ChannelViewModel">

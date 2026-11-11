@@ -180,8 +180,8 @@ public partial class MixerPage : Page
     private static double RowWidth(int n, double strip) => n * strip + Math.Max(0, n - 1) * Gap;
 
     /// <summary>
-    /// Professional studio mixing console: Inputs, Master Controls, and Outputs always side-by-side in Fullwidth-Layout.
-    /// Strips dynamically stretch across the entire screen width with smooth horizontal scrolling when needed.
+    /// Professional studio mixing console: Inputs, Master Controls, and Outputs always side-by-side.
+    /// Strips maintain ergonomic channel widths with harmonious centering on large/fullscreen displays.
     /// </summary>
     private void Layout()
     {
@@ -192,21 +192,25 @@ public partial class MixerPage : Page
         if (w <= 0) return;
 
         double minStrip = ViewModel.ActiveMixIndex == 2 ? 104 : MinStrip;
+        double maxStrip = ViewModel.ActiveMixIndex == 2 ? 120 : 100;
         double chrome = MidWidth + 48; // Controls + Dividers + margins
 
-        double minDeskWidth = RowWidth(nIn, minStrip) + chrome + RowWidth(nOut, minStrip);
-        Sections.MinWidth = minDeskWidth;
-        Sections.HorizontalAlignment = HorizontalAlignment.Stretch;
+        double availableForStrips = w - chrome - Math.Max(0, nIn - 1) * Gap - Math.Max(0, nOut - 1) * Gap;
+        double targetStrip = Math.Max(minStrip, availableForStrips / (nIn + nOut));
+        targetStrip = Math.Clamp(targetStrip, minStrip, maxStrip);
 
-        // Proportional Fullwidth-Layout: Inputs and Outputs stretch to fill 100% of available screen width
-        InCol.Width = new GridLength(nIn, GridUnitType.Star);
+        double totalDeskWidth = RowWidth(nIn, targetStrip) + chrome + RowWidth(nOut, targetStrip);
+        Sections.MinWidth = totalDeskWidth;
+        Sections.HorizontalAlignment = HorizontalAlignment.Center;
+
+        InCol.Width = new GridLength(RowWidth(nIn, targetStrip));
         MidCol.Width = GridLength.Auto;
-        OutCol.Width = new GridLength(nOut, GridUnitType.Star);
+        OutCol.Width = new GridLength(RowWidth(nOut, targetStrip));
 
-        InLayout.MinItemWidth = minStrip;
-        OutLayout.MinItemWidth = minStrip;
-        InLayout.ItemsStretch = UniformGridLayoutItemsStretch.Fill;
-        OutLayout.ItemsStretch = UniformGridLayoutItemsStretch.Fill;
+        InLayout.MinItemWidth = targetStrip;
+        OutLayout.MinItemWidth = targetStrip;
+        InLayout.ItemsStretch = UniformGridLayoutItemsStretch.None;
+        OutLayout.ItemsStretch = UniformGridLayoutItemsStretch.None;
 
         InLayout.MaximumRowsOrColumns = nIn;
         OutLayout.MaximumRowsOrColumns = nOut;
