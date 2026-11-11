@@ -6,7 +6,7 @@
     xmlns:vm="using:NextXLR.ViewModels"
     xmlns:controls="using:NextXLR.Controls"
     xmlns:services="using:NextXLR.Services"
-    Background="Transparent">
+    Background="{StaticResource SurfaceL1Brush}">
 
     <Page.Resources>
         <!-- Colour flyout: ring picker + hex input + quick swatches. Shared by both swatch buttons. -->

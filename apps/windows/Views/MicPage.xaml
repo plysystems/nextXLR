@@ -6,7 +6,7 @@
     xmlns:vm="using:NextXLR.ViewModels"
     xmlns:services="using:NextXLR.Services"
     xmlns:controls="using:NextXLR.Controls"
-    Background="Transparent">
+    Background="{StaticResource SurfaceL1Brush}">
 
     <Page.Resources>
         <Style TargetType="Expander">

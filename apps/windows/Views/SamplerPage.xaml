@@ -6,7 +6,7 @@
     xmlns:local="using:NextXLR"
     xmlns:vm="using:NextXLR.ViewModels"
     xmlns:controls="using:NextXLR.Controls"
-    Background="Transparent">
+    Background="{StaticResource SurfaceL1Brush}">
 
     <ScrollViewer Style="{StaticResource PageScroller}">
         <Grid x:Name="Root" ColumnSpacing="20" RowSpacing="20" MaxWidth="1500" HorizontalAlignment="Center">

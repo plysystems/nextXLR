@@ -1177,8 +1177,7 @@ public sealed partial class VstPluginService : ObservableObject
     {
         var editorWin = new Window
         {
-            Title = $"Plugin-Editor — {plugin.Name} {plugin.TagCode}",
-            SystemBackdrop = new MicaBackdrop()
+            Title = $"Plugin-Editor — {plugin.Name} {plugin.TagCode}"
         };
 
         var appWin = editorWin.AppWindow;

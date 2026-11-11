@@ -160,7 +160,7 @@
                         </InfoBar.ActionButton>
                     </InfoBar>
                 </StackPanel>
-                <Frame x:Name="ContentFrame" Grid.Row="1" />
+                <Frame x:Name="ContentFrame" Grid.Row="1" Background="{StaticResource SurfaceL1Brush}" />
 
                 <!-- Animiertes Lade-Overlay bei Start, Seitenwechsel, Plugin-Scan oder Profil-Laden -->
                 <Grid x:Name="GlobalLoadingOverlay" Grid.Row="1" Background="#550A0C10"

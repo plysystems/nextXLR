@@ -50,21 +50,22 @@ public sealed partial class MainWindow : Window
 
         Title = Loc.Get("AppTitle");
         Handle = WinRT.Interop.WindowNative.GetWindowHandle(this);
-        try
-        {
-            if (Microsoft.UI.Composition.SystemBackdrops.MicaController.IsSupported())
-            {
-                SystemBackdrop = new MicaBackdrop();
-            }
-        }
-        catch { }
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
+        if (Microsoft.UI.Windowing.AppWindowTitleBar.IsCustomizationSupported())
+        {
+            var titleBar = AppWindow.TitleBar;
+            titleBar.ButtonBackgroundColor = Colors.Transparent;
+            titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+            titleBar.ButtonHoverBackgroundColor = ColorHelper.FromArgb(30, 255, 255, 255);
+            titleBar.ButtonPressedBackgroundColor = ColorHelper.FromArgb(50, 255, 255, 255);
+            titleBar.ButtonForegroundColor = Colors.White;
+            titleBar.ButtonInactiveForegroundColor = ColorHelper.FromArgb(180, 255, 255, 255);
+        }
         AppWindow.Resize(new SizeInt32(1440, 920));
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "nextXLR_icon.ico"));
 
         ViewModel.Hardware.PropertyChanged += OnHardwareChanged;
-        Nav.SelectedItem = MixerItem;
 
         // Tray Icon Service
         _trayService = new TrayIconService(
@@ -114,6 +115,11 @@ public sealed partial class MainWindow : Window
         {
             try
             {
+                if (Nav.SelectedItem == null)
+                {
+                    Nav.SelectedItem = MixerItem;
+                }
+
                 if (!ViewModel.IsConnected)
                 {
                     ViewModel.SetBusy(true, "Verbinde mit GoXLR Audio-Engine...");
@@ -188,6 +194,10 @@ public sealed partial class MainWindow : Window
                 }
                 AppWindow.MoveInZOrderAtTop();
                 SetForegroundWindow(Handle);
+                if (Nav.SelectedItem == null)
+                {
+                    Nav.SelectedItem = MixerItem;
+                }
                 ViewModel.SetMetersActive(ContentFrame.CurrentSourcePageType == typeof(MixerPage));
             }
             catch { }
@@ -400,6 +410,8 @@ public sealed partial class MainWindow : Window
         });
     }
 
+    private bool _isInitialNavigation = true;
+
     private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
         Type targetPage = typeof(MixerPage);
@@ -414,9 +426,17 @@ public sealed partial class MainWindow : Window
 
         if (ContentFrame.CurrentSourcePageType != targetPage)
         {
-            // Silky smooth, modern Windows 11 Fluent Slide transition
-            var transition = new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromBottom };
-            ContentFrame.Navigate(targetPage, ViewModel, transition);
+            if (_isInitialNavigation)
+            {
+                _isInitialNavigation = false;
+                ContentFrame.Navigate(targetPage, ViewModel, new SuppressNavigationTransitionInfo());
+            }
+            else
+            {
+                // Silky smooth, modern Windows 11 Fluent Slide transition
+                var transition = new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromBottom };
+                ContentFrame.Navigate(targetPage, ViewModel, transition);
+            }
         }
 
         // Performance: Only run MeterAnimator when MixerPage is on screen

@@ -396,8 +396,7 @@ public static class CrashHandler
         {
             var win = new Window
             {
-                Title = "NEXT : XLR — Unerwarteter Fehler",
-                SystemBackdrop = new MicaBackdrop()
+                Title = "NEXT : XLR — Unerwarteter Fehler"
             };
 
             var appWin = win.AppWindow;

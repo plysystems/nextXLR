@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:services="using:NextXLR.Services"
     xmlns:views="using:NextXLR.Views"
-    Background="Transparent">
+    Background="{StaticResource SurfaceL1Brush}">
 
     <Page.Resources>
         <!-- A settings row: icon, title + description, control on the right. -->

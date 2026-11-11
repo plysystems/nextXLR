@@ -4,7 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:services="using:NextXLR.Services"
-    Background="Transparent">
+    Background="{StaticResource SurfaceL1Brush}">
 
     <ScrollViewer Style="{StaticResource PageScroller}">
         <StackPanel Padding="{StaticResource PagePadding}" Spacing="24" MaxWidth="1100" HorizontalAlignment="Center">
