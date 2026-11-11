@@ -186,6 +186,30 @@ public partial class StreamDeckStatusService : ObservableObject
             string targetPluginDir = Path.Combine(elgatoPluginsDir, "com.plysystems.nextxlr.sdPlugin");
 
             string baseDir = AppContext.BaseDirectory;
+
+            // 1. First trigger official Elgato Stream Deck installation dialog if .streamDeckPlugin package exists
+            string[] pkgCandidates =
+            [
+                Path.Combine(baseDir, @"Assets\StreamDeck\com.plysystems.nextxlr.streamDeckPlugin"),
+                @"E:\Projects\plysys\Neuer Ordner\goxlr\dist\com.plysystems.nextxlr.streamDeckPlugin"
+            ];
+
+            bool launchedPkg = false;
+            foreach (var pkg in pkgCandidates)
+            {
+                if (File.Exists(pkg))
+                {
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo(pkg) { UseShellExecute = true });
+                        launchedPkg = true;
+                    }
+                    catch { }
+                    break;
+                }
+            }
+
+            // 2. Also ensure plugin files are safely copied to Plugins directory
             string[] sourceCandidateDirs =
             [
                 Path.Combine(baseDir, @"Assets\StreamDeck\com.plysystems.nextxlr.sdPlugin"),
@@ -205,37 +229,20 @@ public partial class StreamDeckStatusService : ObservableObject
 
             if (sourceDir != null)
             {
-                if (!Directory.Exists(elgatoPluginsDir))
+                try
                 {
-                    Directory.CreateDirectory(elgatoPluginsDir);
-                }
-
-                CopyDirectory(sourceDir, targetPluginDir);
-            }
-
-            // Also check for .streamDeckPlugin package file to trigger StreamDeck native installer if present
-            string[] pkgCandidates =
-            [
-                Path.Combine(baseDir, @"Assets\StreamDeck\com.plysystems.nextxlr.streamDeckPlugin"),
-                @"E:\Projects\plysys\Neuer Ordner\goxlr\dist\com.plysystems.nextxlr.streamDeckPlugin"
-            ];
-
-            foreach (var pkg in pkgCandidates)
-            {
-                if (File.Exists(pkg))
-                {
-                    try
+                    if (!Directory.Exists(elgatoPluginsDir))
                     {
-                        Process.Start(new ProcessStartInfo(pkg) { UseShellExecute = true });
+                        Directory.CreateDirectory(elgatoPluginsDir);
                     }
-                    catch { }
-                    break;
+                    CopyDirectory(sourceDir, targetPluginDir);
                 }
+                catch { }
             }
 
-            await Task.Delay(400);
+            await Task.Delay(500);
             await CheckStatusAsync();
-            return IsPluginInstalled;
+            return IsPluginInstalled || launchedPkg;
         }
         catch
         {
@@ -248,13 +255,25 @@ public partial class StreamDeckStatusService : ObservableObject
         Directory.CreateDirectory(destDir);
         foreach (var file in Directory.GetFiles(sourceDir))
         {
-            string dest = Path.Combine(destDir, Path.GetFileName(file));
-            File.Copy(file, dest, true);
+            try
+            {
+                string dest = Path.Combine(destDir, Path.GetFileName(file));
+                File.Copy(file, dest, true);
+            }
+            catch { }
         }
         foreach (var dir in Directory.GetDirectories(sourceDir))
         {
-            string dest = Path.Combine(destDir, Path.GetFileName(dir));
-            CopyDirectory(dir, dest);
+            string dirName = Path.GetFileName(dir);
+            // Avoid recursive nesting of the plugin directory
+            if (dirName.Equals("com.plysystems.nextxlr.sdPlugin", StringComparison.OrdinalIgnoreCase)) continue;
+
+            try
+            {
+                string dest = Path.Combine(destDir, dirName);
+                CopyDirectory(dir, dest);
+            }
+            catch { }
         }
     }
 

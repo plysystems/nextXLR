@@ -1,4 +1,6 @@
 {
+  "UUID": "com.plysystems.nextxlr",
+  "SDKVersion": 2,
   "Author": "plysystems",
   "Description": "NEXT : XLR Stream Deck Integration — Fader-Lautstärken, Mutes, Husten-Taste, Zensur-Bleep, Routing und Profile direkt über Stream Deck & Stream Deck + steuern.",
   "Name": "NEXT : XLR",
@@ -24,17 +26,18 @@
       "Tooltip": "Steuert Lautstärke eines Audiokanals oder Faders (Lauter, Leiser oder Fader-Wert)",
       "UUID": "com.plysystems.nextxlr.fader",
       "PropertyInspectorPath": "pi/fader.html",
-      "Controllers": ["Keypad", "Encoder"],
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
       "States": [
         {
           "Image": "assets/faderAction",
-          "TitleAlignment": "bottom",
-          "FontSize": "10"
+          "TitleAlignment": "bottom"
         }
       ],
       "Encoder": {
         "layout": "$B1",
-        "StackColor": "#00E5FF",
         "TriggerDescription": {
           "Rotate": "Lautstärke anpassen",
           "Push": "Mute umschalten",
@@ -48,17 +51,17 @@
       "Tooltip": "Schaltet einen Kanal (z. B. Musik, Chat, Game, System) stumm oder hebt Stummschaltung auf",
       "UUID": "com.plysystems.nextxlr.mute",
       "PropertyInspectorPath": "pi/mute.html",
-      "Controllers": ["Keypad"],
+      "Controllers": [
+        "Keypad"
+      ],
       "States": [
         {
           "Image": "assets/muteOff",
-          "TitleAlignment": "bottom",
-          "FontSize": "10"
+          "TitleAlignment": "bottom"
         },
         {
           "Image": "assets/muteOn",
-          "TitleAlignment": "bottom",
-          "FontSize": "10"
+          "TitleAlignment": "bottom"
         }
       ]
     },
@@ -68,17 +71,17 @@
       "Tooltip": "Stummschalten des Mikrofons (Umschalten oder Push-to-Mute)",
       "UUID": "com.plysystems.nextxlr.micmute",
       "PropertyInspectorPath": "pi/micmute.html",
-      "Controllers": ["Keypad"],
+      "Controllers": [
+        "Keypad"
+      ],
       "States": [
         {
           "Image": "assets/micLive",
-          "TitleAlignment": "bottom",
-          "FontSize": "10"
+          "TitleAlignment": "bottom"
         },
         {
           "Image": "assets/micMuted",
-          "TitleAlignment": "bottom",
-          "FontSize": "10"
+          "TitleAlignment": "bottom"
         }
       ]
     },
@@ -88,17 +91,17 @@
       "Tooltip": "Spielt den Zensurton ab und mutet das Mikrofon solange die Taste gehalten wird",
       "UUID": "com.plysystems.nextxlr.bleep",
       "PropertyInspectorPath": "pi/bleep.html",
-      "Controllers": ["Keypad"],
+      "Controllers": [
+        "Keypad"
+      ],
       "States": [
         {
           "Image": "assets/bleepOff",
-          "TitleAlignment": "bottom",
-          "FontSize": "10"
+          "TitleAlignment": "bottom"
         },
         {
           "Image": "assets/bleepOn",
-          "TitleAlignment": "bottom",
-          "FontSize": "10"
+          "TitleAlignment": "bottom"
         }
       ]
     },
@@ -108,12 +111,13 @@
       "Tooltip": "Lädt ein bestimmtes NEXT : XLR Profil (z. B. Gaming, Stream, Podcast)",
       "UUID": "com.plysystems.nextxlr.profile",
       "PropertyInspectorPath": "pi/profile.html",
-      "Controllers": ["Keypad"],
+      "Controllers": [
+        "Keypad"
+      ],
       "States": [
         {
           "Image": "assets/profileAction",
-          "TitleAlignment": "bottom",
-          "FontSize": "10"
+          "TitleAlignment": "bottom"
         }
       ]
     },
@@ -123,17 +127,17 @@
       "Tooltip": "Schaltet eine Verbindung in der Routing-Tabelle um (z. B. Musik zu Stream)",
       "UUID": "com.plysystems.nextxlr.route",
       "PropertyInspectorPath": "pi/route.html",
-      "Controllers": ["Keypad"],
+      "Controllers": [
+        "Keypad"
+      ],
       "States": [
         {
           "Image": "assets/routeOff",
-          "TitleAlignment": "bottom",
-          "FontSize": "10"
+          "TitleAlignment": "bottom"
         },
         {
           "Image": "assets/routeOn",
-          "TitleAlignment": "bottom",
-          "FontSize": "10"
+          "TitleAlignment": "bottom"
         }
       ]
     }

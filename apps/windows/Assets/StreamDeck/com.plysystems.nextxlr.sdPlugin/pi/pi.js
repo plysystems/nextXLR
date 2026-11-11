@@ -55,3 +55,4 @@ function sendToPlugin(payload) {
         websocket.send(JSON.stringify(json));
     }
 }
+

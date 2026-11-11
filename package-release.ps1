@@ -36,7 +36,7 @@ cargo build --release --bin mixforged
 
 # 0b. Compile projects to ensure latest binaries
 Write-Host "Building Windows Application in Release Mode..."
-dotnet build (Join-Path $root "apps\windows\NextXLR.csproj") -c Release -p:SourceRevisionId=$gitSha -p:InformationalVersion="$version+$gitSha" --no-restore
+dotnet build (Join-Path $root "apps\windows\NextXLR.csproj") -c Release -p:SourceRevisionId=$gitSha -p:InformationalVersion="$version+$gitSha" --no-restore --no-incremental
 
 Write-Host "Creating release package directory structure..."
 if (Test-Path $releaseDir) { Remove-Item $releaseDir -Recurse -Force }
@@ -73,16 +73,30 @@ Copy-Item (Join-Path $root "certificates\plysystems.cer") (Join-Path $releaseDir
 Write-Host "Packaging official Stream Deck plugin..."
 $sdPluginSrc = Join-Path $root "plugins\streamdeck\com.plysystems.nextxlr.sdPlugin"
 $sdPluginDstDir = Join-Path $appDir "Assets\StreamDeck"
-if (-not (Test-Path $sdPluginDstDir)) { New-Item -ItemType Directory -Path $sdPluginDstDir -Force | Out-Null }
+if (Test-Path $sdPluginDstDir) { Remove-Item $sdPluginDstDir -Recurse -Force }
+New-Item -ItemType Directory -Path $sdPluginDstDir -Force | Out-Null
 Copy-Item $sdPluginSrc (Join-Path $sdPluginDstDir "com.plysystems.nextxlr.sdPlugin") -Recurse -Force
 
-$sdPluginZip = Join-Path $distDir "com.plysystems.nextxlr.streamDeckPlugin.zip"
 $sdPluginOut = Join-Path $distDir "com.plysystems.nextxlr.streamDeckPlugin"
-if (Test-Path $sdPluginZip) { Remove-Item $sdPluginZip -Force }
 if (Test-Path $sdPluginOut) { Remove-Item $sdPluginOut -Force }
-Add-Type -AssemblyName System.IO.Compression.FileSystem
-[System.IO.Compression.ZipFile]::CreateFromDirectory($sdPluginSrc, $sdPluginZip)
-Move-Item $sdPluginZip $sdPluginOut -Force
+
+Add-Type -AssemblyName System.IO.Compression
+$zipStream = [System.IO.File]::Create($sdPluginOut)
+$archive = New-Object System.IO.Compression.ZipArchive($zipStream, [System.IO.Compression.ZipArchiveMode]::Create)
+$files = Get-ChildItem -Path $sdPluginSrc -Recurse -File
+foreach ($file in $files) {
+    $relPath = $file.FullName.Substring($sdPluginSrc.Length).TrimStart('\', '/')
+    $entryName = "com.plysystems.nextxlr.sdPlugin/" + ($relPath -replace '\\', '/')
+    $entry = $archive.CreateEntry($entryName, [System.IO.Compression.CompressionLevel]::Optimal)
+    $entryStream = $entry.Open()
+    $fileStream = [System.IO.File]::OpenRead($file.FullName)
+    $fileStream.CopyTo($entryStream)
+    $fileStream.Dispose()
+    $entryStream.Dispose()
+}
+$archive.Dispose()
+$zipStream.Dispose()
+
 Copy-Item $sdPluginOut (Join-Path $sdPluginDstDir "com.plysystems.nextxlr.streamDeckPlugin") -Force
 Copy-Item $sdPluginOut (Join-Path $releaseDir "com.plysystems.nextxlr.streamDeckPlugin") -Force
 

@@ -401,3 +401,4 @@ function isRouteActive(chName, busName) {
     const route = lastMixerState.routes.find(r => r.channel === ch.id && r.bus === bus.id);
     return route ? route.gain > 0 : false;
 }
+
