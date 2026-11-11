@@ -53,6 +53,7 @@ public partial class ChannelViewModel : ObservableObject
     [ObservableProperty] private bool _isSubmixActive;
     [ObservableProperty] private bool _showDualMix = true;
     [ObservableProperty] private bool _dualFaderIsKopfhoerer = true;
+    [ObservableProperty] private double _stripWidth = 110;
 
     partial void OnDualFaderIsKopfhoererChanged(bool value)
     {

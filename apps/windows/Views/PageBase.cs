@@ -216,6 +216,13 @@ public partial class MixerPage : Page
             double extra = actualDeskWidth - (inBayWidth + chrome + outBayWidth);
             inBayWidth += extra * (nIn / (double)(nIn + nOut));
             outBayWidth += extra * (nOut / (double)(nIn + nOut));
+            targetStrip = Math.Max(minStrip, (inBayWidth - gapsIn) / nIn);
+        }
+
+        // Apply uniform proportional width to all channel strips
+        foreach (var ch in ViewModel.Channels)
+        {
+            ch.StripWidth = targetStrip;
         }
 
         // Explicit width ensures Grid never receives infinite measure in ScrollViewer,
@@ -224,36 +231,12 @@ public partial class MixerPage : Page
         Sections.MinWidth = minDeskWidth;
         Sections.HorizontalAlignment = HorizontalAlignment.Stretch;
 
-        // Explicit pixel widths ensure star column rounding never truncates or wraps items
         InCol.Width = new GridLength(inBayWidth, GridUnitType.Pixel);
         OutCol.Width = new GridLength(outBayWidth, GridUnitType.Pixel);
-
-        // Defensive calculation ensures all 8 inputs and 5 outputs ALWAYS stay strictly in one row side-by-side
-        double inItemWidth = Math.Max(minStrip, Math.Floor((inBayWidth - gapsIn) / nIn) - 0.5);
-        double outItemWidth = Math.Max(minStrip, Math.Floor((outBayWidth - gapsOut) / nOut) - 0.5);
-
-        InLayout.MinItemWidth = inItemWidth;
-        OutLayout.MinItemWidth = outItemWidth;
-        InLayout.MinColumnSpacing = colGap;
-        OutLayout.MinColumnSpacing = colGap;
-        InLayout.MinRowSpacing = 0;
-        OutLayout.MinRowSpacing = 0;
-
-        InLayout.ItemsStretch = UniformGridLayoutItemsStretch.Fill;
-        OutLayout.ItemsStretch = UniformGridLayoutItemsStretch.Fill;
-
-        InLayout.ItemsJustification = UniformGridLayoutItemsJustification.Start;
-        OutLayout.ItemsJustification = UniformGridLayoutItemsJustification.Start;
-
-        InLayout.MaximumRowsOrColumns = nIn;
-        OutLayout.MaximumRowsOrColumns = nOut;
 
         Place(InputsSection, 0, 0);
         Place(DivCol1Rect, 0, 1);
         Place(OutputsSection, 0, 2);
-
-        var height = Math.Max(MinRowHeight, h - Header - 2);
-        InLayout.MinItemHeight = OutLayout.MinItemHeight = height;
     }
 
     private static void Place(FrameworkElement e, int row, int column, int span = 1)
