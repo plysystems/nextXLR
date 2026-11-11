@@ -7,7 +7,7 @@
     xmlns:vm="using:NextXLR.ViewModels"
     Background="{StaticResource SurfaceL1Brush}">
 
-    <Grid Padding="{StaticResource PagePadding}" RowSpacing="24" MaxWidth="1500" HorizontalAlignment="Center">
+    <Grid Padding="{StaticResource PagePadding}" RowSpacing="20" HorizontalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -219,13 +219,14 @@
                 <Rectangle x:Name="DivCol1Rect" Grid.Column="1" Width="1" VerticalAlignment="Stretch"
                            Fill="{StaticResource SurfaceStrokeSubtleBrush}" Margin="12,28,12,8" />
 
-                <!-- Global mic mute (cough button) and censor: master controls section -->
+                <!-- Global mic mute (cough button) and censor: master controls section (Headline hidden) -->
                 <Grid x:Name="BleepSection" Grid.Column="2" RowSpacing="10" Margin="4,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="18" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <TextBlock Text="CONTROLS" Style="{StaticResource Overline}" Height="18" HorizontalAlignment="Center" />
+                    <!-- Empty 18px spacer keeps controls aligned with channel strips without showing headline -->
+                    <Border Height="18" />
                     <Border x:Name="BleepCard" Grid.Row="1" Background="Transparent" CornerRadius="12"
                             Padding="8,12" BorderThickness="0">
                         <StackPanel x:Name="BleepButtons" Spacing="16" VerticalAlignment="Center" HorizontalAlignment="Center">

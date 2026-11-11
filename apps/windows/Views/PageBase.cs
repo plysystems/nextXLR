@@ -180,8 +180,8 @@ public partial class MixerPage : Page
     private static double RowWidth(int n, double strip) => n * strip + Math.Max(0, n - 1) * Gap;
 
     /// <summary>
-    /// Professional studio mixing console: Inputs, Master Controls, and Outputs always side-by-side.
-    /// Strips dynamically size to fill available width with smooth horizontal scrolling when needed.
+    /// Professional studio mixing console: Inputs, Master Controls, and Outputs always side-by-side in Fullwidth-Layout.
+    /// Strips dynamically stretch across the entire screen width with smooth horizontal scrolling when needed.
     /// </summary>
     private void Layout()
     {
@@ -194,21 +194,22 @@ public partial class MixerPage : Page
         double minStrip = ViewModel.ActiveMixIndex == 2 ? 104 : MinStrip;
         double chrome = MidWidth + 48; // Controls + Dividers + margins
 
-        double availableForStrips = w - chrome - (nIn - 1) * Gap - (nOut - 1) * Gap;
-        double targetStrip = Math.Max(minStrip, availableForStrips / (nIn + nOut));
-        targetStrip = Math.Min(targetStrip, 130);
+        double minDeskWidth = RowWidth(nIn, minStrip) + chrome + RowWidth(nOut, minStrip);
+        Sections.MinWidth = minDeskWidth;
+        Sections.HorizontalAlignment = HorizontalAlignment.Stretch;
 
-        InLayout.MinItemWidth = targetStrip;
-        OutLayout.MinItemWidth = targetStrip;
+        // Proportional Fullwidth-Layout: Inputs and Outputs stretch to fill 100% of available screen width
+        InCol.Width = new GridLength(nIn, GridUnitType.Star);
+        MidCol.Width = GridLength.Auto;
+        OutCol.Width = new GridLength(nOut, GridUnitType.Star);
+
+        InLayout.MinItemWidth = minStrip;
+        OutLayout.MinItemWidth = minStrip;
         InLayout.ItemsStretch = UniformGridLayoutItemsStretch.Fill;
         OutLayout.ItemsStretch = UniformGridLayoutItemsStretch.Fill;
 
         InLayout.MaximumRowsOrColumns = nIn;
         OutLayout.MaximumRowsOrColumns = nOut;
-
-        InCol.Width = new GridLength(RowWidth(nIn, targetStrip));
-        MidCol.Width = GridLength.Auto;
-        OutCol.Width = new GridLength(RowWidth(nOut, targetStrip));
 
         Place(InputsSection, 0, 0);
         Place(DivCol1Rect, 0, 1);
