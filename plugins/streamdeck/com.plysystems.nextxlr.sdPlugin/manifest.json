@@ -6,7 +6,7 @@
   "Name": "NEXT : XLR",
   "Icon": "assets/pluginIcon",
   "URL": "https://github.com/plysystems/nextXLR",
-  "Version": "0.1.9.0",
+  "Version": "0.1.9.1",
   "OS": [
     {
       "Platform": "windows",

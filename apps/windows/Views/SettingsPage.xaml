@@ -290,7 +290,7 @@
                                         <StackPanel Orientation="Horizontal" Spacing="10">
                                             <TextBlock Text="Offizielles NEXT : XLR Stream Deck Plugin" FontWeight="SemiBold" FontSize="16" />
                                             <Border Background="{StaticResource SurfaceL2Brush}" CornerRadius="4" Padding="6,2">
-                                                <TextBlock Text="v0.1.9.0" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                                                <TextBlock Text="v0.1.9.1" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
                                             </Border>
                                         </StackPanel>
                                         <TextBlock Text="{x:Bind StreamDeckService.PluginStatusText, Mode=OneWay}"

@@ -10,26 +10,114 @@
         <div class="badge">NEXT : XLR AUDIO ENGINE</div>
 
         <div class="sdpi-item">
-            <div class="sdpi-item-label">Profil-Name:</div>
+            <div class="sdpi-item-label">Profil-Typ:</div>
             <div class="sdpi-item-value">
-                <input type="text" id="profileName" placeholder="z. B. Gaming, Stream, Podcast" />
-                <div class="hint">Name des gespeicherten Profils (ohne .json).</div>
+                <select id="profileType">
+                    <option value="nextxlr" selected>NEXT : XLR Setup (Mixer)</option>
+                    <option value="mic">Mikrofon-Profil (Stimme / DSP)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="sdpi-item">
+            <div class="sdpi-item-label">Profil wählen:</div>
+            <div class="sdpi-item-value">
+                <select id="profileSelect">
+                    <!-- Populated dynamically based on profileType -->
+                </select>
+            </div>
+        </div>
+
+        <div class="sdpi-item" id="customRow" style="display:none;">
+            <div class="sdpi-item-label">Eigener Name:</div>
+            <div class="sdpi-item-value">
+                <input type="text" id="profileName" placeholder="Dateiname ohne .json" />
+                <div class="hint">Name des gespeicherten Profils unter %LOCALAPPDATA%\NextXLR</div>
             </div>
         </div>
     </div>
 
     <script src="pi.js"></script>
     <script>
-        function initUI() {
-            document.getElementById("profileName").value = settings.profileName || "Gaming";
-            document.getElementById("profileName").oninput = onChange;
+        const NEXTXLR_PROFILES = [
+            { id: "Default", name: "Standard (Default)" },
+            { id: "Gaming", name: "Gaming" },
+            { id: "Streaming", name: "Streaming" },
+            { id: "Podcast", name: "Podcast" },
+            { id: "Musik", name: "Musik" },
+            { id: "custom", name: "Eigener Name (Manuell)..." }
+        ];
+
+        const MIC_PROFILES = [
+            { id: "Standard", name: "Standard Mikrofon" },
+            { id: "Warm Broadcast", name: "Warm Broadcast" },
+            { id: "Dynamic Clarity", name: "Dynamic Clarity" },
+            { id: "Podcaster Pro", name: "Podcaster Pro" },
+            { id: "Clean Voice", name: "Clean Voice" },
+            { id: "Radio Voice", name: "Radio Voice" },
+            { id: "custom", name: "Eigener Name (Manuell)..." }
+        ];
+
+        function populateSelect(type) {
+            const sel = document.getElementById("profileSelect");
+            sel.innerHTML = "";
+            const list = (type === "mic") ? MIC_PROFILES : NEXTXLR_PROFILES;
+            list.forEach(p => {
+                const opt = document.createElement("option");
+                opt.value = p.id;
+                opt.textContent = p.name;
+                sel.appendChild(opt);
+            });
         }
 
-        function onChange() {
+        function initUI() {
+            const type = settings.profileType || "nextxlr";
+            document.getElementById("profileType").value = type;
+            populateSelect(type);
+
+            const savedName = settings.profileName || "Gaming";
+            const sel = document.getElementById("profileSelect");
+            const hasOption = Array.from(sel.options).some(o => o.value.toLowerCase() === savedName.toLowerCase());
+            
+            if (hasOption) {
+                sel.value = savedName;
+                document.getElementById("customRow").style.display = "none";
+            } else {
+                sel.value = "custom";
+                document.getElementById("profileName").value = savedName;
+                document.getElementById("customRow").style.display = "flex";
+            }
+
+            document.getElementById("profileType").onchange = onTypeChange;
+            document.getElementById("profileSelect").onchange = onSelectChange;
+            document.getElementById("profileName").oninput = onCustomInput;
+        }
+
+        function onTypeChange() {
+            const type = document.getElementById("profileType").value;
+            settings.profileType = type;
+            populateSelect(type);
+            const sel = document.getElementById("profileSelect");
+            sel.selectedIndex = 0;
+            onSelectChange();
+        }
+
+        function onSelectChange() {
+            const selVal = document.getElementById("profileSelect").value;
+            if (selVal === "custom") {
+                document.getElementById("customRow").style.display = "flex";
+                settings.profileName = document.getElementById("profileName").value.trim();
+            } else {
+                document.getElementById("customRow").style.display = "none";
+                settings.profileName = selVal;
+            }
+            saveSettings();
+        }
+
+        function onCustomInput() {
             settings.profileName = document.getElementById("profileName").value.trim();
             saveSettings();
         }
     </script>
 </body>
 </html>
-

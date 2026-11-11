@@ -434,6 +434,39 @@ async fn get_current_mixer_state(app: &AppState) -> Option<mixforge_protocol::Mi
     None
 }
 
+fn normalize_channel_token(input: &str) -> &'static str {
+    let clean = input.trim().to_lowercase().replace(['_', ' ', '-'], "");
+    match clean.as_str() {
+        "mic" | "mikrofon" | "microphone" => "mic",
+        "chat" | "discord" => "chat",
+        "music" | "musik" | "spotify" => "music",
+        "game" | "spiel" => "game",
+        "system" => "system",
+        "samples" | "sampler" => "samples",
+        "linein" | "line" => "linein",
+        "console" | "konsole" => "console",
+        "headphones" | "kopfhoerer" | "kopfhörer" | "hp" => "headphones",
+        "monitor" => "monitor",
+        "lineout" => "lineout",
+        "broadcast" | "stream" | "broadcaststreammix" => "stream",
+        "chatmic" => "chatmic",
+        _ => "",
+    }
+}
+
+fn normalize_bus_token(input: &str) -> &'static str {
+    let clean = input.trim().to_lowercase().replace(['_', ' ', '-'], "");
+    match clean.as_str() {
+        "headphones" | "kopfhoerer" | "kopfhörer" | "hp" => "headphones",
+        "stream" | "broadcast" | "broadcaststreammix" => "stream",
+        "lineout" => "lineout",
+        "chatmic" | "chat" => "chatmic",
+        "sampler" | "samples" => "sampler",
+        "external" | "extern" | "speaker" | "lautsprecher" | "wireless" | "bluetooth" => "external",
+        _ => "",
+    }
+}
+
 fn resolve_channel_id(
     input: &str,
     state: Option<&mixforge_protocol::MixerState>,
@@ -450,7 +483,15 @@ fn resolve_channel_id(
                 return Some(fa.channel);
             }
         }
-        // Match by channel name
+        let token = normalize_channel_token(clean);
+        if !token.is_empty() {
+            for c in &st.channels {
+                if normalize_channel_token(&c.name) == token {
+                    return Some(c.id);
+                }
+            }
+        }
+        // Match by channel name fallback
         let clean_norm = clean.to_lowercase().replace(['_', ' ', '-'], "");
         for c in &st.channels {
             let name_norm = c.name.to_lowercase().replace(['_', ' ', '-'], "");
@@ -471,6 +512,14 @@ fn resolve_bus_id(
         return Some(mixforge_protocol::BusId(id));
     }
     if let Some(st) = state {
+        let token = normalize_bus_token(clean);
+        if !token.is_empty() {
+            for b in &st.buses {
+                if normalize_bus_token(&b.name) == token {
+                    return Some(b.id);
+                }
+            }
+        }
         let clean_norm = clean.to_lowercase().replace(['_', ' ', '-'], "");
         for b in &st.buses {
             let name_norm = b.name.to_lowercase().replace(['_', ' ', '-'], "");
@@ -520,6 +569,14 @@ async fn api_status(State(app): State<AppState>) -> impl IntoResponse {
         .get("ActiveMixerPage")
         .and_then(|v| v.as_u64())
         .unwrap_or(1) as u8;
+    let external_speaker_enabled = settings
+        .get("EnableBluetoothHeadset")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let wireless_routing = settings
+        .get("WirelessRouting")
+        .cloned()
+        .unwrap_or_else(|| json!({}));
 
     match rx.await {
         Ok(replies) => {
@@ -528,14 +585,22 @@ async fn api_status(State(app): State<AppState>) -> impl IntoResponse {
                     let submix = state.fader_target_submix;
                     return axum::Json(json!({
                         "ok": true,
-                        "version": "0.1.9.0-alpha",
+                        "version": "0.1.9.1-alpha",
                         "state": state,
                         "active_page": current_page,
-                        "fader_target_submix": submix
+                        "fader_target_submix": submix,
+                        "external_speaker_enabled": external_speaker_enabled,
+                        "wireless_routing": wireless_routing,
                     }));
                 }
             }
-            axum::Json(json!({ "ok": true, "active_page": current_page }))
+            axum::Json(json!({
+                "ok": true,
+                "version": "0.1.9.1-alpha",
+                "active_page": current_page,
+                "external_speaker_enabled": external_speaker_enabled,
+                "wireless_routing": wireless_routing,
+            }))
         }
         Err(e) => axum::Json(json!({ "ok": false, "error": e.to_string() })),
     }
@@ -679,6 +744,71 @@ async fn api_route(
     let Some(ch_id) = resolve_channel_id(&q.channel, state.as_ref()) else {
         return axum::Json(json!({ "ok": false, "error": format!("unknown channel '{}'", q.channel) }));
     };
+
+    let is_external = normalize_bus_token(&q.bus) == "external";
+    if is_external {
+        let mut settings = load_app_settings();
+        let enabled = settings
+            .get("EnableBluetoothHeadset")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        if !enabled {
+            return axum::Json(json!({
+                "ok": false,
+                "error": "Externer Lautsprecher ist in den NEXT : XLR Einstellungen deaktiviert",
+                "disabled": true
+            }));
+        }
+
+        let ch_name = state
+            .as_ref()
+            .and_then(|s| s.channels.iter().find(|c| c.id == ch_id))
+            .map(|c| c.name.clone())
+            .unwrap_or_else(|| format!("Channel {}", ch_id.0));
+
+        let current_routed = settings
+            .get("WirelessRouting")
+            .and_then(|w| w.get(&ch_name).or_else(|| {
+                w.as_object().and_then(|obj| {
+                    obj.iter()
+                        .find(|(k, _)| k.eq_ignore_ascii_case(&ch_name))
+                        .map(|(_, v)| v)
+                })
+            }))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(true);
+
+        let target_routed = if q.action.as_deref() == Some("toggle") {
+            !current_routed
+        } else if let Some(g) = q.gain {
+            g > 0.0
+        } else {
+            true
+        };
+
+        if let Some(obj) = settings.as_object_mut() {
+            let wireless_obj = obj
+                .entry("WirelessRouting".to_string())
+                .or_insert_with(|| json!({}))
+                .as_object_mut();
+            if let Some(w_map) = wireless_obj {
+                w_map.insert(ch_name.clone(), json!(target_routed));
+            }
+            if let Some(p) = get_app_settings_path() {
+                let _ = std::fs::write(&p, serde_json::to_string_pretty(&settings).unwrap_or_default());
+            }
+        }
+
+        return axum::Json(json!({
+            "ok": true,
+            "channel": ch_id.0,
+            "channel_name": ch_name,
+            "bus": "external",
+            "routed": target_routed,
+            "external_speaker_enabled": true
+        }));
+    }
+
     let Some(b_id) = resolve_bus_id(&q.bus, state.as_ref()) else {
         return axum::Json(json!({ "ok": false, "error": format!("unknown bus '{}'", q.bus) }));
     };
@@ -766,6 +896,8 @@ async fn api_mic_mute(
 #[derive(serde::Deserialize)]
 struct ApiProfileQuery {
     name: String,
+    #[serde(default)]
+    category: Option<String>,
 }
 
 async fn api_profile(
@@ -776,11 +908,27 @@ async fn api_profile(
         return axum::Json(json!({ "ok": false, "error": "LOCALAPPDATA not set" }));
     };
     let dir = std::path::Path::new(&base).join("NextXLR");
-    let candidate_paths = [
-        dir.join("setups").join(format!("{}.json", q.name)),
-        dir.join("profiles").join(format!("{}.json", q.name)),
-        dir.join(format!("{}.json", q.name)),
-    ];
+    let is_mic = q
+        .category
+        .as_deref()
+        .map(|c| c.eq_ignore_ascii_case("mic") || c.eq_ignore_ascii_case("microphone"))
+        .unwrap_or(false);
+
+    let candidate_paths = if is_mic {
+        vec![
+            dir.join("mic-profiles").join(format!("{}.json", q.name)),
+            dir.join("mic_profiles").join(format!("{}.json", q.name)),
+            dir.join("profiles").join(format!("{}.json", q.name)),
+            dir.join(format!("{}.json", q.name)),
+        ]
+    } else {
+        vec![
+            dir.join("profiles").join(format!("{}.json", q.name)),
+            dir.join("setups").join(format!("{}.json", q.name)),
+            dir.join(format!("{}.json", q.name)),
+            dir.join("mic-profiles").join(format!("{}.json", q.name)),
+        ]
+    };
 
     let found = candidate_paths.iter().find(|p| p.exists());
     let Some(path) = found else {
@@ -796,6 +944,20 @@ async fn api_profile(
     };
 
     let profile_val = v.get("profile").cloned().unwrap_or(v);
+
+    // If mic profile
+    if is_mic || profile_val.get("gate_enabled").is_some() || profile_val.get("eq_gains").is_some() {
+        if let Ok(settings) = serde_json::from_value::<mixforge_protocol::MicSettings>(profile_val.clone()) {
+            let (tx, rx) = oneshot::channel();
+            let _ = app.hub.send(HubMsg::Client {
+                msg: ClientMessage::SetMicSettings { settings },
+                reply: tx,
+            });
+            let _ = rx.await;
+            return axum::Json(json!({ "ok": true, "profile": q.name, "type": "mic" }));
+        }
+    }
+
     let Ok(profile) = serde_json::from_value::<mixforge_protocol::Profile>(profile_val) else {
         return axum::Json(json!({ "ok": false, "error": "could not parse Profile format" }));
     };
@@ -807,7 +969,7 @@ async fn api_profile(
     });
     let _ = rx.await;
 
-    axum::Json(json!({ "ok": true, "profile": q.name }))
+    axum::Json(json!({ "ok": true, "profile": q.name, "type": "setup" }))
 }
 
 #[derive(serde::Deserialize)]

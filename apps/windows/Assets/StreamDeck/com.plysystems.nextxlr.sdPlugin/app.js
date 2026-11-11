@@ -101,6 +101,12 @@ async function refreshEngineState() {
         if (res.fader_target_submix !== undefined) {
             lastMixerState.fader_target_submix = res.fader_target_submix;
         }
+        if (res.external_speaker_enabled !== undefined) {
+            lastMixerState.external_speaker_enabled = res.external_speaker_enabled;
+        }
+        if (res.wireless_routing !== undefined) {
+            lastMixerState.wireless_routing = res.wireless_routing;
+        }
         isEngineOnline = true;
         updateAllActiveContexts();
     } else if (!engineWs || engineWs.readyState !== WebSocket.OPEN) {
@@ -217,33 +223,137 @@ function renderCanvasFader(channelName, volPct, isMuted, isSubmix) {
 
         // Center Level / Mute
         if (isMuted) {
+            // Crossed-out microphone icon
+            const cx = 72, cy = 64;
+            ctx.save();
+            // Capsule
             ctx.fillStyle = "#EF4444";
-            ctx.font = "900 24px sans-serif";
-            ctx.fillText("MUTED", 72, isSubmix ? 82 : 78);
+            ctx.beginPath();
+            ctx.roundRect(cx - 8, cy - 20, 16, 26, 8);
+            ctx.fill();
+
+            // U-arc
+            ctx.strokeStyle = "#EF4444";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(cx, cy - 6, 13, 0, Math.PI);
+            ctx.stroke();
+
+            // Stem and base
+            ctx.beginPath();
+            ctx.moveTo(cx, cy + 7);
+            ctx.lineTo(cx, cy + 17);
+            ctx.moveTo(cx - 10, cy + 17);
+            ctx.lineTo(cx + 10, cy + 17);
+            ctx.stroke();
+
+            // Bold white/red diagonal slash through the mic
+            ctx.strokeStyle = "#EF4444";
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(cx - 18, cy - 22);
+            ctx.lineTo(cx + 18, cy + 20);
+            ctx.stroke();
+
+            ctx.strokeStyle = "#FFFFFF";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(cx - 17, cy - 21);
+            ctx.lineTo(cx + 17, cy + 19);
+            ctx.stroke();
+            ctx.restore();
+
+            // MUTE text
+            ctx.fillStyle = "#EF4444";
+            ctx.font = "900 18px sans-serif";
+            ctx.fillText("MUTE", 72, 102);
 
             // Red mute bar
-            ctx.fillStyle = "rgba(239, 68, 68, 0.25)";
+            ctx.fillStyle = "rgba(239, 68, 68, 0.35)";
             ctx.beginPath();
-            ctx.roundRect(18, 102, 108, 16, 8);
+            ctx.roundRect(18, 116, 108, 12, 6);
             ctx.fill();
         } else {
+            // Unmuted: 0 - 100 level display
             ctx.fillStyle = "#FFFFFF";
-            ctx.font = "900 28px sans-serif";
-            ctx.fillText(`${volPct}%`, 72, isSubmix ? 84 : 78);
+            ctx.font = "900 32px sans-serif";
+            ctx.fillText(`${volPct}`, 72, isSubmix ? 82 : 76);
 
             // Progress bar background
             ctx.fillStyle = "#1E293B";
             ctx.beginPath();
-            ctx.roundRect(18, 102, 108, 16, 8);
+            ctx.roundRect(18, 106, 108, 16, 8);
             ctx.fill();
 
             // Active fill
-            const fillW = Math.max(10, Math.round((Math.min(volPct, 100) / 100) * 108));
+            const fillW = Math.max(8, Math.round((Math.min(volPct, 100) / 100) * 108));
             ctx.fillStyle = isSubmix ? "#3B82F6" : "#00D2B4";
             ctx.beginPath();
-            ctx.roundRect(18, 102, fillW, 16, 8);
+            ctx.roundRect(18, 106, fillW, 16, 8);
             ctx.fill();
         }
+
+        return canvas.toDataURL("image/png");
+    } catch (e) {
+        return null;
+    }
+}
+
+function renderCanvasPage(pageNum) {
+    try {
+        let canvas = document.getElementById("renderCanvasPage");
+        if (!canvas) {
+            canvas = document.createElement("canvas");
+            canvas.id = "renderCanvasPage";
+            canvas.width = 144;
+            canvas.height = 144;
+            document.body.appendChild(canvas);
+        }
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, 144, 144);
+
+        const isP2 = (pageNum === 2);
+        const accentColor = isP2 ? "#F59E0B" : "#00D2B4"; // Orange for Seite 2, Cyan for Seite 1
+        const badgeBg = isP2 ? "rgba(245, 158, 11, 0.18)" : "rgba(0, 210, 180, 0.18)";
+
+        // Dark background
+        ctx.fillStyle = "#0E1015";
+        ctx.beginPath();
+        ctx.roundRect(4, 4, 136, 136, 18);
+        ctx.fill();
+
+        // Accent border
+        ctx.strokeStyle = accentColor;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // Header: "SEITE"
+        ctx.fillStyle = "#94A3B8";
+        ctx.font = "bold 15px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("SEITE", 72, 32);
+
+        // Center circular badge
+        ctx.fillStyle = badgeBg;
+        ctx.beginPath();
+        ctx.arc(72, 74, 32, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = accentColor;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Big Page number "1" or "2"
+        ctx.fillStyle = accentColor;
+        ctx.font = "900 42px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(pageNum.toString(), 72, 75);
+        ctx.textBaseline = "alphabetic";
+
+        // Footer: "BANK 1" or "BANK 2"
+        ctx.fillStyle = accentColor;
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText(isP2 ? "BANK 2" : "BANK 1", 72, 126);
 
         return canvas.toDataURL("image/png");
     } catch (e) {
@@ -350,28 +460,6 @@ async function handleKeyDown(context, action, settings) {
             break;
         }
 
-        case "com.plysystems.nextxlr.fadermute": {
-            const fader = (settings.fader || "A").toUpperCase();
-            const mode = settings.mode || "toggle";
-            const res = await callEngineApi("/api/mute", { channel: fader, action: mode });
-            if (res && res.ok) showOk(context); else showAlert(context);
-            await refreshEngineState();
-            break;
-        }
-
-        case "com.plysystems.nextxlr.mixmode": {
-            const target = settings.target || "toggle";
-            let res;
-            if (target === "toggle") {
-                res = await callEngineApi("/api/mix-mode", { action: "toggle" });
-            } else {
-                res = await callEngineApi("/api/mix-mode", { target });
-            }
-            if (res && res.ok) showOk(context); else showAlert(context);
-            await refreshEngineState();
-            break;
-        }
-
         case "com.plysystems.nextxlr.mute": {
             const mode = settings.mode || "toggle";
             const res = await callEngineApi("/api/mute", { channel, action: mode });
@@ -407,8 +495,9 @@ async function handleKeyDown(context, action, settings) {
         }
 
         case "com.plysystems.nextxlr.profile": {
-            const profileName = settings.profileName || "Gaming";
-            const res = await callEngineApi("/api/profile", { name: profileName });
+            const profileType = settings.profileType || "nextxlr";
+            const profileName = settings.profileName || (profileType === "mic" ? "Standard" : "Gaming");
+            const res = await callEngineApi("/api/profile", { name: profileName, category: profileType });
             if (res && res.ok) showOk(context); else showAlert(context);
             await refreshEngineState();
             break;
@@ -416,6 +505,11 @@ async function handleKeyDown(context, action, settings) {
 
         case "com.plysystems.nextxlr.route": {
             const bus = settings.bus || "stream";
+            const normBus = normalizeBusToken(bus);
+            if (normBus === "external" && lastMixerState && !lastMixerState.external_speaker_enabled) {
+                showAlert(context);
+                return;
+            }
             const res = await callEngineApi("/api/route", { channel, bus, action: "toggle" });
             if (res && res.ok) showOk(context); else showAlert(context);
             await refreshEngineState();
@@ -496,7 +590,18 @@ function updateContextDisplay(context, action, settings) {
     switch (action) {
         case "com.plysystems.nextxlr.encoder":
         case "com.plysystems.nextxlr.fader": {
-            if (channelObj) {
+            const mode = settings.mode || "display";
+            if (mode === "increase") {
+                setImage(context, "assets/faderUp.png");
+                const stepPct = Math.round(parseFloat(settings.step || "0.05") * 100);
+                const titleName = channelObj ? channelObj.name : channelName;
+                setTitle(context, `${titleName}\n+${stepPct}%`);
+            } else if (mode === "decrease") {
+                setImage(context, "assets/faderDown.png");
+                const stepPct = Math.round(parseFloat(settings.step || "0.05") * 100);
+                const titleName = channelObj ? channelObj.name : channelName;
+                setTitle(context, `${titleName}\n-${stepPct}%`);
+            } else if (channelObj) {
                 const targetSubmix = settings.mix === "headphones" || (settings.mix !== "stream" && (lastMixerState && lastMixerState.fader_target_submix));
                 const volPct = Math.round((targetSubmix ? channelObj.submix_volume : channelObj.volume) * 100);
                 const isMuted = targetSubmix ? channelObj.submix_muted : channelObj.muted;
@@ -534,29 +639,16 @@ function updateContextDisplay(context, action, settings) {
             break;
         }
 
-        case "com.plysystems.nextxlr.fadermute": {
-            const faderLetter = (settings.fader || "A").toUpperCase();
-            const ch = findChannelInState(faderLetter);
-            if (ch) {
-                setState(context, ch.muted ? 1 : 0);
-                setTitle(context, `FADER ${faderLetter}\n${ch.name}\n${ch.muted ? "MUTED" : "ON"}`);
-            } else {
-                setTitle(context, `FADER ${faderLetter}\n--`);
-            }
-            break;
-        }
-
         case "com.plysystems.nextxlr.page": {
             const curPage = (lastMixerState && lastMixerState.active_page) || 1;
             setState(context, curPage === 2 ? 1 : 0);
-            setTitle(context, `MIXER\nSEITE ${curPage}`);
-            break;
-        }
-
-        case "com.plysystems.nextxlr.mixmode": {
-            const isSubmix = (lastMixerState && lastMixerState.fader_target_submix !== undefined) ? lastMixerState.fader_target_submix : true;
-            setState(context, isSubmix ? 0 : 1);
-            setTitle(context, `MIX\n${isSubmix ? "KOPFHÖRER" : "STREAM"}`);
+            const dataUrl = renderCanvasPage(curPage);
+            if (dataUrl) {
+                setImage(context, dataUrl);
+                setTitle(context, "");
+            } else {
+                setTitle(context, `SEITE\n${curPage}`);
+            }
             break;
         }
 
@@ -577,38 +669,113 @@ function updateContextDisplay(context, action, settings) {
         }
 
         case "com.plysystems.nextxlr.profile": {
-            const prof = settings.profileName || "Gaming";
-            setTitle(context, `Profil:\n${prof}`);
+            const pType = settings.profileType || "nextxlr";
+            const prof = settings.profileName || (pType === "mic" ? "Standard" : "Gaming");
+            const header = (pType === "mic") ? "MIC" : "PROFIL";
+            setTitle(context, `${header}\n${prof}`);
             break;
         }
 
         case "com.plysystems.nextxlr.route": {
             const bus = settings.bus || "stream";
-            const routed = isRouteActive(channelName, bus);
-            setState(context, routed ? 1 : 0);
-            setTitle(context, `${channelName}\n→ ${bus}`);
+            const normBus = normalizeBusToken(bus);
+            const titleName = channelObj ? channelObj.name : channelName;
+            if (normBus === "external") {
+                if (lastMixerState && !lastMixerState.external_speaker_enabled) {
+                    setImage(context, "assets/speakerDisabled.png");
+                    setTitle(context, `${titleName}\nDeaktiviert`);
+                } else {
+                    const routed = isRouteActive(channelName, "external");
+                    setImage(context, routed ? "assets/speakerOn.png" : "assets/speakerOff.png");
+                    setTitle(context, `${titleName}\n${routed ? "ON" : "OFF"}`);
+                }
+            } else {
+                const routed = isRouteActive(channelName, bus);
+                setState(context, routed ? 1 : 0);
+                setTitle(context, `${titleName}\n→ ${bus}`);
+            }
             break;
         }
     }
 }
 
+function normalizeChannelToken(str) {
+    if (!str) return "";
+    const clean = str.toString().toLowerCase().replace(/[\s_\-]+/g, "");
+    if (["mic", "mikrofon", "microphone"].includes(clean)) return "mic";
+    if (["chat", "discord"].includes(clean)) return "chat";
+    if (["music", "musik", "spotify"].includes(clean)) return "music";
+    if (["game", "spiel"].includes(clean)) return "game";
+    if (["system"].includes(clean)) return "system";
+    if (["samples", "sampler"].includes(clean)) return "samples";
+    if (["linein", "line"].includes(clean)) return "linein";
+    if (["console", "konsole"].includes(clean)) return "console";
+    if (["headphones", "kopfhörer", "kopfhoerer", "hp"].includes(clean)) return "headphones";
+    if (["monitor"].includes(clean)) return "monitor";
+    if (["lineout"].includes(clean)) return "lineout";
+    if (["stream", "broadcast", "broadcaststreammix"].includes(clean)) return "stream";
+    if (["chatmic"].includes(clean)) return "chatmic";
+    return clean;
+}
+
+function normalizeBusToken(str) {
+    if (!str) return "";
+    const clean = str.toString().toLowerCase().replace(/[\s_\-]+/g, "");
+    if (["headphones", "kopfhörer", "kopfhoerer", "hp"].includes(clean)) return "headphones";
+    if (["stream", "broadcast", "broadcaststreammix"].includes(clean)) return "stream";
+    if (["lineout"].includes(clean)) return "lineout";
+    if (["chatmic", "chat"].includes(clean)) return "chatmic";
+    if (["sampler", "samples"].includes(clean)) return "sampler";
+    if (["external", "extern", "speaker", "lautsprecher", "wireless", "bluetooth"].includes(clean)) return "external";
+    return clean;
+}
+
 function findChannelInState(name) {
     if (!lastMixerState || !lastMixerState.channels) return null;
-    const clean = name.toLowerCase().trim();
+    const clean = (name || "").toString().toLowerCase().trim();
+    if (!clean) return null;
+
     // Check faders A, B, C, D
     if (clean.length === 1 && ["a", "b", "c", "d"].includes(clean)) {
-        const fa = lastMixerState.faders.find(f => f.fader.toLowerCase() === clean);
+        const fa = lastMixerState.faders && lastMixerState.faders.find(f => f.fader.toLowerCase() === clean);
         if (fa) return lastMixerState.channels.find(c => c.id === fa.channel);
     }
-    return lastMixerState.channels.find(c => c.name.toLowerCase().includes(clean) || clean.includes(c.name.toLowerCase()));
+
+    const normInput = normalizeChannelToken(clean);
+    // 1. Exact token match
+    let match = lastMixerState.channels.find(c => normalizeChannelToken(c.name) === normInput);
+    if (match) return match;
+
+    // 2. Substring match
+    const strippedClean = clean.replace(/[\s_\-]+/g, "");
+    match = lastMixerState.channels.find(c => {
+        const cClean = c.name.toLowerCase().replace(/[\s_\-]+/g, "");
+        return cClean.includes(strippedClean) || strippedClean.includes(cClean);
+    });
+    return match || null;
 }
 
 function isRouteActive(chName, busName) {
-    if (!lastMixerState || !lastMixerState.routes) return false;
+    if (!lastMixerState) return false;
+    const normBus = normalizeBusToken(busName);
+    if (normBus === "external") {
+        if (!lastMixerState.external_speaker_enabled) return false;
+        const ch = findChannelInState(chName);
+        if (!ch) return false;
+        if (lastMixerState.wireless_routing) {
+            for (const [k, v] of Object.entries(lastMixerState.wireless_routing)) {
+                if (normalizeChannelToken(k) === normalizeChannelToken(ch.name)) {
+                    return !!v;
+                }
+            }
+        }
+        return false;
+    }
+
+    if (!lastMixerState.routes) return false;
     const ch = findChannelInState(chName);
     if (!ch) return false;
-    const busClean = busName.toLowerCase();
-    const bus = lastMixerState.buses ? lastMixerState.buses.find(b => b.name.toLowerCase().includes(busClean)) : null;
+    const bus = lastMixerState.buses ? lastMixerState.buses.find(b => normalizeBusToken(b.name) === normBus) : null;
     if (!bus) return false;
     const route = lastMixerState.routes.find(r => r.channel === ch.id && r.bus === bus.id);
     return route ? route.gain > 0 : false;
