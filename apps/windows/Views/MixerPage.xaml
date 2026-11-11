@@ -142,6 +142,7 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Uid="FaderAssignTitle" FontWeight="SemiBold" VerticalAlignment="Center" />
                     <ItemsRepeater Grid.Column="1" HorizontalAlignment="Left" ItemsSource="{x:Bind ViewModel.FaderSlots}">
@@ -176,6 +177,51 @@
                             </DataTemplate>
                         </ItemsRepeater.ItemTemplate>
                     </ItemsRepeater>
+
+                    <!-- Top Area Controls: Directly under (Kopfhörer | Stream | Dual) -->
+                    <Border Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Background="{StaticResource SurfaceL2Brush}" CornerRadius="10"
+                            Padding="8,3" BorderBrush="{StaticResource SurfaceStrokeBrush}" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <!-- Mic Mute (Husten) Button -->
+                            <ToggleButton x:Uid="MicMuteButton" Height="34" Padding="10,4" CornerRadius="7"
+                                          Style="{StaticResource SmoothDangerToggle}"
+                                          IsChecked="{x:Bind ViewModel.MicMuted, Mode=TwoWay}"
+                                          ToolTipService.ToolTip="Mikrofon stummschalten (Husten-Taste)">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="{x:Bind MicGlyph(ViewModel.MicMuted), Mode=OneWay}" FontSize="13" />
+                                    <TextBlock Text="Husten" FontWeight="SemiBold" FontSize="11" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <!-- Bleep (Zensur) Button -->
+                            <ToggleButton x:Name="BleepButton" x:Uid="BleepButton" Height="34" Padding="10,4" CornerRadius="7"
+                                          Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
+                                          IsChecked="{x:Bind ViewModel.BleepActive, Mode=OneWay}"
+                                          ToolTipService.ToolTip="Zensurton (Halten)">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="!@#$?*" FontSize="12" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}" />
+                                    <TextBlock Text="Zensur" FontWeight="SemiBold" FontSize="11" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <!-- Subtle vertical divider -->
+                            <Border Width="1" Height="20" Background="{StaticResource SurfaceStrokeSubtleBrush}" VerticalAlignment="Center" />
+
+                            <!-- Bleep Slider (Pegel) -->
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <TextBlock Text="Bleep:" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" />
+                                <Slider x:Name="BleepSlider" Minimum="0" Maximum="100" StepFrequency="1"
+                                        Width="76" VerticalAlignment="Center"
+                                        Value="{x:Bind ViewModel.BleepVolume, Mode=TwoWay}"
+                                        AutomationProperties.Name="Bleep Lautstärke" />
+                                <TextBlock Text="{x:Bind ViewModel.BleepVolumeText, Mode=OneWay}"
+                                           FontSize="11" FontWeight="SemiBold" Width="36" VerticalAlignment="Center"
+                                           FontFamily="{StaticResource DisplayFont}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
                 </Grid>
             </StackPanel>
         </Border>
@@ -191,8 +237,6 @@
                     <ColumnDefinition x:Name="InCol" Width="Auto" />
                     <ColumnDefinition x:Name="DivCol1" Width="Auto" />
                     <ColumnDefinition x:Name="OutCol" Width="Auto" />
-                    <ColumnDefinition x:Name="DivCol2" Width="Auto" />
-                    <ColumnDefinition x:Name="MidCol" Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -240,61 +284,6 @@
                         </ItemsRepeater.ItemTemplate>
                     </ItemsRepeater>
                 </StackPanel>
-
-                <!-- Divider between Outputs and Master Controls -->
-                <Rectangle x:Name="DivCol2Rect" Grid.Column="3" Width="1" VerticalAlignment="Stretch"
-                           Fill="{StaticResource SurfaceStrokeSubtleBrush}" Margin="12,28,12,8" />
-
-                <!-- Master Controls Section (Mic Mute / Cough button + Censor Bleep) on the Far Right (Headline hidden) -->
-                <Grid x:Name="BleepSection" Grid.Column="4" RowSpacing="10" Margin="4,0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="18" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <!-- Empty 18px spacer keeps controls aligned with channel strips without showing headline -->
-                    <Border Height="18" />
-                    <Border x:Name="BleepCard" Grid.Row="1" Background="{StaticResource SurfaceL2Brush}" CornerRadius="12"
-                            BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1"
-                            Padding="12,16">
-                        <StackPanel x:Name="BleepButtons" Spacing="16" VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <!-- Mic Mute (Cough) Button -->
-                            <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                <ToggleButton x:Uid="MicMuteButton" Width="68" Height="68" CornerRadius="34"
-                                              Style="{StaticResource SmoothDangerToggle}"
-                                              IsChecked="{x:Bind ViewModel.MicMuted, Mode=TwoWay}">
-                                    <FontIcon Glyph="{x:Bind MicGlyph(ViewModel.MicMuted), Mode=OneWay}" FontSize="24" />
-                                </ToggleButton>
-                                <TextBlock Text="Husten" FontSize="11" FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-
-                            <!-- Bleep Censor Button -->
-                            <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                <ToggleButton x:Name="BleepButton" x:Uid="BleepButton" Width="68" Height="68" CornerRadius="16"
-                                              Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
-                                              IsChecked="{x:Bind ViewModel.BleepActive, Mode=OneWay}">
-                                    <TextBlock Text="!@#$?*" FontSize="15" FontWeight="Bold" HorizontalAlignment="Center"
-                                               FontFamily="{StaticResource DisplayFont}" />
-                                </ToggleButton>
-                                <TextBlock Text="Zensur" FontSize="11" FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-
-                            <!-- Bleep volume slider (0-100%) -->
-                            <StackPanel Spacing="3" HorizontalAlignment="Center" Margin="0,4,0,0">
-                                <TextBlock Text="Bleep-Pegel" Style="{StaticResource Caption}" HorizontalAlignment="Center"
-                                           Foreground="{StaticResource TextMutedBrush}" />
-                                <Slider x:Name="BleepSlider" Minimum="0" Maximum="100" StepFrequency="1"
-                                        Width="72" HorizontalAlignment="Center"
-                                        Value="{x:Bind ViewModel.BleepVolume, Mode=TwoWay}"
-                                        AutomationProperties.Name="Bleep Lautstärke" />
-                                <TextBlock Text="{x:Bind ViewModel.BleepVolumeText, Mode=OneWay}"
-                                           FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"
-                                           FontFamily="{StaticResource DisplayFont}" />
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-                </Grid>
             </Grid>
         </ScrollViewer>
     </Grid>

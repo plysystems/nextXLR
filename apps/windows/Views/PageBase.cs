@@ -194,7 +194,7 @@ public partial class MixerPage : Page
         double minStrip = ViewModel.ActiveMixIndex == 2 ? 104 : MinStrip;
         double maxStrip = ViewModel.ActiveMixIndex == 2 ? 240 : 200;
         double colGap = 8;
-        double chrome = MidWidth + 48; // Controls + Dividers + margins
+        double chrome = 25; // 1px hairline divider + 24px margins between Inputs and Outputs
 
         double gapsIn = Math.Max(0, nIn - 1) * colGap;
         double gapsOut = Math.Max(0, nOut - 1) * colGap;
@@ -226,7 +226,6 @@ public partial class MixerPage : Page
 
         // Explicit pixel widths ensure star column rounding never truncates or wraps items
         InCol.Width = new GridLength(inBayWidth, GridUnitType.Pixel);
-        MidCol.Width = GridLength.Auto;
         OutCol.Width = new GridLength(outBayWidth, GridUnitType.Pixel);
 
         // Defensive calculation ensures all 8 inputs and 5 outputs ALWAYS stay strictly in one row side-by-side
@@ -252,14 +251,9 @@ public partial class MixerPage : Page
         Place(InputsSection, 0, 0);
         Place(DivCol1Rect, 0, 1);
         Place(OutputsSection, 0, 2);
-        Place(DivCol2Rect, 0, 3);
-        Place(BleepSection, 0, 4);
-
-        BleepButtons.Orientation = Orientation.Vertical;
 
         var height = Math.Max(MinRowHeight, h - Header - 2);
         InLayout.MinItemHeight = OutLayout.MinItemHeight = height;
-        BleepCard.Height = height;
     }
 
     private static void Place(FrameworkElement e, int row, int column, int span = 1)
