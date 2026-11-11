@@ -180,8 +180,8 @@ public partial class MixerPage : Page
     private static double RowWidth(int n, double strip) => n * strip + Math.Max(0, n - 1) * Gap;
 
     /// <summary>
-    /// Wide: Inputs | mic mute + censor | Outputs in one row; every strip gets the same width and
-    /// the full height. Narrow: the three sections stack, strips wrap, and the page scrolls.
+    /// Professional studio mixing console: Inputs, Master Controls, and Outputs always side-by-side.
+    /// Strips dynamically size to fill available width with smooth horizontal scrolling when needed.
     /// </summary>
     private void Layout()
     {
@@ -191,66 +191,36 @@ public partial class MixerPage : Page
         var h = StripScroller.ActualHeight;
         if (w <= 0) return;
 
-        var chrome = MidWidth + 2 * SectionGap;
-        double effectiveStrip = ViewModel.ActiveMixIndex == 0 ? 104 : MinStrip;
-        double effectiveOneRow = ViewModel.ActiveMixIndex == 0 ? 104 : OneRowStrip;
-        InLayout.MinItemWidth = effectiveStrip;
-        OutLayout.MinItemWidth = MinStrip;
+        double minStrip = ViewModel.ActiveMixIndex == 2 ? 104 : MinStrip;
+        double chrome = MidWidth + 48; // Controls + Dividers + margins
+
+        double availableForStrips = w - chrome - (nIn - 1) * Gap - (nOut - 1) * Gap;
+        double targetStrip = Math.Max(minStrip, availableForStrips / (nIn + nOut));
+        targetStrip = Math.Min(targetStrip, 130);
+
+        InLayout.MinItemWidth = targetStrip;
+        OutLayout.MinItemWidth = targetStrip;
+        InLayout.ItemsStretch = UniformGridLayoutItemsStretch.Fill;
         OutLayout.ItemsStretch = UniformGridLayoutItemsStretch.Fill;
-        if (RowWidth(nIn, effectiveOneRow) + RowWidth(nOut, OneRowStrip) + chrome <= w)
-        {
-            // 1) One row: Inputs | censor | Outputs, full height.
-            var strip = (w - chrome - (nIn - 1) * Gap - (nOut - 1) * Gap) / (nIn + nOut);
-            InCol.Width = new GridLength(RowWidth(nIn, strip));
-            MidCol.Width = GridLength.Auto;
-            OutCol.Width = new GridLength(RowWidth(nOut, strip));
-            Place(InputsSection, 0, 0); Place(BleepSection, 0, 1); Place(OutputsSection, 0, 2);
-            BleepSection.Margin = new Thickness(SectionGap, 0, SectionGap, 0);
-            OutputsSection.Margin = new Thickness(0);
-            BleepButtons.Orientation = Orientation.Vertical;
-            InLayout.MinItemWidth = effectiveOneRow;
-            OutLayout.MinItemWidth = OneRowStrip;
-            InLayout.MaximumRowsOrColumns = nIn;
-            OutLayout.MaximumRowsOrColumns = nOut;
-            var height = Math.Max(MinRowHeight, h - Header - 2);
-            InLayout.MinItemHeight = OutLayout.MinItemHeight = height;
-            BleepCard.Height = height;
-        }
-        else if (RowWidth(nIn, MinStrip) <= w && RowWidth(nOut, MinStrip) + MidWidth + SectionGap <= w)
-        {
-            // 2) Two rows: Inputs across the top; censor + Outputs below, same strip width.
-            var strip = (w - (nIn - 1) * Gap) / nIn;
-            if (RowWidth(nOut, strip) + MidWidth + SectionGap > w)
-                strip = (w - MidWidth - SectionGap - (nOut - 1) * Gap) / nOut;
-            InCol.Width = GridLength.Auto;
-            MidCol.Width = new GridLength(1, GridUnitType.Star);
-            OutCol.Width = new GridLength(0);
-            Place(InputsSection, 0, 0, span: 3); Place(BleepSection, 1, 0); Place(OutputsSection, 1, 1);
-            BleepSection.Margin = new Thickness(0, SectionGap, SectionGap, 0);
-            OutputsSection.Margin = new Thickness(0, SectionGap, 0, 0);
-            BleepButtons.Orientation = Orientation.Vertical;
-            InLayout.MaximumRowsOrColumns = nIn;
-            OutLayout.MaximumRowsOrColumns = nOut;
-            OutLayout.MinItemWidth = strip;
-            OutLayout.ItemsStretch = UniformGridLayoutItemsStretch.None;
-            InLayout.MinItemHeight = OutLayout.MinItemHeight = WrappedHeight;
-            BleepCard.Height = WrappedHeight;
-        }
-        else
-        {
-            // 3) Stacked: each section wraps; the page scrolls.
-            InCol.Width = new GridLength(1, GridUnitType.Star);
-            MidCol.Width = OutCol.Width = new GridLength(0);
-            Place(InputsSection, 0, 0); Place(BleepSection, 1, 0); Place(OutputsSection, 2, 0);
-            BleepSection.Margin = new Thickness(0, SectionGap, 0, SectionGap);
-            OutputsSection.Margin = new Thickness(0);
-            BleepButtons.Orientation = Orientation.Horizontal;
-            var cols = Math.Max(1, (int)((w + Gap) / (MinStrip + Gap)));
-            InLayout.MaximumRowsOrColumns = Math.Min(cols, nIn);
-            OutLayout.MaximumRowsOrColumns = Math.Min(cols, nOut);
-            InLayout.MinItemHeight = OutLayout.MinItemHeight = WrappedHeight;
-            BleepCard.Height = double.NaN;
-        }
+
+        InLayout.MaximumRowsOrColumns = nIn;
+        OutLayout.MaximumRowsOrColumns = nOut;
+
+        InCol.Width = new GridLength(RowWidth(nIn, targetStrip));
+        MidCol.Width = GridLength.Auto;
+        OutCol.Width = new GridLength(RowWidth(nOut, targetStrip));
+
+        Place(InputsSection, 0, 0);
+        Place(DivCol1Rect, 0, 1);
+        Place(BleepSection, 0, 2);
+        Place(DivCol2Rect, 0, 3);
+        Place(OutputsSection, 0, 4);
+
+        BleepButtons.Orientation = Orientation.Vertical;
+
+        var height = Math.Max(MinRowHeight, h - Header - 2);
+        InLayout.MinItemHeight = OutLayout.MinItemHeight = height;
+        BleepCard.Height = height;
     }
 
     private static void Place(FrameworkElement e, int row, int column, int span = 1)

@@ -6,9 +6,9 @@
     xmlns:local="using:NextXLR"
     xmlns:controls="using:NextXLR.Controls">
 
-    <!-- Responsive channel strip: sleek unboxed design with subtle separation and ergonomic fader layout -->
-    <Border Background="{StaticResource SurfaceL1Brush}" CornerRadius="14" Padding="8,14,8,12" MinWidth="84"
-            BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+    <!-- Responsive channel strip: sleek unboxed studio console design -->
+    <Border Background="Transparent" CornerRadius="10" Padding="4,8" MinWidth="80"
+            BorderThickness="0">
         <Grid RowSpacing="10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -94,9 +94,9 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Left Column: Kopfhörer-Mix (Submix) -->
-                <Border CornerRadius="8" Padding="4,6"
+                <Border CornerRadius="8" Padding="2,4"
                         Background="{x:Bind TrackBackground(ViewModel.ShowFaderOnPhones), Mode=OneWay}"
-                        BorderBrush="{x:Bind TrackBorder(ViewModel.ShowFaderOnPhones), Mode=OneWay}" BorderThickness="1">
+                        BorderThickness="0">
                     <StackPanel Spacing="6" HorizontalAlignment="Center">
                         <controls:Fader x:Name="PhonesFader" Width="44" Height="180"
                                         Minimum="{x:Bind ViewModel.MinVolumePercent, Mode=OneWay}"
@@ -135,9 +135,9 @@
                         VerticalAlignment="Stretch" Margin="0,4" />
 
                 <!-- Right Column: Stream-Mix -->
-                <Border Grid.Column="2" CornerRadius="8" Padding="4,6"
+                <Border Grid.Column="2" CornerRadius="8" Padding="2,4"
                         Background="{x:Bind TrackBackground(ViewModel.ShowFaderOnStream), Mode=OneWay}"
-                        BorderBrush="{x:Bind TrackBorder(ViewModel.ShowFaderOnStream), Mode=OneWay}" BorderThickness="1">
+                        BorderThickness="0">
                     <StackPanel Spacing="6" HorizontalAlignment="Center">
                         <controls:Fader x:Name="StreamFader" Width="44" Height="180"
                                         Minimum="{x:Bind ViewModel.MinVolumePercent, Mode=OneWay}"

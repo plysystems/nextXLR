@@ -438,8 +438,8 @@ public sealed class BluetoothAudioRouter : IDisposable
                     streamProvider = new SampleToWaveProvider16(pipeline);
                 }
 
-                // 5. Initialize Output: WASAPI Shared with optimal buffer (30ms for crystal-clear playback without dropouts)
-                int bufferLatencyMs = 30;
+                // 5. Initialize Output: WASAPI Shared with ultra-low latency event buffer (15ms for crystal-clear playback)
+                int bufferLatencyMs = 15;
                 try
                 {
                     _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, true, bufferLatencyMs);
@@ -450,7 +450,7 @@ public sealed class BluetoothAudioRouter : IDisposable
                     try
                     {
                         _player?.Dispose();
-                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 40);
+                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 25);
                         _player.Init(streamProvider);
                     }
                     catch
@@ -460,7 +460,7 @@ public sealed class BluetoothAudioRouter : IDisposable
                             ? pipeline.ToWaveProvider()
                             : new SampleToWaveProvider16(pipeline);
 
-                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 50);
+                        _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, false, 40);
                         _player.Init(fallbackProvider);
                     }
                 }
@@ -557,9 +557,9 @@ public sealed class BluetoothAudioRouter : IDisposable
 
     private void AddCaptureToMixer(WasapiCapture capture, MixingSampleProvider mixer, string fullName, string shortName)
     {
-        // Real-time jitter buffer with active drift compensation and micro-crossfades (60ms max lag, 25ms cushion)
+        // Real-time ultra-low latency jitter buffer with active drift compensation and micro-crossfades (25ms max lag, 10ms cushion)
         // guaranteeing pristine, glitch-free audio output without dropouts or crackles.
-        var jitterBuffer = new RealtimeJitterBuffer(capture.WaveFormat, maxLatencyMs: 60, prebufferMs: 25);
+        var jitterBuffer = new RealtimeJitterBuffer(capture.WaveFormat, maxLatencyMs: 25, prebufferMs: 10);
 
         capture.DataAvailable += (s, e) =>
         {
@@ -702,9 +702,10 @@ public sealed class BluetoothAudioRouter : IDisposable
 
     private static WasapiCapture CreateLoopbackCapture(MMDevice device)
     {
+        // Prioritize ultra-low latency event-driven capture (~10-12ms)
         try
         {
-            return new WasapiLoopbackCapture(device);
+            return new LowLatencyWasapiLoopbackCapture(device, 10);
         }
         catch
         {
@@ -714,7 +715,14 @@ public sealed class BluetoothAudioRouter : IDisposable
             }
             catch
             {
-                return new PollingWasapiLoopbackCapture(device, 20);
+                try
+                {
+                    return new PollingWasapiLoopbackCapture(device, 15);
+                }
+                catch
+                {
+                    return new WasapiLoopbackCapture(device);
+                }
             }
         }
     }
@@ -776,12 +784,12 @@ public sealed class BluetoothAudioRouter : IDisposable
 
         public WaveFormat WaveFormat { get; }
 
-        public RealtimeJitterBuffer(WaveFormat format, int maxLatencyMs = 60, int prebufferMs = 25)
+        public RealtimeJitterBuffer(WaveFormat format, int maxLatencyMs = 25, int prebufferMs = 10)
         {
             WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(format.SampleRate, format.Channels);
             int samplesPerMs = Math.Max((format.SampleRate * format.Channels) / 1000, 1);
-            _maxTargetLatencySamples = Math.Max(samplesPerMs * maxLatencyMs, 960);
-            _prebufferSamples = Math.Max(samplesPerMs * prebufferMs, 480);
+            _maxTargetLatencySamples = Math.Max(samplesPerMs * maxLatencyMs, 480);
+            _prebufferSamples = Math.Max(samplesPerMs * prebufferMs, 192);
             _capacity = samplesPerMs * 500; // 500ms ring buffer capacity
             _ringBuffer = new float[_capacity];
         }

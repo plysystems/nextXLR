@@ -96,8 +96,8 @@
         </Grid>
 
         <!-- Hardware faders A–D: sleek unboxed console ribbon -->
-        <Border Grid.Row="1" Background="{StaticResource SurfaceL1Brush}" CornerRadius="12" Padding="14,10"
-                BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+        <Border Grid.Row="1" Background="Transparent" Padding="4,2,4,12"
+                BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="0,0,0,1">
             <StackPanel Spacing="12">
                 <!-- Mixer Pages Switcher Bar (Only visible on full GoXLR) -->
                 <Grid Visibility="{x:Bind ViewModel.MixerPagesVisibility, Mode=OneWay}">
@@ -181,22 +181,21 @@
         </Border>
 
         <!--
-          Three sections: Inputs (fader A–D channels first) | mic mute + censor | Outputs.
-          Wide windows: one row, strips share the width equally and fill the height.
-          Narrow windows: the sections stack and wrap, and the page scrolls (MixerPage.Layout).
+          Three sections: Inputs (fader A–D channels first) | Master Controls (Cough + Bleep) | Outputs.
+          Always side-by-side on one cohesive studio mixing console desk.
         -->
         <ScrollViewer x:Name="StripScroller" Grid.Row="2" VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Disabled" SizeChanged="StripScroller_SizeChanged">
+                      HorizontalScrollBarVisibility="Auto" SizeChanged="StripScroller_SizeChanged">
             <Grid x:Name="Sections">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition x:Name="InCol" Width="*" />
+                    <ColumnDefinition x:Name="InCol" Width="Auto" />
+                    <ColumnDefinition x:Name="DivCol1" Width="Auto" />
                     <ColumnDefinition x:Name="MidCol" Width="Auto" />
-                    <ColumnDefinition x:Name="OutCol" Width="*" />
+                    <ColumnDefinition x:Name="DivCol2" Width="Auto" />
+                    <ColumnDefinition x:Name="OutCol" Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
                 <StackPanel x:Name="InputsSection" Spacing="10">
@@ -216,24 +215,29 @@
                     </ItemsRepeater>
                 </StackPanel>
 
-                <!-- Global mic mute (cough button) and censor: icon / symbols only -->
-                <Grid x:Name="BleepSection" Grid.Column="1" RowSpacing="10" Margin="14,0">
+                <!-- Divider between Inputs and Master Controls -->
+                <Rectangle x:Name="DivCol1Rect" Grid.Column="1" Width="1" VerticalAlignment="Stretch"
+                           Fill="{StaticResource SurfaceStrokeSubtleBrush}" Margin="12,28,12,8" />
+
+                <!-- Global mic mute (cough button) and censor: master controls section -->
+                <Grid x:Name="BleepSection" Grid.Column="2" RowSpacing="10" Margin="4,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="18" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <Border x:Name="BleepCard" Grid.Row="1" Background="{StaticResource SurfaceL1Brush}" CornerRadius="16"
-                            Padding="12,18" BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
-                        <StackPanel x:Name="BleepButtons" Spacing="14" VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <ToggleButton x:Uid="MicMuteButton" Width="80" Height="80" CornerRadius="40"
+                    <TextBlock Text="CONTROLS" Style="{StaticResource Overline}" Height="18" HorizontalAlignment="Center" />
+                    <Border x:Name="BleepCard" Grid.Row="1" Background="Transparent" CornerRadius="12"
+                            Padding="8,12" BorderThickness="0">
+                        <StackPanel x:Name="BleepButtons" Spacing="16" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <ToggleButton x:Uid="MicMuteButton" Width="72" Height="72" CornerRadius="36"
                                           Style="{StaticResource SmoothDangerToggle}"
                                           IsChecked="{x:Bind ViewModel.MicMuted, Mode=TwoWay}">
-                                <FontIcon Glyph="{x:Bind MicGlyph(ViewModel.MicMuted), Mode=OneWay}" FontSize="28" />
+                                <FontIcon Glyph="{x:Bind MicGlyph(ViewModel.MicMuted), Mode=OneWay}" FontSize="26" />
                             </ToggleButton>
-                            <ToggleButton x:Name="BleepButton" x:Uid="BleepButton" Width="80" Height="80" CornerRadius="16"
+                            <ToggleButton x:Name="BleepButton" x:Uid="BleepButton" Width="72" Height="72" CornerRadius="16"
                                           Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
                                           IsChecked="{x:Bind ViewModel.BleepActive, Mode=OneWay}">
-                                <TextBlock Text="!@#$?*" FontSize="17" FontWeight="Bold" HorizontalAlignment="Center"
+                                <TextBlock Text="!@#$?*" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"
                                            FontFamily="{StaticResource DisplayFont}" />
                             </ToggleButton>
 
@@ -242,18 +246,22 @@
                                 <TextBlock Text="Bleep" Style="{StaticResource Caption}" HorizontalAlignment="Center"
                                            Foreground="{StaticResource TextMutedBrush}" />
                                 <Slider x:Name="BleepSlider" Minimum="0" Maximum="100" StepFrequency="1"
-                                        Width="80" HorizontalAlignment="Center"
+                                        Width="72" HorizontalAlignment="Center"
                                         Value="{x:Bind ViewModel.BleepVolume, Mode=TwoWay}"
                                         AutomationProperties.Name="Bleep Lautstärke" />
                                 <TextBlock Text="{x:Bind ViewModel.BleepVolumeText, Mode=OneWay}"
-                                           FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                           FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"
                                            FontFamily="{StaticResource DisplayFont}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
                 </Grid>
 
-                <StackPanel x:Name="OutputsSection" Grid.Column="2" Spacing="10">
+                <!-- Divider between Master Controls and Outputs -->
+                <Rectangle x:Name="DivCol2Rect" Grid.Column="3" Width="1" VerticalAlignment="Stretch"
+                           Fill="{StaticResource SurfaceStrokeSubtleBrush}" Margin="12,28,12,8" />
+
+                <StackPanel x:Name="OutputsSection" Grid.Column="4" Spacing="10">
                     <TextBlock x:Uid="MixerOutputs" Style="{StaticResource Overline}" Height="18" />
                     <ItemsRepeater x:Name="OutputsRepeater" ItemsSource="{x:Bind ViewModel.OutputStrips}"
                                    ElementPrepared="OutputsRepeater_ElementPrepared">

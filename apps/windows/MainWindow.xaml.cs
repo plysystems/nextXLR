@@ -46,7 +46,15 @@ public sealed partial class MainWindow : Window
     {
         CurrentInstance = this;
         ViewModel = new MainViewModel(Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread(), _transport);
-        InitializeComponent();
+
+        try
+        {
+            InitializeComponent();
+        }
+        catch (Exception ex)
+        {
+            Services.CrashHandler.HandleException(ex, "MainWindow.InitializeComponent Exception");
+        }
 
         Title = Loc.Get("AppTitle");
         Handle = WinRT.Interop.WindowNative.GetWindowHandle(this);
@@ -56,8 +64,12 @@ public sealed partial class MainWindow : Window
             Content = RootWindowGrid;
         }
 
-        ExtendsContentIntoTitleBar = true;
-        SetTitleBar(AppTitleBar);
+        try
+        {
+            ExtendsContentIntoTitleBar = true;
+            SetTitleBar(AppTitleBar);
+        }
+        catch { }
         try
         {
             if (Microsoft.UI.Windowing.AppWindowTitleBar.IsCustomizationSupported())
@@ -433,9 +445,9 @@ public sealed partial class MainWindow : Window
     {
         try
         {
-            if (ContentFrame.Content == null)
+            if (ContentFrame != null && ContentFrame.Content == null)
             {
-                if (Nav.SelectedItem == null)
+                if (Nav != null && Nav.SelectedItem == null)
                 {
                     Nav.SelectedItem = MixerItem;
                 }
