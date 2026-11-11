@@ -1,6 +1,6 @@
 {
   "UUID": "com.plysystems.nextxlr",
-  "SDKVersion": 2,
+  "SDKVersion": 3,
   "Author": "plysystems",
   "Description": "NEXT : XLR Stream Deck Integration — Fader-Lautstärken, Mutes, Husten-Taste, Zensur-Bleep, Routing und Profile direkt über Stream Deck & Stream Deck + steuern.",
   "Name": "NEXT : XLR",
@@ -14,7 +14,7 @@
     }
   ],
   "Software": {
-    "MinimumVersion": "6.5"
+    "MinimumVersion": "6.9"
   },
   "CodePath": "index.html",
   "Category": "NEXT : XLR",

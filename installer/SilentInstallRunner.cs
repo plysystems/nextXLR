@@ -151,7 +151,7 @@ public sealed class SilentInstallRunner
 
                 using var uninstKey = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\NextXLR");
                 uninstKey.SetValue("DisplayName", "NEXT : XLR");
-                uninstKey.SetValue("DisplayVersion", "0.1.8.9-alpha");
+                uninstKey.SetValue("DisplayVersion", "0.1.9.0-alpha");
                 uninstKey.SetValue("Publisher", "plysystems");
                 uninstKey.SetValue("UninstallString", $"\"{uninstExe}\" --uninstall");
                 uninstKey.SetValue("QuietUninstallString", $"\"{uninstExe}\" --uninstall --quiet");
@@ -161,6 +161,30 @@ public sealed class SilentInstallRunner
                 uninstKey.SetValue("URLInfoAbout", "https://github.com/plysystems/nextXLR");
                 uninstKey.SetValue("NoModify", 1, RegistryValueKind.DWord);
                 uninstKey.SetValue("NoRepair", 1, RegistryValueKind.DWord);
+
+                // Auto-install Stream Deck plugin if Stream Deck is present
+                try
+                {
+                    var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    var sdPluginsDir = Path.Combine(appData, "Elgato", "StreamDeck", "Plugins");
+                    if (Directory.Exists(sdPluginsDir))
+                    {
+                        var srcPluginDir = Path.Combine(_targetDir, "Assets", "StreamDeck", "com.plysystems.nextxlr.sdPlugin");
+                        if (Directory.Exists(srcPluginDir))
+                        {
+                            var dstPluginDir = Path.Combine(sdPluginsDir, "com.plysystems.nextxlr.sdPlugin");
+                            Directory.CreateDirectory(dstPluginDir);
+                            foreach (var f in Directory.GetFiles(srcPluginDir, "*", SearchOption.AllDirectories))
+                            {
+                                var rel = Path.GetRelativePath(srcPluginDir, f);
+                                var dest = Path.Combine(dstPluginDir, rel);
+                                Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+                                File.Copy(f, dest, true);
+                            }
+                        }
+                    }
+                }
+                catch { }
 
                 using var runKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
                 runKey?.DeleteValue("NextXLR_BackgroundService", throwOnMissingValue: false);

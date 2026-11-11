@@ -557,9 +557,9 @@ public sealed class BluetoothAudioRouter : IDisposable
 
     private void AddCaptureToMixer(WasapiCapture capture, MixingSampleProvider mixer, string fullName, string shortName)
     {
-        // Real-time ultra-low latency jitter buffer with active drift compensation and micro-crossfades (25ms max lag, 10ms cushion)
+        // Real-time ultra-low latency jitter buffer with active drift compensation and micro-crossfades (20ms max lag, 6ms cushion)
         // guaranteeing pristine, glitch-free audio output without dropouts or crackles.
-        var jitterBuffer = new RealtimeJitterBuffer(capture.WaveFormat, maxLatencyMs: 25, prebufferMs: 10);
+        var jitterBuffer = new RealtimeJitterBuffer(capture.WaveFormat, maxLatencyMs: 20, prebufferMs: 6);
 
         capture.DataAvailable += (s, e) =>
         {
@@ -767,7 +767,7 @@ public sealed class BluetoothAudioRouter : IDisposable
 
     /// <summary>
     /// Jitter buffer optimized for external outputs (Bluetooth, 2.4GHz wireless headsets, USB DACs).
-    /// Features low-latency pre-buffering (8ms cushion) and strict 20ms max-lag cap
+    /// Features low-latency pre-buffering (6ms cushion) and strict 20ms max-lag cap
     /// with frame-aligned boundary clipping to preserve stereo imaging and sub-second responsiveness.
     /// </summary>
     public sealed class RealtimeJitterBuffer : ISampleProvider
@@ -780,11 +780,12 @@ public sealed class BluetoothAudioRouter : IDisposable
         private int _readPos;
         private int _bufferedSamples;
         private bool _isBuffering = true;
+        private int _consecutiveUnderruns = 0;
         private readonly object _lock = new();
 
         public WaveFormat WaveFormat { get; }
 
-        public RealtimeJitterBuffer(WaveFormat format, int maxLatencyMs = 25, int prebufferMs = 10)
+        public RealtimeJitterBuffer(WaveFormat format, int maxLatencyMs = 20, int prebufferMs = 6)
         {
             WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(format.SampleRate, format.Channels);
             int samplesPerMs = Math.Max((format.SampleRate * format.Channels) / 1000, 1);
@@ -846,6 +847,7 @@ public sealed class BluetoothAudioRouter : IDisposable
                 if (_isBuffering && _bufferedSamples >= _prebufferSamples)
                 {
                     _isBuffering = false;
+                    _consecutiveUnderruns = 0;
                 }
             }
         }
@@ -880,10 +882,17 @@ public sealed class BluetoothAudioRouter : IDisposable
             {
                 if (_bufferedSamples <= 0)
                 {
-                    _isBuffering = true;
+                    _consecutiveUnderruns++;
+                    // Only re-enter buffering mode on sustained starvation (e.g. >10 consecutive frames = ~100ms)
+                    if (_consecutiveUnderruns > 10)
+                    {
+                        _isBuffering = true;
+                    }
                     Array.Clear(buffer, offset, count);
                     return count;
                 }
+
+                _consecutiveUnderruns = 0;
 
                 if (_isBuffering)
                 {
@@ -921,6 +930,17 @@ public sealed class BluetoothAudioRouter : IDisposable
 
                 if (toRead < count)
                 {
+                    // Gentle micro-fadeout on partial underrun to prevent harsh DC-offset clicks
+                    int fadeLen = Math.Min(toRead, 32 * channels);
+                    if (fadeLen > 0)
+                    {
+                        int fadeStart = offset + toRead - fadeLen;
+                        for (int i = 0; i < fadeLen; i++)
+                        {
+                            float factor = 1.0f - ((float)i / fadeLen);
+                            buffer[fadeStart + i] *= factor;
+                        }
+                    }
                     Array.Clear(buffer, offset + toRead, count - toRead);
                 }
 
@@ -971,16 +991,20 @@ public sealed class BluetoothAudioRouter : IDisposable
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ApplySoftLimit(Span<float> span)
         {
+            const float threshold = 0.90f;
+            const float headroom = 0.099f;
+            const float invHeadroom = 1.0f / headroom;
+
             for (int i = 0; i < span.Length; i++)
             {
                 float s = span[i];
-                if (s > 0.85f)
+                if (s > threshold)
                 {
-                    span[i] = 0.85f + 0.14f * (float)Math.Tanh((s - 0.85f) / 0.14f);
+                    span[i] = threshold + headroom * MathF.Tanh((s - threshold) * invHeadroom);
                 }
-                else if (s < -0.85f)
+                else if (s < -threshold)
                 {
-                    span[i] = -0.85f + 0.14f * (float)Math.Tanh((s + 0.85f) / 0.14f);
+                    span[i] = -threshold + headroom * MathF.Tanh((s + threshold) * invHeadroom);
                 }
             }
         }

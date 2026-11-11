@@ -1,5 +1,5 @@
 param(
-    [string]$version = "0.1.8.9-alpha"
+    [string]$version = "0.1.9.0-alpha"
 )
 
 $ErrorActionPreference = "Stop"
@@ -106,6 +106,7 @@ if (-not $packed) {
     Add-Type -AssemblyName System.IO.Compression
     $zipStream = [System.IO.File]::Create($sdPluginOut)
     $archive = New-Object System.IO.Compression.ZipArchive($zipStream, [System.IO.Compression.ZipArchiveMode]::Create)
+    [void]$archive.CreateEntry("com.plysystems.nextxlr.sdPlugin/")
     $files = Get-ChildItem -Path $sdPluginSrc -Recurse -File
     foreach ($file in $files) {
         $relPath = $file.FullName.Substring($sdPluginSrc.Length).TrimStart('\', '/')

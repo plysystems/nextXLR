@@ -93,6 +93,8 @@ impl Engine {
                 EndpointBinding { slot: 3, prefix: "Game", capture: false },
                 EndpointBinding { slot: 4, prefix: "System", capture: false },
                 EndpointBinding { slot: 5, prefix: "Sample", capture: false },
+                EndpointBinding { slot: 6, prefix: "Line In", capture: true },
+                EndpointBinding { slot: 7, prefix: "Console", capture: false },
                 // The GoXLR's mixes, as Windows recording devices.
                 EndpointBinding { slot: 11, prefix: "Broadcast Stream Mix", capture: true },
                 EndpointBinding { slot: 12, prefix: "Chat Mic", capture: true },

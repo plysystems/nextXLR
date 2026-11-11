@@ -588,6 +588,9 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
                 SetProgress(85, "Registriere Windows-Deinstallation...");
                 RegisterUninstall(installDir);
 
+                SetProgress(88, "Richte Stream Deck Integration ein...");
+                InstallStreamDeckPlugin(installDir);
+
                 // Autostart konfigurieren
                 SetProgress(92, "Konfiguriere Autostart...");
                 if (chkAppAutostart.Checked)
@@ -926,7 +929,7 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
 
             using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\NextXLR");
             key.SetValue("DisplayName", "NEXT : XLR");
-            key.SetValue("DisplayVersion", "0.1.7-alpha");
+            key.SetValue("DisplayVersion", "0.1.9.0-alpha");
             key.SetValue("Publisher", "plysystems");
             key.SetValue("UninstallString", $"\"{uninstExe}\" --uninstall");
             key.SetValue("QuietUninstallString", $"\"{uninstExe}\" --uninstall --quiet");
@@ -974,6 +977,46 @@ oLink.Save
             Log($"Verknüpfung erstellt: {Path.GetFileName(shortcutPath)}");
         }
         catch { }
+    }
+
+    private void InstallStreamDeckPlugin(string targetDir)
+    {
+        try
+        {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var sdPluginsDir = Path.Combine(appData, "Elgato", "StreamDeck", "Plugins");
+            if (Directory.Exists(sdPluginsDir))
+            {
+                var srcPluginDir = Path.Combine(targetDir, "Assets", "StreamDeck", "com.plysystems.nextxlr.sdPlugin");
+                if (Directory.Exists(srcPluginDir))
+                {
+                    var dstPluginDir = Path.Combine(sdPluginsDir, "com.plysystems.nextxlr.sdPlugin");
+                    Log("Installiere Stream Deck Plugin...");
+                    Directory.CreateDirectory(dstPluginDir);
+                    CopyDirectoryRecursive(srcPluginDir, dstPluginDir);
+                    Log("Stream Deck Plugin erfolgreich installiert.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log($"Hinweis zu Stream Deck Plugin: {ex.Message}");
+        }
+    }
+
+    private static void CopyDirectoryRecursive(string sourceDir, string targetDir)
+    {
+        Directory.CreateDirectory(targetDir);
+        foreach (var file in Directory.GetFiles(sourceDir))
+        {
+            var dest = Path.Combine(targetDir, Path.GetFileName(file));
+            try { File.Copy(file, dest, true); } catch { }
+        }
+        foreach (var sub in Directory.GetDirectories(sourceDir))
+        {
+            var dest = Path.Combine(targetDir, Path.GetFileName(sub));
+            CopyDirectoryRecursive(sub, dest);
+        }
     }
 
     private bool ConfirmCancel()
