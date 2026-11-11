@@ -198,14 +198,16 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <StackPanel x:Name="InputsSection" Spacing="10">
-                    <TextBlock x:Uid="MixerInputs" Style="{StaticResource Overline}" Height="18" />
+                <StackPanel x:Name="InputsSection" Spacing="10" HorizontalAlignment="Stretch">
+                    <TextBlock x:Uid="MixerInputs" Style="{StaticResource Overline}" Height="18"
+                               Foreground="{StaticResource BrandBrush}" FontWeight="Bold" Margin="4,0,0,0" />
                     <ItemsRepeater x:Name="InputsRepeater" ItemsSource="{x:Bind ViewModel.InputStrips}"
+                                   HorizontalAlignment="Stretch"
                                    ElementPrepared="InputsRepeater_ElementPrepared">
                         <ItemsRepeater.Layout>
                             <UniformGridLayout x:Name="InLayout" MinItemWidth="84" MinItemHeight="440"
                                                MinColumnSpacing="8" MinRowSpacing="8"
-                                               ItemsStretch="None" ItemsJustification="Start" />
+                                               ItemsStretch="Fill" ItemsJustification="Start" />
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="vm:ChannelViewModel">
@@ -227,8 +229,9 @@
                     </Grid.RowDefinitions>
                     <!-- Empty 18px spacer keeps controls aligned with channel strips without showing headline -->
                     <Border Height="18" />
-                    <Border x:Name="BleepCard" Grid.Row="1" Background="Transparent" CornerRadius="12"
-                            Padding="8,12" BorderThickness="0">
+                    <Border x:Name="BleepCard" Grid.Row="1" Background="{StaticResource SurfaceL2Brush}" CornerRadius="12"
+                            BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1"
+                            Padding="12,16">
                         <StackPanel x:Name="BleepButtons" Spacing="16" VerticalAlignment="Center" HorizontalAlignment="Center">
                             <ToggleButton x:Uid="MicMuteButton" Width="72" Height="72" CornerRadius="36"
                                           Style="{StaticResource SmoothDangerToggle}"
@@ -262,14 +265,16 @@
                 <Rectangle x:Name="DivCol2Rect" Grid.Column="3" Width="1" VerticalAlignment="Stretch"
                            Fill="{StaticResource SurfaceStrokeSubtleBrush}" Margin="12,28,12,8" />
 
-                <StackPanel x:Name="OutputsSection" Grid.Column="4" Spacing="10">
-                    <TextBlock x:Uid="MixerOutputs" Style="{StaticResource Overline}" Height="18" />
+                <StackPanel x:Name="OutputsSection" Grid.Column="4" Spacing="10" HorizontalAlignment="Stretch">
+                    <TextBlock x:Uid="MixerOutputs" Style="{StaticResource Overline}" Height="18"
+                               Foreground="{StaticResource HeadphoneBrush}" FontWeight="Bold" Margin="4,0,0,0" />
                     <ItemsRepeater x:Name="OutputsRepeater" ItemsSource="{x:Bind ViewModel.OutputStrips}"
+                                   HorizontalAlignment="Stretch"
                                    ElementPrepared="OutputsRepeater_ElementPrepared">
                         <ItemsRepeater.Layout>
                             <UniformGridLayout x:Name="OutLayout" MinItemWidth="84" MinItemHeight="440"
                                                MinColumnSpacing="8" MinRowSpacing="8"
-                                               ItemsStretch="None" ItemsJustification="Start" />
+                                               ItemsStretch="Fill" ItemsJustification="Start" />
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="vm:ChannelViewModel">

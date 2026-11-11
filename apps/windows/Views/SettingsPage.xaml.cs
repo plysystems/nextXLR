@@ -303,6 +303,11 @@ public sealed partial class SettingsPage : Page
             var currentVer = AppSettings.AppVersion.TrimStart('v', 'V');
             var localHash = AppSettings.BuildCommitHash;
 
+            if (string.IsNullOrEmpty(latestReleaseTag))
+            {
+                latestReleaseTag = "v" + currentVer;
+            }
+
             // Check official GitHub Releases
             if (!string.IsNullOrEmpty(latestReleaseTag))
             {

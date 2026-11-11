@@ -192,14 +192,21 @@ public partial class MixerPage : Page
         if (w <= 0) return;
 
         double minStrip = ViewModel.ActiveMixIndex == 2 ? 104 : MinStrip;
-        double maxStrip = ViewModel.ActiveMixIndex == 2 ? 160 : 136;
+        double maxStrip = ViewModel.ActiveMixIndex == 2 ? 240 : 200;
+        double colGap = 8;
         double chrome = MidWidth + 48; // Controls + Dividers + margins
 
-        double availableForStrips = Math.Max(0, w - chrome);
+        double totalGaps = Math.Max(0, nIn - 1) * colGap + Math.Max(0, nOut - 1) * colGap;
+        double availableForStrips = Math.Max(0, w - chrome - totalGaps);
         double targetStrip = availableForStrips / (nIn + nOut);
         targetStrip = Math.Clamp(targetStrip, minStrip, maxStrip);
 
-        double minDeskWidth = RowWidth(nIn, minStrip) + chrome + RowWidth(nOut, minStrip);
+        double minDeskWidth = nIn * minStrip + Math.Max(0, nIn - 1) * colGap + chrome + nOut * minStrip + Math.Max(0, nOut - 1) * colGap;
+        double actualDeskWidth = Math.Max(w, minDeskWidth);
+
+        // Explicit width ensures Grid never receives infinite measure in ScrollViewer,
+        // so Star columns stretch to fill 100% of the visible viewport!
+        Sections.Width = actualDeskWidth;
         Sections.MinWidth = minDeskWidth;
         Sections.HorizontalAlignment = HorizontalAlignment.Stretch;
 
@@ -210,10 +217,11 @@ public partial class MixerPage : Page
 
         InLayout.MinItemWidth = targetStrip;
         OutLayout.MinItemWidth = targetStrip;
+        InLayout.MinColumnSpacing = colGap;
+        OutLayout.MinColumnSpacing = colGap;
 
-        // When channels are present, fill bay; when only 1-2 placeholder channels, keep neat fixed width
-        InLayout.ItemsStretch = nIn > 2 ? UniformGridLayoutItemsStretch.Fill : UniformGridLayoutItemsStretch.None;
-        OutLayout.ItemsStretch = nOut > 2 ? UniformGridLayoutItemsStretch.Fill : UniformGridLayoutItemsStretch.None;
+        InLayout.ItemsStretch = UniformGridLayoutItemsStretch.Fill;
+        OutLayout.ItemsStretch = UniformGridLayoutItemsStretch.Fill;
 
         InLayout.ItemsJustification = UniformGridLayoutItemsJustification.Start;
         OutLayout.ItemsJustification = UniformGridLayoutItemsJustification.Start;

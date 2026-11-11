@@ -226,13 +226,11 @@ public sealed partial class ChannelStrip : UserControl
         return DarkIcon;
     }
 
-    public static readonly Brush ActiveTrackBg = new SolidColorBrush(ColorHelper.FromArgb(30, 255, 255, 255));
-    public static readonly Brush ActiveTrackBorder = new SolidColorBrush(ColorHelper.FromArgb(60, 255, 255, 255));
-    public static readonly Brush InactiveTrackBg = new SolidColorBrush(Colors.Transparent);
-    public static readonly Brush InactiveTrackBorder = new SolidColorBrush(Colors.Transparent);
+    public Brush TrackBorderPhones(bool hasHardwareFader) =>
+        hasHardwareFader ? (Brush)Application.Current.Resources["HeadphoneBrush"] : (Brush)Application.Current.Resources["SurfaceStrokeSubtleBrush"];
 
-    public Brush TrackBackground(bool hasHardwareFader) => hasHardwareFader ? ActiveTrackBg : InactiveTrackBg;
-    public Brush TrackBorder(bool hasHardwareFader) => hasHardwareFader ? ActiveTrackBorder : InactiveTrackBorder;
+    public Brush TrackBorderStream(bool hasHardwareFader) =>
+        hasHardwareFader ? (Brush)Application.Current.Resources["BrandBrush"] : (Brush)Application.Current.Resources["SurfaceStrokeSubtleBrush"];
 
     public string ChannelTooltip(bool canEdit, string name) => canEdit ? Loc.Get("MixerCustomizeTitle.Text") : name;
     public string MuteGlyph(bool muted) => muted ? "\uE74F" : "\uE767";
