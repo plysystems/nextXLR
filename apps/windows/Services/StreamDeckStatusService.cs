@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,9 +22,13 @@ public partial class StreamDeckStatusService : ObservableObject
     private bool _isChecking;
 
     public const int DefaultPort = 48500;
+    public const int LegacyPort = 14565;
 
+    [ObservableProperty] private int _activePort = DefaultPort;
     [ObservableProperty] private bool _isApiOnline;
     [ObservableProperty] private bool _isAppRunning;
+    [ObservableProperty] private bool _isPluginInstalled;
+    [ObservableProperty] private string _pluginStatusText = "Plugin nicht installiert";
     [ObservableProperty] private string _appRunningText = "Software ist aktuell nicht gestartet";
     [ObservableProperty] private string _statusText = "Stream Deck: Prüfe...";
     [ObservableProperty] private string _statusDetail = "Prüfe Verbindung zu mixforged Port 48500...";
@@ -48,7 +53,7 @@ public partial class StreamDeckStatusService : ObservableObject
         if (_pollTimer == null)
         {
             _pollTimer = _uiQueue.CreateTimer();
-            _pollTimer.Interval = TimeSpan.FromSeconds(5.0);
+            _pollTimer.Interval = TimeSpan.FromSeconds(4.0);
             _pollTimer.Tick += async (_, _) => await CheckStatusAsync();
         }
         _pollTimer.Start();
@@ -80,12 +85,43 @@ public partial class StreamDeckStatusService : ObservableObject
             }
             catch { }
 
-            // 2. Check if NextXLR Engine API (Port 48500) is answering
+            // 2. Check if NextXLR Engine API is answering (Try 48500 first, then fallback to 14565)
             bool apiOnline = false;
+            int detectedPort = DefaultPort;
+
             try
             {
                 var resp = await _http.GetAsync($"http://127.0.0.1:{DefaultPort}/health");
-                apiOnline = resp.IsSuccessStatusCode;
+                if (resp.IsSuccessStatusCode)
+                {
+                    apiOnline = true;
+                    detectedPort = DefaultPort;
+                }
+            }
+            catch { }
+
+            if (!apiOnline)
+            {
+                try
+                {
+                    var respLegacy = await _http.GetAsync($"http://127.0.0.1:{LegacyPort}/health");
+                    if (respLegacy.IsSuccessStatusCode)
+                    {
+                        apiOnline = true;
+                        detectedPort = LegacyPort;
+                    }
+                }
+                catch { }
+            }
+
+            // 3. Check if Stream Deck Plugin is installed
+            bool pluginInstalled = false;
+            try
+            {
+                string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                string pluginDir = Path.Combine(appData, @"Elgato\StreamDeck\Plugins\com.plysystems.nextxlr.sdPlugin");
+                string manifestFile = Path.Combine(pluginDir, "manifest.json");
+                pluginInstalled = File.Exists(manifestFile);
             }
             catch { }
 
@@ -93,26 +129,33 @@ public partial class StreamDeckStatusService : ObservableObject
             {
                 _uiQueue.TryEnqueue(() =>
                 {
-                    if (IsApiOnline == apiOnline && IsAppRunning == appRunning) return;
-
+                    ActivePort = detectedPort;
                     IsApiOnline = apiOnline;
                     IsAppRunning = appRunning;
-                    AppRunningText = appRunning ? "Software läuft im Hintergrund" : "Software ist aktuell nicht gestartet";
+                    IsPluginInstalled = pluginInstalled;
+
+                    PluginStatusText = pluginInstalled
+                        ? "Plugin installiert & einsatzbereit"
+                        : "Plugin noch nicht installiert";
+
+                    AppRunningText = appRunning
+                        ? "Software läuft im Hintergrund"
+                        : "Software ist aktuell nicht gestartet";
 
                     if (apiOnline && appRunning)
                     {
                         StatusText = "Stream Deck: Aktiv";
-                        StatusDetail = "Elgato Stream Deck ist aktiv und mit der NextXLR Engine verbunden (Port 48500).";
+                        StatusDetail = $"Elgato Stream Deck ist aktiv und mit der NextXLR Engine verbunden (Port {detectedPort}).";
                     }
                     else if (apiOnline)
                     {
                         StatusText = "Stream Deck: Bereit";
-                        StatusDetail = "NextXLR REST & WebSocket API ist auf Port 48500 bereit (Stream Deck Software nicht gestartet).";
+                        StatusDetail = $"NextXLR Engine API ist auf Port {detectedPort} bereit (Stream Deck Software nicht gestartet).";
                     }
                     else
                     {
                         StatusText = "Stream Deck: Offline";
-                        StatusDetail = "Die NextXLR Engine API auf Port 48500 ist momentan nicht erreichbar.";
+                        StatusDetail = $"Die NextXLR Engine API auf Port {DefaultPort} ist momentan nicht erreichbar.";
                     }
 
                     OnPropertyChanged(nameof(IsFullyActive));
@@ -126,13 +169,102 @@ public partial class StreamDeckStatusService : ObservableObject
         }
     }
 
+    public async Task<bool> EnsureDaemonRunningAsync()
+    {
+        App.EnsureDaemonRunning();
+        await Task.Delay(600);
+        await CheckStatusAsync();
+        return IsApiOnline;
+    }
+
+    public async Task<bool> InstallPluginAsync()
+    {
+        try
+        {
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string elgatoPluginsDir = Path.Combine(appData, @"Elgato\StreamDeck\Plugins");
+            string targetPluginDir = Path.Combine(elgatoPluginsDir, "com.plysystems.nextxlr.sdPlugin");
+
+            string baseDir = AppContext.BaseDirectory;
+            string[] sourceCandidateDirs =
+            [
+                Path.Combine(baseDir, @"Assets\StreamDeck\com.plysystems.nextxlr.sdPlugin"),
+                @"E:\Projects\plysys\Neuer Ordner\goxlr\plugins\streamdeck\com.plysystems.nextxlr.sdPlugin",
+                Path.Combine(baseDir, @"..\..\..\..\plugins\streamdeck\com.plysystems.nextxlr.sdPlugin")
+            ];
+
+            string? sourceDir = null;
+            foreach (var cand in sourceCandidateDirs)
+            {
+                if (Directory.Exists(cand) && File.Exists(Path.Combine(cand, "manifest.json")))
+                {
+                    sourceDir = cand;
+                    break;
+                }
+            }
+
+            if (sourceDir != null)
+            {
+                if (!Directory.Exists(elgatoPluginsDir))
+                {
+                    Directory.CreateDirectory(elgatoPluginsDir);
+                }
+
+                CopyDirectory(sourceDir, targetPluginDir);
+            }
+
+            // Also check for .streamDeckPlugin package file to trigger StreamDeck native installer if present
+            string[] pkgCandidates =
+            [
+                Path.Combine(baseDir, @"Assets\StreamDeck\com.plysystems.nextxlr.streamDeckPlugin"),
+                @"E:\Projects\plysys\Neuer Ordner\goxlr\dist\com.plysystems.nextxlr.streamDeckPlugin"
+            ];
+
+            foreach (var pkg in pkgCandidates)
+            {
+                if (File.Exists(pkg))
+                {
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo(pkg) { UseShellExecute = true });
+                    }
+                    catch { }
+                    break;
+                }
+            }
+
+            await Task.Delay(400);
+            await CheckStatusAsync();
+            return IsPluginInstalled;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static void CopyDirectory(string sourceDir, string destDir)
+    {
+        Directory.CreateDirectory(destDir);
+        foreach (var file in Directory.GetFiles(sourceDir))
+        {
+            string dest = Path.Combine(destDir, Path.GetFileName(file));
+            File.Copy(file, dest, true);
+        }
+        foreach (var dir in Directory.GetDirectories(sourceDir))
+        {
+            string dest = Path.Combine(destDir, Path.GetFileName(dir));
+            CopyDirectory(dir, dest);
+        }
+    }
+
     // --- Interactive Stream Deck Test Actions ---
 
     public async Task<bool> SendTestFaderAsync(string channel, float volume)
     {
         try
         {
-            var resp = await _http.GetAsync($"http://127.0.0.1:{DefaultPort}/api/fader?channel={Uri.EscapeDataString(channel)}&volume={volume:F2}");
+            var resp = await _http.GetAsync($"http://127.0.0.1:{ActivePort}/api/fader?channel={Uri.EscapeDataString(channel)}&volume={volume:F2}");
             return resp.IsSuccessStatusCode;
         }
         catch { return false; }
@@ -142,7 +274,7 @@ public partial class StreamDeckStatusService : ObservableObject
     {
         try
         {
-            var resp = await _http.GetAsync($"http://127.0.0.1:{DefaultPort}/api/bleep?active={active.ToString().ToLowerInvariant()}");
+            var resp = await _http.GetAsync($"http://127.0.0.1:{ActivePort}/api/bleep?active={active.ToString().ToLowerInvariant()}");
             return resp.IsSuccessStatusCode;
         }
         catch { return false; }
@@ -152,7 +284,7 @@ public partial class StreamDeckStatusService : ObservableObject
     {
         try
         {
-            var resp = await _http.GetAsync($"http://127.0.0.1:{DefaultPort}/api/mute?channel={Uri.EscapeDataString(channel)}&action=toggle");
+            var resp = await _http.GetAsync($"http://127.0.0.1:{ActivePort}/api/mute?channel={Uri.EscapeDataString(channel)}&action=toggle");
             return resp.IsSuccessStatusCode;
         }
         catch { return false; }
@@ -162,7 +294,7 @@ public partial class StreamDeckStatusService : ObservableObject
     {
         try
         {
-            var resp = await _http.GetAsync($"http://127.0.0.1:{DefaultPort}/api/status");
+            var resp = await _http.GetAsync($"http://127.0.0.1:{ActivePort}/api/status");
             if (resp.IsSuccessStatusCode)
             {
                 return await resp.Content.ReadAsStringAsync();
@@ -175,4 +307,3 @@ public partial class StreamDeckStatusService : ObservableObject
         }
     }
 }
-

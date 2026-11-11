@@ -55,10 +55,11 @@ public partial class App : Application
             string[] candidates =
             [
                 Path.Combine(baseDir, "mixforged.exe"),
-                Path.Combine(baseDir, @"..\..\..\..\..\target\debug\mixforged.exe"),
                 Path.Combine(baseDir, @"..\..\..\..\..\target\release\mixforged.exe"),
-                Path.Combine(baseDir, @"..\..\..\..\target\debug\mixforged.exe"),
+                Path.Combine(baseDir, @"..\..\..\..\..\target\debug\mixforged.exe"),
                 Path.Combine(baseDir, @"..\..\..\..\target\release\mixforged.exe"),
+                Path.Combine(baseDir, @"..\..\..\..\target\debug\mixforged.exe"),
+                @"E:\Projects\plysys\Neuer Ordner\goxlr\target\release\mixforged.exe",
                 @"E:\Projects\plysys\Neuer Ordner\goxlr\target\debug\mixforged.exe"
             ];
 

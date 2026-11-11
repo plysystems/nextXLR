@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>NEXT : XLR — Kanal Mute</title>
+    <link rel="stylesheet" href="pi.css" />
+</head>
+<body>
+    <div class="sdpi-wrapper">
+        <div class="badge">NEXT : XLR AUDIO ENGINE</div>
+
+        <div class="sdpi-item">
+            <div class="sdpi-item-label">Kanal:</div>
+            <div class="sdpi-item-value">
+                <select id="channel">
+                    <option value="music">Musik</option>
+                    <option value="chat">Chat</option>
+                    <option value="mic">Mikrofon</option>
+                    <option value="game">Game</option>
+                    <option value="system">System</option>
+                    <option value="console">Console</option>
+                    <option value="linein">Line In</option>
+                    <option value="samples">Samples</option>
+                    <option value="A">Hardware Fader A</option>
+                    <option value="B">Hardware Fader B</option>
+                    <option value="C">Hardware Fader C</option>
+                    <option value="D">Hardware Fader D</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="sdpi-item">
+            <div class="sdpi-item-label">Verhalten:</div>
+            <div class="sdpi-item-value">
+                <select id="mode">
+                    <option value="toggle">Umschalten (Toggle)</option>
+                    <option value="mute">Nur Stummschalten</option>
+                    <option value="unmute">Nur Entstummen</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <script src="pi.js"></script>
+    <script>
+        function initUI() {
+            document.getElementById("channel").value = settings.channel || "music";
+            document.getElementById("mode").value = settings.mode || "toggle";
+
+            document.getElementById("channel").onchange = onChange;
+            document.getElementById("mode").onchange = onChange;
+        }
+
+        function onChange() {
+            settings.channel = document.getElementById("channel").value;
+            settings.mode = document.getElementById("mode").value;
+            saveSettings();
+        }
+    </script>
+</body>
+</html>
+

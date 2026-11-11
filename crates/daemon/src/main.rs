@@ -160,7 +160,24 @@ async fn main() -> Result<()> {
     let bind =
         std::env::var("MIXFORGE_BIND").unwrap_or_else(|_| format!("127.0.0.1:{DEFAULT_PORT}"));
     let listener = tokio::net::TcpListener::bind(&bind).await?;
-    tracing::info!("WebSocket API on ws://{bind}/ws");
+    tracing::info!("NextXLR Engine API active on http://{bind} & ws://{bind}/ws");
+
+    // Also support legacy port 14565 if primary is 48500
+    if bind.ends_with(":48500") {
+        let legacy_bind = "127.0.0.1:14565";
+        match tokio::net::TcpListener::bind(legacy_bind).await {
+            Ok(legacy_listener) => {
+                let r = router.clone();
+                tokio::spawn(async move {
+                    tracing::info!("Legacy port compatibility active on http://{legacy_bind}");
+                    let _ = axum::serve(legacy_listener, r).await;
+                });
+            }
+            Err(e) => {
+                tracing::debug!("Legacy port {legacy_bind} not bound: {e}");
+            }
+        }
+    }
 
     axum::serve(listener, router)
         .with_graceful_shutdown(async {

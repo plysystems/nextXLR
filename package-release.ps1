@@ -3,7 +3,7 @@ $ProgressPreference = "SilentlyContinue"
 $root = $PSScriptRoot
 Set-Location $root
 $distDir = Join-Path $root "dist"
-$version = "0.1.8.9-alpha"
+$version = "0.1.9.0-alpha"
 $releaseDir = Join-Path $distDir "NextXLR-v$version"
 $appDir = Join-Path $releaseDir "app"
 $gitSha = try { (git rev-parse HEAD).Trim() } catch { "release" }
@@ -69,7 +69,24 @@ Copy-Item (Join-Path $root "THIRD_PARTY_NOTICES.md") (Join-Path $appDir "THIRD_P
 Copy-Item (Join-Path $root "certificates\plysystems.cer") (Join-Path $appDir "plysystems.cer") -Force -ErrorAction SilentlyContinue
 Copy-Item (Join-Path $root "certificates\plysystems.cer") (Join-Path $releaseDir "plysystems.cer") -Force -ErrorAction SilentlyContinue
 
-# 3c. Code-sign app binaries before embedding into installer payload
+# 3c. Package and copy official Stream Deck Plugin
+Write-Host "Packaging official Stream Deck plugin..."
+$sdPluginSrc = Join-Path $root "plugins\streamdeck\com.plysystems.nextxlr.sdPlugin"
+$sdPluginDstDir = Join-Path $appDir "Assets\StreamDeck"
+if (-not (Test-Path $sdPluginDstDir)) { New-Item -ItemType Directory -Path $sdPluginDstDir -Force | Out-Null }
+Copy-Item $sdPluginSrc (Join-Path $sdPluginDstDir "com.plysystems.nextxlr.sdPlugin") -Recurse -Force
+
+$sdPluginZip = Join-Path $distDir "com.plysystems.nextxlr.streamDeckPlugin.zip"
+$sdPluginOut = Join-Path $distDir "com.plysystems.nextxlr.streamDeckPlugin"
+if (Test-Path $sdPluginZip) { Remove-Item $sdPluginZip -Force }
+if (Test-Path $sdPluginOut) { Remove-Item $sdPluginOut -Force }
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[System.IO.Compression.ZipFile]::CreateFromDirectory($sdPluginSrc, $sdPluginZip)
+Move-Item $sdPluginZip $sdPluginOut -Force
+Copy-Item $sdPluginOut (Join-Path $sdPluginDstDir "com.plysystems.nextxlr.streamDeckPlugin") -Force
+Copy-Item $sdPluginOut (Join-Path $releaseDir "com.plysystems.nextxlr.streamDeckPlugin") -Force
+
+# 3d. Code-sign app binaries before embedding into installer payload
 Write-Host "Signing core executables and libraries..."
 Sign-Binary (Join-Path $appDir "NextXLR.exe")
 Sign-Binary (Join-Path $appDir "NextXLR.dll")

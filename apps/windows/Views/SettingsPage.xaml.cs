@@ -1026,6 +1026,51 @@ public sealed partial class SettingsPage : Page
 
     #region Stream Deck Actions
 
+    private async void StartEngine_Click(object sender, RoutedEventArgs e)
+    {
+        bool ok = await StreamDeckService.EnsureDaemonRunningAsync();
+        StreamDeckTestResult.Severity = ok ? InfoBarSeverity.Success : InfoBarSeverity.Error;
+        StreamDeckTestResult.Title = ok ? "NEXT : XLR Engine gestartet" : "Engine Start fehlgeschlagen";
+        StreamDeckTestResult.Message = ok
+            ? $"Die Audio-Engine läuft und antwortet auf Port {StreamDeckService.ActivePort}."
+            : "Die mixforged Audio-Engine konnte nicht gestartet werden. Bitte prüfe die Logs.";
+        StreamDeckTestResult.IsOpen = true;
+    }
+
+    private async void InstallStreamDeckPlugin_Click(object sender, RoutedEventArgs e)
+    {
+        bool ok = await StreamDeckService.InstallPluginAsync();
+        StreamDeckTestResult.Severity = ok ? InfoBarSeverity.Success : InfoBarSeverity.Warning;
+        StreamDeckTestResult.Title = ok ? "Stream Deck Plugin installiert!" : "Plugin-Installation ausgeführt";
+        StreamDeckTestResult.Message = ok
+            ? "Das offizielle NEXT : XLR Plugin wurde in Elgato Stream Deck registriert und ist einsatzbereit."
+            : "Das Plugin wurde kopiert bzw. die Installationsdatei geöffnet. Bitte bestätige das Fenster von Elgato Stream Deck.";
+        StreamDeckTestResult.IsOpen = true;
+    }
+
+    private void OpenPluginPackage_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var baseDir = AppContext.BaseDirectory;
+            string[] candidates =
+            [
+                System.IO.Path.Combine(baseDir, @"Assets\StreamDeck\com.plysystems.nextxlr.streamDeckPlugin"),
+                @"E:\Projects\plysys\Neuer Ordner\goxlr\dist\com.plysystems.nextxlr.streamDeckPlugin"
+            ];
+
+            foreach (var cand in candidates)
+            {
+                if (System.IO.File.Exists(cand))
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(cand) { UseShellExecute = true });
+                    return;
+                }
+            }
+        }
+        catch { }
+    }
+
     private async void CheckStreamDeckStatus_Click(object sender, RoutedEventArgs e)
     {
         await StreamDeckService.CheckStatusAsync();

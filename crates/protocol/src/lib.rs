@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 pub const API_VERSION: u32 = 1;
-pub const DEFAULT_PORT: u16 = 14565;
+pub const DEFAULT_PORT: u16 = 48500;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[serde(transparent)]

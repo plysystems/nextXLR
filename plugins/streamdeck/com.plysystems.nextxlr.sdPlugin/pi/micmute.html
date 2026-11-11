@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>NEXT : XLR — Husten-Taste</title>
+    <link rel="stylesheet" href="pi.css" />
+</head>
+<body>
+    <div class="sdpi-wrapper">
+        <div class="badge">NEXT : XLR AUDIO ENGINE</div>
+
+        <div class="sdpi-item">
+            <div class="sdpi-item-label">Modus:</div>
+            <div class="sdpi-item-value">
+                <select id="mode">
+                    <option value="toggle">Umschalten (Toggle)</option>
+                    <option value="hold">Gedrückt halten (Push-to-Mute)</option>
+                </select>
+                <div class="hint">Push-to-Mute mutet das Mikrofon nur während die Taste gedrückt wird.</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="pi.js"></script>
+    <script>
+        function initUI() {
+            document.getElementById("mode").value = settings.mode || "toggle";
+            document.getElementById("mode").onchange = onChange;
+        }
+
+        function onChange() {
+            settings.mode = document.getElementById("mode").value;
+            saveSettings();
+        }
+    </script>
+</body>
+</html>
+

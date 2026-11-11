@@ -243,16 +243,20 @@
                                         </StackPanel>
                                         <TextBlock Text="{x:Bind StreamDeckService.StatusDetail, Mode=OneWay}" Style="{StaticResource Caption}" />
                                     </StackPanel>
-                                    <Button Grid.Column="2" Content="Status prüfen" Style="{StaticResource SmoothButton}"
-                                            Click="CheckStreamDeckStatus_Click" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <Button Content="Engine starten" Style="{StaticResource AccentButtonStyle}"
+                                                Click="StartEngine_Click" />
+                                        <Button Content="Status prüfen" Style="{StaticResource SmoothButton}"
+                                                Click="CheckStreamDeckStatus_Click" />
+                                    </StackPanel>
                                 </Grid>
 
                                 <Grid Style="{StaticResource SettingRow}">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                     <FontIcon Glyph="&#xE8B8;" />
                                     <StackPanel Grid.Column="1">
-                                        <TextBlock Text="Lokale REST-API" FontWeight="SemiBold" />
-                                        <TextBlock Text="HTTP http://127.0.0.1:48500 / WebSocket ws://127.0.0.1:48500/ws" Style="{StaticResource Caption}" />
+                                        <TextBlock Text="Lokale REST &amp; WebSocket API" FontWeight="SemiBold" />
+                                        <TextBlock Text="HTTP http://127.0.0.1:48500 / WebSocket ws://127.0.0.1:48500/ws (Legacy-Port 14565 aktiv)" Style="{StaticResource Caption}" />
                                     </StackPanel>
                                     <TextBlock Grid.Column="2" Text="Port 48500" Foreground="{StaticResource BrandBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
                                 </Grid>
@@ -267,6 +271,69 @@
                                     <Button Grid.Column="2" Content="Stream Deck öffnen" Style="{StaticResource SmoothButton}"
                                             Click="OpenStreamDeckApp_Click" />
                                 </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card: Official Stream Deck Plugin Installation -->
+                        <Border Style="{StaticResource Card}" Padding="20">
+                            <StackPanel Spacing="16">
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="48" Height="48" CornerRadius="12" Background="{StaticResource SurfaceL3Brush}">
+                                        <FontIcon Glyph="&#xE74C;" FontSize="24" Foreground="{StaticResource BrandBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <TextBlock Text="Offizielles NEXT : XLR Stream Deck Plugin" FontWeight="SemiBold" FontSize="16" />
+                                            <Border Background="{StaticResource SurfaceL2Brush}" CornerRadius="4" Padding="6,2">
+                                                <TextBlock Text="v0.1.9.0" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Text="{x:Bind StreamDeckService.PluginStatusText, Mode=OneWay}"
+                                                   Foreground="{StaticResource TextMutedBrush}" Style="{StaticResource Caption}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <Button Style="{StaticResource AccentButtonStyle}"
+                                                Click="InstallStreamDeckPlugin_Click">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE896;" FontSize="13" />
+                                                <TextBlock Text="Plugin installieren" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Style="{StaticResource SmoothButton}" Click="OpenPluginPackage_Click"
+                                                ToolTipService.ToolTip="Öffnet die .streamDeckPlugin Datei für Elgato Installer">
+                                            <FontIcon Glyph="&#xE8DA;" FontSize="13" />
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+
+                                <Border Background="{StaticResource SurfaceL2Brush}" CornerRadius="10" Padding="14"
+                                        BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                                    <StackPanel Spacing="10">
+                                        <TextBlock Text="Enthaltene Aktionen &amp; Features:" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                        <Grid RowSpacing="6" ColumnSpacing="16">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="🎚️ Lautstärke / Fader (inkl. Stream Deck + Dials)" Style="{StaticResource Caption}" />
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="🔇 Kanal Mute (Toggle / Stumm / An)" Style="{StaticResource Caption}" />
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="🎙️ Husten-Taste (Toggle oder Push-to-Mute)" Style="{StaticResource Caption}" />
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="🤬 Zensur / Bleep (!@#$?* Piepton halten)" Style="{StaticResource Caption}" />
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Text="🔄 Routing Matrix (Kanal auf Bus schalten)" Style="{StaticResource Caption}" />
+                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="💾 Profil laden (Direktes Umschalten per Taste)" Style="{StaticResource Caption}" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </Border>
 

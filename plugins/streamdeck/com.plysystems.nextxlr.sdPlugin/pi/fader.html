@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>NEXT : XLR — Fader Einstellungen</title>
+    <link rel="stylesheet" href="pi.css" />
+</head>
+<body>
+    <div class="sdpi-wrapper">
+        <div class="badge">NEXT : XLR AUDIO ENGINE</div>
+
+        <div class="sdpi-item">
+            <div class="sdpi-item-label">Kanal:</div>
+            <div class="sdpi-item-value">
+                <select id="channel">
+                    <option value="music">Musik</option>
+                    <option value="chat">Chat</option>
+                    <option value="mic">Mikrofon</option>
+                    <option value="game">Game</option>
+                    <option value="system">System</option>
+                    <option value="console">Console</option>
+                    <option value="linein">Line In</option>
+                    <option value="samples">Samples</option>
+                    <option value="A">Hardware Fader A</option>
+                    <option value="B">Hardware Fader B</option>
+                    <option value="C">Hardware Fader C</option>
+                    <option value="D">Hardware Fader D</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="sdpi-item">
+            <div class="sdpi-item-label">Aktion:</div>
+            <div class="sdpi-item-value">
+                <select id="mode">
+                    <option value="increase">Lauter (+)</option>
+                    <option value="decrease">Leiser (-)</option>
+                    <option value="set">Lautstärke fest setzen</option>
+                    <option value="toggle_mute">Mute umschalten</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="sdpi-item" id="stepRow">
+            <div class="sdpi-item-label">Schrittgröße:</div>
+            <div class="sdpi-item-value">
+                <select id="step">
+                    <option value="0.02">2 %</option>
+                    <option value="0.05" selected>5 %</option>
+                    <option value="0.10">10 %</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="sdpi-item" id="volumeRow" style="display:none;">
+            <div class="sdpi-item-label">Lautstärke:</div>
+            <div class="sdpi-item-value">
+                <input type="number" id="volume" min="0" max="100" value="75" />
+                <div class="hint">Wert in Prozent (0 - 100)</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="pi.js"></script>
+    <script>
+        function initUI() {
+            document.getElementById("channel").value = settings.channel || "music";
+            document.getElementById("mode").value = settings.mode || "increase";
+            document.getElementById("step").value = settings.step || "0.05";
+            if (settings.volume !== undefined) {
+                document.getElementById("volume").value = Math.round(parseFloat(settings.volume) * 100);
+            }
+            updateVisibility();
+
+            document.getElementById("channel").onchange = onChange;
+            document.getElementById("mode").onchange = onChange;
+            document.getElementById("step").onchange = onChange;
+            document.getElementById("volume").oninput = onChange;
+        }
+
+        function updateVisibility() {
+            const mode = document.getElementById("mode").value;
+            document.getElementById("stepRow").style.display = (mode === "increase" || mode === "decrease") ? "flex" : "none";
+            document.getElementById("volumeRow").style.display = (mode === "set") ? "flex" : "none";
+        }
+
+        function onChange() {
+            settings.channel = document.getElementById("channel").value;
+            settings.mode = document.getElementById("mode").value;
+            settings.step = document.getElementById("step").value;
+            settings.volume = (parseFloat(document.getElementById("volume").value || 75) / 100.0).toString();
+            updateVisibility();
+            saveSettings();
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>NEXT : XLR — Profil laden</title>
+    <link rel="stylesheet" href="pi.css" />
+</head>
+<body>
+    <div class="sdpi-wrapper">
+        <div class="badge">NEXT : XLR AUDIO ENGINE</div>
+
+        <div class="sdpi-item">
+            <div class="sdpi-item-label">Profil-Name:</div>
+            <div class="sdpi-item-value">
+                <input type="text" id="profileName" placeholder="z. B. Gaming, Stream, Podcast" />
+                <div class="hint">Name des gespeicherten Profils (ohne .json).</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="pi.js"></script>
+    <script>
+        function initUI() {
+            document.getElementById("profileName").value = settings.profileName || "Gaming";
+            document.getElementById("profileName").oninput = onChange;
+        }
+
+        function onChange() {
+            settings.profileName = document.getElementById("profileName").value.trim();
+            saveSettings();
+        }
+    </script>
+</body>
+</html>

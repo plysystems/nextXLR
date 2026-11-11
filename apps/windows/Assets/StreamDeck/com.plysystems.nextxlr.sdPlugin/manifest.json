@@ -1,0 +1,141 @@
+{
+  "Author": "plysystems",
+  "Description": "NEXT : XLR Stream Deck Integration — Fader-Lautstärken, Mutes, Husten-Taste, Zensur-Bleep, Routing und Profile direkt über Stream Deck & Stream Deck + steuern.",
+  "Name": "NEXT : XLR",
+  "Icon": "assets/pluginIcon",
+  "URL": "https://github.com/plysystems/nextXLR",
+  "Version": "0.1.9.0",
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "6.0"
+  },
+  "CodePath": "index.html",
+  "Category": "NEXT : XLR",
+  "CategoryIcon": "assets/categoryIcon",
+  "Actions": [
+    {
+      "Icon": "assets/faderAction",
+      "Name": "Lautstärke / Fader",
+      "Tooltip": "Steuert Lautstärke eines Audiokanals oder Faders (Lauter, Leiser oder Fader-Wert)",
+      "UUID": "com.plysystems.nextxlr.fader",
+      "PropertyInspectorPath": "pi/fader.html",
+      "Controllers": ["Keypad", "Encoder"],
+      "States": [
+        {
+          "Image": "assets/faderAction",
+          "TitleAlignment": "bottom",
+          "FontSize": "10"
+        }
+      ],
+      "Encoder": {
+        "layout": "$B1",
+        "StackColor": "#00E5FF",
+        "TriggerDescription": {
+          "Rotate": "Lautstärke anpassen",
+          "Push": "Mute umschalten",
+          "Touch": "Auf 100% setzen"
+        }
+      }
+    },
+    {
+      "Icon": "assets/muteOff",
+      "Name": "Kanal Mute",
+      "Tooltip": "Schaltet einen Kanal (z. B. Musik, Chat, Game, System) stumm oder hebt Stummschaltung auf",
+      "UUID": "com.plysystems.nextxlr.mute",
+      "PropertyInspectorPath": "pi/mute.html",
+      "Controllers": ["Keypad"],
+      "States": [
+        {
+          "Image": "assets/muteOff",
+          "TitleAlignment": "bottom",
+          "FontSize": "10"
+        },
+        {
+          "Image": "assets/muteOn",
+          "TitleAlignment": "bottom",
+          "FontSize": "10"
+        }
+      ]
+    },
+    {
+      "Icon": "assets/micLive",
+      "Name": "Husten-Taste (Mic Mute)",
+      "Tooltip": "Stummschalten des Mikrofons (Umschalten oder Push-to-Mute)",
+      "UUID": "com.plysystems.nextxlr.micmute",
+      "PropertyInspectorPath": "pi/micmute.html",
+      "Controllers": ["Keypad"],
+      "States": [
+        {
+          "Image": "assets/micLive",
+          "TitleAlignment": "bottom",
+          "FontSize": "10"
+        },
+        {
+          "Image": "assets/micMuted",
+          "TitleAlignment": "bottom",
+          "FontSize": "10"
+        }
+      ]
+    },
+    {
+      "Icon": "assets/bleepOff",
+      "Name": "Zensur / Bleep (!@#$?*)",
+      "Tooltip": "Spielt den Zensurton ab und mutet das Mikrofon solange die Taste gehalten wird",
+      "UUID": "com.plysystems.nextxlr.bleep",
+      "PropertyInspectorPath": "pi/bleep.html",
+      "Controllers": ["Keypad"],
+      "States": [
+        {
+          "Image": "assets/bleepOff",
+          "TitleAlignment": "bottom",
+          "FontSize": "10"
+        },
+        {
+          "Image": "assets/bleepOn",
+          "TitleAlignment": "bottom",
+          "FontSize": "10"
+        }
+      ]
+    },
+    {
+      "Icon": "assets/profileAction",
+      "Name": "Profil laden",
+      "Tooltip": "Lädt ein bestimmtes NEXT : XLR Profil (z. B. Gaming, Stream, Podcast)",
+      "UUID": "com.plysystems.nextxlr.profile",
+      "PropertyInspectorPath": "pi/profile.html",
+      "Controllers": ["Keypad"],
+      "States": [
+        {
+          "Image": "assets/profileAction",
+          "TitleAlignment": "bottom",
+          "FontSize": "10"
+        }
+      ]
+    },
+    {
+      "Icon": "assets/routeOn",
+      "Name": "Routing Matrix",
+      "Tooltip": "Schaltet eine Verbindung in der Routing-Tabelle um (z. B. Musik zu Stream)",
+      "UUID": "com.plysystems.nextxlr.route",
+      "PropertyInspectorPath": "pi/route.html",
+      "Controllers": ["Keypad"],
+      "States": [
+        {
+          "Image": "assets/routeOff",
+          "TitleAlignment": "bottom",
+          "FontSize": "10"
+        },
+        {
+          "Image": "assets/routeOn",
+          "TitleAlignment": "bottom",
+          "FontSize": "10"
+        }
+      ]
+    }
+  ]
+}

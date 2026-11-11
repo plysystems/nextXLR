@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>NEXT : XLR — Routing Matrix</title>
+    <link rel="stylesheet" href="pi.css" />
+</head>
+<body>
+    <div class="sdpi-wrapper">
+        <div class="badge">NEXT : XLR AUDIO ENGINE</div>
+
+        <div class="sdpi-item">
+            <div class="sdpi-item-label">Quelle (Kanal):</div>
+            <div class="sdpi-item-value">
+                <select id="channel">
+                    <option value="music">Musik</option>
+                    <option value="chat">Chat</option>
+                    <option value="mic">Mikrofon</option>
+                    <option value="game">Game</option>
+                    <option value="system">System</option>
+                    <option value="console">Console</option>
+                    <option value="linein">Line In</option>
+                    <option value="samples">Samples</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="sdpi-item">
+            <div class="sdpi-item-label">Ziel (Bus):</div>
+            <div class="sdpi-item-value">
+                <select id="bus">
+                    <option value="headphones">Kopfhörer</option>
+                    <option value="stream">Stream-Mix (Broadcast)</option>
+                    <option value="lineout">Line Out</option>
+                    <option value="chatmic">Chat Mic</option>
+                    <option value="sampler">Sampler</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <script src="pi.js"></script>
+    <script>
+        function initUI() {
+            document.getElementById("channel").value = settings.channel || "music";
+            document.getElementById("bus").value = settings.bus || "stream";
+
+            document.getElementById("channel").onchange = onChange;
+            document.getElementById("bus").onchange = onChange;
+        }
+
+        function onChange() {
+            settings.channel = document.getElementById("channel").value;
+            settings.bus = document.getElementById("bus").value;
+            saveSettings();
+        }
+    </script>
+</body>
+</html>
+
