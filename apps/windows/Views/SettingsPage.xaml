@@ -262,7 +262,7 @@
                                     <FontIcon Glyph="&#xE774;" />
                                     <StackPanel Grid.Column="1">
                                         <TextBlock Text="Elgato Stream Deck Software" FontWeight="SemiBold" />
-                                        <TextBlock Text="{x:Bind StreamDeckAppStatusText, Mode=OneWay}" Style="{StaticResource Caption}" />
+                                        <TextBlock Text="{x:Bind StreamDeckAppStatusText}" Style="{StaticResource Caption}" />
                                     </StackPanel>
                                     <Button Grid.Column="2" Content="Stream Deck öffnen" Style="{StaticResource SmoothButton}"
                                             Click="OpenStreamDeckApp_Click" />

@@ -288,7 +288,12 @@ public sealed partial class MainWindow : Window
             {
                 ContentFrame.Navigate(page, ViewModel);
                 if (tag == "mixer") Nav.SelectedItem = MixerItem;
+                else if (tag == "mic") Nav.SelectedItem = MicItem;
+                else if (tag == "routing") Nav.SelectedItem = RoutingItem;
+                else if (tag == "effects") Nav.SelectedItem = EffectsItem;
                 else if (tag == "sampler") Nav.SelectedItem = SamplerItem;
+                else if (tag == "lighting") Nav.SelectedItem = LightingItem;
+                else if (tag == "virtual") Nav.SelectedItem = VirtualChannelsItem;
                 else if (tag == "settings") Nav.SelectedItem = Nav.SettingsItem;
             }
         });

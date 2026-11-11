@@ -24,6 +24,7 @@ public partial class StreamDeckStatusService : ObservableObject
 
     [ObservableProperty] private bool _isApiOnline;
     [ObservableProperty] private bool _isAppRunning;
+    [ObservableProperty] private string _appRunningText = "Software ist aktuell nicht gestartet";
     [ObservableProperty] private string _statusText = "Stream Deck: Prüfe...";
     [ObservableProperty] private string _statusDetail = "Prüfe Verbindung zu mixforged Port 48500...";
 
@@ -96,6 +97,7 @@ public partial class StreamDeckStatusService : ObservableObject
 
                     IsApiOnline = apiOnline;
                     IsAppRunning = appRunning;
+                    AppRunningText = appRunning ? "Software läuft im Hintergrund" : "Software ist aktuell nicht gestartet";
 
                     if (apiOnline && appRunning)
                     {

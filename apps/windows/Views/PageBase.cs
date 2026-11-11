@@ -262,29 +262,21 @@ public partial class RoutingPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         ViewModel = (MainViewModel)e.Parameter;
-        ViewModel.AppRouting.StartMonitoring();
-        ViewModel.AppRouting.Refresh();
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
-        ViewModel.AppRouting.StopMonitoring();
         base.OnNavigatedFrom(e);
     }
 
-    private void RefreshAppRouting_Click(object sender, RoutedEventArgs e)
+    private void NavigateToVirtualChannels_Click(object sender, RoutedEventArgs e)
     {
-        ViewModel.AppRouting.Refresh();
-    }
-
-    private void AutoAssignApps_Click(object sender, RoutedEventArgs e)
-    {
-        ViewModel.AppRouting.AutoAssignAll();
+        MainWindow.CurrentInstance?.NavigateToPage("virtual");
     }
 
     private void OpenWindowsMixer_Click(object sender, RoutedEventArgs e)
     {
-        ViewModel.AppRouting.OpenWindowsMixer();
+        VirtualChannelsService.OpenWindowsVolumeMixer();
     }
 
     // Row highlight; the Border's BrushTransition makes it a 200 ms fade.
@@ -1022,18 +1014,37 @@ public partial class SamplerPage : Page
 public partial class VirtualChannelsPage : Page
 {
     public VirtualChannelsService Service => VirtualChannelsService.Instance;
-    public AppRoutingManagerViewModel AppRouting { get; } = new();
+    public MainViewModel ViewModel { get; private set; } = null!;
+    public AppRoutingManagerViewModel AppRouting => ViewModel?.AppRouting ?? _fallbackRouting;
+    private readonly AppRoutingManagerViewModel _fallbackRouting = new();
     public string VirtualChannelsCountText => $"{Service.Channels.Count} zusätzliche Kabel konfiguriert";
 
     public VirtualChannelsPage()
     {
         NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
-        Loaded += (_, _) =>
+    }
+
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        if (e.Parameter is MainViewModel vm)
         {
-            Service.ScanWindowsEndpoints();
-            AppRouting.Refresh();
-        };
+            ViewModel = vm;
+        }
+        Service.ScanWindowsEndpoints();
+        AppRouting.StartMonitoring();
+        AppRouting.Refresh();
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        AppRouting.StopMonitoring();
+        base.OnNavigatedFrom(e);
+    }
+
+    private void AutoAssignApps_Click(object sender, RoutedEventArgs e)
+    {
+        AppRouting.AutoAssignAll();
     }
 
     private void ReSync_Click(object sender, RoutedEventArgs e)

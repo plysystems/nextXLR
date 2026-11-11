@@ -100,29 +100,64 @@
             <Border Style="{StaticResource Card}" Padding="20">
                 <StackPanel Spacing="16">
                     <Grid>
-                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                            <FontIcon Glyph="&#xE8AB;" Foreground="{StaticResource BrandBrush}" FontSize="18" />
-                            <TextBlock Text="Aktives Windows App-Audio-Routing" Style="{StaticResource CardTitle}" />
-                        </StackPanel>
-                        <Button HorizontalAlignment="Right" Click="ReSync_Click" Padding="10,4">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <FontIcon Glyph="&#xE72C;" FontSize="12" />
-                                <TextBlock Text="Apps neu laden" FontSize="12" />
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Spacing="3">
+                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE8AB;" Foreground="{StaticResource BrandBrush}" FontSize="18" />
+                                <TextBlock Text="Aktives Windows App-Audio-Routing (Lautstärkemixer)" Style="{StaticResource CardTitle}" />
+                                <Border Background="{StaticResource SurfaceL3Brush}" BorderBrush="{StaticResource BrandBrush}" BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+                                    <TextBlock Text="Aktiv" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                                </Border>
                             </StackPanel>
-                        </Button>
+                            <TextBlock Text="Weise laufenden Anwendungen direkt eine GoXLR-Spur und das passende Mikrofon zu. Windows routet den Ton ohne Neustart der App auf das gewählte Audiogerät."
+                                       Style="{StaticResource Caption}" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Button Style="{StaticResource AccentButtonStyle}" Padding="12,6" Click="AutoAssignApps_Click"
+                                    ToolTipService.ToolTip="Ordnet bekannte Musik-, Chat- und Game-Apps automatisch den richtigen Kanälen zu">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE8B8;" FontSize="14" />
+                                    <TextBlock Text="Auto-Zuweisung" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource SmoothButton}" Padding="10,6" Click="ReSync_Click"
+                                    ToolTipService.ToolTip="Aktive Anwendungen neu laden">
+                                <FontIcon Glyph="&#xE72C;" FontSize="14" />
+                            </Button>
+                            <Button Style="{StaticResource SmoothButton}" Padding="10,6" Click="OpenWindowsVolumeMixer_Click"
+                                    ToolTipService.ToolTip="Windows Soundeinstellungen / Lautstärkemixer öffnen">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE8A7;" FontSize="14" />
+                                    <TextBlock Text="Windows-Mixer" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
                     </Grid>
 
-                    <TextBlock Text="Weise laufenden Anwendungen direkt eine GoXLR-Spur zu. Windows routet den Ton ohne Neustart der App auf das gewählte Audiogerät."
-                               Style="{StaticResource Caption}" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
+                    <!-- Animierter Lade-Indikator -->
+                    <Border Background="{StaticResource SurfaceL2Brush}" CornerRadius="12" Padding="20"
+                            Visibility="{x:Bind AppRouting.IsScanning, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal" Spacing="14" HorizontalAlignment="Center">
+                            <ProgressRing IsActive="{x:Bind AppRouting.IsScanning, Mode=OneWay}"
+                                          Width="24" Height="24" Foreground="{StaticResource BrandBrush}" />
+                            <TextBlock Text="Scanne aktive Windows Audio-Sitzungen..." FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{StaticResource BrandBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
 
                     <!-- Wenn keine Apps Ton wiedergeben -->
                     <Border Visibility="{x:Bind AppRouting.HasNoApps, Mode=OneWay}"
-                            Background="{StaticResource SurfaceL2Brush}" CornerRadius="10" Padding="20"
+                            Background="{StaticResource SurfaceL2Brush}" CornerRadius="12" Padding="28,24"
                             BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
                         <StackPanel HorizontalAlignment="Center" Spacing="8">
-                            <FontIcon Glyph="&#xE7F6;" FontSize="24" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" />
-                            <TextBlock Text="{x:Bind AppRouting.StatusMessage, Mode=OneWay}"
-                                       Style="{StaticResource Caption}" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" />
+                            <FontIcon Glyph="&#xE995;" FontSize="28" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" />
+                            <TextBlock Text="Keine aktiven Audio-Anwendungen gefunden" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                            <TextBlock Text="Spiele Ton in einer App ab (z. B. Spotify, Discord oder im Browser), damit sie hier gesteuert und zugewiesen werden kann."
+                                       Style="{StaticResource Caption}" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" TextAlignment="Center" />
                         </StackPanel>
                     </Border>
 
@@ -134,32 +169,41 @@
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="vm:AppSessionItemViewModel">
-                                <Border Background="{StaticResource SurfaceL2Brush}" CornerRadius="10" Padding="14,10" Margin="0,0,0,8"
-                                        BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
-                                    <Grid ColumnSpacing="14">
+                                <Border Background="{StaticResource SurfaceL2Brush}" BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}"
+                                        BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,4">
+                                    <Grid ColumnSpacing="16" VerticalAlignment="Center">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="34" />
-                                            <ColumnDefinition Width="180" />
+                                            <!-- App info -->
                                             <ColumnDefinition Width="220" />
-                                            <ColumnDefinition Width="*" />
+                                            <!-- Output channel selector -->
+                                            <ColumnDefinition Width="200" />
+                                            <!-- Input channel selector -->
+                                            <ColumnDefinition Width="200" />
+                                            <!-- Volume slider & peak meter -->
+                                            <ColumnDefinition Width="*" MinWidth="140" />
+                                            <!-- Mute button -->
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
 
-                                        <Border Width="30" Height="30" CornerRadius="6" Background="{StaticResource SurfaceL3Brush}" VerticalAlignment="Center">
-                                            <TextBlock Text="{x:Bind Glyph}" FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                                       FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                       Foreground="{StaticResource BrandBrush}" />
-                                        </Border>
-
-                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
-                                            <TextBlock Text="{x:Bind ProcessName}" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Text="{x:Bind DisplayName}" Style="{StaticResource Caption}"
-                                                       Foreground="{StaticResource TextMutedBrush}" TextTrimming="CharacterEllipsis" />
+                                        <!-- 1. App Icon and Name -->
+                                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                            <Border Width="34" Height="34" CornerRadius="8" Background="{StaticResource SurfaceL3Brush}"
+                                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind Glyph}" FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                                           FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                           Foreground="{StaticResource BrandBrush}" />
+                                            </Border>
+                                            <StackPanel VerticalAlignment="Center" Spacing="1">
+                                                <TextBlock Text="{x:Bind ProcessName}" FontWeight="SemiBold" FontSize="14"
+                                                           TextTrimming="CharacterEllipsis" MaxWidth="160" />
+                                                <TextBlock Text="{x:Bind DisplayName}" Style="{StaticResource Caption}"
+                                                           Foreground="{StaticResource TextMutedBrush}" TextTrimming="CharacterEllipsis" MaxWidth="160" />
+                                            </StackPanel>
                                         </StackPanel>
 
-                                        <!-- Target GoXLR Endpoint Dropdown -->
-                                        <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
-                                            <TextBlock Text="GoXLR-Ausgabe" Style="{StaticResource Caption}" />
+                                        <!-- 2. Target GoXLR Endpoint Dropdown -->
+                                        <StackPanel Grid.Column="1" Spacing="2">
+                                            <TextBlock Text="Ausgabe-Kanal (GoXLR)" Style="{StaticResource Overline}" FontSize="10" />
                                             <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Bind OutputChoices}"
                                                       SelectedIndex="{x:Bind SelectedOutputIndex, Mode=TwoWay}">
                                                 <ComboBox.ItemTemplate>
@@ -174,21 +218,43 @@
                                             </ComboBox>
                                         </StackPanel>
 
-                                        <!-- Volume Slider & Peak -->
-                                        <StackPanel Grid.Column="3" VerticalAlignment="Center" Spacing="2" Margin="10,0">
-                                            <Grid>
-                                                <TextBlock Text="App-Lautstärke" Style="{StaticResource Caption}" />
-                                                <TextBlock Text="{x:Bind VolumeText, Mode=OneWay}" HorizontalAlignment="Right"
-                                                           Style="{StaticResource Caption}" FontFamily="Consolas" Foreground="{StaticResource BrandBrush}" />
-                                            </Grid>
-                                            <Slider Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind Volume, Mode=TwoWay}" />
+                                        <!-- 3. Microphone Device (GoXLR Input) -->
+                                        <StackPanel Grid.Column="2" Spacing="2">
+                                            <TextBlock Text="Mikrofon-Eingang" Style="{StaticResource Overline}" FontSize="10" />
+                                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Bind InputChoices}"
+                                                      SelectedIndex="{x:Bind SelectedInputIndex, Mode=TwoWay}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate x:DataType="services:AudioEndpointChoice">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                            <TextBlock Text="{x:Bind Glyph}" FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                                                       FontSize="14" VerticalAlignment="Center" />
+                                                            <TextBlock Text="{x:Bind ShortName}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
                                         </StackPanel>
 
-                                        <!-- Mute Button -->
-                                        <ToggleButton Grid.Column="4" Height="32" Width="36" Padding="0" VerticalAlignment="Center"
-                                                      Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
-                                                      IsChecked="{x:Bind IsMuted, Mode=TwoWay}">
-                                            <FontIcon Glyph="&#xE74F;" FontSize="12" />
+                                        <!-- 4. Volume Slider & Live Peak Meter -->
+                                        <StackPanel Grid.Column="3" Spacing="2" VerticalAlignment="Center">
+                                            <Grid>
+                                                <TextBlock Text="App-Lautstärke" Style="{StaticResource Overline}" FontSize="10" />
+                                                <TextBlock Text="{x:Bind VolumeText, Mode=OneWay}" HorizontalAlignment="Right"
+                                                           Style="{StaticResource Caption}" FontWeight="SemiBold" />
+                                            </Grid>
+                                            <Slider Minimum="0" Maximum="100" StepFrequency="1"
+                                                    Value="{x:Bind Volume, Mode=TwoWay}" Margin="0,-4,0,0" />
+                                            <ProgressBar Minimum="0" Maximum="100" Value="{x:Bind PeakPercent, Mode=OneWay}"
+                                                         Height="3" CornerRadius="2" Margin="0,-2,0,0"
+                                                         Foreground="{StaticResource BrandBrush}" Background="#15FFFFFF" />
+                                        </StackPanel>
+
+                                        <!-- 5. Mute Button -->
+                                        <ToggleButton Grid.Column="4" Style="{StaticResource SmoothDangerToggle}"
+                                                      IsChecked="{x:Bind IsMuted, Mode=TwoWay}"
+                                                      Width="38" Height="38" Padding="0" CornerRadius="10"
+                                                      ToolTipService.ToolTip="App stummschalten">
+                                            <FontIcon Glyph="&#xE74F;" FontSize="14" />
                                         </ToggleButton>
                                     </Grid>
                                 </Border>
@@ -217,7 +283,7 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel Spacing="4">
-                                <TextBlock Text="{x:Bind Service.VirtualCableStatusText, Mode=OneWay}" FontWeight="SemiBold" FontSize="13" />
+                                <TextBlock Text="{x:Bind Service.VirtualCableStatusText, Mode=OneTime}" FontWeight="SemiBold" FontSize="13" />
                                 <TextBlock Text="VB-CABLE erstellt ein virtuelles Wiedergabegerät 'CABLE Input' und ein Aufnahmegerät 'CABLE Output' in Windows."
                                            Style="{StaticResource Caption}" Foreground="{StaticResource TextMutedBrush}" />
                             </StackPanel>

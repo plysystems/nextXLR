@@ -96,7 +96,9 @@ public partial class AppSessionItemViewModel : ObservableObject
 
     [ObservableProperty] private int _selectedOutputIndex;
     [ObservableProperty] private int _selectedInputIndex;
-    [ObservableProperty] private double _volume;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(VolumeText))]
+    private double _volume;
     [ObservableProperty] private bool _isMuted;
     [ObservableProperty] private double _peakPercent;
 
@@ -147,19 +149,23 @@ public partial class AppSessionItemViewModel : ObservableObject
             {
                 if (_info.MeterInformation.GetPeakValue(out float peak) == 0)
                 {
-                    PeakPercent = Math.Clamp(peak * 100.0, 0.0, 100.0);
+                    var newPeak = Math.Clamp(peak * 100.0, 0.0, 100.0);
+                    if (Math.Abs(PeakPercent - newPeak) > 0.5 || (newPeak == 0 && PeakPercent != 0))
+                    {
+                        PeakPercent = newPeak;
+                    }
                 }
-                else
+                else if (PeakPercent != 0.0)
                 {
                     PeakPercent = 0.0;
                 }
             }
             catch
             {
-                PeakPercent = 0.0;
+                if (PeakPercent != 0.0) PeakPercent = 0.0;
             }
         }
-        else
+        else if (PeakPercent != 0.0)
         {
             PeakPercent = 0.0;
         }
@@ -258,7 +264,7 @@ public partial class AppRoutingManagerViewModel : ObservableObject
             if (queue != null)
             {
                 _meterTimer = queue.CreateTimer();
-                _meterTimer.Interval = TimeSpan.FromMilliseconds(50);
+                _meterTimer.Interval = TimeSpan.FromMilliseconds(75);
                 _meterTimer.Tick += (_, _) =>
                 {
                     foreach (var s in AppSessions)

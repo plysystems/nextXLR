@@ -605,6 +605,7 @@ public static class WindowsAppAudioRouter
                     foreach (var p in Process.GetProcessesByName(processName))
                     {
                         pids.Add((uint)p.Id);
+                        try { p.Dispose(); } catch { }
                     }
                 }
                 catch { }
