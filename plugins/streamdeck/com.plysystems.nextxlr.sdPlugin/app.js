@@ -217,33 +217,137 @@ function renderCanvasFader(channelName, volPct, isMuted, isSubmix) {
 
         // Center Level / Mute
         if (isMuted) {
+            // Crossed-out microphone icon
+            const cx = 72, cy = 64;
+            ctx.save();
+            // Capsule
             ctx.fillStyle = "#EF4444";
-            ctx.font = "900 24px sans-serif";
-            ctx.fillText("MUTED", 72, isSubmix ? 82 : 78);
+            ctx.beginPath();
+            ctx.roundRect(cx - 8, cy - 20, 16, 26, 8);
+            ctx.fill();
+
+            // U-arc
+            ctx.strokeStyle = "#EF4444";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(cx, cy - 6, 13, 0, Math.PI);
+            ctx.stroke();
+
+            // Stem and base
+            ctx.beginPath();
+            ctx.moveTo(cx, cy + 7);
+            ctx.lineTo(cx, cy + 17);
+            ctx.moveTo(cx - 10, cy + 17);
+            ctx.lineTo(cx + 10, cy + 17);
+            ctx.stroke();
+
+            // Bold white/red diagonal slash through the mic
+            ctx.strokeStyle = "#EF4444";
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(cx - 18, cy - 22);
+            ctx.lineTo(cx + 18, cy + 20);
+            ctx.stroke();
+
+            ctx.strokeStyle = "#FFFFFF";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(cx - 17, cy - 21);
+            ctx.lineTo(cx + 17, cy + 19);
+            ctx.stroke();
+            ctx.restore();
+
+            // MUTE text
+            ctx.fillStyle = "#EF4444";
+            ctx.font = "900 18px sans-serif";
+            ctx.fillText("MUTE", 72, 102);
 
             // Red mute bar
-            ctx.fillStyle = "rgba(239, 68, 68, 0.25)";
+            ctx.fillStyle = "rgba(239, 68, 68, 0.35)";
             ctx.beginPath();
-            ctx.roundRect(18, 102, 108, 16, 8);
+            ctx.roundRect(18, 116, 108, 12, 6);
             ctx.fill();
         } else {
+            // Unmuted: 0 - 100 level display
             ctx.fillStyle = "#FFFFFF";
-            ctx.font = "900 28px sans-serif";
-            ctx.fillText(`${volPct}%`, 72, isSubmix ? 84 : 78);
+            ctx.font = "900 32px sans-serif";
+            ctx.fillText(`${volPct}`, 72, isSubmix ? 82 : 76);
 
             // Progress bar background
             ctx.fillStyle = "#1E293B";
             ctx.beginPath();
-            ctx.roundRect(18, 102, 108, 16, 8);
+            ctx.roundRect(18, 106, 108, 16, 8);
             ctx.fill();
 
             // Active fill
-            const fillW = Math.max(10, Math.round((Math.min(volPct, 100) / 100) * 108));
+            const fillW = Math.max(8, Math.round((Math.min(volPct, 100) / 100) * 108));
             ctx.fillStyle = isSubmix ? "#3B82F6" : "#00D2B4";
             ctx.beginPath();
-            ctx.roundRect(18, 102, fillW, 16, 8);
+            ctx.roundRect(18, 106, fillW, 16, 8);
             ctx.fill();
         }
+
+        return canvas.toDataURL("image/png");
+    } catch (e) {
+        return null;
+    }
+}
+
+function renderCanvasPage(pageNum) {
+    try {
+        let canvas = document.getElementById("renderCanvasPage");
+        if (!canvas) {
+            canvas = document.createElement("canvas");
+            canvas.id = "renderCanvasPage";
+            canvas.width = 144;
+            canvas.height = 144;
+            document.body.appendChild(canvas);
+        }
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, 144, 144);
+
+        const isP2 = (pageNum === 2);
+        const accentColor = isP2 ? "#F59E0B" : "#00D2B4"; // Orange for Seite 2, Cyan for Seite 1
+        const badgeBg = isP2 ? "rgba(245, 158, 11, 0.18)" : "rgba(0, 210, 180, 0.18)";
+
+        // Dark background
+        ctx.fillStyle = "#0E1015";
+        ctx.beginPath();
+        ctx.roundRect(4, 4, 136, 136, 18);
+        ctx.fill();
+
+        // Accent border
+        ctx.strokeStyle = accentColor;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // Header: "SEITE"
+        ctx.fillStyle = "#94A3B8";
+        ctx.font = "bold 15px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("SEITE", 72, 32);
+
+        // Center circular badge
+        ctx.fillStyle = badgeBg;
+        ctx.beginPath();
+        ctx.arc(72, 74, 32, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = accentColor;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Big Page number "1" or "2"
+        ctx.fillStyle = accentColor;
+        ctx.font = "900 42px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(pageNum.toString(), 72, 75);
+        ctx.textBaseline = "alphabetic";
+
+        // Footer: "BANK 1" or "BANK 2"
+        ctx.fillStyle = accentColor;
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText(isP2 ? "BANK 2" : "BANK 1", 72, 126);
 
         return canvas.toDataURL("image/png");
     } catch (e) {
@@ -344,28 +448,6 @@ async function handleKeyDown(context, action, settings) {
                 res = await callEngineApi("/api/page", { action: "toggle" });
             } else {
                 res = await callEngineApi("/api/page", { page: parseInt(mode, 10) });
-            }
-            if (res && res.ok) showOk(context); else showAlert(context);
-            await refreshEngineState();
-            break;
-        }
-
-        case "com.plysystems.nextxlr.fadermute": {
-            const fader = (settings.fader || "A").toUpperCase();
-            const mode = settings.mode || "toggle";
-            const res = await callEngineApi("/api/mute", { channel: fader, action: mode });
-            if (res && res.ok) showOk(context); else showAlert(context);
-            await refreshEngineState();
-            break;
-        }
-
-        case "com.plysystems.nextxlr.mixmode": {
-            const target = settings.target || "toggle";
-            let res;
-            if (target === "toggle") {
-                res = await callEngineApi("/api/mix-mode", { action: "toggle" });
-            } else {
-                res = await callEngineApi("/api/mix-mode", { target });
             }
             if (res && res.ok) showOk(context); else showAlert(context);
             await refreshEngineState();
@@ -534,29 +616,16 @@ function updateContextDisplay(context, action, settings) {
             break;
         }
 
-        case "com.plysystems.nextxlr.fadermute": {
-            const faderLetter = (settings.fader || "A").toUpperCase();
-            const ch = findChannelInState(faderLetter);
-            if (ch) {
-                setState(context, ch.muted ? 1 : 0);
-                setTitle(context, `FADER ${faderLetter}\n${ch.name}\n${ch.muted ? "MUTED" : "ON"}`);
-            } else {
-                setTitle(context, `FADER ${faderLetter}\n--`);
-            }
-            break;
-        }
-
         case "com.plysystems.nextxlr.page": {
             const curPage = (lastMixerState && lastMixerState.active_page) || 1;
             setState(context, curPage === 2 ? 1 : 0);
-            setTitle(context, `MIXER\nSEITE ${curPage}`);
-            break;
-        }
-
-        case "com.plysystems.nextxlr.mixmode": {
-            const isSubmix = (lastMixerState && lastMixerState.fader_target_submix !== undefined) ? lastMixerState.fader_target_submix : true;
-            setState(context, isSubmix ? 0 : 1);
-            setTitle(context, `MIX\n${isSubmix ? "KOPFHÖRER" : "STREAM"}`);
+            const dataUrl = renderCanvasPage(curPage);
+            if (dataUrl) {
+                setImage(context, dataUrl);
+                setTitle(context, "");
+            } else {
+                setTitle(context, `SEITE\n${curPage}`);
+            }
             break;
         }
 

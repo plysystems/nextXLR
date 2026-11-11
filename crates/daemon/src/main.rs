@@ -528,6 +528,7 @@ async fn api_status(State(app): State<AppState>) -> impl IntoResponse {
                     let submix = state.fader_target_submix;
                     return axum::Json(json!({
                         "ok": true,
+                        "version": "0.1.9.0-alpha",
                         "state": state,
                         "active_page": current_page,
                         "fader_target_submix": submix
