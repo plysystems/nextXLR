@@ -385,6 +385,14 @@ public partial class MainViewModel : ObservableObject
                 {
                     ToggleMixerPage();
                 }
+                if (s.ActivePage != 0 && s.ActivePage != ActiveMixerPage)
+                {
+                    SwitchMixerPage(s.ActivePage);
+                }
+                if (TargetSubmix != s.FaderTargetSubmix)
+                {
+                    DualFaderTarget = s.FaderTargetSubmix ? 0 : 1;
+                }
                 if (s.Effects is { } fx) Effects.ApplyFromServer(fx);
                 if (s.Mic is { } mic) Mic.ApplyFromServer(mic);
                 Lighting.Apply(Hardware.LightingZoneIds, s.Lighting);
@@ -661,6 +669,7 @@ public partial class MainViewModel : ObservableObject
         if (page < 1 || page > 2) return;
 
         ActiveMixerPage = page;
+        _transport.Send(new SetMixerPage(page));
         var settings = AppSettings.Load();
         settings.ActiveMixerPage = page;
         settings.EnsureDistinctMixerPages();

@@ -69,6 +69,7 @@ public partial class ChannelViewModel : ObservableObject
     public bool ShowFaderOnStream => HasFader && (!ShowDualMix || !DualFaderIsKopfhoerer);
     public bool ShowFaderOnPhones => HasFader && ShowDualMix && DualFaderIsKopfhoerer;
     [ObservableProperty] private double? _restoreVolume;
+    [ObservableProperty] private double? _restoreSubmixVolume;
     [ObservableProperty] private bool _metered = true;
     /// <summary>Meter-only (no level control on the GoXLR): Broadcast Stream Mix, Chat Mic.</summary>
     [ObservableProperty] private bool _isFixed;
@@ -205,6 +206,7 @@ public partial class ChannelViewModel : ObservableObject
             SubmixVolume = c.SubmixVolume;
             SubmixMuted = c.SubmixMuted;
             RestoreVolume = c.RestoreVolume;
+            RestoreSubmixVolume = c.RestoreSubmixVolume;
             Metered = c.Metered;
             IsFixed = c.Fixed;
 
@@ -256,6 +258,10 @@ public partial class ChannelViewModel : ObservableObject
             PeakHold = 0;
             PeakLabel = "-∞";
         }
+        if (value > 0.001 && Muted && !_applyingServer)
+        {
+            Muted = false;
+        }
         if (!_applyingServer)
         {
             MainViewModel.HasPendingChanges = true;
@@ -272,6 +278,10 @@ public partial class ChannelViewModel : ObservableObject
         {
             OnPropertyChanged(nameof(VolumePercent));
             OnPropertyChanged(nameof(VolumeLabel));
+        }
+        if (value > 0.001 && SubmixMuted && !_applyingServer)
+        {
+            SubmixMuted = false;
         }
         if (!_applyingServer)
         {
@@ -290,12 +300,19 @@ public partial class ChannelViewModel : ObservableObject
         }
         if (value)
         {
+            if (Volume > 0.001) RestoreVolume = Volume;
+            Volume = 0.0;
             _targetDb = FloorDb;
             _displayDb = FloorDb;
             _holdDb = FloorDb;
             Meter = 0;
             PeakHold = 0;
             PeakLabel = "-∞";
+        }
+        else
+        {
+            Volume = RestoreVolume ?? 0.8;
+            RestoreVolume = null;
         }
         if (!_applyingServer)
         {
@@ -312,7 +329,21 @@ public partial class ChannelViewModel : ObservableObject
             OnPropertyChanged(nameof(ActiveMuted));
             OnPropertyChanged(nameof(ActiveMuteTooltip));
         }
-        if (!_applyingServer) _transport.Send(new SetSubmixMute(Id, value));
+        if (value)
+        {
+            if (SubmixVolume > 0.001) RestoreSubmixVolume = SubmixVolume;
+            SubmixVolume = 0.0;
+        }
+        else
+        {
+            SubmixVolume = RestoreSubmixVolume ?? 0.8;
+            RestoreSubmixVolume = null;
+        }
+        if (!_applyingServer)
+        {
+            MainViewModel.HasPendingChanges = true;
+            _transport.Send(new SetSubmixMute(Id, value));
+        }
     }
 
     partial void OnRestoreVolumeChanged(double? value) => OnPropertyChanged(nameof(RestoreLabel));

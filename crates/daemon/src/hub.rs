@@ -299,6 +299,10 @@ impl Hub {
                     })],
                 };
             }
+            ClientMessage::SetMixerPage { page } => {
+                self.engine.set_active_page(page);
+                return vec![Effect::Broadcast(self.state_message())];
+            }
             ClientMessage::Bleep { pressed } => {
                 self.client_bleep = pressed;
                 return self.bleep_effects(pressed, true);
@@ -511,9 +515,11 @@ impl Hub {
 
     /// Soft takeover. Returns the bound channel if this physical move should apply.
     fn takeover(&mut self, fader: Fader, position: f32) -> Option<ChannelId> {
-        let ch = self.channel(fader)?;
-        let current = if self.fader_target_submix { ch.submix_volume } else { ch.volume };
-        let id = ch.id;
+        let (current, id, is_submix_muted, is_muted) = {
+            let ch = self.channel(fader)?;
+            let current = if self.fader_target_submix { ch.submix_volume } else { ch.volume };
+            (current, ch.id, ch.submix_muted, ch.muted)
+        };
         let slot = &mut self.faders[fader.index()];
         if !slot.picked_up {
             let near = (position - current).abs() <= PICKUP_TOLERANCE;
@@ -527,6 +533,15 @@ impl Hub {
             slot.picked_up = true;
         }
         slot.last_physical = Some(position);
+        if position > 0.02 {
+            if self.fader_target_submix {
+                if is_submix_muted {
+                    let _ = self.engine.set_submix_mute(id, false);
+                }
+            } else if is_muted {
+                let _ = self.engine.set_mute(id, false);
+            }
+        }
         Some(id)
     }
 
@@ -629,6 +644,12 @@ impl Hub {
                     out.push(Effect::Hardware(HardwareCommand::MuteLed {
                         fader: f,
                         on: m1,
+                    }));
+                    // When muted, drop physical fader display to 0; when unmuted, restore to volume position v1.
+                    out.push(Effect::Hardware(HardwareCommand::FaderDisplay {
+                        fader: f,
+                        position: if m1 { 0.0 } else { v1 },
+                        label: n1.clone(),
                     }));
                 }
             }

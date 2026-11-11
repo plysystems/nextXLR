@@ -36,7 +36,10 @@ cargo build --release --bin mixforged
 
 # 0b. Compile projects to ensure latest binaries
 Write-Host "Building Windows Application in Release Mode..."
-dotnet build (Join-Path $root "apps\windows\NextXLR.csproj") -c Release -p:SourceRevisionId=$gitSha -p:InformationalVersion="$version+$gitSha" --no-restore --no-incremental
+dotnet build (Join-Path $root "apps\windows\NextXLR.csproj") -c Release -p:SourceRevisionId=$gitSha -p:InformationalVersion="$version+$gitSha"
+if ($LASTEXITCODE -ne 0) {
+    throw "dotnet build for NextXLR failed with exit code $LASTEXITCODE"
+}
 
 Write-Host "Creating release package directory structure..."
 if (Test-Path $releaseDir) { Remove-Item $releaseDir -Recurse -Force }
@@ -44,6 +47,10 @@ New-Item -ItemType Directory -Path $appDir -Force | Out-Null
 
 # 1. Copy App binaries from Windows build
 $binDir = Join-Path $root "apps\windows\bin\Release\net8.0-windows10.0.19041.0\win-x64"
+$binExe = Join-Path $binDir "NextXLR.exe"
+if (-not (Test-Path $binExe)) {
+    throw "NextXLR.exe was not found in build output at $binExe"
+}
 Write-Host "Copying Windows App binaries from $binDir..."
 Copy-Item "$binDir\*" -Destination $appDir -Recurse -Exclude "*.pdb","*.old" -Force
 
@@ -83,7 +90,7 @@ if (Test-Path $sdPluginOut) { Remove-Item $sdPluginOut -Force }
 $packed = $false
 try {
     Write-Host "Packaging with official Elgato CLI..."
-    cmd /c "npx -y @elgato/cli pack `"$sdPluginSrc`" -o `"$distDir`" -f"
+    streamdeck pack "$sdPluginSrc" -o "$distDir" -f --ignore-validation
     if (Test-Path $sdPluginOut) {
         $packed = $true
         Write-Host "Stream Deck plugin packaged with official Elgato CLI."

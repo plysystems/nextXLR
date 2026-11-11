@@ -852,6 +852,13 @@ async fn api_page(
         let _ = rx.await;
     }
 
+    let (tx, rx) = oneshot::channel();
+    let _ = app.hub.send(HubMsg::Client {
+        msg: ClientMessage::SetMixerPage { page: target_page },
+        reply: tx,
+    });
+    let _ = rx.await;
+
     save_active_page_to_settings(target_page);
 
     axum::Json(json!({

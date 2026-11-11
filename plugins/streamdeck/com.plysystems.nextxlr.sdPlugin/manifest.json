@@ -23,13 +23,27 @@
     {
       "Icon": "assets/faderAction",
       "Name": "Lautstärke / Fader",
-      "Tooltip": "Steuert Lautstärke eines Audiokanals oder Faders (Lauter, Leiser oder Fader-Wert)",
+      "Tooltip": "Steuert Lautstärke eines Audiokanals oder Faders über eine Stream Deck Taste",
       "UUID": "com.plysystems.nextxlr.fader",
       "PropertyInspectorPath": "pi/fader.html",
+      "SupportedInMultiActions": true,
+      "States": [
+        {
+          "Image": "assets/faderAction",
+          "TitleAlignment": "bottom"
+        }
+      ]
+    },
+    {
+      "Icon": "assets/faderAction",
+      "Name": "Lautstärke Drehregler (Stream Deck +)",
+      "Tooltip": "Steuert Lautstärke über den Drehregler des Stream Deck + (Drehen: Pegel, Drücken: Mute, Touch: 100%)",
+      "UUID": "com.plysystems.nextxlr.encoder",
+      "PropertyInspectorPath": "pi/fader.html",
       "Controllers": [
-        "Keypad",
         "Encoder"
       ],
+      "SupportedInMultiActions": false,
       "States": [
         {
           "Image": "assets/faderAction",
@@ -51,9 +65,8 @@
       "Tooltip": "Wechselt zwischen Fader-Bank 1 und 2 für GoXLR Hardware-Fader A–D",
       "UUID": "com.plysystems.nextxlr.page",
       "PropertyInspectorPath": "pi/page.html",
-      "Controllers": [
-        "Keypad"
-      ],
+      "SupportedInMultiActions": true,
+      "DisableAutomaticStates": true,
       "States": [
         {
           "Image": "assets/pageAction",
@@ -71,9 +84,8 @@
       "Tooltip": "Schaltet den aktuellen Kanal auf GoXLR Hardware-Fader A, B, C oder D stumm",
       "UUID": "com.plysystems.nextxlr.fadermute",
       "PropertyInspectorPath": "pi/fadermute.html",
-      "Controllers": [
-        "Keypad"
-      ],
+      "SupportedInMultiActions": true,
+      "DisableAutomaticStates": true,
       "States": [
         {
           "Image": "assets/faderMuteAction",
@@ -91,9 +103,8 @@
       "Tooltip": "Wählt, ob die Hardware-Fader Kopfhörer oder Stream steuern",
       "UUID": "com.plysystems.nextxlr.mixmode",
       "PropertyInspectorPath": "pi/mixmode.html",
-      "Controllers": [
-        "Keypad"
-      ],
+      "SupportedInMultiActions": true,
+      "DisableAutomaticStates": true,
       "States": [
         {
           "Image": "assets/mixModeAction",
@@ -111,9 +122,8 @@
       "Tooltip": "Schaltet einen Kanal (z. B. Musik, Chat, Game, System) stumm oder hebt Stummschaltung auf",
       "UUID": "com.plysystems.nextxlr.mute",
       "PropertyInspectorPath": "pi/mute.html",
-      "Controllers": [
-        "Keypad"
-      ],
+      "SupportedInMultiActions": true,
+      "DisableAutomaticStates": true,
       "States": [
         {
           "Image": "assets/muteOff",
@@ -131,9 +141,8 @@
       "Tooltip": "Stummschalten des Mikrofons (Umschalten oder Push-to-Mute)",
       "UUID": "com.plysystems.nextxlr.micmute",
       "PropertyInspectorPath": "pi/micmute.html",
-      "Controllers": [
-        "Keypad"
-      ],
+      "SupportedInMultiActions": true,
+      "DisableAutomaticStates": true,
       "States": [
         {
           "Image": "assets/micLive",
@@ -151,9 +160,8 @@
       "Tooltip": "Spielt den Zensurton ab und mutet das Mikrofon solange die Taste gehalten wird",
       "UUID": "com.plysystems.nextxlr.bleep",
       "PropertyInspectorPath": "pi/bleep.html",
-      "Controllers": [
-        "Keypad"
-      ],
+      "SupportedInMultiActions": true,
+      "DisableAutomaticStates": true,
       "States": [
         {
           "Image": "assets/bleepOff",
@@ -171,9 +179,7 @@
       "Tooltip": "Lädt ein bestimmtes NEXT : XLR Profil (z. B. Gaming, Stream, Podcast)",
       "UUID": "com.plysystems.nextxlr.profile",
       "PropertyInspectorPath": "pi/profile.html",
-      "Controllers": [
-        "Keypad"
-      ],
+      "SupportedInMultiActions": true,
       "States": [
         {
           "Image": "assets/profileAction",
@@ -187,9 +193,8 @@
       "Tooltip": "Schaltet eine Verbindung in der Routing-Tabelle um (z. B. Musik zu Stream)",
       "UUID": "com.plysystems.nextxlr.route",
       "PropertyInspectorPath": "pi/route.html",
-      "Controllers": [
-        "Keypad"
-      ],
+      "SupportedInMultiActions": true,
+      "DisableAutomaticStates": true,
       "States": [
         {
           "Image": "assets/routeOff",

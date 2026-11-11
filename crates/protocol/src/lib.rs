@@ -64,6 +64,9 @@ pub struct Channel {
     /// Smart mute: the fader position to return to on unmute. Set while muted.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub restore_volume: Option<f32>,
+    /// Smart mute: the submix fader position to return to on unmute. Set while muted.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub restore_submix_volume: Option<f32>,
 }
 
 fn default_true() -> bool {
@@ -209,6 +212,12 @@ pub struct MixerState {
     pub vst_plugins: Vec<VstPluginSlot>,
     #[serde(default)]
     pub fader_target_submix: bool,
+    #[serde(default = "default_page_one")]
+    pub active_page: u8,
+}
+
+fn default_page_one() -> u8 {
+    1
 }
 
 /// One effect preset (GoXLR buttons 1–6). Knob positions as on the device:
@@ -423,6 +432,8 @@ pub enum ClientMessage {
     SetLightingScheme { zones: Vec<LightingZone> },
     /// Put a channel on a physical fader ("A"–"D"). If it is already on another fader, the two swap.
     AssignFader { fader: String, channel: ChannelId },
+    /// Switch active mixer page (1 or 2)
+    SetMixerPage { page: u8 },
     /// Bleep (censor) from a client: while pressed, the mic is muted on the device.
     Bleep { pressed: bool },
     /// Global mic mute (same as the GoXLR cough button).

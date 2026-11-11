@@ -26,7 +26,9 @@ public sealed record Channel(
     /// <summary>Dual-Mix submix volume for Headphones/Monitor (0.0..1.0).</summary>
     double SubmixVolume = 0.8,
     /// <summary>Dual-Mix submix mute for Headphones/Monitor.</summary>
-    bool SubmixMuted = false);
+    bool SubmixMuted = false,
+    /// <summary>Smart mute submix restore volume.</summary>
+    double? RestoreSubmixVolume = null);
 public sealed record Bus(uint Id, string Name);
 public sealed record Route(uint Channel, uint Bus, double Gain);
 
@@ -70,7 +72,9 @@ public sealed record StateMessage(
     bool MicMuted = false,
     EffectsState? Effects = null,
     MicSettings? Mic = null,
-    IReadOnlyList<VstPluginSlot>? VstPlugins = null) : ServerMessage;
+    IReadOnlyList<VstPluginSlot>? VstPlugins = null,
+    int ActivePage = 1,
+    bool FaderTargetSubmix = true) : ServerMessage;
 
 /// <summary>Knob positions as on the device: reverb/echo 0..24, pitch/gender -24..24.</summary>
 public sealed record EffectPreset(int Reverb, int Echo, int Pitch, int Gender, bool Megaphone, bool Robot, bool Hardtune,
@@ -137,6 +141,7 @@ public sealed record ProfileMessage(System.Text.Json.Nodes.JsonNode Profile) : S
 [JsonDerivedType(typeof(SetVstPlugin), "set_vst_plugin")]
 [JsonDerivedType(typeof(RemoveVstPlugin), "remove_vst_plugin")]
 [JsonDerivedType(typeof(ScanVstPlugins), "scan_vst_plugins")]
+[JsonDerivedType(typeof(SetMixerPage), "set_mixer_page")]
 public abstract record ClientMessage;
 
 public sealed record GetState : ClientMessage;
@@ -145,6 +150,7 @@ public sealed record SetMute(uint Channel, bool Muted) : ClientMessage;
 public sealed record SetSubmixVolume(uint Channel, double Volume) : ClientMessage;
 public sealed record SetSubmixMute(uint Channel, bool Muted) : ClientMessage;
 public sealed record SetFaderTargetSubmix(bool Submix) : ClientMessage;
+public sealed record SetMixerPage(int Page) : ClientMessage;
 public sealed record SetVstPlugin(VstPluginSlot Plugin) : ClientMessage;
 public sealed record RemoveVstPlugin(string Id) : ClientMessage;
 public sealed record ScanVstPlugins : ClientMessage;

@@ -170,16 +170,27 @@ impl Engine {
         ch.submix_volume = volume.clamp(0.0, 1.0);
         if ch.submix_muted && ch.submix_volume > 0.0 {
             ch.submix_muted = false;
+            ch.restore_submix_volume = None;
         }
         self.sync_channel(id);
         Ok(())
     }
 
-    /// Dual-mix submix mute for Headphones/Monitor bus.
+    /// Dual-mix submix mute for Headphones/Monitor bus with smart mute.
     pub fn set_submix_mute(&mut self, id: ChannelId, muted: bool) -> Result<()> {
         let ch = self.channel_mut(id)?;
         if ch.fixed {
             bail!("{} can't be muted here", ch.name);
+        }
+        if muted && !ch.submix_muted {
+            ch.restore_submix_volume = Some(ch.submix_volume);
+            ch.submix_volume = 0.0;
+        } else if !muted && ch.submix_muted {
+            if let Some(v) = ch.restore_submix_volume.take() {
+                ch.submix_volume = v;
+            } else {
+                ch.submix_volume = 0.8;
+            }
         }
         ch.submix_muted = muted;
         self.sync_channel(id);
@@ -259,6 +270,10 @@ impl Engine {
 
     pub fn set_fader_target_submix(&mut self, submix: bool) {
         self.state.fader_target_submix = submix;
+    }
+
+    pub fn set_active_page(&mut self, page: u8) {
+        self.state.active_page = page;
     }
 
     /// The current setup as a portable profile.
@@ -629,6 +644,7 @@ fn default_state() -> MixerState {
         metered,
         icon: None,
         restore_volume: None,
+        restore_submix_volume: None,
         fixed: false,
     };
     let channels = vec![
@@ -690,5 +706,6 @@ fn default_state() -> MixerState {
         bleep: false, mic_muted: false, effects, mic: MicSettings::default(),
         vst_plugins: Vec::new(),
         fader_target_submix: true,
+        active_page: 1,
     }
 }

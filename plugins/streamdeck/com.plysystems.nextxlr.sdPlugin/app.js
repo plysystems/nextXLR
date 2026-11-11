@@ -47,7 +47,51 @@ async function callEngineApi(endpoint, params = {}) {
     }
 }
 
+let engineWs = null;
+let engineWsReconnectTimer = null;
+
+function connectEngineWebSocket() {
+    if (engineWs && (engineWs.readyState === WebSocket.OPEN || engineWs.readyState === WebSocket.CONNECTING)) {
+        return;
+    }
+    try {
+        engineWs = new WebSocket(`ws://127.0.0.1:${activeApiPort}/ws`);
+        engineWs.onopen = () => {
+            isEngineOnline = true;
+            try { engineWs.send(JSON.stringify({ type: "get_state" })); } catch (e) { }
+        };
+        engineWs.onmessage = (event) => {
+            try {
+                const msg = JSON.parse(event.data);
+                if (msg.type === "state") {
+                    lastMixerState = msg;
+                    isEngineOnline = true;
+                    updateAllActiveContexts();
+                }
+            } catch (err) { }
+        };
+        engineWs.onclose = () => {
+            scheduleEngineWsReconnect();
+        };
+        engineWs.onerror = () => {
+            try { engineWs.close(); } catch (e) { }
+        };
+    } catch (e) {
+        scheduleEngineWsReconnect();
+    }
+}
+
+function scheduleEngineWsReconnect() {
+    if (!engineWsReconnectTimer) {
+        engineWsReconnectTimer = setTimeout(() => {
+            engineWsReconnectTimer = null;
+            detectApiPort().then(() => connectEngineWebSocket());
+        }, 2500);
+    }
+}
+
 async function refreshEngineState() {
+    connectEngineWebSocket();
     const res = await callEngineApi("/api/status");
     if (res && res.ok && res.state) {
         lastMixerState = res.state;
@@ -59,17 +103,19 @@ async function refreshEngineState() {
         }
         isEngineOnline = true;
         updateAllActiveContexts();
-    } else {
+    } else if (!engineWs || engineWs.readyState !== WebSocket.OPEN) {
         isEngineOnline = false;
     }
 }
 
-// Background polling loop (every 750ms when Stream Deck is active)
+// Background heartbeat fallback loop (every 4s)
 setInterval(() => {
     if (activeContexts.size > 0) {
-        refreshEngineState();
+        if (!engineWs || engineWs.readyState !== WebSocket.OPEN) {
+            refreshEngineState();
+        }
     }
-}, 750);
+}, 4000);
 
 // --- Stream Deck WebSocket Setup ---
 
@@ -192,6 +238,7 @@ async function handleKeyDown(context, action, settings) {
     const channel = settings.channel || "music";
 
     switch (action) {
+        case "com.plysystems.nextxlr.encoder":
         case "com.plysystems.nextxlr.fader": {
             const mode = settings.mode || "increase";
             const step = parseFloat(settings.step || "0.05");
@@ -321,7 +368,7 @@ async function handleKeyUp(context, action, settings) {
 }
 
 async function handleDialRotate(context, action, settings, ticks) {
-    if (action === "com.plysystems.nextxlr.fader") {
+    if (action === "com.plysystems.nextxlr.fader" || action === "com.plysystems.nextxlr.encoder") {
         const channel = settings.channel || "music";
         const delta = (ticks * 0.02);
         await callEngineApi("/api/fader", { channel, delta });
@@ -330,7 +377,7 @@ async function handleDialRotate(context, action, settings, ticks) {
 }
 
 async function handleDialPress(context, action, settings) {
-    if (action === "com.plysystems.nextxlr.fader") {
+    if (action === "com.plysystems.nextxlr.fader" || action === "com.plysystems.nextxlr.encoder") {
         const channel = settings.channel || "music";
         await callEngineApi("/api/mute", { channel, action: "toggle" });
         await refreshEngineState();
@@ -338,7 +385,7 @@ async function handleDialPress(context, action, settings) {
 }
 
 async function handleTouchTap(context, action, settings) {
-    if (action === "com.plysystems.nextxlr.fader") {
+    if (action === "com.plysystems.nextxlr.fader" || action === "com.plysystems.nextxlr.encoder") {
         const channel = settings.channel || "music";
         await callEngineApi("/api/fader", { channel, volume: 1.0 });
         await refreshEngineState();
@@ -365,6 +412,7 @@ function updateContextDisplay(context, action, settings) {
     const channelObj = findChannelInState(channelName);
 
     switch (action) {
+        case "com.plysystems.nextxlr.encoder":
         case "com.plysystems.nextxlr.fader": {
             if (channelObj) {
                 const volPct = Math.round(channelObj.volume * 100);
