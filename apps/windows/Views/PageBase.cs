@@ -196,29 +196,49 @@ public partial class MixerPage : Page
         double colGap = 8;
         double chrome = MidWidth + 48; // Controls + Dividers + margins
 
-        double totalGaps = Math.Max(0, nIn - 1) * colGap + Math.Max(0, nOut - 1) * colGap;
-        double availableForStrips = Math.Max(0, w - chrome - totalGaps);
-        double targetStrip = availableForStrips / (nIn + nOut);
+        double gapsIn = Math.Max(0, nIn - 1) * colGap;
+        double gapsOut = Math.Max(0, nOut - 1) * colGap;
+        double totalFixed = chrome + gapsIn + gapsOut;
+
+        double availableForFaders = Math.Max(0, w - totalFixed);
+        double targetStrip = availableForFaders / (nIn + nOut);
         targetStrip = Math.Clamp(targetStrip, minStrip, maxStrip);
 
-        double minDeskWidth = nIn * minStrip + Math.Max(0, nIn - 1) * colGap + chrome + nOut * minStrip + Math.Max(0, nOut - 1) * colGap;
-        double actualDeskWidth = Math.Max(w, minDeskWidth);
+        double inBayWidth = nIn * targetStrip + gapsIn;
+        double outBayWidth = nOut * targetStrip + gapsOut;
+
+        double minDeskWidth = nIn * minStrip + gapsIn + chrome + nOut * minStrip + gapsOut;
+        double actualDeskWidth = Math.Max(w, inBayWidth + chrome + outBayWidth);
+
+        // If viewport is wider, distribute the remaining width proportionally
+        if (actualDeskWidth > inBayWidth + chrome + outBayWidth)
+        {
+            double extra = actualDeskWidth - (inBayWidth + chrome + outBayWidth);
+            inBayWidth += extra * (nIn / (double)(nIn + nOut));
+            outBayWidth += extra * (nOut / (double)(nIn + nOut));
+        }
 
         // Explicit width ensures Grid never receives infinite measure in ScrollViewer,
-        // so Star columns stretch to fill 100% of the visible viewport!
+        // so columns stretch to fill 100% of the visible viewport!
         Sections.Width = actualDeskWidth;
         Sections.MinWidth = minDeskWidth;
         Sections.HorizontalAlignment = HorizontalAlignment.Stretch;
 
-        // Proportional Fullwidth-Layout: Inputs and Outputs stretch to fill 100% of available screen width
-        InCol.Width = new GridLength(nIn, GridUnitType.Star);
+        // Explicit pixel widths ensure star column rounding never truncates or wraps items
+        InCol.Width = new GridLength(inBayWidth, GridUnitType.Pixel);
         MidCol.Width = GridLength.Auto;
-        OutCol.Width = new GridLength(nOut, GridUnitType.Star);
+        OutCol.Width = new GridLength(outBayWidth, GridUnitType.Pixel);
 
-        InLayout.MinItemWidth = targetStrip;
-        OutLayout.MinItemWidth = targetStrip;
+        // Defensive calculation ensures all 8 inputs and 5 outputs ALWAYS stay strictly in one row side-by-side
+        double inItemWidth = Math.Max(minStrip, Math.Floor((inBayWidth - gapsIn) / nIn) - 0.5);
+        double outItemWidth = Math.Max(minStrip, Math.Floor((outBayWidth - gapsOut) / nOut) - 0.5);
+
+        InLayout.MinItemWidth = inItemWidth;
+        OutLayout.MinItemWidth = outItemWidth;
         InLayout.MinColumnSpacing = colGap;
         OutLayout.MinColumnSpacing = colGap;
+        InLayout.MinRowSpacing = 0;
+        OutLayout.MinRowSpacing = 0;
 
         InLayout.ItemsStretch = UniformGridLayoutItemsStretch.Fill;
         OutLayout.ItemsStretch = UniformGridLayoutItemsStretch.Fill;

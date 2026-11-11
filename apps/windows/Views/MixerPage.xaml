@@ -206,7 +206,7 @@
                                    ElementPrepared="InputsRepeater_ElementPrepared">
                         <ItemsRepeater.Layout>
                             <UniformGridLayout x:Name="InLayout" MinItemWidth="84" MinItemHeight="440"
-                                               MinColumnSpacing="8" MinRowSpacing="8"
+                                               MinColumnSpacing="8" MinRowSpacing="0" MaximumRowsOrColumns="8"
                                                ItemsStretch="Fill" ItemsJustification="Start" />
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
@@ -273,7 +273,7 @@
                                    ElementPrepared="OutputsRepeater_ElementPrepared">
                         <ItemsRepeater.Layout>
                             <UniformGridLayout x:Name="OutLayout" MinItemWidth="84" MinItemHeight="440"
-                                               MinColumnSpacing="8" MinRowSpacing="8"
+                                               MinColumnSpacing="8" MinRowSpacing="0" MaximumRowsOrColumns="5"
                                                ItemsStretch="Fill" ItemsJustification="Start" />
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
