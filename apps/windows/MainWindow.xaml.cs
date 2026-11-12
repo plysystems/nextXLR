@@ -110,6 +110,7 @@ public sealed partial class MainWindow : Window
                 args.Cancel = true;
                 ViewModel.SetMetersActive(false);
                 AppWindow.Hide();
+                _trayService?.AddOrUpdateTrayIcon();
                 return;
             }
 
@@ -136,6 +137,7 @@ public sealed partial class MainWindow : Window
                     if (settings.MinimizeToTray)
                     {
                         AppWindow.Hide();
+                        _trayService?.AddOrUpdateTrayIcon();
                     }
                     TrimMemoryWorkingSet();
                 }
@@ -168,6 +170,7 @@ public sealed partial class MainWindow : Window
             {
                 try
                 {
+                    _trayService?.AddOrUpdateTrayIcon();
                     if (Nav.SelectedItem == null)
                     {
                         Nav.SelectedItem = MixerItem;
@@ -238,12 +241,13 @@ public sealed partial class MainWindow : Window
             try
             {
                 ShowWindow(Handle, 9); // SW_RESTORE
-                AppWindow.Show();
+                ShowWindow(Handle, 5); // SW_SHOW
+                AppWindow.Show(activateWindow: true);
                 if (AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
                 {
                     if (presenter.State == Microsoft.UI.Windowing.OverlappedPresenterState.Minimized)
                     {
-                        presenter.Restore();
+                        presenter.Restore(true);
                     }
                 }
                 AppWindow.MoveInZOrderAtTop();
@@ -253,6 +257,7 @@ public sealed partial class MainWindow : Window
                     Nav.SelectedItem = MixerItem;
                 }
                 ViewModel.SetMetersActive(ContentFrame.CurrentSourcePageType == typeof(MixerPage));
+                StreamDeckStatusService.Instance.StartMonitoring(DispatcherQueue);
             }
             catch { }
         });
@@ -469,6 +474,12 @@ public sealed partial class MainWindow : Window
 
     public async void ExitApplication()
     {
+        if (!AppWindow.IsVisible)
+        {
+            ExitApplicationDirect();
+            return;
+        }
+
         var canExit = await ConfirmExitWithUnsavedChangesAsync();
         if (!canExit) return;
 

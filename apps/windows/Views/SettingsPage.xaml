@@ -325,12 +325,30 @@
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
-                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="🎚️ Lautstärke / Fader (inkl. Stream Deck + Dials)" Style="{StaticResource Caption}" />
-                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="🔇 Kanal Mute (Toggle / Stumm / An)" Style="{StaticResource Caption}" />
-                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="🎙️ Husten-Taste (Toggle oder Push-to-Mute)" Style="{StaticResource Caption}" />
-                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="🤬 Zensur / Bleep (!@#$?* Piepton halten)" Style="{StaticResource Caption}" />
-                                            <TextBlock Grid.Row="2" Grid.Column="0" Text="🔄 Routing Matrix (Kanal auf Bus schalten)" Style="{StaticResource Caption}" />
-                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="💾 Profil laden (Direktes Umschalten per Taste)" Style="{StaticResource Caption}" />
+                                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                                                <FontIcon Glyph="&#xE767;" FontSize="13" Foreground="{StaticResource BrandBrush}" />
+                                                <TextBlock Text="Lautstärke / Fader (inkl. Stream Deck + Dials)" Style="{StaticResource Caption}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                                <FontIcon Glyph="&#xE74F;" FontSize="13" Foreground="{StaticResource BrandBrush}" />
+                                                <TextBlock Text="Kanal Mute (Toggle / Stumm / An)" Style="{StaticResource Caption}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                                                <FontIcon Glyph="&#xE720;" FontSize="13" Foreground="{StaticResource BrandBrush}" />
+                                                <TextBlock Text="Mikrofon Mute (Toggle oder Push-to-Mute)" Style="{StaticResource Caption}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                                <FontIcon Glyph="&#xEA18;" FontSize="13" Foreground="{StaticResource BrandBrush}" />
+                                                <TextBlock Text="Zensur / Bleep (Piepton halten)" Style="{StaticResource Caption}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                                                <FontIcon Glyph="&#xE8AB;" FontSize="13" Foreground="{StaticResource BrandBrush}" />
+                                                <TextBlock Text="Routing Matrix (Kanal auf Bus schalten)" Style="{StaticResource Caption}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                                <FontIcon Glyph="&#xE792;" FontSize="13" Foreground="{StaticResource BrandBrush}" />
+                                                <TextBlock Text="Profil laden (Direktes Umschalten per Taste)" Style="{StaticResource Caption}" />
+                                            </StackPanel>
                                         </Grid>
                                     </StackPanel>
                                 </Border>

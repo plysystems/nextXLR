@@ -18,7 +18,7 @@ public sealed class ProfileEntry(string name, string path, DateTime saved, bool 
     public Microsoft.UI.Xaml.Visibility DefaultBadge =>
         IsDefault ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
     public string OverwriteTooltip => Loc.Format("ProfileOverwriteTooltip", Name);
-    public override string ToString() => IsDefault ? $"★ {Name}" : Name;
+    public override string ToString() => IsDefault ? $"[Standard] {Name}" : Name;
 }
 
 /// <summary>

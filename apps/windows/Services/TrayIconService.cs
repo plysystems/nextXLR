@@ -1,23 +1,31 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.UI.Windowing;
+using System.Threading;
 
 namespace NextXLR.Services;
 
 public sealed class TrayIconService : IDisposable
 {
     private const uint WM_USER = 0x0400;
-    private const uint WM_TRAY = WM_USER + 1042;
+    private const uint WM_APP = 0x8000;
+    private const uint WM_TRAY = WM_APP + 1042;
     private const uint WM_COMMAND = 0x0111;
 
+    private const int WM_LBUTTONDOWN = 0x0201;
     private const int WM_LBUTTONUP = 0x0202;
     private const int WM_LBUTTONDBLCLK = 0x0203;
+    private const int WM_RBUTTONDOWN = 0x0204;
     private const int WM_RBUTTONUP = 0x0205;
+    private const int WM_CONTEXTMENU = 0x007B;
+    private const int NIN_SELECT = 0x0400;
+    private const int NIN_KEYSELECT = 0x0401;
 
     private const uint NIM_ADD = 0x00000000;
     private const uint NIM_MODIFY = 0x00000001;
     private const uint NIM_DELETE = 0x00000002;
+    private const uint NIM_SETVERSION = 0x00000004;
 
     private const uint NIF_MESSAGE = 0x00000001;
     private const uint NIF_ICON = 0x00000002;
@@ -34,11 +42,16 @@ public sealed class TrayIconService : IDisposable
 
     private const uint IMAGE_ICON = 1;
     private const uint LR_LOADFROMFILE = 0x00000010;
+    private const uint LR_DEFAULTSIZE = 0x00000040;
 
     private const int CMD_OPEN = 1001;
     private const int CMD_MIXER = 1002;
-    private const int CMD_SETTINGS = 1003;
-    private const int CMD_EXIT = 1004;
+    private const int CMD_MIC = 1003;
+    private const int CMD_ROUTING = 1004;
+    private const int CMD_SETTINGS = 1005;
+    private const int CMD_EXIT = 1006;
+
+    private static readonly uint WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
 
     private readonly nint _hWnd;
     private readonly Action _onRestore;
@@ -82,7 +95,7 @@ public sealed class TrayIconService : IDisposable
 
     private delegate nint SUBCLASSPROC(nint hWnd, uint uMsg, nuint wParam, nint lParam, nuint uIdSubclass, nuint dwRefData);
 
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern bool Shell_NotifyIcon(uint dwMessage, ref NOTIFYICONDATA lpdata);
 
     [DllImport("comctl32.dll", SetLastError = true)]
@@ -118,8 +131,17 @@ public sealed class TrayIconService : IDisposable
     [DllImport("user32.dll")]
     private static extern bool SetForegroundWindow(nint hWnd);
 
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool PostMessage(nint hWnd, uint Msg, nuint wParam, nint lParam);
+
     [DllImport("user32.dll")]
     private static extern uint TrackPopupMenuEx(nint hMenu, uint uFlags, int x, int y, nint hWnd, nint lpTPMParams);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern uint RegisterWindowMessage(string lpString);
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern uint ExtractIconEx(string lpszFile, int nIconIndex, out nint phiconLarge, out nint phiconSmall, uint nIcons);
 
     public TrayIconService(nint hWnd, Action onRestore, Action<string> onNavigate, Action onExit)
     {
@@ -131,30 +153,75 @@ public sealed class TrayIconService : IDisposable
         _subclassDelegate = SubclassProc;
         SetWindowSubclass(_hWnd, _subclassDelegate, 1042, 0);
 
-        InitializeIcon();
+        AddOrUpdateTrayIcon();
     }
 
-    private void InitializeIcon()
+    private void EnsureIconHandle()
     {
+        if (_hIcon != nint.Zero) return;
+
         try
         {
             var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "nextXLR_icon.ico");
             if (File.Exists(iconPath))
             {
-                _hIcon = LoadImage(nint.Zero, iconPath, IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
+                _hIcon = LoadImage(nint.Zero, iconPath, IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
             }
+        }
+        catch { }
+
+        if (_hIcon == nint.Zero)
+        {
+            try
+            {
+                var procPath = Environment.ProcessPath;
+                if (!string.IsNullOrEmpty(procPath) && File.Exists(procPath))
+                {
+                    ExtractIconEx(procPath, 0, out _, out _hIcon, 1);
+                }
+            }
+            catch { }
+        }
+    }
+
+    public bool AddOrUpdateTrayIcon()
+    {
+        if (_disposed) return false;
+
+        try
+        {
+            EnsureIconHandle();
 
             var nid = CreateNotifyData();
             nid.uFlags = (int)(NIF_MESSAGE | NIF_ICON | NIF_TIP);
             nid.szTip = "NEXT : XLR (GoXLR Audiosteuerung)";
-            _isAdded = Shell_NotifyIcon(NIM_ADD, ref nid);
+
+            if (_isAdded)
+            {
+                if (Shell_NotifyIcon(NIM_MODIFY, ref nid))
+                {
+                    return true;
+                }
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                if (Shell_NotifyIcon(NIM_ADD, ref nid))
+                {
+                    _isAdded = true;
+                    return true;
+                }
+                Thread.Sleep(100);
+            }
         }
         catch { }
+
+        return false;
     }
 
     public void ShowNotification(string title, string message)
     {
-        if (!_isAdded) return;
+        if (!_isAdded && !AddOrUpdateTrayIcon()) return;
         try
         {
             var nid = CreateNotifyData();
@@ -187,15 +254,21 @@ public sealed class TrayIconService : IDisposable
             return nint.Zero;
         }
 
+        if (WM_TASKBARCREATED != 0 && uMsg == WM_TASKBARCREATED)
+        {
+            AddOrUpdateTrayIcon();
+            return nint.Zero;
+        }
+
         if (uMsg == WM_TRAY)
         {
             int eventId = (int)(lParam.ToInt64() & 0xFFFF);
-            if (eventId == WM_LBUTTONUP || eventId == WM_LBUTTONDBLCLK)
+            if (eventId == WM_LBUTTONUP || eventId == WM_LBUTTONDBLCLK || eventId == NIN_SELECT || eventId == NIN_KEYSELECT)
             {
                 _onRestore?.Invoke();
                 return nint.Zero;
             }
-            if (eventId == WM_RBUTTONUP)
+            if (eventId == WM_RBUTTONUP || eventId == WM_CONTEXTMENU)
             {
                 ShowContextMenu();
                 return nint.Zero;
@@ -214,6 +287,8 @@ public sealed class TrayIconService : IDisposable
         {
             AppendMenu(hMenu, MF_STRING, CMD_OPEN, "NEXT : XLR öffnen");
             AppendMenu(hMenu, MF_STRING, CMD_MIXER, "Mischpult");
+            AppendMenu(hMenu, MF_STRING, CMD_MIC, "Mikrofon (DSP)");
+            AppendMenu(hMenu, MF_STRING, CMD_ROUTING, "Routing Matrix");
             AppendMenu(hMenu, MF_STRING, CMD_SETTINGS, "Einstellungen");
             AppendMenu(hMenu, MF_SEPARATOR, 0, string.Empty);
             AppendMenu(hMenu, MF_STRING, CMD_EXIT, "Beenden");
@@ -223,6 +298,7 @@ public sealed class TrayIconService : IDisposable
             GetCursorPos(out POINT pt);
             SetForegroundWindow(_hWnd);
             uint cmd = TrackPopupMenuEx(hMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.X, pt.Y, _hWnd, nint.Zero);
+            PostMessage(_hWnd, 0 /* WM_NULL */, 0, 0);
 
             switch (cmd)
             {
@@ -232,6 +308,14 @@ public sealed class TrayIconService : IDisposable
                 case CMD_MIXER:
                     _onRestore?.Invoke();
                     _onNavigate?.Invoke("mixer");
+                    break;
+                case CMD_MIC:
+                    _onRestore?.Invoke();
+                    _onNavigate?.Invoke("mic");
+                    break;
+                case CMD_ROUTING:
+                    _onRestore?.Invoke();
+                    _onNavigate?.Invoke("routing");
                     break;
                 case CMD_SETTINGS:
                     _onRestore?.Invoke();
@@ -269,4 +353,3 @@ public sealed class TrayIconService : IDisposable
         }
     }
 }
-

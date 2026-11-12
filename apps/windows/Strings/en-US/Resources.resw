@@ -229,7 +229,7 @@
   <data name="SetAutostartTitle.Text" xml:space="preserve"><value>Run on startup</value></data>
   <data name="SetAutostartDesc.Text" xml:space="preserve"><value>Start NEXT : XLR minimised when you sign in to Windows.</value></data>
   <data name="SetTrayTitle.Text" xml:space="preserve"><value>Minimise to tray</value></data>
-  <data name="SetTrayDesc.Text" xml:space="preserve"><value>Keep running in the notification area when the window is closed. The preference is saved; the tray icon itself arrives in a coming update.</value></data>
+  <data name="SetTrayDesc.Text" xml:space="preserve"><value>Keep running in the notification area (system tray) when the window is closed or minimised.</value></data>
   <data name="SetMuteOnStartupTitle.Text" xml:space="preserve"><value>Mute on Startup</value></data>
   <data name="SetMuteOnStartupDesc.Text" xml:space="preserve"><value>Automatically engages microphone mute when NEXT : XLR starts up.</value></data>
   <data name="SetLanguageTitle.Text" xml:space="preserve"><value>Language</value></data>

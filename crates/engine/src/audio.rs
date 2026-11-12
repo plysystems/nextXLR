@@ -104,9 +104,10 @@ fn open_streams(params: Arc<ParamBank>, meters: Arc<MeterBank>) -> Result<(cpal:
         tracing::warn!("input/output sample rates differ — resampling is not implemented yet");
     }
 
-    // ~100 ms of mono audio between the two callbacks.
-    let capacity = (in_cfg.sample_rate.0 as usize / 10).max(1024);
-    let (mut producer, mut consumer) = rtrb::RingBuffer::<f32>::new(capacity);
+    // Pro audio ultra-low latency ring buffer: ~10-12 ms of audio at device sample rate
+    // (e.g. 480–576 samples at 48 kHz instead of 4800 samples / 100 ms).
+    let latency_samples = ((in_cfg.sample_rate.0 as usize) / 80).clamp(256, 1024);
+    let (mut producer, mut consumer) = rtrb::RingBuffer::<f32>::new(latency_samples * 2);
 
     let in_channels = in_cfg.channels as usize;
     let in_params = params.clone();
@@ -133,8 +134,22 @@ fn open_streams(params: Arc<ParamBank>, meters: Arc<MeterBank>) -> Result<(cpal:
         &out_cfg,
         move |out: &mut [f32], _: &cpal::OutputCallbackInfo| {
             let route = params.route_gain(MIC_SLOT, HEADPHONES_BUS);
+            // Clock drift & delay protection: keep buffer at target latency
+            let available = consumer.slots();
+            if available > latency_samples {
+                let excess = available - latency_samples;
+                for _ in 0..excess {
+                    let _ = consumer.pop();
+                }
+            }
             for frame in out.chunks_exact_mut(out_channels) {
-                let s = consumer.pop().unwrap_or(0.0) * route;
+                let raw = consumer.pop().unwrap_or(0.0) * route;
+                // Soft saturator / peak limiter prevents harsh digital clipping (+ sound quality)
+                let s = if raw.abs() > 0.95 {
+                    raw.signum() * (0.95 + 0.05 * (1.0 - (-((raw.abs() - 0.95) / 0.05).min(20.0)).exp()))
+                } else {
+                    raw
+                };
                 frame.fill(s);
             }
         },

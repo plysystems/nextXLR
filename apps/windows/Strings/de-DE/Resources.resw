@@ -229,7 +229,7 @@
   <data name="SetAutostartTitle.Text" xml:space="preserve"><value>Mit Windows starten</value></data>
   <data name="SetAutostartDesc.Text" xml:space="preserve"><value>NEXT : XLR beim Anmelden an Windows minimiert starten.</value></data>
   <data name="SetTrayTitle.Text" xml:space="preserve"><value>In den Infobereich minimieren</value></data>
-  <data name="SetTrayDesc.Text" xml:space="preserve"><value>Beim Schließen im Infobereich weiterlaufen. Die Einstellung wird gespeichert; das Tray-Symbol selbst folgt in einem kommenden Update.</value></data>
+  <data name="SetTrayDesc.Text" xml:space="preserve"><value>Beim Schließen oder Minimieren im Windows-Infobereich (System-Tray) aktiv weiterlaufen.</value></data>
   <data name="SetMuteOnStartupTitle.Text" xml:space="preserve"><value>Beim Start stummschalten (Mute on Startup)</value></data>
   <data name="SetMuteOnStartupDesc.Text" xml:space="preserve"><value>Aktiviert die Mute-Taste für das Mikrofon automatisch direkt beim Start der Software.</value></data>
   <data name="SetLanguageTitle.Text" xml:space="preserve"><value>Sprache</value></data>
