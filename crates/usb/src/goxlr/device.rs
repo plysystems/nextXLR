@@ -47,6 +47,12 @@ pub struct GoXlrDevice {
     /// Fonts for the scribble strips (loaded on first use) and the last image per strip.
     scribble_fonts: Option<Result<scribble::Fonts, String>>,
     scribble_cache: [Option<[u8; scribble::BYTES]>; 4],
+    /// Standby: lighting, LEDs and scribble strips are dark. Updates are only remembered.
+    sleeping: bool,
+    /// Last colour map sent (or requested while asleep) — restored on wake.
+    colour_map: Option<Vec<u8>>,
+    /// Last fader LED display mode per fader — restored on wake.
+    fader_gradient: [Option<bool>; 4],
 }
 
 const MIC_POLL: Duration = Duration::from_millis(33);
@@ -88,6 +94,9 @@ impl GoXlrDevice {
             fader_page: DEFAULT_PAGE,
             scribble_fonts: None,
             scribble_cache: [None; 4],
+            sleeping: false,
+            colour_map: None,
+            fader_gradient: [None; 4],
         };
         me.handshake()?;
         me.serial = me.read_serial().ok();
@@ -163,8 +172,64 @@ impl GoXlrDevice {
     }
 
     fn push_leds(&mut self) -> Result<()> {
+        if self.sleeping {
+            return Ok(()); // remembered in `self.leds`, pushed on wake
+        }
         let body = self.leds.map(|l| l as u8);
         self.request(Command::SetButtonStates, &body)?;
+        Ok(())
+    }
+
+    /// Standby: black colour map (buttons, faders, encoders, logo), every button LED on its
+    /// (now black) inactive colour and blank scribble strips. Each step is best effort so one
+    /// failing write never leaves the device half-lit.
+    fn enter_sleep(&mut self) -> Result<()> {
+        if self.sleeping {
+            return Ok(());
+        }
+        let mut first_err = None;
+        let black = vec![0u8; self.map_format.byte_len()];
+        if let Err(e) = self.request(Command::SetColourMap, &black) {
+            first_err.get_or_insert(e);
+        }
+        let off = [ButtonLed::Colour2 as u8; BUTTON_COUNT];
+        if let Err(e) = self.request(Command::SetButtonStates, &off) {
+            first_err.get_or_insert(e);
+        }
+        if self.model != Model::Mini {
+            let blank = [0u8; scribble::BYTES];
+            for fader in Fader::ALL {
+                if let Err(e) = self.request(Command::SetScribble(fader), &blank) {
+                    first_err.get_or_insert(e);
+                }
+            }
+        }
+        self.sleeping = true;
+        tracing::info!("GoXLR entered standby");
+        first_err.map_or(Ok(()), Err)
+    }
+
+    /// Leave standby: restore colour map, fader display modes, button LEDs and scribbles.
+    fn leave_sleep(&mut self) -> Result<()> {
+        if !self.sleeping {
+            return Ok(());
+        }
+        self.sleeping = false;
+        if let Some(map) = self.colour_map.clone() {
+            self.request(Command::SetColourMap, &map)?;
+        }
+        if self.model != Model::Mini {
+            for fader in Fader::ALL {
+                if let Some(g) = self.fader_gradient[fader.index()] {
+                    self.request(Command::SetFaderDisplayMode(fader), &[u8::from(g), 0])?;
+                }
+                if let Some(image) = self.scribble_cache[fader.index()] {
+                    self.request(Command::SetScribble(fader), &image)?;
+                }
+            }
+        }
+        self.push_leds()?;
+        tracing::info!("GoXLR left standby");
         Ok(())
     }
 
@@ -252,7 +317,10 @@ impl HardwareDevice for GoXlrDevice {
             HardwareCommand::FaderDisplay { .. } => {}
             HardwareCommand::ColourMap(zones) => {
                 let map = build_colour_map(zones, self.map_format);
-                self.request(Command::SetColourMap, &map)?;
+                if !self.sleeping {
+                    self.request(Command::SetColourMap, &map)?;
+                }
+                self.colour_map = Some(map);
             }
             HardwareCommand::Routing { channel, buses } => {
                 let Some((left_in, right_in)) = routing::input_ids(*channel) else { return Ok(()) };
@@ -312,7 +380,9 @@ impl HardwareDevice for GoXlrDevice {
                     return Ok(());
                 };
                 let image = scribble::render(fonts, text, *glyph);
-                if self.scribble_cache[fader.index()] != Some(image) {
+                if self.sleeping {
+                    self.scribble_cache[fader.index()] = Some(image); // shown on wake
+                } else if self.scribble_cache[fader.index()] != Some(image) {
                     self.request(Command::SetScribble(*fader), &image)?;
                     self.scribble_cache[fader.index()] = Some(image);
                 }
@@ -327,8 +397,13 @@ impl HardwareDevice for GoXlrDevice {
                     return Ok(()); // GoXLR Mini has manual faders without display mode registers
                 }
                 // [gradient, meter]: the level meter on the fader LEDs stays off.
-                self.request(Command::SetFaderDisplayMode(*fader), &[u8::from(*gradient), 0])?;
+                self.fader_gradient[fader.index()] = Some(*gradient);
+                if !self.sleeping {
+                    self.request(Command::SetFaderDisplayMode(*fader), &[u8::from(*gradient), 0])?;
+                }
             }
+            HardwareCommand::Sleep => self.enter_sleep()?,
+            HardwareCommand::Wake => self.leave_sleep()?,
         }
         Ok(())
     }

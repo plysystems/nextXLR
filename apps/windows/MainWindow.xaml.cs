@@ -488,10 +488,23 @@ public sealed partial class MainWindow : Window
 
     public void ExitApplicationDirect()
     {
-        DispatcherQueue.TryEnqueue(() =>
+        DispatcherQueue.TryEnqueue(async () =>
         {
+            if (_isExplicitExit) return;
             _isExplicitExit = true;
             _trayService?.Dispose();
+            try
+            {
+                // Hide right away so quitting feels instant, then let the engine put the
+                // GoXLR into standby (lights / LEDs / scribble strips off) before closing.
+                AppWindow.Hide();
+                ViewModel.SetMetersActive(false);
+                await HardwareStandbyService.ShutdownEngineAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Hardware standby on exit failed: {ex}");
+            }
             Close();
         });
     }

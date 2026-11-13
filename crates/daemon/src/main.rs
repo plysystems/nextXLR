@@ -10,6 +10,7 @@
 
 mod hub;
 mod icons;
+mod power;
 mod session;
 
 use std::time::Duration;
@@ -22,7 +23,8 @@ use axum::Router;
 use hub::{Effect, Hub, Input};
 use mixforge_engine::Engine;
 use mixforge_protocol::{ClientMessage, ServerMessage, DEFAULT_PORT};
-use mixforge_usb::{Fader, HardwareDevice, HardwareEvent, HardwareThread, SimDevice, SimHandle};
+use mixforge_usb::{Fader, HardwareCommand, HardwareDevice, HardwareEvent, HardwareThread, SimDevice, SimHandle};
+use power::PowerAction;
 use serde_json::json;
 use tokio::sync::{broadcast, mpsc, oneshot};
 use tracing_subscriber::EnvFilter;
@@ -34,6 +36,11 @@ enum HubMsg {
         reply: oneshot::Sender<Vec<ServerMessage>>,
     },
     Hardware(HardwareEvent),
+    /// Hardware standby / wake (PC shutdown, suspend, app exit). `ack` fires once applied.
+    Power {
+        action: PowerAction,
+        ack: Option<std::sync::mpsc::Sender<()>>,
+    },
 }
 
 #[derive(Clone)]
@@ -124,6 +131,10 @@ async fn main() -> Result<()> {
 
     tokio::spawn(run_hub(hub, hub_rx, events.clone(), hw_thread, hub_tx.clone(), sim_model.is_some()));
 
+    // PC shutdown / logoff / suspend → GoXLR standby, resume → wake.
+    power::spawn_watcher(hub_tx.clone());
+    let shutdown_hub = hub_tx.clone();
+
     // ---- API -------------------------------------------------------------------------------
     let app = AppState {
         hub: hub_tx,
@@ -153,6 +164,7 @@ async fn main() -> Result<()> {
         .route("/api/profile", get(api_profile).post(api_profile))
         .route("/api/page", get(api_page).post(api_page))
         .route("/api/mix-mode", get(api_mix_mode).post(api_mix_mode))
+        .route("/api/power", get(api_power).post(api_power))
         .route("/dev/sim/fader", post(sim_fader))
         .route("/dev/sim/mute", post(sim_mute))
         .route("/dev/sim/received", get(sim_received))
@@ -187,7 +199,54 @@ async fn main() -> Result<()> {
             tracing::info!("shutting down");
         })
         .await?;
+    // Leave the device dark instead of frozen on its last state.
+    let _ = tokio::task::spawn_blocking(move || {
+        power::request_blocking(&shutdown_hub, PowerAction::Sleep, Duration::from_millis(2500))
+    })
+    .await;
     Ok(())
+}
+
+#[derive(serde::Deserialize)]
+struct ApiPowerQuery {
+    /// `sleep` | `wake` | `shutdown` (standby, then the engine exits). Omitted = status only.
+    action: Option<String>,
+}
+
+/// Hardware standby control, used by the app on exit ("Beenden") and available to Stream Deck.
+async fn api_power(State(app): State<AppState>, Query(q): Query<ApiPowerQuery>) -> impl IntoResponse {
+    let action = q.action.as_deref().map(str::to_ascii_lowercase);
+    let (power, exit) = match action.as_deref() {
+        Some("sleep" | "standby" | "ruhemodus") => (Some(PowerAction::Sleep), false),
+        Some("wake" | "resume") => (Some(PowerAction::Wake), false),
+        Some("shutdown" | "exit" | "quit") => (Some(PowerAction::Sleep), true),
+        None => (None, false),
+        Some(other) => {
+            return axum::Json(json!({ "ok": false, "error": format!("unknown action '{other}'") }));
+        }
+    };
+    let Some(power) = power else {
+        return axum::Json(json!({ "ok": true, "actions": ["sleep", "wake", "shutdown"] }));
+    };
+    let hub = app.hub.clone();
+    let applied = tokio::task::spawn_blocking(move || {
+        power::request_blocking(&hub, power, Duration::from_millis(2500))
+    })
+    .await
+    .unwrap_or(false);
+    if exit {
+        tracing::info!("shutdown requested via API — exiting after standby");
+        tokio::spawn(async {
+            // Let the HTTP response go out first.
+            tokio::time::sleep(Duration::from_millis(150)).await;
+            std::process::exit(0);
+        });
+    }
+    axum::Json(json!({
+        "ok": applied,
+        "action": action,
+        "exiting": exit,
+    }))
 }
 
 #[cfg(windows)]
@@ -285,6 +344,8 @@ async fn run_hub(
 
     let mut hw_reconnect_tick = tokio::time::interval(Duration::from_secs(2));
     hw_reconnect_tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    // GoXLR standby (shutdown / suspend / app exit). The device remembers changes while dark.
+    let mut sleeping = false;
 
     loop {
         tokio::select! {
@@ -292,12 +353,47 @@ async fn run_hub(
                 let Some(msg) = msg else { break };
                 let (input, reply) = match msg {
                     HubMsg::Client { msg, reply } => (Input::Client(msg), Some(reply)),
+                    HubMsg::Power { action, ack } => {
+                        match action {
+                            PowerAction::Sleep => {
+                                sleeping = true;
+                                if let Some(h) = &hw {
+                                    // Blocking on purpose: the caller (shutdown / suspend) must
+                                    // not continue before the device is dark.
+                                    let done = tokio::task::block_in_place(|| {
+                                        h.sleep_blocking(Duration::from_secs(2))
+                                    });
+                                    if !done {
+                                        tracing::warn!("GoXLR standby not confirmed within 2 s");
+                                    }
+                                }
+                            }
+                            PowerAction::Wake => {
+                                if sleeping {
+                                    sleeping = false;
+                                    if let Some(h) = &hw { h.send(HardwareCommand::Wake); }
+                                }
+                            }
+                        }
+                        if let Some(ack) = ack { let _ = ack.send(()); }
+                        continue;
+                    }
                     HubMsg::Hardware(ev) => {
                         if matches!(ev, HardwareEvent::Disconnected) {
                             tracing::warn!("GoXLR disconnected — hardware thread dropped");
                             hw = None;
                         } else if !matches!(ev, HardwareEvent::FaderMoved { .. } | HardwareEvent::MicLevel(_)) {
                             tracing::debug!(?ev, "← hardware");
+                        }
+                        // Touching the device (button, knob, fader) wakes it from standby. The
+                        // waking touch itself is swallowed so it doesn't toggle a mute by accident.
+                        if sleeping && !matches!(ev, HardwareEvent::MicLevel(_) | HardwareEvent::Disconnected) {
+                            sleeping = false;
+                            tracing::info!("GoXLR input during standby — waking up");
+                            if let Some(h) = &hw { h.send(HardwareCommand::Wake); }
+                            if !matches!(ev, HardwareEvent::FaderMoved { .. }) {
+                                continue;
+                            }
                         }
                         (Input::Hardware(ev), None)
                     }
@@ -339,6 +435,9 @@ async fn run_hub(
                                 if let Effect::Hardware(cmd) = e {
                                     new_hw.send(cmd);
                                 }
+                            }
+                            if sleeping {
+                                new_hw.send(HardwareCommand::Sleep);
                             }
                             hw = Some(new_hw);
                             let _ = events.send(hub.state_message());

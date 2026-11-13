@@ -173,6 +173,11 @@ pub enum HardwareCommand {
     MicInputMute(bool),
     /// Scribble strip above a fader (full GoXLR): label + optional Segoe Fluent icon glyph.
     Scribble { fader: Fader, text: String, glyph: Option<char> },
+    /// Standby (PC shutdown / suspend / app exit): all lighting, button LEDs and scribble
+    /// strips go dark. State changes received while asleep are remembered, not shown.
+    Sleep,
+    /// Leave standby: restore the remembered colour map, button LEDs and scribble strips.
+    Wake,
 }
 
 /// Anything that can act as a control surface: GoXLR, GoXLR Mini, MIDI controller, or a

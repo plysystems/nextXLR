@@ -7,14 +7,36 @@ use std::time::Duration;
 
 use crate::{HardwareCommand, HardwareDevice, HardwareEvent};
 
+enum Msg {
+    Cmd(HardwareCommand),
+    /// Answered once every command queued before it has been applied.
+    Flush(Sender<()>),
+}
+
 pub struct HardwareThread {
-    commands: Sender<HardwareCommand>,
+    commands: Sender<Msg>,
     handle: Option<JoinHandle<()>>,
 }
 
 impl HardwareThread {
     pub fn send(&self, cmd: HardwareCommand) {
-        let _ = self.commands.send(cmd);
+        let _ = self.commands.send(Msg::Cmd(cmd));
+    }
+
+    /// Blocks until all previously sent commands reached the device (or `timeout` elapsed).
+    /// Used before shutdown / suspend so the standby command is really on the hardware.
+    pub fn flush(&self, timeout: Duration) -> bool {
+        let (tx, rx) = mpsc::channel();
+        if self.commands.send(Msg::Flush(tx)).is_err() {
+            return false;
+        }
+        rx.recv_timeout(timeout).is_ok()
+    }
+
+    /// Puts the device into standby and waits until the command has been written.
+    pub fn sleep_blocking(&self, timeout: Duration) -> bool {
+        self.send(HardwareCommand::Sleep);
+        self.flush(timeout)
     }
 }
 
@@ -35,17 +57,20 @@ where
     D: HardwareDevice + 'static,
     F: Fn(HardwareEvent) + Send + 'static,
 {
-    let (tx, rx): (Sender<HardwareCommand>, Receiver<HardwareCommand>) = mpsc::channel();
+    let (tx, rx): (Sender<Msg>, Receiver<Msg>) = mpsc::channel();
     let handle = std::thread::Builder::new().name("mixforge-hw".into()).spawn(move || {
         let mut consecutive_errors = 0usize;
         loop {
             // 1. Outgoing: drain everything the hub wants on the device.
             loop {
                 match rx.try_recv() {
-                    Ok(cmd) => {
+                    Ok(Msg::Cmd(cmd)) => {
                         if let Err(e) = device.apply(&cmd) {
                             tracing::warn!("hardware command {cmd:?} failed: {e:#}");
                         }
+                    }
+                    Ok(Msg::Flush(ack)) => {
+                        let _ = ack.send(());
                     }
                     Err(mpsc::TryRecvError::Empty) => break,
                     Err(mpsc::TryRecvError::Disconnected) => return,
