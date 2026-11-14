@@ -8,13 +8,13 @@ switch instantly; only storyboard values are interpolated.)
 """
 from pathlib import Path
 
-DARK_NEUTRAL = dict(bg="#141416", stroke="#222226", fg="#F8FAFC")
-DARK_HOVER = dict(bg="#1C1C20", stroke="#32323A")
-DARK_PRESSED = dict(bg="#0A0A0A")
+DARK_NEUTRAL = dict(bg="#12151B", stroke="#1A1E26", fg="#F8FAFC")
+DARK_HOVER = dict(bg="#181C24", stroke="#24C5BF")
+DARK_PRESSED = dict(bg="#0B0D12")
 
 LIGHT_NEUTRAL = dict(bg="#FFFFFF", stroke="#D8DCE4", fg="#0F172A")
-LIGHT_HOVER = dict(bg="#E7E9EF", stroke="#C8CED8")
-LIGHT_PRESSED = dict(bg="#DCE0E8")
+LIGHT_HOVER = dict(bg="#F1F3F8", stroke="#0D9488")
+LIGHT_PRESSED = dict(bg="#E2E6EE")
 
 def anim(target, prop, value):
     if prop == "Color":
@@ -88,7 +88,8 @@ COMMON_SETTERS = '''        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="VerticalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="UseSystemFocusVisuals" Value="True" />'''
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="services:CursorHelper.UseHandCursor" Value="True" />'''
 
 def style(key, target, states, neutral_cfg):
     return f'''    <Style x:Key="{key}" TargetType="{target}">
@@ -119,9 +120,9 @@ dark_styles = generate_styles(
 
 light_styles = generate_styles(
     LIGHT_NEUTRAL, LIGHT_HOVER, LIGHT_PRESSED,
-    "#168B87", "#1AA29D", "#137E7A", "#FFFFFF",
+    "#0D9488", "#0F766E", "#115E59", "#FFFFFF",
     "#EF4444", "#F87171", "#DC2626", "#FFFFFF",
-    "#168B87"
+    "#0D9488"
 )
 
 xml = f'''<?xml version="1.0" encoding="utf-8"?>
@@ -130,7 +131,8 @@ xml = f'''<?xml version="1.0" encoding="utf-8"?>
      scale to 0.97. Used by tiles, routing cells, pads, banks and mute buttons. -->
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:services="using:NextXLR.Services">
 
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Default">

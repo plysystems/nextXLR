@@ -2,181 +2,315 @@
 <Window
     x:Class="NextXLR.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:services="using:NextXLR.Services">
 
-    <Grid x:Name="RootWindowGrid" Background="{ThemeResource SurfaceL3Brush}"
+    <Grid x:Name="RootWindowGrid" Background="{ThemeResource SurfaceL1Brush}"
           AllowDrop="True" DragOver="App_DragOver" Drop="App_Drop">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="48" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
 
-        <!-- Title bar: the NEXT : XLR logo. Draggable; caption buttons on the right. Both columns unified in SurfaceL3Brush (#050505 Dark / #EAECEF Light) -->
-        <Grid x:Name="AppTitleBar" Background="{ThemeResource SurfaceL3Brush}">
+        <Grid.Resources>
+            <Style x:Key="NavCapsuleButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Height" Value="42" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="services:CursorHelper.UseHandCursor" Value="True" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="RootBorder" CornerRadius="{TemplateBinding CornerRadius}"
+                                    Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Grid.Resources>
+
+        <!-- Atmospheric Studio Ambient Glow (Top-center subtle cyan lighting bloom from Bild 1) -->
+        <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsHitTestVisible="False">
+            <Border.Background>
+                <RadialGradientBrush Center="0.55, 0.0" RadiusX="0.65" RadiusY="0.55" GradientOrigin="0.55, 0.0">
+                    <GradientStop Color="{ThemeResource AmbientGlowStart}" Offset="0" />
+                    <GradientStop Color="{ThemeResource AmbientGlowMid}" Offset="0.5" />
+                    <GradientStop Color="{ThemeResource AmbientGlowEnd}" Offset="1" />
+                </RadialGradientBrush>
+            </Border.Background>
+        </Border>
+
+        <!-- Main Layout: Docked Sidebar (Left) + Content Stage (Right) -->
+        <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="TitleBarPaneColumn" Width="248" />
+                <ColumnDefinition x:Name="SidebarColumn" Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!-- Left pane header (matches sidebar) -->
-            <Grid Grid.Column="0" Background="{ThemeResource SurfaceL3Brush}">
-                <Border BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="0,0,1,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Padding="4,0,0,0">
-                    <Button x:Name="MenuToggleButton" Width="36" Height="36" Margin="6,0,8,0"
-                            Background="Transparent" BorderThickness="0" CornerRadius="8"
-                            Click="MenuToggleButton_Click" ToolTipService.ToolTip="Menü ein-/ausklappen">
-                        <FontIcon Glyph="&#xE700;" FontSize="15" Foreground="{StaticResource BrandBrush}" />
-                    </Button>
-                    <Grid x:Name="LogoContainer" VerticalAlignment="Center">
-                        <!-- Ambient Brand Glow behind the logo -->
-                        <Border Width="110" Height="26" CornerRadius="13" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
-                            <Border.Background>
-                                <RadialGradientBrush Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5" GradientOrigin="0.5,0.5">
-                                    <GradientStop Color="#2A3DDFD9" Offset="0" />
-                                    <GradientStop Color="#003DDFD9" Offset="1" />
-                                </RadialGradientBrush>
-                            </Border.Background>
-                        </Border>
-                        <Image x:Name="LogoFull" Height="28"
-                               VerticalAlignment="Center" Stretch="Uniform" AutomationProperties.Name="NEXT : XLR" />
+            <!-- Column 0: Docked Sidebar Panel (Flush with top, left, bottom window edges) -->
+            <Border x:Name="SidebarIsland" Grid.Column="0" Width="230"
+                    CornerRadius="0" Margin="0"
+                    Background="{ThemeResource SurfaceL3Brush}"
+                    BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="0,0,1,0">
+                <Grid Padding="12,14,12,14" RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" /> <!-- Header: [≡] next:xlr -->
+                        <RowDefinition Height="*" />    <!-- Navigation Items -->
+                        <RowDefinition Height="Auto" /> <!-- Footer Status Cards -->
+                    </Grid.RowDefinitions>
+
+                    <!-- Header: Minimalist Hamburger + next:xlr Typography -->
+                    <Grid Grid.Row="0" Margin="4,2,4,6">
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <Button x:Name="MenuToggleButton" Width="36" Height="36"
+                                    Background="Transparent" BorderThickness="0" CornerRadius="8"
+                                    services:CursorHelper.UseHandCursor="True"
+                                    Click="MenuToggleButton_Click" ToolTipService.ToolTip="Menü ein-/ausklappen">
+                                <FontIcon Glyph="&#xE700;" FontSize="15" Foreground="{ThemeResource TextPrimaryBrush}" />
+                            </Button>
+                            <TextBlock x:Name="BrandTitleText" Text="next:xlr" FontSize="18" FontWeight="Bold"
+                                       FontFamily="{StaticResource DisplayFont}" Foreground="{ThemeResource TextPrimaryBrush}"
+                                       VerticalAlignment="Center" Margin="2,0,0,0" />
+                        </StackPanel>
                     </Grid>
-                </StackPanel>
-            </Grid>
 
-            <!-- Right content header: draggable window titlebar -->
-            <Grid x:Name="AppDragArea" Grid.Column="1" Background="{ThemeResource SurfaceL3Brush}" Padding="0,0,150,0">
-                <!-- Allgemeiner animierter Lade-Indikator -->
-                <StackPanel x:Name="AppLoadingPanel" Orientation="Horizontal" Spacing="8"
-                            HorizontalAlignment="Right" VerticalAlignment="Center"
-                            Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}">
-                    <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Width="16" Height="16"
-                                  Foreground="{StaticResource BrandBrush}" />
-                    <TextBlock Text="{x:Bind ViewModel.BusyText, Mode=OneWay}" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{StaticResource BrandBrush}" VerticalAlignment="Center" />
-                </StackPanel>
-            </Grid>
-        </Grid>
+                    <!-- Navigation Items -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Spacing="4">
+                            <!-- Mixer -->
+                            <Button x:Name="Btn_Mixer" Tag="mixer" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click">
+                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="Ind_Mixer" Width="3" Height="20" CornerRadius="1.5"
+                                            Background="{StaticResource BrandBrush}" Visibility="Visible" Margin="0,0,2,0" />
+                                    <FontIcon x:Name="Icon_Mixer" Grid.Column="1" Glyph="&#xE9E9;" FontSize="16"
+                                              Foreground="{StaticResource BrandBrush}" Width="22" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Mixer" Grid.Column="2" Text="Mixer" FontSize="13.5"
+                                               FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
 
-        <NavigationView x:Name="Nav" Grid.Row="1"
-                        Background="{ThemeResource SurfaceL1Brush}"
-                        PaneDisplayMode="Left" OpenPaneLength="248" CompactPaneLength="48"
-                        IsBackButtonVisible="Collapsed" IsSettingsVisible="False"
-                        IsPaneToggleButtonVisible="False"
-                        AlwaysShowHeader="False" Header="{x:Null}"
-                        PaneOpened="Nav_PaneOpened"
-                        PaneClosed="Nav_PaneClosed"
-                        DisplayModeChanged="Nav_DisplayModeChanged"
-                        SelectionChanged="Nav_SelectionChanged">
-            <NavigationView.Resources>
-                <Thickness x:Key="NavigationViewContentGridBorderThickness">0</Thickness>
-                <CornerRadius x:Key="NavigationViewContentGridCornerRadius">0</CornerRadius>
-                <Thickness x:Key="NavigationViewHeaderMargin">0</Thickness>
-                <x:Double x:Key="NavigationViewTopPadding">0</x:Double>
-                <x:Double x:Key="NavigationViewContentTopMargin">0</x:Double>
-                <Thickness x:Key="NavigationViewContentMargin">0</Thickness>
-            </NavigationView.Resources>
+                            <!-- Mikrofon -->
+                            <Button x:Name="Btn_Mic" Tag="mic" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click">
+                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="Ind_Mic" Width="3" Height="20" CornerRadius="1.5"
+                                            Background="{StaticResource BrandBrush}" Visibility="Collapsed" Margin="0,0,2,0" />
+                                    <FontIcon x:Name="Icon_Mic" Grid.Column="1" Glyph="&#xE720;" FontSize="16"
+                                              Foreground="{ThemeResource TextMutedBrush}" Width="22" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Mic" Grid.Column="2" Text="Mikrofon" FontSize="13.5"
+                                               FontWeight="Normal" Foreground="{ThemeResource TextMutedBrush}"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
 
-            <NavigationView.MenuItems>
-                <NavigationViewItem x:Uid="NavMixer" Tag="mixer" x:Name="MixerItem">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE9E9;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem x:Uid="NavMic" Tag="mic" x:Name="MicItem">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE720;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem x:Uid="NavRouting" Tag="routing" x:Name="RoutingItem">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE8AB;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem x:Uid="NavEffects" Tag="effects" x:Name="EffectsItem"
+                            <!-- Routing -->
+                            <Button x:Name="Btn_Routing" Tag="routing" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click">
+                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="Ind_Routing" Width="3" Height="20" CornerRadius="1.5"
+                                            Background="{StaticResource BrandBrush}" Visibility="Collapsed" Margin="0,0,2,0" />
+                                    <FontIcon x:Name="Icon_Routing" Grid.Column="1" Glyph="&#xE8AB;" FontSize="16"
+                                              Foreground="{ThemeResource TextMutedBrush}" Width="22" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Routing" Grid.Column="2" Text="Routing" FontSize="13.5"
+                                               FontWeight="Normal" Foreground="{ThemeResource TextMutedBrush}"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+
+                            <!-- Effekte (HasEffects) -->
+                            <Button x:Name="Btn_Effects" Tag="effects" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click"
                                     Visibility="{x:Bind ViewModel.Hardware.HasEffects, Mode=OneWay}">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE945;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem x:Uid="NavSampler" Tag="sampler" x:Name="SamplerItem"
+                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="Ind_Effects" Width="3" Height="20" CornerRadius="1.5"
+                                            Background="{StaticResource BrandBrush}" Visibility="Collapsed" Margin="0,0,2,0" />
+                                    <FontIcon x:Name="Icon_Effects" Grid.Column="1" Glyph="&#xE945;" FontSize="16"
+                                              Foreground="{ThemeResource TextMutedBrush}" Width="22" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Effects" Grid.Column="2" Text="Effekte" FontSize="13.5"
+                                               FontWeight="Normal" Foreground="{ThemeResource TextMutedBrush}"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+
+                            <!-- Sampler (HasSampler) -->
+                            <Button x:Name="Btn_Sampler" Tag="sampler" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click"
                                     Visibility="{x:Bind ViewModel.Hardware.HasSampler, Mode=OneWay}">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE93C;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem x:Uid="NavLighting" Tag="lighting" x:Name="LightingItem">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE781;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem Content="Virtuelle Kanäle" Tag="virtual" x:Name="VirtualChannelsItem">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE7F4;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem x:Uid="NavSettings" Tag="settings" x:Name="SettingsItem">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE713;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-            </NavigationView.MenuItems>
+                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="Ind_Sampler" Width="3" Height="20" CornerRadius="1.5"
+                                            Background="{StaticResource BrandBrush}" Visibility="Collapsed" Margin="0,0,2,0" />
+                                    <FontIcon x:Name="Icon_Sampler" Grid.Column="1" Glyph="&#xE93C;" FontSize="16"
+                                              Foreground="{ThemeResource TextMutedBrush}" Width="22" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Sampler" Grid.Column="2" Text="Sampler" FontSize="13.5"
+                                               FontWeight="Normal" Foreground="{ThemeResource TextMutedBrush}"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
 
-            <NavigationView.PaneFooter>
-                <StackPanel Spacing="6" Margin="0,0,0,8">
-                    <!-- Connection status: always visible. Pill when the pane is open, dot when compact. -->
-                    <Border Margin="10,0" Padding="12,8" CornerRadius="10"
-                            Background="{ThemeResource SurfaceL2Brush}" BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}"
-                            BorderThickness="1" Visibility="{x:Bind Nav.IsPaneOpen, Mode=OneWay}">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <Grid Width="10" Height="10" VerticalAlignment="Center">
-                                <Ellipse Fill="{x:Bind StatusBrush(ViewModel.IsConnected), Mode=OneWay}" Opacity="0.35" Width="10" Height="10" />
-                                <Ellipse Fill="{x:Bind StatusBrush(ViewModel.IsConnected), Mode=OneWay}" Width="6" Height="6" />
-                            </Grid>
-                            <TextBlock Text="{x:Bind ViewModel.ConnectionText, Mode=OneWay}" FontSize="13" FontWeight="SemiBold" />
+                            <!-- Beleuchtung -->
+                            <Button x:Name="Btn_Lighting" Tag="lighting" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click">
+                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="Ind_Lighting" Width="3" Height="20" CornerRadius="1.5"
+                                            Background="{StaticResource BrandBrush}" Visibility="Collapsed" Margin="0,0,2,0" />
+                                    <FontIcon x:Name="Icon_Lighting" Grid.Column="1" Glyph="&#xE781;" FontSize="16"
+                                              Foreground="{ThemeResource TextMutedBrush}" Width="22" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Lighting" Grid.Column="2" Text="Beleuchtung" FontSize="13.5"
+                                               FontWeight="Normal" Foreground="{ThemeResource TextMutedBrush}"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+
+                            <!-- Virtuelle Kanäle -->
+                            <Button x:Name="Btn_Virtual" Tag="virtual" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click">
+                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="Ind_Virtual" Width="3" Height="20" CornerRadius="1.5"
+                                            Background="{StaticResource BrandBrush}" Visibility="Collapsed" Margin="0,0,2,0" />
+                                    <FontIcon x:Name="Icon_Virtual" Grid.Column="1" Glyph="&#xE7F4;" FontSize="16"
+                                              Foreground="{ThemeResource TextMutedBrush}" Width="22" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Virtual" Grid.Column="2" Text="Virtuelle Kanäle" FontSize="13.5"
+                                               FontWeight="Normal" Foreground="{ThemeResource TextMutedBrush}"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+
+                            <!-- Einstellungen -->
+                            <Button x:Name="Btn_Settings" Tag="settings" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click">
+                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="Ind_Settings" Width="3" Height="20" CornerRadius="1.5"
+                                            Background="{StaticResource BrandBrush}" Visibility="Collapsed" Margin="0,0,2,0" />
+                                    <FontIcon x:Name="Icon_Settings" Grid.Column="1" Glyph="&#xE713;" FontSize="16"
+                                              Foreground="{ThemeResource TextMutedBrush}" Width="22" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Settings" Grid.Column="2" Text="Einstellungen" FontSize="13.5"
+                                               FontWeight="Normal" Foreground="{ThemeResource TextMutedBrush}"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
                         </StackPanel>
-                    </Border>
-                    <Grid Width="40" Height="28" HorizontalAlignment="Left" Margin="4,0,0,0"
-                          Visibility="{x:Bind VisibleIfNot(Nav.IsPaneOpen), Mode=OneWay}"
-                          ToolTipService.ToolTip="{x:Bind ViewModel.ConnectionText, Mode=OneWay}">
-                        <Ellipse Fill="{x:Bind StatusBrush(ViewModel.IsConnected), Mode=OneWay}" Opacity="0.35" Width="12" Height="12" />
-                        <Ellipse Fill="{x:Bind StatusBrush(ViewModel.IsConnected), Mode=OneWay}" Width="7" Height="7" />
-                    </Grid>
+                    </ScrollViewer>
 
-                    <!-- Stream Deck integration status -->
-                    <Border Margin="10,0" Padding="12,8" CornerRadius="10"
-                            Background="{ThemeResource SurfaceL2Brush}" BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}"
-                            BorderThickness="1" Visibility="{x:Bind Nav.IsPaneOpen, Mode=OneWay}"
-                            ToolTipService.ToolTip="{x:Bind ViewModel.StreamDeck.StatusDetail, Mode=OneWay}">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <Grid Width="10" Height="10" VerticalAlignment="Center">
-                                <Ellipse Fill="{x:Bind StreamDeckStatusBrush(ViewModel.StreamDeck.IsApiOnline, ViewModel.StreamDeck.IsAppRunning), Mode=OneWay}" Opacity="0.35" Width="10" Height="10" />
-                                <Ellipse Fill="{x:Bind StreamDeckStatusBrush(ViewModel.StreamDeck.IsApiOnline, ViewModel.StreamDeck.IsAppRunning), Mode=OneWay}" Width="6" Height="6" />
+                    <!-- Footer Status Cards (Bild 1) -->
+                    <StackPanel Grid.Row="2" Spacing="6" Margin="0,4,0,0">
+                        <!-- Card 1: NEXT:XLR / Verbunden -->
+                        <Border x:Name="StatusCardConnection" CornerRadius="12" Padding="12,10"
+                                Background="{ThemeResource SurfaceL2Brush}" BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1">
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <!-- Glowing Status Dot -->
+                                <Grid Width="16" Height="16" VerticalAlignment="Center">
+                                    <Ellipse Fill="{x:Bind StatusBrush(ViewModel.IsConnected), Mode=OneWay}" Opacity="0.35" Width="16" Height="16" />
+                                    <Ellipse Fill="{x:Bind StatusBrush(ViewModel.IsConnected), Mode=OneWay}" Width="8" Height="8" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Grid>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" x:Name="StatusConnectionPanel">
+                                    <TextBlock Text="NEXT:XLR" FontSize="12.5" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}" />
+                                    <TextBlock Text="{x:Bind ViewModel.ConnectionText, Mode=OneWay}" FontSize="11" Foreground="{ThemeResource TextMutedBrush}" />
+                                </StackPanel>
                             </Grid>
-                            <FontIcon Glyph="&#xE93C;" FontSize="13" Foreground="{StaticResource BrandBrush}" VerticalAlignment="Center" />
-                            <TextBlock Text="{x:Bind ViewModel.StreamDeck.StatusText, Mode=OneWay}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Border>
-                    <Grid Width="40" Height="28" HorizontalAlignment="Left" Margin="4,0,0,0"
-                          Visibility="{x:Bind VisibleIfNot(Nav.IsPaneOpen), Mode=OneWay}"
-                          ToolTipService.ToolTip="{x:Bind ViewModel.StreamDeck.StatusDetail, Mode=OneWay}">
-                        <Ellipse Fill="{x:Bind StreamDeckStatusBrush(ViewModel.StreamDeck.IsApiOnline, ViewModel.StreamDeck.IsAppRunning), Mode=OneWay}" Opacity="0.35" Width="12" Height="12" />
-                        <Ellipse Fill="{x:Bind StreamDeckStatusBrush(ViewModel.StreamDeck.IsApiOnline, ViewModel.StreamDeck.IsAppRunning), Mode=OneWay}" Width="7" Height="7" />
-                    </Grid>
+                        </Border>
 
-                    <!-- Detected device (USB PID → GoXLR / GoXLR Mini); only when the pane is open. -->
-                    <Border Margin="10,0" Padding="14,12" CornerRadius="12"
-                            Visibility="{x:Bind Nav.IsPaneOpen, Mode=OneWay}"
-                            Background="{ThemeResource SurfaceL2Brush}"
-                            BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
-                        <Grid ColumnSpacing="12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Border Width="34" Height="34" CornerRadius="10" Background="{ThemeResource SurfaceL3Brush}">
-                                <FontIcon Glyph="&#xE88E;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
-                            </Border>
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="{x:Bind ViewModel.Hardware.DeviceName, Mode=OneWay}"
-                                           FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                <TextBlock Text="{x:Bind ViewModel.Hardware.DeviceDetail, Mode=OneWay}"
-                                           Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                </StackPanel>
-            </NavigationView.PaneFooter>
+                        <!-- Card 2: Stream Deck / Aktiv -->
+                        <Border x:Name="StatusCardStreamDeck" CornerRadius="12" Padding="12,10"
+                                Background="{ThemeResource SurfaceL2Brush}" BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1"
+                                ToolTipService.ToolTip="{x:Bind ViewModel.StreamDeck.StatusDetail, Mode=OneWay}">
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid Width="16" Height="16" VerticalAlignment="Center">
+                                    <FontIcon Glyph="&#xE93C;" FontSize="14" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Grid>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" x:Name="StatusStreamDeckPanel">
+                                    <TextBlock Text="Stream Deck" FontSize="12.5" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}" />
+                                    <TextBlock Text="{x:Bind ViewModel.StreamDeck.StatusText, Mode=OneWay}" FontSize="11" Foreground="{ThemeResource TextMutedBrush}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
 
-            <Grid Background="{ThemeResource SurfaceL1Brush}">
-                <Frame x:Name="ContentFrame" Background="{ThemeResource SurfaceL1Brush}"
+                        <!-- Card 3: GoXLR / Seriennummer -->
+                        <Border x:Name="StatusCardHardware" CornerRadius="12" Padding="12,10"
+                                Background="{ThemeResource SurfaceL2Brush}" BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1">
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid Width="16" Height="16" VerticalAlignment="Center">
+                                    <FontIcon Glyph="&#xE88E;" FontSize="14" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Grid>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" x:Name="StatusHardwarePanel">
+                                    <TextBlock Text="{x:Bind ViewModel.Hardware.DeviceName, Mode=OneWay}" FontSize="12.5" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{x:Bind ViewModel.Hardware.DeviceDetail, Mode=OneWay}" FontSize="11" Foreground="{ThemeResource TextMutedBrush}" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Column 1: Main Content Stage -->
+            <Grid Grid.Column="1" Margin="0">
+                <!-- Top Drag Area for window moving -->
+                <Grid x:Name="AppDragArea" Height="44" VerticalAlignment="Top" Background="Transparent" Margin="16,0,150,0">
+                    <!-- Allgemeiner animierter Lade-Indikator -->
+                    <StackPanel x:Name="AppLoadingPanel" Orientation="Horizontal" Spacing="8"
+                                HorizontalAlignment="Right" VerticalAlignment="Center"
+                                Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}">
+                        <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Width="16" Height="16"
+                                      Foreground="{StaticResource BrandBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.BusyText, Mode=OneWay}" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{StaticResource BrandBrush}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Page Content Frame (Transparent to reveal Ambient Studio Glow + canvas background) -->
+                <Frame x:Name="ContentFrame" Margin="0,44,0,0" Background="Transparent"
                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
 
                 <!-- InfoBars overlay on top when active, zero height/gap when closed -->
-                <StackPanel VerticalAlignment="Top" Spacing="8">
+                <StackPanel VerticalAlignment="Top" Spacing="8" Margin="0,44,0,0">
                     <InfoBar x:Uid="EngineOffline" IsOpen="{x:Bind Not(ViewModel.IsConnected), Mode=OneWay}"
                              Margin="40,8,40,0" Severity="Warning" IsClosable="False" />
                     <InfoBar x:Uid="EngineError" IsOpen="{x:Bind HasText(ViewModel.LastError), Mode=OneWay}"
@@ -187,13 +321,14 @@
                              Message="Damit Windows alle Kanäle (System, Chat, Musik, Game) anbietet, muss der GoXLR Treiber installiert werden."
                              IsClosable="True">
                         <InfoBar.ActionButton>
-                            <Button Content="Treiber jetzt installieren" Click="InstallDriver_Click" />
+                            <Button Content="Treiber jetzt installieren" Click="InstallDriver_Click"
+                                    services:CursorHelper.UseHandCursor="True" />
                         </InfoBar.ActionButton>
                     </InfoBar>
                 </StackPanel>
 
                 <!-- Animiertes Lade-Overlay bei Start, Seitenwechsel, Plugin-Scan oder Profil-Laden -->
-                <Grid x:Name="GlobalLoadingOverlay" Background="#550A0C10"
+                <Grid x:Name="GlobalLoadingOverlay" Background="#55050505"
                       Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
                       IsHitTestVisible="False" Canvas.ZIndex="500">
                     <Border Background="{ThemeResource SurfaceL2Brush}" BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}"
@@ -203,17 +338,16 @@
                             <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Width="28" Height="28"
                                           Foreground="{StaticResource BrandBrush}" />
                             <TextBlock Text="{x:Bind ViewModel.BusyText, Mode=OneWay}" FontSize="14" FontWeight="SemiBold"
-                                       Foreground="{ThemeResource TextFillColorPrimaryBrush}" VerticalAlignment="Center" />
+                                       Foreground="{ThemeResource TextPrimaryBrush}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
                 </Grid>
             </Grid>
-        </NavigationView>
+        </Grid>
 
         <!-- Interactive Welcome & Guided Tour Modal Overlay -->
-        <Grid x:Name="TourOverlay" Visibility="Collapsed"
-              Grid.Row="0" Grid.RowSpan="2" Canvas.ZIndex="1000"
-              Background="#C00A0C10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid x:Name="TourOverlay" Visibility="Collapsed" Canvas.ZIndex="1000"
+              Background="#C0050505" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Border Style="{StaticResource Card}" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Width="620" Padding="32" CornerRadius="20"
                     BorderBrush="{StaticResource BrandBrush}" BorderThickness="1.5"

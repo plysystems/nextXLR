@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="using:NextXLR.ViewModels"
     xmlns:controls="using:NextXLR.Controls"
-    Background="{ThemeResource SurfaceL1Brush}">
+    Background="Transparent">
 
     <ScrollViewer Style="{StaticResource PageScroller}">
         <StackPanel Spacing="24" MaxWidth="1320" HorizontalAlignment="Center">

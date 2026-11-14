@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:NextXLR"
     xmlns:vm="using:NextXLR.ViewModels"
-    Background="{ThemeResource SurfaceL1Brush}">
+    Background="Transparent">
 
     <Grid Padding="{StaticResource PagePadding}" RowSpacing="20" HorizontalAlignment="Stretch">
         <Grid.RowDefinitions>

@@ -39,6 +39,10 @@ public sealed partial class MainWindow : Window
     /// <summary>HWND for pickers in an unpackaged app (FileOpenPicker needs an owner window).</summary>
     public static nint Handle { get; private set; }
 
+    private readonly Dictionary<string, (Button btn, Border ind, FontIcon icon, TextBlock text)> _navControls = new();
+    private string _currentNavTag = "mixer";
+    private bool _isPaneOpen = true;
+
     private TrayIconService? _trayService;
     private bool _isExplicitExit = false;
 
@@ -84,6 +88,7 @@ public sealed partial class MainWindow : Window
         }
         catch { }
 
+        InitNavControls();
         UpdatePaneLayout();
 
         if (RootWindowGrid != null)
@@ -91,7 +96,7 @@ public sealed partial class MainWindow : Window
             RootWindowGrid.ActualThemeChanged += (_, _) =>
             {
                 UpdateTitleBarTheme();
-                UpdateLogoTheme();
+                UpdateNavVisuals();
             };
         }
         if (ContentFrame != null)
@@ -101,18 +106,24 @@ public sealed partial class MainWindow : Window
                 if (ContentFrame.Content is FrameworkElement fe)
                 {
                     fe.RequestedTheme = ContentFrame.RequestedTheme;
+                    DispatcherQueue.TryEnqueue(() => CursorHelper.ApplyHandCursor(fe));
                 }
             };
         }
         ApplyTheme(AppSettings.Load().AppTheme);
-        UpdateLogoTheme();
         UpdatePaneLayout();
+        UpdateNavVisuals();
 
         SizeChanged += (s, e) =>
         {
-            if (e.Size.Width < 1080 && Nav != null && Nav.IsPaneOpen)
+            if (e.Size.Width < 1080 && _isPaneOpen)
             {
-                Nav.IsPaneOpen = false;
+                _isPaneOpen = false;
+                UpdatePaneLayout();
+            }
+            else if (e.Size.Width >= 1080 && !_isPaneOpen)
+            {
+                _isPaneOpen = true;
                 UpdatePaneLayout();
             }
         };
@@ -203,10 +214,11 @@ public sealed partial class MainWindow : Window
             {
                 try
                 {
+                    CursorHelper.ApplyHandCursor(RootWindowGrid);
                     _trayService?.AddOrUpdateTrayIcon();
-                    if (Nav.SelectedItem == null)
+                    if (ContentFrame?.Content == null)
                     {
-                        Nav.SelectedItem = MixerItem;
+                        NavigateToPage(_currentNavTag ?? "mixer");
                     }
 
                     if (!ViewModel.IsConnected)
@@ -285,11 +297,11 @@ public sealed partial class MainWindow : Window
                 }
                 AppWindow.MoveInZOrderAtTop();
                 SetForegroundWindow(Handle);
-                if (Nav.SelectedItem == null)
+                if (ContentFrame?.Content == null)
                 {
-                    Nav.SelectedItem = MixerItem;
+                    NavigateToPage(_currentNavTag ?? "mixer");
                 }
-                ViewModel.SetMetersActive(ContentFrame.CurrentSourcePageType == typeof(MixerPage));
+                ViewModel.SetMetersActive(ContentFrame?.CurrentSourcePageType == typeof(MixerPage));
                 StreamDeckStatusService.Instance.StartMonitoring(DispatcherQueue);
             }
             catch { }
@@ -322,18 +334,35 @@ public sealed partial class MainWindow : Window
     {
         DispatcherQueue.TryEnqueue(() =>
         {
-            if (Pages.TryGetValue(tag, out var page))
+            _currentNavTag = tag;
+            UpdateNavVisuals();
+
+            Type? targetPage = null;
+            if (tag == "settings")
             {
-                ContentFrame.Navigate(page, ViewModel);
-                if (tag == "mixer") Nav.SelectedItem = MixerItem;
-                else if (tag == "mic") Nav.SelectedItem = MicItem;
-                else if (tag == "routing") Nav.SelectedItem = RoutingItem;
-                else if (tag == "effects") Nav.SelectedItem = EffectsItem;
-                else if (tag == "sampler") Nav.SelectedItem = SamplerItem;
-                else if (tag == "lighting") Nav.SelectedItem = LightingItem;
-                else if (tag == "virtual") Nav.SelectedItem = VirtualChannelsItem;
-                else if (tag == "settings") Nav.SelectedItem = Nav.SettingsItem;
+                targetPage = typeof(SettingsPage);
             }
+            else if (Pages.TryGetValue(tag, out var page))
+            {
+                targetPage = page;
+            }
+
+            if (targetPage != null && ContentFrame.CurrentSourcePageType != targetPage)
+            {
+                if (_isInitialNavigation)
+                {
+                    _isInitialNavigation = false;
+                    ContentFrame.Navigate(targetPage, ViewModel, new SuppressNavigationTransitionInfo());
+                }
+                else
+                {
+                    var transition = new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromBottom };
+                    ContentFrame.Navigate(targetPage, ViewModel, transition);
+                }
+            }
+
+            // Performance: Only run MeterAnimator when MixerPage is on screen
+            ViewModel.SetMetersActive(targetPage == typeof(MixerPage));
         });
     }
 
@@ -347,7 +376,7 @@ public sealed partial class MainWindow : Window
             e.DragUIOverride.IsContentVisible = true;
 
             // Automatisch zu Sampler wechseln
-            if (!ReferenceEquals(Nav.SelectedItem, SamplerItem))
+            if (_currentNavTag != "sampler")
             {
                 NavigateToPage("sampler");
             }
@@ -550,13 +579,7 @@ public sealed partial class MainWindow : Window
         {
             if (ContentFrame != null && ContentFrame.Content == null)
             {
-                if (Nav != null && Nav.SelectedItem == null)
-                {
-                    Nav.SelectedItem = MixerItem;
-                }
-                _isInitialNavigation = false;
-                ContentFrame.Navigate(typeof(MixerPage), ViewModel, new SuppressNavigationTransitionInfo());
-                ViewModel.SetMetersActive(true);
+                NavigateToPage("mixer");
             }
         }
         catch { }
@@ -564,69 +587,82 @@ public sealed partial class MainWindow : Window
 
     private void MenuToggleButton_Click(object sender, RoutedEventArgs e)
     {
-        Nav.IsPaneOpen = !Nav.IsPaneOpen;
+        _isPaneOpen = !_isPaneOpen;
         UpdatePaneLayout();
     }
 
-    private void Nav_PaneOpened(NavigationView sender, object args)
+    private void NavButton_Click(object sender, RoutedEventArgs e)
     {
-        UpdatePaneLayout();
+        if (sender is Button btn && btn.Tag is string tag)
+        {
+            NavigateToPage(tag);
+        }
     }
 
-    private void Nav_PaneClosed(NavigationView sender, object args)
+    private void InitNavControls()
     {
-        UpdatePaneLayout();
-    }
-
-    private void Nav_DisplayModeChanged(NavigationView sender, NavigationViewDisplayModeChangedEventArgs args)
-    {
-        UpdatePaneLayout();
+        _navControls["mixer"] = (Btn_Mixer, Ind_Mixer, Icon_Mixer, Text_Mixer);
+        _navControls["mic"] = (Btn_Mic, Ind_Mic, Icon_Mic, Text_Mic);
+        _navControls["routing"] = (Btn_Routing, Ind_Routing, Icon_Routing, Text_Routing);
+        _navControls["effects"] = (Btn_Effects, Ind_Effects, Icon_Effects, Text_Effects);
+        _navControls["sampler"] = (Btn_Sampler, Ind_Sampler, Icon_Sampler, Text_Sampler);
+        _navControls["lighting"] = (Btn_Lighting, Ind_Lighting, Icon_Lighting, Text_Lighting);
+        _navControls["virtual"] = (Btn_Virtual, Ind_Virtual, Icon_Virtual, Text_Virtual);
+        _navControls["settings"] = (Btn_Settings, Ind_Settings, Icon_Settings, Text_Settings);
     }
 
     private void UpdatePaneLayout()
     {
-        if (TitleBarPaneColumn == null || Nav == null) return;
-        bool isOpen = Nav.IsPaneOpen;
-        TitleBarPaneColumn.Width = new GridLength(isOpen ? Nav.OpenPaneLength : Nav.CompactPaneLength);
-        if (LogoContainer != null)
+        if (SidebarIsland == null) return;
+        SidebarIsland.Width = _isPaneOpen ? 230 : 64;
+        if (BrandTitleText != null)
         {
-            LogoContainer.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
+            BrandTitleText.Visibility = _isPaneOpen ? Visibility.Visible : Visibility.Collapsed;
         }
-        else if (LogoFull != null)
+
+        foreach (var kvp in _navControls)
         {
-            LogoFull.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
+            if (kvp.Value.text != null)
+            {
+                kvp.Value.text.Visibility = _isPaneOpen ? Visibility.Visible : Visibility.Collapsed;
+            }
         }
+
+        if (StatusConnectionPanel != null)
+            StatusConnectionPanel.Visibility = _isPaneOpen ? Visibility.Visible : Visibility.Collapsed;
+        if (StatusStreamDeckPanel != null)
+            StatusStreamDeckPanel.Visibility = _isPaneOpen ? Visibility.Visible : Visibility.Collapsed;
+        if (StatusHardwarePanel != null)
+            StatusHardwarePanel.Visibility = _isPaneOpen ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+    private void UpdateNavVisuals()
     {
-        Type targetPage = typeof(MixerPage);
-        if (args.IsSettingsSelected || (args.SelectedItem is NavigationViewItem { Tag: "settings" }))
+        try
         {
-            targetPage = typeof(SettingsPage);
-        }
-        else if (args.SelectedItem is NavigationViewItem { Tag: string tag } && Pages.TryGetValue(tag, out var page))
-        {
-            targetPage = page;
-        }
+            var brandBrush = (Brush)Application.Current.Resources["BrandBrush"];
+            var textPrimaryBrush = (Brush)Application.Current.Resources["TextPrimaryBrush"];
+            var textMutedBrush = (Brush)Application.Current.Resources["TextMutedBrush"];
+            var activeBg = (Brush)Application.Current.Resources["SurfaceL2Brush"];
+            var transparent = new SolidColorBrush(Colors.Transparent);
 
-        if (ContentFrame.CurrentSourcePageType != targetPage)
-        {
-            if (_isInitialNavigation)
+            foreach (var kvp in _navControls)
             {
-                _isInitialNavigation = false;
-                ContentFrame.Navigate(targetPage, ViewModel, new SuppressNavigationTransitionInfo());
-            }
-            else
-            {
-                // Silky smooth, modern Windows 11 Fluent Slide transition
-                var transition = new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromBottom };
-                ContentFrame.Navigate(targetPage, ViewModel, transition);
+                var tag = kvp.Key;
+                var (btn, ind, icon, text) = kvp.Value;
+                bool isSelected = tag == _currentNavTag;
+
+                if (ind != null) ind.Visibility = isSelected ? Visibility.Visible : Visibility.Collapsed;
+                if (icon != null) icon.Foreground = isSelected ? brandBrush : textMutedBrush;
+                if (text != null)
+                {
+                    text.Foreground = isSelected ? textPrimaryBrush : textMutedBrush;
+                    text.FontWeight = isSelected ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+                }
+                if (btn != null) btn.Background = isSelected ? activeBg : transparent;
             }
         }
-
-        // Performance: Only run MeterAnimator when MixerPage is on screen
-        ViewModel.SetMetersActive(targetPage == typeof(MixerPage));
+        catch { }
     }
 
     /// <summary>If the device changes (e.g. a Mini is plugged in) while a now-hidden tab is open, go to Mixer.</summary>
@@ -635,7 +671,7 @@ public sealed partial class MainWindow : Window
         var hw = ViewModel.Hardware;
         var current = ContentFrame.CurrentSourcePageType;
         if ((current == typeof(EffectsPage) && !hw.HasEffects) || (current == typeof(SamplerPage) && !hw.HasSampler))
-            Nav.SelectedItem = MixerItem;
+            NavigateToPage("mixer");
     }
 
     // x:Bind helper functions
@@ -665,11 +701,6 @@ public sealed partial class MainWindow : Window
         UpdateTourStep();
     }
 
-    private void SelectNav(NavigationViewItem item)
-    {
-        if (!ReferenceEquals(Nav.SelectedItem, item)) Nav.SelectedItem = item;
-    }
-
     private void UpdateTourStep()
     {
         TourBackButton.Visibility = _tourStep > 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -683,7 +714,7 @@ public sealed partial class MainWindow : Window
                 TourStepLabel.Text = "Übersicht";
                 TourDescription.Text = "Die moderne, blitzschnelle Open-Source Steuerzentrale für dein GoXLR und GoXLR Mini.\n\n• Latenzfreier Hardware-DSP und nahtloses Audio-Routing\n• Schneller Profil-Import aus der bisherigen GoXLR-App\n• Modernes Fluent UI mit voller Kontrolle";
                 TourNextButton.Content = "Tour starten";
-                SelectNav(MixerItem);
+                NavigateToPage("mixer");
                 break;
 
             case 1:
@@ -692,7 +723,7 @@ public sealed partial class MainWindow : Window
                 TourStepLabel.Text = "Schritt 2 von 7";
                 TourDescription.Text = "• Direkteingabe: Klicke auf die Zahl unter jedem Fader, um die Lautstärke direkt als Zahl einzugeben.\n• Mic-Monitor: Auf 50% bis 100% optimiert – für kristallklares Kopfhörer-Monitoring völlig ohne Hall.\n• Bleep-Regler: Passe die Lautstärke des Zensur-Tons (!@#$?*) stufenlos zwischen 0% und 100% an.";
                 TourNextButton.Content = "Weiter";
-                SelectNav(MixerItem);
+                NavigateToPage("mixer");
                 break;
 
             case 2:
@@ -701,7 +732,7 @@ public sealed partial class MainWindow : Window
                 TourStepLabel.Text = "Schritt 3 von 7";
                 TourDescription.Text = "• Studio-DSP: Vollwertiges Noise Gate, Equalizer, Kompressor und De-Esser.\n• Profil-Import: Du hast alte Profile aus der bisherigen GoXLR-App? Klicke einfach auf 'Importieren', um deine gewohnten Profile (.goxlr, .goxlrMicProfile, .xml) direkt zu laden!";
                 TourNextButton.Content = "Weiter";
-                SelectNav(MicItem);
+                NavigateToPage("mic");
                 break;
 
             case 3:
@@ -710,7 +741,7 @@ public sealed partial class MainWindow : Window
                 TourStepLabel.Text = "Schritt 4 von 7";
                 TourDescription.Text = "• Matrix-Routing: Weise jeden Audio-Eingang frei den gewünschten Ausgängen zu.\n• Bleep-Routing: Der Zensur-Ton wird automatisch auf Chat Mic, Broadcast und Kopfhörer geroutet, damit er überall zuverlässig greift.";
                 TourNextButton.Content = "Weiter";
-                SelectNav(RoutingItem);
+                NavigateToPage("routing");
                 break;
 
             case 4:
@@ -719,7 +750,7 @@ public sealed partial class MainWindow : Window
                 TourStepLabel.Text = "Schritt 5 von 7";
                 TourDescription.Text = "• Voice FX: Megaphone, Robot, Hardtune und Pitch-Shifter.\n• Sampler: 3 Sound-Bänke (A, B, C) mit je 4 Pads.\n• Neuer Pad-Editor: Hinterlegte Pads können jetzt jederzeit direkt mit dem 'Bearbeiten'-Button oder per Rechtsklick editiert, getrimmt oder ausgetauscht werden!";
                 TourNextButton.Content = "Weiter";
-                SelectNav(SamplerItem);
+                NavigateToPage("sampler");
                 break;
 
             case 5:
@@ -728,7 +759,7 @@ public sealed partial class MainWindow : Window
                 TourStepLabel.Text = "Schritt 6 von 7";
                 TourDescription.Text = "• Volle RGB-Kontrolle: Gestalte Fader und Tasten nach deinen Vorlieben.\n• GTA VI Theme: Hol dir das Vice-City-Feeling direkt auf dein GoXLR – mit stilvollem Neon-Pink, Miami-Blue und Sonnenuntergangs-Verläufen!";
                 TourNextButton.Content = "Weiter";
-                SelectNav(LightingItem);
+                NavigateToPage("lighting");
                 break;
 
             case 6:
@@ -737,7 +768,7 @@ public sealed partial class MainWindow : Window
                 TourStepLabel.Text = "Schritt 7 von 7";
                 TourDescription.Text = "Du bist startklar! NextXLR ist optimal für deinen Stream und deine tägliche Nutzung konfiguriert.\n\nDu kannst diese Tour oder den Profil-Import jederzeit über die Einstellungen erneut starten.\n\nViel Spaß mit NextXLR!";
                 TourNextButton.Content = "Tour abschließen";
-                SelectNav(MixerItem);
+                NavigateToPage("mixer");
                 break;
         }
     }
@@ -824,11 +855,6 @@ public sealed partial class MainWindow : Window
             RootWindowGrid.RequestedTheme = requestedTheme;
         }
 
-        if (Nav != null)
-        {
-            Nav.RequestedTheme = requestedTheme;
-        }
-
         if (ContentFrame != null)
         {
             ContentFrame.RequestedTheme = requestedTheme;
@@ -842,25 +868,8 @@ public sealed partial class MainWindow : Window
             }
         }
 
+        UpdateNavVisuals();
         UpdateTitleBarTheme();
-        UpdateLogoTheme();
-    }
-
-    private void UpdateLogoTheme()
-    {
-        try
-        {
-            if (LogoFull == null) return;
-            bool isDark = true;
-            if (RootWindowGrid != null)
-            {
-                isDark = RootWindowGrid.ActualTheme != ElementTheme.Light;
-            }
-
-            string logoFile = isDark ? "nextXLR_logo_dark.png" : "nextXLR_logo_light.png";
-            LogoFull.Source = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri($"ms-appx:///Assets/{logoFile}"));
-        }
-        catch { }
     }
 
     private void UpdateTitleBarTheme()
