@@ -29,15 +29,25 @@ Offizieller Release **v0.1.9.2-alpha** für NEXT : XLR, die Mixforge Audio Engin
 
 ### 3. Design & Theme-Auswahl (Dunkel / Hell / System)
 * **Theme-Umschaltung in Einstellungen**:
-  * Unter *Einstellungen -> Allgemein* steht nun die Option **Erscheinungsbild & Design** bereit.
-  * Auswahl zwischen **Dunkel**, **Hell** und **System** (passt sich automatisch dem Windows-Design an).
+  * Unter *Einstellungen -> Allgemein* steht nun die Option **Erscheinungsbild & Design** bereit (Dunkel, Hell, System).
   * Wechsel erfolgt sofort zur Laufzeit ohne Neustart der App.
-* **Neue Basisfarbe `#1D1D1D` für Dark Mode**:
-  * Der bisherige bläuliche Farbton (`#15181E` / `#111318`) wurde vollständig verworfen.
-  * Das gesamte UI erstrahlt in tiefem, neutralem Studio-Schwarz (`#1D1D1D`), harmonisch abgestimmt mit Karten (`#262626`), Steuerelementen (`#303030`) und Randkonturen (`#383838`).
-  * Optimierte Titelzeilen-Buttons für perfekte Lesbarkeit in hellen und dunklen Umgebungen.
+* **Farbschema "Dunkel"**:
+  * Der Content-Hintergrund erstrahlt in modernem `#252525`.
+  * Sidebar und Titelzeile bilden ein edles `#1D1D1D` Studio-Chassis.
+  * Modul-Karten und Boxen heben sich dezent bei `#2E2E2E` ab, mit vertieften Reglerschächten in `#1D1D1D`.
+* **Farbschema "Hell"**:
+  * Elegante Sidebar in warmem Creamweiß (`#F6F5F2`) und reiner Content-Bereich in `#FFFFFF`.
+* **Optische Mixer- & Sampler-Optimierungen**:
+  * **Motor-Fader**: Neu gestalteter anodisierter Aluminium-Faderknopf mit feinen Bevels, Grip-Rillen und hochpräziser LED-Indikatorlinie sowie neutralgrauen Skalenstrichen.
+  * **Sampler-Pads (Button 1–4)**: Vollständig überarbeitete Hardware-Pad-Optik mit taktilem Button-Badge, Modus-Chip, dynamischen LED-Statusfarben und intuitiven Zustandsanzeigen.
+  * **Husten-Taste**: Text entfernt – zeigt im Mixer-Header nun ein klares, minimalistisches Mikrofon-Icon.
 
-### 4. Sicherheit & Code-Signing
+### 4. Wichtige Fixes & Verbesserungen
+* **Tastenkombination Husten + Zensur**: Löst keinen ungewollten Mixer-Seitenwechsel mehr aus.
+* **Engine-Versionsanzeige**: Die Anzeige der Engine-Version in den Einstellungen wurde auf `0.1.9.2-alpha` korrigiert.
+* **Minimiert Starten**: Neue Einstellungsoption unter *Allgemein*, um NEXT : XLR direkt minimiert im System-Tray zu starten.
+
+### 5. Sicherheit & Code-Signing
 * Alle Binärdateien (`NextXLR.exe`, `NextXLR.dll`, `mixforged.exe`, `mixforge.exe`, `NextXLR-Setup-0.1.9.2-alpha.exe`, `NextXLR-Uninstall.exe`) sind mit dem offiziellen plysystems-Zertifikat code-signiert.
 
 ---
