@@ -26,12 +26,14 @@
 
     <ScrollViewer Style="{StaticResource PageScroller}">
         <StackPanel Spacing="20" MaxWidth="1400" HorizontalAlignment="Center">
-            <StackPanel Spacing="6">
-                <TextBlock x:Uid="LightTitle" Style="{StaticResource PageTitle}" />
+            <!-- Clean Header without badges -->
+            <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center" Margin="0,0,0,8">
+                <TextBlock x:Uid="LightTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
             </StackPanel>
 
             <!-- Live device: mirrors the LED colours, button states, faders and knobs of the GoXLR -->
-            <Border Style="{StaticResource Card}" Padding="20">
+            <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                    BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20">
                 <StackPanel Spacing="16">
                     <!-- Auto-detected hardware badge (GoXLR vs GoXLR Mini) -->
                     <Border HorizontalAlignment="Center" Background="{ThemeResource SurfaceL2Brush}"
@@ -49,7 +51,8 @@
             </Border>
 
             <!-- Themes: one click recolours the whole device -->
-            <Border Style="{StaticResource Card}" Padding="20">
+            <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                    BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20">
                 <StackPanel Spacing="16">
                     <!-- Header with Title and Actions -->
                     <Grid>
@@ -185,7 +188,9 @@
             </Border>
 
             <!-- Fader gradients: Colour 1 (bottom) to Colour 2 (top), live on the fader LEDs -->
-            <Border Style="{StaticResource Card}" Visibility="{x:Bind ViewModel.Hardware.HasDevice, Mode=OneWay}">
+            <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                    BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20"
+                    Visibility="{x:Bind ViewModel.Hardware.HasDevice, Mode=OneWay}">
                 <StackPanel Spacing="16">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <FontIcon Glyph="&#xE9E9;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
@@ -282,7 +287,8 @@
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="vm:LightingGroupViewModel">
-                        <Border Style="{StaticResource Card}">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20">
                             <StackPanel Spacing="16">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <FontIcon Glyph="{x:Bind Glyph}" FontSize="16" Foreground="{StaticResource BrandBrush}" />

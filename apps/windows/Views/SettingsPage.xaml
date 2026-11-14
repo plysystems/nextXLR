@@ -68,8 +68,8 @@
                         </StackPanel>
 
                         <!-- Card 1: Erscheinungsbild & Design -->
-                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="14"
-                                BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1" Padding="20,16">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,16">
                             <Grid ColumnSpacing="16">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -93,8 +93,8 @@
                         </Border>
 
                         <!-- Card 2: Systemverhalten & Autostart -->
-                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="14"
-                                BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1" Padding="0">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="0">
                             <StackPanel>
                                 <!-- Row 1: Mit Windows starten -->
                                 <Grid Padding="20,14" ColumnSpacing="16">
@@ -173,8 +173,8 @@
                         </Border>
 
                         <!-- Card 3: Windows Audio & Datenschutz -->
-                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="14"
-                                BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1" Padding="0">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="0">
                             <StackPanel>
                                 <!-- Sprache -->
                                 <Grid Padding="20,14" ColumnSpacing="16">
@@ -234,8 +234,8 @@
                         </Border>
 
                         <!-- Card 4: Wartung & Dienststeuerung -->
-                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="14"
-                                BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1" Padding="0">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="0">
                             <StackPanel>
                                 <!-- Altlasten bereinigen -->
                                 <Grid Padding="20,14" ColumnSpacing="16">
@@ -283,7 +283,8 @@
                         <TextBlock Text="Audio-Ausgabe, Headset &amp; GoXLR Treiber" Style="{StaticResource SectionTitle}" Margin="0,0,0,6" />
 
                         <!-- Bluetooth & Wireless Headset Card -->
-                        <Border Style="{StaticResource Card}" Padding="20,16">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,16">
                             <StackPanel Spacing="14">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -318,7 +319,8 @@
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
-                                    <Button Grid.Column="1" ToolTipService.ToolTip="Audiogeräte neu laden" Click="RefreshAudioDevices_Click">
+                                    <Button Grid.Column="1" ToolTipService.ToolTip="Audiogeräte neu laden" Click="RefreshAudioDevices_Click"
+                                            services:CursorHelper.UseHandCursor="True">
                                         <FontIcon Glyph="&#xE72C;" FontSize="14" />
                                     </Button>
                                 </Grid>
@@ -333,7 +335,8 @@
                         </Border>
 
                         <!-- GoXLR Audio Treiber Card -->
-                        <Border Style="{StaticResource Card}" Padding="20,16">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,16">
                             <StackPanel Spacing="14">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -359,13 +362,15 @@
                                 <InfoBar x:Name="DriverResultBar" IsOpen="False" IsClosable="True" />
 
                                 <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <Button x:Name="InstallDriverButton" Style="{StaticResource AccentButtonStyle}" Click="InstallDriver_Click">
+                                    <Button x:Name="InstallDriverButton" Style="{StaticResource AccentButtonStyle}" Click="InstallDriver_Click"
+                                            services:CursorHelper.UseHandCursor="True">
                                         <StackPanel Orientation="Horizontal" Spacing="8">
                                             <FontIcon Glyph="&#xE896;" FontSize="14" />
                                             <TextBlock Text="Treiber installieren / reparieren" />
                                         </StackPanel>
                                     </Button>
-                                    <Button Content="Windows Sound-Systemsteuerung" Click="OpenSoundControl_Click" />
+                                    <Button Content="Windows Sound-Systemsteuerung" Click="OpenSoundControl_Click"
+                                            services:CursorHelper.UseHandCursor="True" />
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -377,7 +382,8 @@
                         <InfoBar x:Name="StreamDeckTestResult" IsClosable="True" />
 
                         <!-- Live Status Card -->
-                        <Border Style="{StaticResource Card}" Padding="20">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20">
                             <StackPanel Spacing="16">
                                 <Grid ColumnSpacing="16">
                                     <Grid.ColumnDefinitions>
@@ -397,8 +403,10 @@
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                         <Button Content="Engine starten" Style="{StaticResource AccentButtonStyle}"
+                                                services:CursorHelper.UseHandCursor="True"
                                                 Click="StartEngine_Click" />
                                         <Button Content="Status prüfen" Style="{StaticResource SmoothButton}"
+                                                services:CursorHelper.UseHandCursor="True"
                                                 Click="CheckStreamDeckStatus_Click" />
                                     </StackPanel>
                                 </Grid>
@@ -421,13 +429,15 @@
                                         <TextBlock Text="{x:Bind StreamDeckAppStatusText}" Style="{StaticResource Caption}" />
                                     </StackPanel>
                                     <Button Grid.Column="2" Content="Stream Deck öffnen" Style="{StaticResource SmoothButton}"
+                                            services:CursorHelper.UseHandCursor="True"
                                             Click="OpenStreamDeckApp_Click" />
                                 </Grid>
                             </StackPanel>
                         </Border>
 
                         <!-- Card: Official Stream Deck Plugin Installation -->
-                        <Border Style="{StaticResource Card}" Padding="20">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20">
                             <StackPanel Spacing="16">
                                 <Grid ColumnSpacing="16">
                                     <Grid.ColumnDefinitions>
@@ -442,7 +452,7 @@
                                         <StackPanel Orientation="Horizontal" Spacing="10">
                                             <TextBlock Text="Offizielles NEXT : XLR Stream Deck Plugin" FontWeight="SemiBold" FontSize="16" />
                                             <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="4" Padding="6,2">
-                                                <TextBlock Text="v0.1.9.1" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                                                <TextBlock Text="v0.2.0-beta" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
                                             </Border>
                                         </StackPanel>
                                         <TextBlock Text="{x:Bind StreamDeckService.PluginStatusText, Mode=OneWay}"
@@ -450,6 +460,7 @@
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                         <Button Style="{StaticResource AccentButtonStyle}"
+                                                services:CursorHelper.UseHandCursor="True"
                                                 Click="InstallStreamDeckPlugin_Click">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
                                                 <FontIcon Glyph="&#xE896;" FontSize="13" />
@@ -457,6 +468,7 @@
                                             </StackPanel>
                                         </Button>
                                         <Button Style="{StaticResource SmoothButton}" Click="OpenPluginPackage_Click"
+                                                services:CursorHelper.UseHandCursor="True"
                                                 ToolTipService.ToolTip="Öffnet die .streamDeckPlugin Datei für Elgato Installer">
                                             <FontIcon Glyph="&#xE8DA;" FontSize="13" />
                                         </Button>
@@ -508,25 +520,29 @@
                         </Border>
 
                         <!-- Interactive Test Controls -->
-                        <Border Style="{StaticResource Card}" Padding="20">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20">
                             <StackPanel Spacing="14">
                                 <TextBlock Text="API-Befehle testen" FontWeight="SemiBold" FontSize="15" />
                                 <TextBlock Text="Sende Testbefehle direkt an die lokale NextXLR Audio-Engine, um die Funktionalität für Stream Deck Tasten zu überprüfen:" Style="{StaticResource Caption}" />
 
                                 <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <Button Style="{StaticResource SmoothButton}" Click="TestBleep_Click">
+                                    <Button Style="{StaticResource SmoothButton}" Click="TestBleep_Click"
+                                            services:CursorHelper.UseHandCursor="True">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <FontIcon Glyph="&#xE74F;" FontSize="14" Foreground="{StaticResource WarningBrush}" />
                                             <TextBlock Text="Test Zensur-Bleep (0.5s)" />
                                         </StackPanel>
                                     </Button>
-                                    <Button Style="{StaticResource SmoothButton}" Click="TestMicMute_Click">
+                                    <Button Style="{StaticResource SmoothButton}" Click="TestMicMute_Click"
+                                            services:CursorHelper.UseHandCursor="True">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <FontIcon Glyph="&#xE720;" FontSize="14" />
                                             <TextBlock Text="Test Mic Mute (Toggle)" />
                                         </StackPanel>
                                     </Button>
-                                    <Button Style="{StaticResource SmoothButton}" Click="TestFaderA_Click">
+                                    <Button Style="{StaticResource SmoothButton}" Click="TestFaderA_Click"
+                                            services:CursorHelper.UseHandCursor="True">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <FontIcon Glyph="&#xE9E9;" FontSize="14" />
                                             <TextBlock Text="Test Fader A (75%)" />
@@ -537,7 +553,8 @@
                         </Border>
 
                         <!-- Documentation & Guide Card -->
-                        <Border Style="{StaticResource Card}" Padding="20">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20">
                             <StackPanel Spacing="12">
                                 <TextBlock Text="Dokumentation &amp; Stream Deck Plugin-Setup" FontWeight="SemiBold" FontSize="15" />
                                 <TextBlock Text="In der Stream Deck Software kannst du Tasten ganz einfach als 'System: Website' (GET-Request) oder über das Elgato API-Plugin anlegen." Style="{StaticResource Caption}" />
@@ -566,7 +583,8 @@
                         <InfoBar x:Name="ProfileResult" IsClosable="True" />
 
                         <!-- Save current setup -->
-                        <Border Style="{StaticResource Card}" Padding="18">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="18">
                             <Grid ColumnSpacing="12">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -574,16 +592,17 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBox x:Name="ProfileNameBox" x:Uid="ProfileNameBox" MaxLength="40" />
                                 <Button x:Uid="ProfileSave" Grid.Column="1" VerticalAlignment="Bottom"
-                                        Style="{StaticResource AccentButtonStyle}" Click="SaveProfile_Click" />
+                                        Style="{StaticResource AccentButtonStyle}" Click="SaveProfile_Click"
+                                        services:CursorHelper.UseHandCursor="True" />
                             </Grid>
                         </Border>
 
                         <!-- Import / export files -->
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button Click="ImportProfile_Click">
+                            <Button Click="ImportProfile_Click" services:CursorHelper.UseHandCursor="True">
                                 <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE8B5;" FontSize="14" /><TextBlock x:Uid="ProfileImportText" /></StackPanel>
                             </Button>
-                            <Button Click="ExportCurrent_Click">
+                            <Button Click="ExportCurrent_Click" services:CursorHelper.UseHandCursor="True">
                                 <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xEDE1;" FontSize="14" /><TextBlock x:Uid="ProfileExportText" /></StackPanel>
                             </Button>
                         </StackPanel>
@@ -636,7 +655,8 @@
                     <!-- ===== Updates ===== -->
                     <StackPanel x:Name="UpdatesPanel" Spacing="12" Visibility="Collapsed">
                         <TextBlock x:Uid="SettingsUpdatesHeader" Style="{StaticResource SectionTitle}" Margin="0,0,0,6" />
-                        <Border Style="{StaticResource Card}" Padding="20">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20">
                             <Grid ColumnSpacing="20">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                 <Image Source="/Assets/nextXLR_icon.ico" Width="52" Height="52" />
@@ -647,6 +667,7 @@
                                     <TextBlock Text="Repository: github.com/plysystems/nextXLR" Style="{StaticResource Caption}" Foreground="{StaticResource BrandBrush}" />
                                 </StackPanel>
                                 <Button x:Uid="SetCheckUpdates" Grid.Column="2" Style="{StaticResource AccentButtonStyle}"
+                                        services:CursorHelper.UseHandCursor="True"
                                         Padding="16,10" CornerRadius="10" Click="CheckUpdates_Click" />
                             </Grid>
                         </Border>
@@ -654,7 +675,8 @@
                         <ProgressBar x:Name="UpdateProgressBar" Visibility="Collapsed" IsIndeterminate="False" Minimum="0" Maximum="100" Margin="0, -6, 0, 8" Height="6" CornerRadius="3" Foreground="{StaticResource BrandBrush}" />
 
                         <!-- GitHub Links & Release Channels -->
-                        <Border Style="{StaticResource Card}" Padding="16">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="16">
                             <StackPanel Spacing="10">
                                 <TextBlock Text="Offizielle Links &amp; Releases" FontWeight="SemiBold" />
                                 <Grid ColumnSpacing="10">
@@ -662,7 +684,8 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Button HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Click="OpenGitHubRepo_Click" Padding="12,10">
+                                    <Button HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Click="OpenGitHubRepo_Click" Padding="12,10"
+                                            services:CursorHelper.UseHandCursor="True">
                                         <StackPanel Orientation="Horizontal" Spacing="10">
                                             <FontIcon Glyph="&#xE774;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
                                             <StackPanel>
@@ -671,7 +694,8 @@
                                             </StackPanel>
                                         </StackPanel>
                                     </Button>
-                                    <Button Grid.Column="1" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Click="OpenGitHubReleases_Click" Padding="12,10">
+                                    <Button Grid.Column="1" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Click="OpenGitHubReleases_Click" Padding="12,10"
+                                            services:CursorHelper.UseHandCursor="True">
                                         <StackPanel Orientation="Horizontal" Spacing="10">
                                             <FontIcon Glyph="&#xEDE1;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
                                             <StackPanel>
@@ -685,7 +709,8 @@
                         </Border>
 
                         <!-- Lizenz & Copyright Summary -->
-                        <Border Style="{StaticResource Card}" Padding="16">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="16">
                             <StackPanel Spacing="8">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <FontIcon Glyph="&#xE8D7;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
@@ -709,7 +734,8 @@
                         <TextBlock x:Uid="SettingsHelpHeader" Style="{StaticResource SectionTitle}" Margin="0,0,0,6" />
 
                         <!-- Guided Tour Button -->
-                        <Border Style="{StaticResource Card}" Background="{ThemeResource SurfaceL2Brush}">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="16">
                             <Grid ColumnSpacing="16">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -723,7 +749,8 @@
                                     <TextBlock Text="Interaktive Guided Tour" FontWeight="SemiBold" />
                                     <TextBlock Text="Entdecke alle Funktionen und Neuerungen von NextXLR Schritt für Schritt." Style="{StaticResource Caption}" />
                                 </StackPanel>
-                                <Button Grid.Column="2" Style="{StaticResource AccentButtonStyle}" Click="StartTour_Click" Content="Tour starten" />
+                                <Button Grid.Column="2" Style="{StaticResource AccentButtonStyle}" Click="StartTour_Click" Content="Tour starten"
+                                        services:CursorHelper.UseHandCursor="True" />
                             </Grid>
                         </Border>
 
@@ -782,7 +809,8 @@
                         </Grid>
 
                         <!-- ===== Copyright & Lizenz (plysystems) ===== -->
-                        <Border Style="{StaticResource Card}" Padding="20,18" Margin="0,4,0,0">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,18" Margin="0,4,0,0">
                             <StackPanel Spacing="14">
                                 <Grid>
                                     <Grid.ColumnDefinitions>

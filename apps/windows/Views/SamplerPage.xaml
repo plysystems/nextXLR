@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:NextXLR"
     xmlns:vm="using:NextXLR.ViewModels"
+    xmlns:services="using:NextXLR.Services"
     xmlns:controls="using:NextXLR.Controls"
     Background="Transparent">
 
@@ -40,7 +41,8 @@
 
             <!-- ===== Left: pages + pads (hardware layout) and the selected pad's settings ===== -->
             <StackPanel Grid.Row="1" Spacing="20">
-                <Border Style="{StaticResource Card}">
+                <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                        BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,18">
                     <StackPanel Spacing="18">
                         <!-- Pages A / B / C -->
                         <StackPanel Spacing="10">
@@ -97,7 +99,9 @@
                 </Border>
 
                 <!-- Selected pad: playback mode + trim (supports drag & drop from browser or explorer) -->
-                <Border x:Name="PadEditorCard" Style="{StaticResource Card}" Visibility="{x:Bind Shown(Sampler.SelectedPad), Mode=OneWay}"
+                <Border x:Name="PadEditorCard" Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                        BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,18"
+                        Visibility="{x:Bind Shown(Sampler.SelectedPad), Mode=OneWay}"
                         AllowDrop="True" DragOver="PadEditor_DragOver" Drop="PadEditor_Drop">
                     <StackPanel Spacing="16">
                         <Grid ColumnSpacing="12">
@@ -226,7 +230,8 @@
             </StackPanel>
 
             <!-- ===== Right: Sampler browser (library) ===== -->
-            <Border x:Name="BrowserCard" Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}" VerticalAlignment="Top"
+            <Border x:Name="BrowserCard" Grid.Row="1" Grid.Column="1" Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                    BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,18" VerticalAlignment="Top"
                     AllowDrop="True" DragOver="Library_DragOver" Drop="Library_Drop">
                 <Grid RowSpacing="12">
                     <Grid.RowDefinitions>

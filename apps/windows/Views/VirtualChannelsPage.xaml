@@ -21,13 +21,15 @@
                                Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <Button Style="{StaticResource AccentButtonStyle}" Click="ReSync_Click">
+                    <Button Style="{StaticResource AccentButtonStyle}" Click="ReSync_Click"
+                            services:CursorHelper.UseHandCursor="True">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon Glyph="&#xE777;" FontSize="14" />
                             <TextBlock Text="Spuren aktualisieren" />
                         </StackPanel>
                     </Button>
-                    <Button Click="OpenWindowsVolumeMixer_Click">
+                    <Button Click="OpenWindowsVolumeMixer_Click"
+                            services:CursorHelper.UseHandCursor="True">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon Glyph="&#xE7F6;" FontSize="14" />
                             <TextBlock Text="Windows Lautstärke-Mixer" />
@@ -37,14 +39,16 @@
             </Grid>
 
             <!-- Card 1: Echte GoXLR Windows-Audiospuren -->
-            <Border Style="{StaticResource Card}" Padding="20">
+            <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                    BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20">
                 <StackPanel Spacing="16">
                     <Grid>
                         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                             <FontIcon Glyph="&#xE7F6;" Foreground="{StaticResource BrandBrush}" FontSize="18" />
                             <TextBlock Text="Offizielle GoXLR Windows-Audiospuren" Style="{StaticResource CardTitle}" />
                         </StackPanel>
-                        <Button HorizontalAlignment="Right" Click="OpenSoundControlPanel_Click" Padding="10,4">
+                        <Button HorizontalAlignment="Right" Click="OpenSoundControlPanel_Click" Padding="10,4"
+                                services:CursorHelper.UseHandCursor="True">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <FontIcon Glyph="&#xE713;" FontSize="12" />
                                 <TextBlock Text="Sound-Systemsteuerung (mmsys.cpl)" FontSize="12" />
@@ -97,7 +101,8 @@
             </Border>
 
             <!-- Card 2: Direktes App-Audio-Routing (Spotify, Discord, Games) -->
-            <Border Style="{StaticResource Card}" Padding="20">
+            <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                    BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20">
                 <StackPanel Spacing="16">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -118,6 +123,7 @@
 
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                             <Button Style="{StaticResource AccentButtonStyle}" Padding="12,6" Click="AutoAssignApps_Click"
+                                    services:CursorHelper.UseHandCursor="True"
                                     ToolTipService.ToolTip="Ordnet bekannte Musik-, Chat- und Game-Apps automatisch den richtigen Kanälen zu">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <FontIcon Glyph="&#xE8B8;" FontSize="14" />
@@ -125,10 +131,12 @@
                                 </StackPanel>
                             </Button>
                             <Button Style="{StaticResource SmoothButton}" Padding="10,6" Click="ReSync_Click"
+                                    services:CursorHelper.UseHandCursor="True"
                                     ToolTipService.ToolTip="Aktive Anwendungen neu laden">
                                 <FontIcon Glyph="&#xE72C;" FontSize="14" />
                             </Button>
                             <Button Style="{StaticResource SmoothButton}" Padding="10,6" Click="OpenWindowsVolumeMixer_Click"
+                                    services:CursorHelper.UseHandCursor="True"
                                     ToolTipService.ToolTip="Windows Soundeinstellungen / Lautstärkemixer öffnen">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <FontIcon Glyph="&#xE8A7;" FontSize="14" />
@@ -253,6 +261,7 @@
                                         <ToggleButton Grid.Column="4" Style="{StaticResource SmoothDangerToggle}"
                                                       IsChecked="{x:Bind IsMuted, Mode=TwoWay}"
                                                       Width="38" Height="38" Padding="0" CornerRadius="10"
+                                                      services:CursorHelper.UseHandCursor="True"
                                                       ToolTipService.ToolTip="App stummschalten">
                                             <FontIcon Glyph="&#xE74F;" FontSize="14" />
                                         </ToggleButton>
@@ -265,7 +274,8 @@
             </Border>
 
             <!-- Card 3: Zusätzliche Virtuelle Kabel (VB-CABLE / VoiceMeeter) -->
-            <Border Style="{StaticResource Card}" Padding="20">
+            <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                    BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20">
                 <StackPanel Spacing="16">
                     <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                         <FontIcon Glyph="&#xE7F4;" Foreground="{StaticResource BrandBrush}" FontSize="18" />
@@ -287,7 +297,8 @@
                                 <TextBlock Text="VB-CABLE erstellt ein virtuelles Wiedergabegerät 'CABLE Input' und ein Aufnahmegerät 'CABLE Output' in Windows."
                                            Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
                             </StackPanel>
-                            <Button Grid.Column="1" Click="DownloadVbCable_Click" VerticalAlignment="Center">
+                            <Button Grid.Column="1" Click="DownloadVbCable_Click" VerticalAlignment="Center"
+                                    services:CursorHelper.UseHandCursor="True">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <FontIcon Glyph="&#xE896;" FontSize="12" Foreground="{StaticResource BrandBrush}" />
                                     <TextBlock Text="VB-CABLE Website öffnen" />
