@@ -394,7 +394,7 @@ public partial class MainViewModel : ObservableObject
                 UpdateDevice(s);
                 break;
             case HelloMessage h:
-                EngineVersion = (h.Version == "0.1.9-alpha.2" || h.Version.Contains("aplha")) ? "0.1.9.2-alpha" : h.Version;
+                EngineVersion = h.Version;
                 break;
             case ProfileMessage p:
                 _profileRequest?.TrySetResult(p.Profile);

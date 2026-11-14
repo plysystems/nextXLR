@@ -1,16 +1,28 @@
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 
 namespace NextXLR.Services;
 
 public static class CursorHelper
 {
+    [DllImport("user32.dll")]
+    private static extern nint SetCursor(nint hCursor);
+
+    [DllImport("user32.dll")]
+    private static extern nint LoadCursor(nint hInstance, int lpCursorName);
+
+    private const int IDC_HAND = 32649;
+    private static readonly nint HandCursorHandle = LoadCursor(nint.Zero, IDC_HAND);
+
     private static readonly PropertyInfo? ProtectedCursorProp =
-        typeof(UIElement).GetProperty("ProtectedCursor", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        typeof(UIElement).GetProperty("ProtectedCursor", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) ??
+        typeof(UIElement).GetProperty("ProtectedCursor");
 
     private static readonly InputSystemCursor HandCursor = InputSystemCursor.Create(InputSystemCursorShape.Hand);
 
@@ -26,19 +38,32 @@ public static class CursorHelper
 
     private static void OnUseHandCursorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is UIElement element)
+        if (d is UIElement element && (bool)e.NewValue)
         {
-            SetCursor(element, (bool)e.NewValue ? HandCursor : null);
+            AttachHandCursor(element);
         }
     }
 
-    public static void SetCursor(UIElement element, InputCursor? cursor)
+    public static void AttachHandCursor(UIElement element)
     {
         try
         {
-            ProtectedCursorProp?.SetValue(element, cursor);
+            ProtectedCursorProp?.SetValue(element, HandCursor);
         }
         catch { }
+
+        element.PointerEntered -= OnPointerEnteredOrMoved;
+        element.PointerEntered += OnPointerEnteredOrMoved;
+        element.PointerMoved -= OnPointerEnteredOrMoved;
+        element.PointerMoved += OnPointerEnteredOrMoved;
+    }
+
+    private static void OnPointerEnteredOrMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (HandCursorHandle != nint.Zero)
+        {
+            SetCursor(HandCursorHandle);
+        }
     }
 
     /// <summary>
@@ -61,11 +86,11 @@ public static class CursorHelper
         for (int i = 0; i < count; i++)
         {
             var child = VisualTreeHelper.GetChild(parent, i);
-            if (child is ButtonBase or ToggleSwitch or HyperlinkButton or ComboBox or RadioButton or CheckBox)
+            if (child is ButtonBase or ToggleSwitch or HyperlinkButton or ComboBox or RadioButton or CheckBox or Slider)
             {
                 if (child is UIElement ui)
                 {
-                    SetCursor(ui, HandCursor);
+                    AttachHandCursor(ui);
                 }
             }
             ApplyHandCursorRecursive(child);

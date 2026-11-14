@@ -50,6 +50,25 @@
                     <SolidColorBrush x:Key="ToggleSwitchStrokeOff" Color="#2E2E36" />
                     <SolidColorBrush x:Key="ToggleSwitchKnobFillOff" Color="#8E98AB" />
 
+                    <!-- Button Hover Styling -->
+                    <SolidColorBrush x:Key="ButtonBackground" Color="#12151B" />
+                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#1E232F" />
+                    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#0B0D12" />
+                    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#1A1E26" />
+                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#3DDFD9" />
+                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#1AA29D" />
+                    <SolidColorBrush x:Key="ButtonForeground" Color="#F8FAFC" />
+                    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#FFFFFF" />
+
+                    <!-- Accent Button Hover Styling -->
+                    <SolidColorBrush x:Key="AccentButtonBackground" Color="#24C5BF" />
+                    <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#3DDFD9" />
+                    <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#1AA29D" />
+                    <SolidColorBrush x:Key="AccentButtonForeground" Color="#050505" />
+                    <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#000000" />
+                    <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="AccentButtonBorderBrushPointerOver" Color="#5EE5DF" />
+
                     <!-- Ambient Studio Glow Colors (#050505 canvas with vivid cyan bloom) -->
                     <Color x:Key="AmbientGlowStart">#351A6662</Color>
                     <Color x:Key="AmbientGlowMid">#14164845</Color>
@@ -94,6 +113,25 @@
                     <SolidColorBrush x:Key="ToggleSwitchStrokeOff" Color="#2E2E36" />
                     <SolidColorBrush x:Key="ToggleSwitchKnobFillOff" Color="#8E98AB" />
 
+                    <!-- Button Hover Styling -->
+                    <SolidColorBrush x:Key="ButtonBackground" Color="#12151B" />
+                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#1E232F" />
+                    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#0B0D12" />
+                    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#1A1E26" />
+                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#3DDFD9" />
+                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#1AA29D" />
+                    <SolidColorBrush x:Key="ButtonForeground" Color="#F8FAFC" />
+                    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#FFFFFF" />
+
+                    <!-- Accent Button Hover Styling -->
+                    <SolidColorBrush x:Key="AccentButtonBackground" Color="#24C5BF" />
+                    <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#3DDFD9" />
+                    <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#1AA29D" />
+                    <SolidColorBrush x:Key="AccentButtonForeground" Color="#050505" />
+                    <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#000000" />
+                    <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="AccentButtonBorderBrushPointerOver" Color="#5EE5DF" />
+
                     <!-- Ambient Studio Glow Colors (#050505 canvas with vivid cyan bloom) -->
                     <Color x:Key="AmbientGlowStart">#351A6662</Color>
                     <Color x:Key="AmbientGlowMid">#14164845</Color>
@@ -137,6 +175,25 @@
                     <SolidColorBrush x:Key="ToggleSwitchFillOff" Color="#E2E6ED" />
                     <SolidColorBrush x:Key="ToggleSwitchStrokeOff" Color="#C8CED8" />
                     <SolidColorBrush x:Key="ToggleSwitchKnobFillOff" Color="#64748B" />
+
+                    <!-- Button Hover Styling -->
+                    <SolidColorBrush x:Key="ButtonBackground" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#F1F3F8" />
+                    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#E2E6EE" />
+                    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#D8DCE4" />
+                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#0D9488" />
+                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#115E59" />
+                    <SolidColorBrush x:Key="ButtonForeground" Color="#0F172A" />
+                    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#000000" />
+
+                    <!-- Accent Button Hover Styling -->
+                    <SolidColorBrush x:Key="AccentButtonBackground" Color="#0D9488" />
+                    <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#0F766E" />
+                    <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#115E59" />
+                    <SolidColorBrush x:Key="AccentButtonForeground" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="AccentButtonBorderBrushPointerOver" Color="#0D9488" />
 
                     <!-- Ambient Studio Glow Colors for Light mode -->
                     <Color x:Key="AmbientGlowStart">#180D9488</Color>
