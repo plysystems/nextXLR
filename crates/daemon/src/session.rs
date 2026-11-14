@@ -38,7 +38,7 @@ pub async fn run_session(
 
     let hello = ServerMessage::Hello {
         server: "mixforged".into(),
-        version: env!("CARGO_PKG_VERSION").into(),
+        version: "0.1.9.2-alpha".into(),
         api: API_VERSION,
     };
     if !emit(&out, &hello).await {

@@ -42,6 +42,7 @@ public sealed partial class SettingsPage : Page
         ViewModel = (MainViewModel)e.Parameter;
         AutostartToggle.IsOn = Autostart.IsEnabled;
         TrayToggle.IsOn = _settings.MinimizeToTray;
+        StartMinimizedToggle.IsOn = _settings.StartMinimized;
         MuteOnStartupToggle.IsOn = _settings.MuteOnStartup;
         AutoUpdateToggle.IsOn = _settings.CheckForUpdatesOnStart;
         AppVersionText.Text = Loc.Format("SetAppVersion", AppSettings.VersionDisplay);
@@ -113,6 +114,13 @@ public sealed partial class SettingsPage : Page
     {
         if (_loading) return;
         _settings.MinimizeToTray = TrayToggle.IsOn;
+        _settings.Save();
+    }
+
+    private void StartMinimized_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_loading) return;
+        _settings.StartMinimized = StartMinimizedToggle.IsOn;
         _settings.Save();
     }
 

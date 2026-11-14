@@ -48,35 +48,58 @@
                         Background="Transparent" BorderThickness="0" Click="Settings_Click">
                     <FontIcon Glyph="&#xE70F;" FontSize="14" />
                 </Button>
-                <StackPanel Grid.Column="1" Spacing="0" HorizontalAlignment="{x:Bind Side}">
-                    <TextBlock Text="{x:Bind ViewModel.Label}" FontSize="18" FontWeight="SemiBold"
-                               FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="{x:Bind Side}" />
-                    <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="{x:Bind Side}" Opacity="0.75">
-                        <FontIcon Glyph="{x:Bind ViewModel.ModeGlyph, Mode=OneWay}" FontSize="11" />
-                        <TextBlock Text="{x:Bind ViewModel.ModeText, Mode=OneWay}" FontSize="11" />
+                <StackPanel Grid.Column="1" Spacing="4" HorizontalAlignment="{x:Bind Side}">
+                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="{x:Bind Side}">
+                        <Border Background="{ThemeResource SurfaceL3Brush}" CornerRadius="6" Padding="8,3"
+                                BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1">
+                            <TextBlock Text="{x:Bind ViewModel.Label}" FontSize="12" FontWeight="Bold"
+                                       FontFamily="{StaticResource DisplayFont}" />
+                        </Border>
+                        <Border Background="{ThemeResource SurfaceL3Brush}" CornerRadius="6" Padding="6,3"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1"
+                                Opacity="0.85">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <FontIcon Glyph="{x:Bind ViewModel.ModeGlyph, Mode=OneWay}" FontSize="10" />
+                                <TextBlock Text="{x:Bind ViewModel.ModeText, Mode=OneWay}" FontSize="10" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </StackPanel>
             </Grid>
 
             <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="{x:Bind Side}" Spacing="6">
-                <TextBlock Text="{x:Bind ViewModel.SampleName, Mode=OneWay}" FontSize="13"
-                           TextTrimming="CharacterEllipsis" MaxWidth="200"
-                           HorizontalAlignment="{x:Bind Side}" Opacity="0.85" />
-                <Button x:Name="EditPadButton" Click="EditPad_Click" Padding="8,4" CornerRadius="6"
-                        Background="{ThemeResource SurfaceL3Brush}" BorderThickness="0"
-                        Visibility="{x:Bind ViewModel.HasSample, Mode=OneWay}"
-                        HorizontalAlignment="{x:Bind Side}">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <FontIcon Glyph="&#xE70F;" FontSize="11" />
-                        <TextBlock Text="Bearbeiten" FontSize="11" FontWeight="SemiBold" />
+                <!-- Sample loaded state -->
+                <StackPanel Visibility="{x:Bind ViewModel.HasSample, Mode=OneWay}" Spacing="6" HorizontalAlignment="{x:Bind Side}">
+                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="{x:Bind Side}">
+                        <FontIcon Glyph="&#xE8D6;" FontSize="13" Foreground="{StaticResource BrandBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.SampleName, Mode=OneWay}" FontSize="13" FontWeight="SemiBold"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="210" />
                     </StackPanel>
-                </Button>
+                    <Button x:Name="EditPadButton" Click="EditPad_Click" Padding="8,3" CornerRadius="6"
+                            Background="{ThemeResource SurfaceL3Brush}" BorderThickness="1" BorderBrush="{ThemeResource SurfaceStrokeBrush}"
+                            HorizontalAlignment="{x:Bind Side}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <FontIcon Glyph="&#xE70F;" FontSize="10" />
+                            <TextBlock Text="Bearbeiten" FontSize="11" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Empty pad state -->
+                <StackPanel Visibility="{x:Bind VisibleIfNot(ViewModel.HasSample), Mode=OneWay}"
+                            HorizontalAlignment="{x:Bind Side}" Spacing="3" Opacity="0.55">
+                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="{x:Bind Side}">
+                        <FontIcon Glyph="&#xE8F1;" FontSize="13" />
+                        <TextBlock Text="Leer (Hier ablegen)" FontSize="12" />
+                    </StackPanel>
+                </StackPanel>
             </StackPanel>
 
-            <controls:WaveformView Grid.Row="2" Height="34" Width="170" HorizontalAlignment="{x:Bind Side}"
+            <controls:WaveformView Grid.Row="2" Height="36" Width="180" HorizontalAlignment="{x:Bind Side}"
                                    Peaks="{x:Bind ViewModel.Peaks, Mode=OneWay}"
                                    Start="{x:Bind ViewModel.TrimStart, Mode=OneWay}" End="{x:Bind ViewModel.TrimEnd, Mode=OneWay}"
-                                   Cursor="{x:Bind ViewModel.Cursor, Mode=OneWay}" IsHitTestVisible="False" />
+                                   Cursor="{x:Bind ViewModel.Cursor, Mode=OneWay}" IsHitTestVisible="False"
+                                   Visibility="{x:Bind ViewModel.HasSample, Mode=OneWay}" />
         </Grid>
     </Border>
 </UserControl>

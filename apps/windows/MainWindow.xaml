@@ -1,10 +1,10 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Window
     x:Class="NextXLR.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Grid x:Name="RootWindowGrid" Background="{ThemeResource SurfaceL1Brush}"
+    <Grid x:Name="RootWindowGrid" Background="{ThemeResource NavigationViewDefaultPaneBackground}"
           AllowDrop="True" DragOver="App_DragOver" Drop="App_Drop">
         <Grid.RowDefinitions>
             <RowDefinition Height="48" />

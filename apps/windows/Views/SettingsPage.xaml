@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="NextXLR.Views.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -93,6 +93,15 @@
                             <FontIcon Glyph="&#xE921;" />
                             <StackPanel Grid.Column="1"><TextBlock x:Uid="SetTrayTitle" FontWeight="SemiBold" /></StackPanel>
                             <ToggleSwitch x:Name="TrayToggle" Grid.Column="2" OnContent="" OffContent="" MinWidth="0" Toggled="Tray_Toggled" />
+                        </Grid>
+                        <Grid Style="{StaticResource SettingRow}">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <FontIcon Glyph="&#xE921;" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Minimiert starten" FontWeight="SemiBold" />
+                                <TextBlock Text="Startet NEXT : XLR direkt minimiert im System-Tray." Style="{StaticResource Caption}" />
+                            </StackPanel>
+                            <ToggleSwitch x:Name="StartMinimizedToggle" Grid.Column="2" OnContent="" OffContent="" MinWidth="0" Toggled="StartMinimized_Toggled" />
                         </Grid>
                         <Grid Style="{StaticResource SettingRow}">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>

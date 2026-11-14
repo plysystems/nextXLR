@@ -183,15 +183,12 @@
                             Background="{ThemeResource SurfaceL2Brush}" CornerRadius="10"
                             Padding="8,3" BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1">
                         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                            <!-- Mic Mute (Husten) Button -->
-                            <ToggleButton x:Uid="MicMuteButton" Height="34" Padding="10,4" CornerRadius="7"
+                            <!-- Mic Mute (Husten) Button - Only Icon -->
+                            <ToggleButton x:Uid="MicMuteButton" Width="38" Height="34" Padding="0" CornerRadius="7"
                                           Style="{StaticResource SmoothDangerToggle}"
                                           IsChecked="{x:Bind ViewModel.MicMuted, Mode=TwoWay}"
                                           ToolTipService.ToolTip="Mikrofon stummschalten (Husten-Taste)">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="{x:Bind MicGlyph(ViewModel.MicMuted), Mode=OneWay}" FontSize="13" />
-                                    <TextBlock Text="Husten" FontWeight="SemiBold" FontSize="11" />
-                                </StackPanel>
+                                <FontIcon Glyph="{x:Bind MicGlyph(ViewModel.MicMuted), Mode=OneWay}" FontSize="14" />
                             </ToggleButton>
 
                             <!-- Bleep (Zensur) Button -->

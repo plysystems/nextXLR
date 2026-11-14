@@ -42,6 +42,7 @@ public sealed partial class PadTile : UserControl
         Body.AddHandler(PointerCanceledEvent, new PointerEventHandler(OnReleased), true);
         IsTabStop = true;
         UseSystemFocusVisuals = true;
+        ActualThemeChanged += (_, _) => Bindings.Update();
         KeyDown += (_, e) => { if (e.Key is Windows.System.VirtualKey.Space or Windows.System.VirtualKey.Enter && !e.KeyStatus.WasKeyDown) Down(); };
         KeyUp += (_, e) => { if (e.Key is Windows.System.VirtualKey.Space or Windows.System.VirtualKey.Enter) Up(); };
     }
@@ -139,13 +140,38 @@ public sealed partial class PadTile : UserControl
     }
 
     // ---- x:Bind helpers ----
-    private static readonly SolidColorBrush Empty = new(Color.FromArgb(255, 0x1A, 0x1E, 0x25));
-    private static readonly SolidColorBrush LoadedBrush = new(Color.FromArgb(255, 0x1D, 0x2B, 0x29));
-    private static readonly SolidColorBrush Playing = new(Color.FromArgb(255, 0x17, 0x5C, 0x4B));
-    private static readonly SolidColorBrush Idle = new(Color.FromArgb(255, 0x2C, 0x31, 0x3B));
-    private static readonly SolidColorBrush Brand = new(Color.FromArgb(255, 0x1F, 0xC7, 0x9A));
-    private static readonly SolidColorBrush Select = new(Color.FromArgb(255, 0xF2, 0xF4, 0xF7));
+    public Visibility VisibleIfNot(bool val) => val ? Visibility.Collapsed : Visibility.Visible;
 
-    public Brush PadBackground(bool playing, bool hasSample) => playing ? Playing : hasSample ? LoadedBrush : Empty;
-    public Brush PadBorder(bool selected, bool playing) => selected ? Select : playing ? Brand : Idle;
+    public Brush PadBackground(bool playing, bool hasSample)
+    {
+        bool isLight = ActualTheme == ElementTheme.Light;
+        if (playing)
+        {
+            return isLight ? new SolidColorBrush(Color.FromArgb(255, 0x88, 0xE2, 0xC6))
+                           : new SolidColorBrush(Color.FromArgb(255, 0x16, 0x54, 0x44));
+        }
+        if (hasSample)
+        {
+            return isLight ? new SolidColorBrush(Color.FromArgb(255, 0xEE, 0xF8, 0xF5))
+                           : new SolidColorBrush(Color.FromArgb(255, 0x1C, 0x2E, 0x2A));
+        }
+        return isLight ? new SolidColorBrush(Color.FromArgb(255, 0xF3, 0xF1, 0xEC))
+                       : new SolidColorBrush(Color.FromArgb(255, 0x1E, 0x1E, 0x1E));
+    }
+
+    public Brush PadBorder(bool selected, bool playing)
+    {
+        bool isLight = ActualTheme == ElementTheme.Light;
+        if (selected)
+        {
+            return isLight ? new SolidColorBrush(Color.FromArgb(255, 0x1A, 0x1A, 0x1A))
+                           : new SolidColorBrush(Color.FromArgb(255, 0xF5, 0xF5, 0xF5));
+        }
+        if (playing)
+        {
+            return new SolidColorBrush(Color.FromArgb(255, 0x1F, 0xC7, 0x9A));
+        }
+        return isLight ? new SolidColorBrush(Color.FromArgb(255, 0xD6, 0xD3, 0xC8))
+                       : new SolidColorBrush(Color.FromArgb(255, 0x36, 0x36, 0x36));
+    }
 }

@@ -721,6 +721,19 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    public void StartMinimizedMode()
+    {
+        try
+        {
+            _trayService?.AddOrUpdateTrayIcon();
+            ViewModel.SetMetersActive(false);
+            StreamDeckStatusService.Instance.StopMonitoring();
+            AppWindow.Hide();
+            TrimMemoryWorkingSet();
+        }
+        catch { }
+    }
+
     public void ApplyTheme(string? theme)
     {
         var requestedTheme = (theme?.ToLowerInvariant()) switch

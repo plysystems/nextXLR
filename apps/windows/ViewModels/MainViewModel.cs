@@ -373,18 +373,11 @@ public partial class MainViewModel : ObservableObject
                 ArrangeStrips(s.Faders ?? []);
                 ApplyAccents(s.Faders ?? [], s.Lighting ?? []);
                 ReconcileRouting(s);   // after accents, so row colours match the strips
-                bool prevBleep = BleepActive;
                 BleepActive = s.Bleep;
-                bool prevCough = MicMuted;
                 _applyingMicMute = true;
                 MicMuted = s.MicMuted;
                 _applyingMicMute = false;
 
-                // Hardware combination on GoXLR (Full): MUTE + !@#$?* (Bleep) toggles Mixer Page
-                if (CanUseMixerPages && s.Bleep && s.MicMuted && (!prevBleep || !prevCough))
-                {
-                    ToggleMixerPage();
-                }
                 if (s.ActivePage != 0 && s.ActivePage != ActiveMixerPage)
                 {
                     SwitchMixerPage(s.ActivePage);
@@ -399,7 +392,7 @@ public partial class MainViewModel : ObservableObject
                 UpdateDevice(s);
                 break;
             case HelloMessage h:
-                EngineVersion = h.Version;
+                EngineVersion = (h.Version == "0.1.9-alpha.2" || h.Version.Contains("aplha")) ? "0.1.9.2-alpha" : h.Version;
                 break;
             case ProfileMessage p:
                 _profileRequest?.TrySetResult(p.Profile);

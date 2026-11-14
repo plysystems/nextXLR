@@ -27,9 +27,9 @@ public sealed partial class Fader : UserControl
     private const double CapHeight = 36;
     private const double GlideTimeConstant = 0.06; // seconds; critically damped approach
 
-    private static readonly SolidColorBrush StudioWhiteBrush = new(Windows.UI.Color.FromArgb(255, 0xF2, 0xF5, 0xFA));
-    private static readonly SolidColorBrush TickMajorBrush = new(ColorHelper.FromArgb(255, 0x4B, 0x55, 0x68));
-    private static readonly SolidColorBrush TickMinorBrush = new(ColorHelper.FromArgb(255, 0x2E, 0x35, 0x42));
+    private static readonly SolidColorBrush StudioWhiteBrush = new(Windows.UI.Color.FromArgb(255, 0xF5, 0xF5, 0xF5));
+    private static readonly SolidColorBrush TickMajorBrush = new(ColorHelper.FromArgb(255, 0x75, 0x75, 0x75));
+    private static readonly SolidColorBrush TickMinorBrush = new(ColorHelper.FromArgb(255, 0x3E, 0x3E, 0x3E));
 
     private double _shown;          // what is drawn (eases toward Value)
     private bool _dragging;

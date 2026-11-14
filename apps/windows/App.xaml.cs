@@ -35,9 +35,19 @@ public partial class App : Application
             Services.CrashHandler.LogStartup("2. Creating MainWindow");
             _window = new MainWindow();
             MainWindowInstance = _window;
-            Services.CrashHandler.LogStartup("3. Activating MainWindow");
-            _window.Activate();
-            Services.CrashHandler.LogStartup("4. MainWindow Activated");
+
+            var settings = Services.AppSettings.Load();
+            if (settings.StartMinimized)
+            {
+                Services.CrashHandler.LogStartup("3. Starting Minimized to Tray");
+                _window.StartMinimizedMode();
+            }
+            else
+            {
+                Services.CrashHandler.LogStartup("3. Activating MainWindow");
+                _window.Activate();
+            }
+            Services.CrashHandler.LogStartup("4. MainWindow Initialized");
         }
         catch (Exception ex)
         {
