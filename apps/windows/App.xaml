@@ -69,6 +69,15 @@
                     <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="Transparent" />
                     <SolidColorBrush x:Key="AccentButtonBorderBrushPointerOver" Color="#5EE5DF" />
 
+                    <!-- Glassmorphism Studio Tokens -->
+                    <SolidColorBrush x:Key="GlassCardBackgroundBrush" Color="#B310131A" />
+                    <SolidColorBrush x:Key="GlassCardBorderBrush" Color="#26FFFFFF" />
+                    <SolidColorBrush x:Key="GlassCardPointerOverBorderBrush" Color="#663DDFD9" />
+                    <SolidColorBrush x:Key="GlassCardActiveFaderBorderBrush" Color="#993DDFD9" />
+                    <SolidColorBrush x:Key="GlassInnerBayBackground" Color="#40000000" />
+                    <SolidColorBrush x:Key="GlassTrackBackground" Color="#CC0A0D12" />
+                    <SolidColorBrush x:Key="GlassTrackBorder" Color="#2E3544" />
+
                     <!-- Ambient Studio Glow Colors (#050505 canvas with vivid cyan bloom) -->
                     <Color x:Key="AmbientGlowStart">#351A6662</Color>
                     <Color x:Key="AmbientGlowMid">#14164845</Color>
@@ -132,6 +141,15 @@
                     <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="Transparent" />
                     <SolidColorBrush x:Key="AccentButtonBorderBrushPointerOver" Color="#5EE5DF" />
 
+                    <!-- Glassmorphism Studio Tokens -->
+                    <SolidColorBrush x:Key="GlassCardBackgroundBrush" Color="#B310131A" />
+                    <SolidColorBrush x:Key="GlassCardBorderBrush" Color="#26FFFFFF" />
+                    <SolidColorBrush x:Key="GlassCardPointerOverBorderBrush" Color="#663DDFD9" />
+                    <SolidColorBrush x:Key="GlassCardActiveFaderBorderBrush" Color="#993DDFD9" />
+                    <SolidColorBrush x:Key="GlassInnerBayBackground" Color="#40000000" />
+                    <SolidColorBrush x:Key="GlassTrackBackground" Color="#CC0A0D12" />
+                    <SolidColorBrush x:Key="GlassTrackBorder" Color="#2E3544" />
+
                     <!-- Ambient Studio Glow Colors (#050505 canvas with vivid cyan bloom) -->
                     <Color x:Key="AmbientGlowStart">#351A6662</Color>
                     <Color x:Key="AmbientGlowMid">#14164845</Color>
@@ -175,6 +193,15 @@
                     <SolidColorBrush x:Key="ToggleSwitchFillOff" Color="#E2E6ED" />
                     <SolidColorBrush x:Key="ToggleSwitchStrokeOff" Color="#C8CED8" />
                     <SolidColorBrush x:Key="ToggleSwitchKnobFillOff" Color="#64748B" />
+
+                    <!-- Glassmorphism Studio Tokens for Light Mode -->
+                    <SolidColorBrush x:Key="GlassCardBackgroundBrush" Color="#E6FFFFFF" />
+                    <SolidColorBrush x:Key="GlassCardBorderBrush" Color="#26000000" />
+                    <SolidColorBrush x:Key="GlassCardPointerOverBorderBrush" Color="#800D9488" />
+                    <SolidColorBrush x:Key="GlassCardActiveFaderBorderBrush" Color="#B30D9488" />
+                    <SolidColorBrush x:Key="GlassInnerBayBackground" Color="#40F0F3F8" />
+                    <SolidColorBrush x:Key="GlassTrackBackground" Color="#E4E8F0" />
+                    <SolidColorBrush x:Key="GlassTrackBorder" Color="#CAD0DC" />
 
                     <!-- Button Hover Styling -->
                     <SolidColorBrush x:Key="ButtonBackground" Color="#FFFFFF" />

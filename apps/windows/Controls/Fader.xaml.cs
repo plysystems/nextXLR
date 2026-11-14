@@ -24,7 +24,7 @@ namespace NextXLR.Controls;
 /// </summary>
 public sealed partial class Fader : UserControl
 {
-    private const double CapHeight = 34;
+    private const double CapHeight = 28;
     private const double GlideTimeConstant = 0.06; // seconds; critically damped approach
 
     private static readonly SolidColorBrush StudioWhiteBrush = new(Windows.UI.Color.FromArgb(255, 0xF5, 0xF5, 0xF5));
@@ -158,6 +158,10 @@ public sealed partial class Fader : UserControl
         {
             IndicatorLine.Background = CapIndicatorBrush;
         }
+        if (IndicatorGlow is not null)
+        {
+            IndicatorGlow.Background = CapIndicatorBrush;
+        }
     }
 
     private static void OnRangeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -246,67 +250,49 @@ public sealed partial class Fader : UserControl
         bool isDark = ActualTheme != ElementTheme.Light;
         if (isDark)
         {
-            // Gunmetal metallic studio fader cap
-            if (CapBevel != null) CapBevel.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x50, 0x50, 0x50));
-            if (CapBg?.GradientStops.Count >= 6)
+            // Modern deep obsidian studio fader cap
+            if (CapBevel != null) CapBevel.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x3E, 0x46, 0x56));
+            if (CapBg?.GradientStops.Count >= 2)
             {
-                CapBg.GradientStops[0].Color = ColorHelper.FromArgb(255, 0x5A, 0x5A, 0x5A);
-                CapBg.GradientStops[1].Color = ColorHelper.FromArgb(255, 0x3C, 0x3C, 0x3C);
-                CapBg.GradientStops[2].Color = ColorHelper.FromArgb(255, 0x26, 0x26, 0x26);
-                CapBg.GradientStops[3].Color = ColorHelper.FromArgb(255, 0x1E, 0x1E, 0x1E);
-                CapBg.GradientStops[4].Color = ColorHelper.FromArgb(255, 0x2D, 0x2D, 0x2D);
-                CapBg.GradientStops[5].Color = ColorHelper.FromArgb(255, 0x18, 0x18, 0x18);
+                CapBg.GradientStops[0].Color = ColorHelper.FromArgb(255, 0x26, 0x2B, 0x36);
+                CapBg.GradientStops[1].Color = ColorHelper.FromArgb(255, 0x16, 0x19, 0x22);
             }
-
-            if (GripRidgeTop1 != null) GripRidgeTop1.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x14, 0x14, 0x14));
-            if (GripRidgeTop2 != null) GripRidgeTop2.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x4A, 0x4A, 0x4A));
-            if (GripRidgeBottom1 != null) GripRidgeBottom1.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x14, 0x14, 0x14));
-            if (GripRidgeBottom2 != null) GripRidgeBottom2.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x4A, 0x4A, 0x4A));
 
             if (Track != null)
             {
-                Track.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x05, 0x05, 0x05));
-                Track.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x22, 0x22, 0x26));
+                Track.Background = new SolidColorBrush(ColorHelper.FromArgb(204, 0x0A, 0x0D, 0x12));
+                Track.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x2E, 0x35, 0x44));
             }
 
             if (MeterTrackBorder != null)
             {
-                MeterTrackBorder.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x05, 0x05, 0x05));
-                MeterTrackBorder.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x22, 0x22, 0x26));
+                MeterTrackBorder.Background = new SolidColorBrush(ColorHelper.FromArgb(204, 0x0A, 0x0D, 0x12));
+                MeterTrackBorder.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x2E, 0x35, 0x44));
             }
-            if (MeterMask != null) MeterMask.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x05, 0x05, 0x05));
+            if (MeterMask != null) MeterMask.Background = new SolidColorBrush(ColorHelper.FromArgb(204, 0x0A, 0x0D, 0x12));
         }
         else
         {
-            // Brushed Natural Aluminum (Silber)
-            if (CapBevel != null) CapBevel.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0xB8, 0xBE, 0xC8));
-            if (CapBg?.GradientStops.Count >= 6)
+            // Crisp Nordic frosted white / satin silver fader cap
+            if (CapBevel != null) CapBevel.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0xC4, 0xCA, 0xD4));
+            if (CapBg?.GradientStops.Count >= 2)
             {
-                CapBg.GradientStops[0].Color = ColorHelper.FromArgb(255, 0xFA, 0xFA, 0xFC);
+                CapBg.GradientStops[0].Color = ColorHelper.FromArgb(255, 0xFF, 0xFF, 0xFF);
                 CapBg.GradientStops[1].Color = ColorHelper.FromArgb(255, 0xE8, 0xEC, 0xF2);
-                CapBg.GradientStops[2].Color = ColorHelper.FromArgb(255, 0xDC, 0xE1, 0xE8);
-                CapBg.GradientStops[3].Color = ColorHelper.FromArgb(255, 0xD0, 0xD6, 0xDF);
-                CapBg.GradientStops[4].Color = ColorHelper.FromArgb(255, 0xE2, 0xE6, 0xED);
-                CapBg.GradientStops[5].Color = ColorHelper.FromArgb(255, 0xC4, 0xCA, 0xD4);
             }
-
-            if (GripRidgeTop1 != null) GripRidgeTop1.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xA0, 0xA8, 0xB4));
-            if (GripRidgeTop2 != null) GripRidgeTop2.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xFF, 0xFF, 0xFF));
-            if (GripRidgeBottom1 != null) GripRidgeBottom1.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xA0, 0xA8, 0xB4));
-            if (GripRidgeBottom2 != null) GripRidgeBottom2.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xFF, 0xFF, 0xFF));
 
             if (Track != null)
             {
-                Track.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xE7, 0xE9, 0xEF));
-                Track.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0xD8, 0xDC, 0xE4));
+                Track.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xE4, 0xE8, 0xF0));
+                Track.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0xCA, 0xD0, 0xDC));
             }
 
             if (MeterTrackBorder != null)
             {
-                MeterTrackBorder.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xE7, 0xE9, 0xEF));
-                MeterTrackBorder.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0xD8, 0xDC, 0xE4));
+                MeterTrackBorder.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xE4, 0xE8, 0xF0));
+                MeterTrackBorder.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0xCA, 0xD0, 0xDC));
             }
-            if (MeterMask != null) MeterMask.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xE7, 0xE9, 0xEF));
+            if (MeterMask != null) MeterMask.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xE4, 0xE8, 0xF0));
         }
     }
 

@@ -122,7 +122,7 @@ public sealed partial class ChannelStrip : UserControl
     private void Edit_Click(object sender, RoutedEventArgs e)
     {
         if (ViewModel is null || !ViewModel.CanEdit) return;
-        CustomizeFlyout.ShowAt(CustomizeButton);
+        CustomizeFlyout.ShowAt(EditMenuButton);
     }
 
     private void LabelBox_KeyDown(object sender, KeyRoutedEventArgs e)
@@ -224,6 +224,15 @@ public sealed partial class ChannelStrip : UserControl
     }
 
     // ---- x:Bind helpers ------------------------------------------------------------------
+    public Brush ChannelCardBorder(bool hasFader, Brush? accent)
+    {
+        if (hasFader)
+        {
+            return accent ?? (Brush)Application.Current.Resources["BrandBrush"];
+        }
+        return (Brush)Application.Current.Resources["GlassCardBorderBrush"];
+    }
+
     public Brush ChannelIconBackground(Brush? accent)
     {
         if (accent is SolidColorBrush sb && (sb.Color.R == 0x5E && sb.Color.G == 0x66 && sb.Color.B == 0x75))
