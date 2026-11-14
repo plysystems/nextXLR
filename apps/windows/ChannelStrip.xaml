@@ -8,7 +8,7 @@
 
     <!-- Responsive channel strip: modular studio console bay -->
     <Border Width="{x:Bind ViewModel.StripWidth, Mode=OneWay}" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="6,10" MinWidth="84"
-            VerticalAlignment="Stretch" BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+            VerticalAlignment="Stretch" BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1">
         <Grid RowSpacing="10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -121,7 +121,7 @@
 
                         <!-- Volume dB readout -->
                         <TextBlock Grid.Row="1" Text="{x:Bind ViewModel.SubmixVolumeDbLabel, Mode=OneWay}"
-                                   FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}"
+                                   FontSize="13" FontWeight="Bold" FontFamily="{StaticResource MonoFont}"
                                    HorizontalAlignment="Center"
                                    ToolTipService.ToolTip="{x:Bind ViewModel.SubmixVolumePercentLabel, Mode=OneWay}" />
 
@@ -182,7 +182,7 @@
 
                         <!-- Volume dB readout -->
                         <TextBlock Grid.Row="1" Text="{x:Bind ViewModel.StreamVolumeDbLabel, Mode=OneWay}"
-                                   FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}"
+                                   FontSize="13" FontWeight="Bold" FontFamily="{StaticResource MonoFont}"
                                    HorizontalAlignment="Center"
                                    ToolTipService.ToolTip="{x:Bind ViewModel.StreamVolumePercentLabel, Mode=OneWay}" />
 
@@ -250,10 +250,11 @@
                                     Tapped="LevelDisplay_Tapped" PointerPressed="LevelDisplay_PointerPressed">
                             <TextBlock Text="{x:Bind LevelText(ViewModel.IsFixed, ViewModel.VolumeDbLabel, ViewModel.PeakLabel), Mode=OneWay}"
                                        FontSize="14" FontWeight="Bold"
-                                       FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center"
+                                       FontFamily="{StaticResource MonoFont}" HorizontalAlignment="Center"
                                        IsHitTestVisible="False" />
                         </StackPanel>
                         <TextBox x:Name="LevelInputBox" Width="68" TextAlignment="Center" FontSize="13" Height="28" Padding="2"
+                                 FontFamily="{StaticResource MonoFont}"
                                  Visibility="Collapsed" KeyDown="LevelInputBox_KeyDown" LostFocus="LevelInputBox_LostFocus" />
                     </Grid>
 

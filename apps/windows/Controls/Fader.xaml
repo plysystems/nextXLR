@@ -9,11 +9,11 @@
         <!-- Level Meter on the left (runs parallel to the fader track) -->
         <Grid x:Name="MeterHost" Width="5" HorizontalAlignment="Left" Margin="2,17,0,17" VerticalAlignment="Stretch">
             <!-- Meter background track -->
-            <Border CornerRadius="2.5" Background="#121212" BorderBrush="#262626" BorderThickness="1" />
+            <Border x:Name="MeterTrackBorder" CornerRadius="2.5" Background="#121316" BorderBrush="#292C35" BorderThickness="1" />
             <!-- Gradient level fill -->
             <Border x:Name="MeterGradient" CornerRadius="2.5" Background="{StaticResource MeterBrush}" Opacity="0.0" />
             <!-- Top mask to hide gradient down to current audio level -->
-            <Border x:Name="MeterMask" VerticalAlignment="Top" CornerRadius="2.5,2.5,0,0" Background="#121212" />
+            <Border x:Name="MeterMask" VerticalAlignment="Top" CornerRadius="2.5,2.5,0,0" Background="#121316" />
             <!-- Peak hold line -->
             <Border x:Name="MeterHold" VerticalAlignment="Top" Height="2" CornerRadius="1"
                     Background="#FFFFFF" Opacity="0.0">
@@ -32,7 +32,7 @@
         <!-- Central recessed studio fader track slot -->
         <Border x:Name="Track" Width="4" CornerRadius="2" HorizontalAlignment="Center"
                 Margin="0,17,0,17" VerticalAlignment="Stretch"
-                Background="#101010" BorderBrush="#282828" BorderThickness="1" />
+                Background="#121316" BorderBrush="#292C35" BorderThickness="1" />
 
         <!-- Tactile hardware studio fader cap -->
         <Grid x:Name="Cap" Width="32" Height="34" VerticalAlignment="Top" HorizontalAlignment="Center">
@@ -44,9 +44,9 @@
             <Border CornerRadius="4" Margin="-1,2,-1,-3" Background="#000000" Opacity="0.55" />
 
             <!-- Main sculpted knob body with metallic studio bevel -->
-            <Border CornerRadius="4" BorderThickness="1" BorderBrush="#505050">
+            <Border x:Name="CapBevel" CornerRadius="4" BorderThickness="1" BorderBrush="#505050">
                 <Border.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <LinearGradientBrush x:Name="CapBg" StartPoint="0,0" EndPoint="0,1">
                         <GradientStop Color="#5A5A5A" Offset="0.0" />
                         <GradientStop Color="#3C3C3C" Offset="0.14" />
                         <GradientStop Color="#262626" Offset="0.46" />
@@ -58,12 +58,12 @@
             </Border>
 
             <!-- Tactile finger grip ridges (top) -->
-            <Border Height="1" Margin="4,5,4,0" VerticalAlignment="Top" Background="#141414" />
-            <Border Height="1" Margin="4,7,4,0" VerticalAlignment="Top" Background="#4A4A4A" />
+            <Border x:Name="GripRidgeTop1" Height="1" Margin="4,5,4,0" VerticalAlignment="Top" Background="#141414" />
+            <Border x:Name="GripRidgeTop2" Height="1" Margin="4,7,4,0" VerticalAlignment="Top" Background="#4A4A4A" />
 
             <!-- Tactile finger grip ridges (bottom) -->
-            <Border Height="1" Margin="4,0,4,7" VerticalAlignment="Bottom" Background="#141414" />
-            <Border Height="1" Margin="4,0,4,5" VerticalAlignment="Bottom" Background="#4A4A4A" />
+            <Border x:Name="GripRidgeBottom1" Height="1" Margin="4,0,4,7" VerticalAlignment="Bottom" Background="#141414" />
+            <Border x:Name="GripRidgeBottom2" Height="1" Margin="4,0,4,5" VerticalAlignment="Bottom" Background="#4A4A4A" />
 
             <!-- Center indicator index mark (high-precision illuminated studio LED line) -->
             <Grid Height="4" Margin="2,0" VerticalAlignment="Center">

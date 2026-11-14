@@ -8,13 +8,13 @@ switch instantly; only storyboard values are interpolated.)
 """
 from pathlib import Path
 
-DARK_NEUTRAL = dict(bg="#2E2E2E", stroke="#3D3D3D", fg="#F0F0F0")
-DARK_HOVER = dict(bg="#3A3A3A", stroke="#4D4D4D")
-DARK_PRESSED = dict(bg="#222222")
+DARK_NEUTRAL = dict(bg="#23252B", stroke="#333742", fg="#F3F4F6")
+DARK_HOVER = dict(bg="#2C2F37", stroke="#424755")
+DARK_PRESSED = dict(bg="#1C1D21")
 
-LIGHT_NEUTRAL = dict(bg="#F0F1F3", stroke="#D1D5DB", fg="#111827")
-LIGHT_HOVER = dict(bg="#E5E7EB", stroke="#9CA3AF")
-LIGHT_PRESSED = dict(bg="#D1D5DB")
+LIGHT_NEUTRAL = dict(bg="#FFFFFF", stroke="#E2E0D8", fg="#111827")
+LIGHT_HOVER = dict(bg="#F4F3EF", stroke="#D1D5DB")
+LIGHT_PRESSED = dict(bg="#ECEAE4")
 
 def anim(target, prop, value):
     if prop == "Color":

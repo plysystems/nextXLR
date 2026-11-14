@@ -147,16 +147,16 @@ public sealed partial class PadTile : UserControl
         bool isLight = ActualTheme == ElementTheme.Light;
         if (playing)
         {
-            return isLight ? new SolidColorBrush(Color.FromArgb(255, 0x88, 0xE2, 0xC6))
-                           : new SolidColorBrush(Color.FromArgb(255, 0x16, 0x54, 0x44));
+            return isLight ? new SolidColorBrush(Color.FromArgb(255, 0xA7, 0xF3, 0xD0))
+                           : new SolidColorBrush(Color.FromArgb(255, 0x19, 0x4E, 0x3F));
         }
         if (hasSample)
         {
-            return isLight ? new SolidColorBrush(Color.FromArgb(255, 0xEE, 0xF8, 0xF5))
-                           : new SolidColorBrush(Color.FromArgb(255, 0x1C, 0x2E, 0x2A));
+            return isLight ? new SolidColorBrush(Color.FromArgb(255, 0xF0, 0xFD, 0xF9))
+                           : new SolidColorBrush(Color.FromArgb(255, 0x17, 0x28, 0x24));
         }
-        return isLight ? new SolidColorBrush(Color.FromArgb(255, 0xF3, 0xF1, 0xEC))
-                       : new SolidColorBrush(Color.FromArgb(255, 0x1E, 0x1E, 0x1E));
+        return isLight ? new SolidColorBrush(Color.FromArgb(255, 0xEC, 0xEA, 0xE4))
+                       : new SolidColorBrush(Color.FromArgb(255, 0x12, 0x13, 0x16));
     }
 
     public Brush PadBorder(bool selected, bool playing)
@@ -164,14 +164,14 @@ public sealed partial class PadTile : UserControl
         bool isLight = ActualTheme == ElementTheme.Light;
         if (selected)
         {
-            return isLight ? new SolidColorBrush(Color.FromArgb(255, 0x1A, 0x1A, 0x1A))
-                           : new SolidColorBrush(Color.FromArgb(255, 0xF5, 0xF5, 0xF5));
+            return isLight ? new SolidColorBrush(Color.FromArgb(255, 0x11, 0x18, 0x27))
+                           : new SolidColorBrush(Color.FromArgb(255, 0xF3, 0xF4, 0xF6));
         }
         if (playing)
         {
             return new SolidColorBrush(Color.FromArgb(255, 0x1F, 0xC7, 0x9A));
         }
-        return isLight ? new SolidColorBrush(Color.FromArgb(255, 0xD6, 0xD3, 0xC8))
-                       : new SolidColorBrush(Color.FromArgb(255, 0x36, 0x36, 0x36));
+        return isLight ? new SolidColorBrush(Color.FromArgb(255, 0xE2, 0xE0, 0xD8))
+                       : new SolidColorBrush(Color.FromArgb(255, 0x33, 0x37, 0x42));
     }
 }
