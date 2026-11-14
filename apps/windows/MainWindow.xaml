@@ -14,18 +14,26 @@
         <!-- Title bar: the NEXT : XLR logo. Draggable; caption buttons on the right. -->
         <Grid x:Name="AppTitleBar">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="248" />
+                <ColumnDefinition x:Name="TitleBarPaneColumn" Width="248" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <!-- Left pane header (matches sidebar) -->
-            <Grid Grid.Column="0" Background="{ThemeResource NavigationViewDefaultPaneBackground}" Padding="16,0,0,0">
-                <Image Source="Assets/nextXLR_logo.png" Height="40" HorizontalAlignment="Left"
-                       VerticalAlignment="Center" Stretch="Uniform" AutomationProperties.Name="NEXT : XLR" />
+            <Grid Grid.Column="0" Background="{ThemeResource NavigationViewDefaultPaneBackground}">
+                <Border BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="0,0,1,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Padding="4,0,0,0">
+                    <Button x:Name="MenuToggleButton" Width="40" Height="40" Margin="4,0,6,0"
+                            Background="Transparent" BorderThickness="0" CornerRadius="8"
+                            Click="MenuToggleButton_Click" ToolTipService.ToolTip="Menü ein-/ausklappen">
+                        <FontIcon Glyph="&#xE700;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                    </Button>
+                    <Image x:Name="LogoFull" Source="Assets/nextXLR_logo.png" Height="36"
+                           VerticalAlignment="Center" Stretch="Uniform" AutomationProperties.Name="NEXT : XLR" />
+                </StackPanel>
             </Grid>
 
-            <!-- Right content header (matches content workspace seamlessly) -->
-            <Grid Grid.Column="1" Background="{ThemeResource SurfaceL1Brush}" Padding="0,0,150,0">
+            <!-- Right content header: draggable window titlebar -->
+            <Grid x:Name="AppDragArea" Grid.Column="1" Background="{ThemeResource SurfaceL1Brush}" Padding="0,0,150,0">
                 <!-- Allgemeiner animierter Lade-Indikator -->
                 <StackPanel x:Name="AppLoadingPanel" Orientation="Horizontal" Spacing="8"
                             HorizontalAlignment="Right" VerticalAlignment="Center"
@@ -40,11 +48,14 @@
 
         <NavigationView x:Name="Nav" Grid.Row="1"
                         Background="{ThemeResource SurfaceL1Brush}"
-                        PaneDisplayMode="Auto" OpenPaneLength="248"
+                        PaneDisplayMode="Auto" OpenPaneLength="248" CompactPaneLength="48"
                         ExpandedModeThresholdWidth="1180" CompactModeThresholdWidth="720"
                         IsBackButtonVisible="Collapsed" IsSettingsVisible="False"
                         IsPaneToggleButtonVisible="False"
                         AlwaysShowHeader="False" Header="{x:Null}"
+                        PaneOpened="Nav_PaneOpened"
+                        PaneClosed="Nav_PaneClosed"
+                        DisplayModeChanged="Nav_DisplayModeChanged"
                         SelectionChanged="Nav_SelectionChanged">
             <NavigationView.Resources>
                 <Thickness x:Key="NavigationViewContentGridBorderThickness">0</Thickness>

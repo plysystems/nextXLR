@@ -67,7 +67,7 @@ public sealed partial class MainWindow : Window
         try
         {
             ExtendsContentIntoTitleBar = true;
-            SetTitleBar(AppTitleBar);
+            SetTitleBar(AppDragArea);
 
             // Modern Windows 11 hardware-accelerated translucent Mica Alt / Acrylic backdrop
             if (Microsoft.UI.Composition.SystemBackdrops.MicaController.IsSupported())
@@ -83,6 +83,8 @@ public sealed partial class MainWindow : Window
             }
         }
         catch { }
+
+        UpdatePaneLayout();
 
         if (RootWindowGrid != null)
         {
@@ -543,6 +545,47 @@ public sealed partial class MainWindow : Window
             }
         }
         catch { }
+    }
+
+    private void MenuToggleButton_Click(object sender, RoutedEventArgs e)
+    {
+        Nav.IsPaneOpen = !Nav.IsPaneOpen;
+    }
+
+    private void Nav_PaneOpened(NavigationView sender, object args)
+    {
+        UpdatePaneLayout();
+    }
+
+    private void Nav_PaneClosed(NavigationView sender, object args)
+    {
+        UpdatePaneLayout();
+    }
+
+    private void Nav_DisplayModeChanged(NavigationView sender, NavigationViewDisplayModeChangedEventArgs args)
+    {
+        UpdatePaneLayout();
+    }
+
+    private void UpdatePaneLayout()
+    {
+        if (TitleBarPaneColumn == null) return;
+        bool isOpen = Nav.IsPaneOpen;
+        if (Nav.DisplayMode == NavigationViewDisplayMode.Minimal)
+        {
+            TitleBarPaneColumn.Width = new GridLength(isOpen ? Nav.OpenPaneLength : 48);
+            if (LogoFull != null) LogoFull.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
+        }
+        else if (Nav.DisplayMode == NavigationViewDisplayMode.Compact)
+        {
+            TitleBarPaneColumn.Width = new GridLength(isOpen ? Nav.OpenPaneLength : Nav.CompactPaneLength);
+            if (LogoFull != null) LogoFull.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
+        }
+        else
+        {
+            TitleBarPaneColumn.Width = new GridLength(isOpen ? Nav.OpenPaneLength : Nav.CompactPaneLength);
+            if (LogoFull != null) LogoFull.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
+        }
     }
 
     private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)

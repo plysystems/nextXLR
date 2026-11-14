@@ -8,13 +8,13 @@ switch instantly; only storyboard values are interpolated.)
 """
 from pathlib import Path
 
-DARK_NEUTRAL = dict(bg="#151822", stroke="#262A38", fg="#F8FAFC")
-DARK_HOVER = dict(bg="#1E2230", stroke="#383E54")
-DARK_PRESSED = dict(bg="#0D0F15")
+DARK_NEUTRAL = dict(bg="#141416", stroke="#222226", fg="#F8FAFC")
+DARK_HOVER = dict(bg="#1C1C20", stroke="#32323A")
+DARK_PRESSED = dict(bg="#0A0A0A")
 
-LIGHT_NEUTRAL = dict(bg="#FFFFFF", stroke="#D2D7E0", fg="#0F172A")
-LIGHT_HOVER = dict(bg="#E9EDF3", stroke="#C0C6D1")
-LIGHT_PRESSED = dict(bg="#DFE4EC")
+LIGHT_NEUTRAL = dict(bg="#FFFFFF", stroke="#D8DCE4", fg="#0F172A")
+LIGHT_HOVER = dict(bg="#E7E9EF", stroke="#C8CED8")
+LIGHT_PRESSED = dict(bg="#DCE0E8")
 
 def anim(target, prop, value):
     if prop == "Color":
@@ -112,16 +112,16 @@ def generate_styles(neutral, hover, pressed, on, on_hover, on_pressed, on_fg, da
 
 dark_styles = generate_styles(
     DARK_NEUTRAL, DARK_HOVER, DARK_PRESSED,
-    "#00F5A0", "#33F7B3", "#00D48A", "#090A0E",
+    "#3DDFD9", "#5EE5DF", "#24C5BF", "#0A0A0A",
     "#F0506A", "#F46B82", "#D9455D", "#FFFFFF",
-    "#00F5A0"
+    "#3DDFD9"
 )
 
 light_styles = generate_styles(
     LIGHT_NEUTRAL, LIGHT_HOVER, LIGHT_PRESSED,
-    "#0D9488", "#14B8A6", "#0F766E", "#FFFFFF",
+    "#1AA29D", "#24C5BF", "#137E7A", "#FFFFFF",
     "#EF4444", "#F87171", "#DC2626", "#FFFFFF",
-    "#0D9488"
+    "#1AA29D"
 )
 
 xml = f'''<?xml version="1.0" encoding="utf-8"?>

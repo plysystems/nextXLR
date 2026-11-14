@@ -265,16 +265,16 @@ public sealed partial class Fader : UserControl
 
             if (Track != null)
             {
-                Track.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x09, 0x0A, 0x0E));
-                Track.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x26, 0x2A, 0x38));
+                Track.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x05, 0x05, 0x05));
+                Track.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x22, 0x22, 0x26));
             }
 
             if (MeterTrackBorder != null)
             {
-                MeterTrackBorder.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x09, 0x0A, 0x0E));
-                MeterTrackBorder.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x26, 0x2A, 0x38));
+                MeterTrackBorder.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x05, 0x05, 0x05));
+                MeterTrackBorder.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x22, 0x22, 0x26));
             }
-            if (MeterMask != null) MeterMask.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x09, 0x0A, 0x0E));
+            if (MeterMask != null) MeterMask.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x05, 0x05, 0x05));
         }
         else
         {
@@ -297,16 +297,16 @@ public sealed partial class Fader : UserControl
 
             if (Track != null)
             {
-                Track.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xE9, 0xED, 0xF3));
-                Track.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0xD2, 0xD7, 0xE0));
+                Track.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xE7, 0xE9, 0xEF));
+                Track.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0xD8, 0xDC, 0xE4));
             }
 
             if (MeterTrackBorder != null)
             {
-                MeterTrackBorder.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xE9, 0xED, 0xF3));
-                MeterTrackBorder.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0xD2, 0xD7, 0xE0));
+                MeterTrackBorder.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xE7, 0xE9, 0xEF));
+                MeterTrackBorder.BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0xD8, 0xDC, 0xE4));
             }
-            if (MeterMask != null) MeterMask.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xE9, 0xED, 0xF3));
+            if (MeterMask != null) MeterMask.Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0xE7, 0xE9, 0xEF));
         }
     }
 
