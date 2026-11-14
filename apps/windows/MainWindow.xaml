@@ -441,6 +441,7 @@
                             <TextBlock x:Name="TourStepLabel" Text="Schritt 1 von 7" Style="{StaticResource Caption}" Foreground="{StaticResource BrandBrush}" />
                         </StackPanel>
                         <Button Grid.Column="2" Padding="8" Background="Transparent" BorderThickness="0"
+                                services:CursorHelper.UseHandCursor="True"
                                 ToolTipService.ToolTip="Tour überspringen" Click="TourSkip_Click">
                             <FontIcon Glyph="&#xE711;" FontSize="14" />
                         </Button>
@@ -460,10 +461,13 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Button x:Name="TourBackButton" Content="Zurück" Click="TourBack_Click" Visibility="Collapsed" />
+                        <Button x:Name="TourBackButton" Content="Zurück" Click="TourBack_Click" Visibility="Collapsed"
+                                services:CursorHelper.UseHandCursor="True" />
                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
-                            <Button x:Name="TourSkipButton" Content="Überspringen" Click="TourSkip_Click" />
-                            <Button x:Name="TourNextButton" Style="{StaticResource AccentButtonStyle}" Content="Weiter" Click="TourNext_Click" />
+                            <Button x:Name="TourSkipButton" Content="Überspringen" Click="TourSkip_Click"
+                                    services:CursorHelper.UseHandCursor="True" />
+                            <Button x:Name="TourNextButton" Style="{StaticResource AccentButtonStyle}" Content="Weiter" Click="TourNext_Click"
+                                    services:CursorHelper.UseHandCursor="True" />
                         </StackPanel>
                     </Grid>
                 </StackPanel>

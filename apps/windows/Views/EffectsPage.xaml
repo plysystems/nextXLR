@@ -10,10 +10,14 @@
 
     <ScrollViewer Style="{StaticResource PageScroller}">
         <StackPanel Spacing="24" MaxWidth="1320" HorizontalAlignment="Center">
-            <!-- Clean Header without badges -->
-            <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center" Margin="0,0,0,8">
-                <TextBlock x:Uid="FxTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
-            </StackPanel>
+            <!-- Studio Header: Title & Subtitle -->
+            <Grid Margin="0,0,0,4">
+                <StackPanel Spacing="3" VerticalAlignment="Center">
+                    <TextBlock x:Uid="FxTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
+                    <TextBlock Text="Megaphon, Roboter, Hardtune, Pitch &amp; Formant für kreative Sprach- und Soundeffekte."
+                               Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
+                </StackPanel>
+            </Grid>
 
             <!-- FX master + presets: the top row of the GoXLR effects section -->
             <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"

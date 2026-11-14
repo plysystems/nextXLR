@@ -150,7 +150,8 @@ public partial class AppSessionItemViewModel : ObservableObject
                 if (_info.MeterInformation.GetPeakValue(out float peak) == 0)
                 {
                     var newPeak = Math.Clamp(peak * 100.0, 0.0, 100.0);
-                    if (Math.Abs(PeakPercent - newPeak) > 1.5 || (newPeak == 0 && PeakPercent != 0))
+                    // Deadband threshold 2.5% to avoid continuous UI redraws for microscopic noise
+                    if (Math.Abs(PeakPercent - newPeak) > 2.5 || (newPeak == 0 && PeakPercent != 0))
                     {
                         PeakPercent = newPeak;
                     }
@@ -284,12 +285,13 @@ public partial class AppRoutingManagerViewModel : ObservableObject
             if (queue != null)
             {
                 _meterTimer = queue.CreateTimer();
-                _meterTimer.Interval = TimeSpan.FromMilliseconds(150);
+                _meterTimer.Interval = TimeSpan.FromMilliseconds(200);
                 _meterTimer.Tick += (_, _) =>
                 {
-                    foreach (var s in AppSessions)
+                    if (AppSessions.Count == 0) return;
+                    for (int i = 0; i < AppSessions.Count; i++)
                     {
-                        s.UpdatePeak();
+                        AppSessions[i].UpdatePeak();
                     }
                 };
             }
@@ -321,10 +323,14 @@ public partial class AppRoutingManagerViewModel : ObservableObject
 
         try
         {
-            var outChoices = await Task.Run(WindowsAppAudioRouter.GetOutputChoices);
-            var inChoices = await Task.Run(WindowsAppAudioRouter.GetInputChoices);
-            var sessions = await Task.Run(WindowsAppAudioRouter.GetActiveAppSessions);
-            var rules = await Task.Run(WindowsAppAudioRouter.LoadRules);
+            var (outChoices, inChoices, sessions, rules) = await Task.Run(() =>
+            {
+                var oc = WindowsAppAudioRouter.GetOutputChoices();
+                var ic = WindowsAppAudioRouter.GetInputChoices();
+                var s = WindowsAppAudioRouter.GetActiveAppSessions();
+                var r = WindowsAppAudioRouter.LoadRules();
+                return (oc, ic, s, r);
+            });
 
             RunOnUI(() =>
             {
@@ -432,8 +438,15 @@ public partial class AppRoutingManagerViewModel : ObservableObject
     {
         try
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("ms-settings:sound-devicesavedsettings") { UseShellExecute = true });
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("ms-settings:apps-volume") { UseShellExecute = true });
         }
-        catch { }
+        catch
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("ms-settings:sound-devicesavedsettings") { UseShellExecute = true });
+            }
+            catch { }
+        }
     }
 }

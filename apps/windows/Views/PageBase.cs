@@ -245,8 +245,7 @@ public partial class MixerPage : Page
 
 public partial class RoutingPage : Page
 {
-    private static readonly Microsoft.UI.Xaml.Media.SolidColorBrush RowHover = new(Windows.UI.Color.FromArgb(255, 0x23, 0x28, 0x33));
-    private static readonly Microsoft.UI.Xaml.Media.SolidColorBrush RowIdle = new(Windows.UI.Color.FromArgb(0, 0x23, 0x28, 0x33));
+    private static readonly Microsoft.UI.Xaml.Media.SolidColorBrush RowIdle = new(Windows.UI.Color.FromArgb(0, 0, 0, 0));
 
     public MainViewModel ViewModel { get; private set; } = null!;
     public AutoDuckingService AutoDucking => AutoDuckingService.Instance;
@@ -279,7 +278,13 @@ public partial class RoutingPage : Page
     // Row highlight; the Border's BrushTransition makes it a 200 ms fade.
     private void Row_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
-        if (sender is Microsoft.UI.Xaml.Controls.Border b) b.Background = RowHover;
+        if (sender is Microsoft.UI.Xaml.Controls.Border b)
+        {
+            if (Application.Current.Resources.TryGetValue("SurfaceHighlightBrush", out var brush) && brush is Microsoft.UI.Xaml.Media.Brush bBrush)
+            {
+                b.Background = bBrush;
+            }
+        }
     }
 
     private void Row_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)

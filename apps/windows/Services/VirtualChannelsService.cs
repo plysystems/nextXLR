@@ -18,6 +18,11 @@ public sealed class WindowsAudioTrackInfo : ObservableObject
     public string Glyph { get; set; } = "\uE7F6";
     public string EndpointId { get; set; } = "";
 
+    private static readonly Microsoft.UI.Xaml.Media.SolidColorBrush DetectedBrush =
+        new(Microsoft.UI.ColorHelper.FromArgb(255, 0x22, 0xD3, 0xA6));
+    private static readonly Microsoft.UI.Xaml.Media.SolidColorBrush UndetectedBrush =
+        new(Microsoft.UI.ColorHelper.FromArgb(255, 0xF5, 0xB9, 0x42));
+
     private bool _isDetected;
     public bool IsDetected
     {
@@ -35,9 +40,7 @@ public sealed class WindowsAudioTrackInfo : ObservableObject
     public string StatusText => IsDetected ? "In Windows erkannt & bereit" : "Nicht erkannt (Treiber prüfen)";
 
     [System.Text.Json.Serialization.JsonIgnore]
-    public Microsoft.UI.Xaml.Media.Brush StatusBrush => IsDetected
-        ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 0x22, 0xD3, 0xA6))
-        : new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 0xF5, 0xB9, 0x42));
+    public Microsoft.UI.Xaml.Media.Brush StatusBrush => IsDetected ? DetectedBrush : UndetectedBrush;
 }
 
 public sealed class VirtualChannelItem : ObservableObject
@@ -235,33 +238,51 @@ public sealed class VirtualChannelsService
         {
             using var enumerator = new MMDeviceEnumerator();
             var renderDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active).ToList();
+            var deviceInfos = renderDevices.Select(d => new { d.ID, Name = d.FriendlyName }).ToList();
+            foreach (var d in renderDevices) { try { d.Dispose(); } catch { } }
 
+            var results = new List<(string Key, bool Detected, string Id)>();
             foreach (var track in GoXlrTracks)
             {
-                var match = renderDevices.FirstOrDefault(d =>
-                    d.FriendlyName.Contains(track.ChannelKey, StringComparison.OrdinalIgnoreCase) &&
-                    (d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
-                     d.FriendlyName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase)));
+                var match = deviceInfos.FirstOrDefault(d =>
+                    d.Name.Contains(track.ChannelKey, StringComparison.OrdinalIgnoreCase) &&
+                    (d.Name.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
+                     d.Name.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase)));
 
-                if (match != null)
-                {
-                    track.IsDetected = true;
-                    track.EndpointId = match.ID;
-                }
-                else
-                {
-                    track.IsDetected = false;
-                    track.EndpointId = "";
-                }
+                results.Add((track.ChannelKey, match != null, match?.ID ?? ""));
             }
 
-            var virtualDriver = renderDevices.FirstOrDefault(d =>
-                d.FriendlyName.Contains("CABLE", StringComparison.OrdinalIgnoreCase) ||
-                d.FriendlyName.Contains("VB-Audio", StringComparison.OrdinalIgnoreCase) ||
-                d.FriendlyName.Contains("VoiceMeeter", StringComparison.OrdinalIgnoreCase) ||
-                d.FriendlyName.Contains("Virtual", StringComparison.OrdinalIgnoreCase));
+            var virtualDriver = deviceInfos.FirstOrDefault(d =>
+                d.Name.Contains("CABLE", StringComparison.OrdinalIgnoreCase) ||
+                d.Name.Contains("VB-Audio", StringComparison.OrdinalIgnoreCase) ||
+                d.Name.Contains("VoiceMeeter", StringComparison.OrdinalIgnoreCase) ||
+                d.Name.Contains("Virtual", StringComparison.OrdinalIgnoreCase));
 
-            HasVirtualCableDriver = (virtualDriver != null);
+            bool hasVirtual = (virtualDriver != null);
+
+            void Apply()
+            {
+                foreach (var (key, detected, id) in results)
+                {
+                    var track = GoXlrTracks.FirstOrDefault(t => t.ChannelKey == key);
+                    if (track != null)
+                    {
+                        track.EndpointId = id;
+                        track.IsDetected = detected;
+                    }
+                }
+                HasVirtualCableDriver = hasVirtual;
+            }
+
+            var uiQueue = MainWindow.CurrentInstance?.DispatcherQueue ?? Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+            if (uiQueue == null || uiQueue.HasThreadAccess)
+            {
+                Apply();
+            }
+            else
+            {
+                uiQueue.TryEnqueue(Apply);
+            }
         }
         catch (Exception ex)
         {

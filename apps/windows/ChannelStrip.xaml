@@ -160,6 +160,7 @@
                         <!-- Kopfhörer Mute Toggle -->
                         <ToggleButton Grid.Row="3" Height="30" Width="38" Padding="0" CornerRadius="7" HorizontalAlignment="Center"
                                       Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
+                                      services:CursorHelper.UseHandCursor="True"
                                       IsChecked="{x:Bind ViewModel.SubmixMuted, Mode=TwoWay}"
                                       ToolTipService.ToolTip="Kopfhörer stummschalten">
                             <FontIcon Glyph="{x:Bind MuteGlyph(ViewModel.SubmixMuted), Mode=OneWay}" FontSize="12" />
@@ -224,6 +225,7 @@
                         <!-- Stream Mute Toggle -->
                         <ToggleButton Grid.Row="3" Height="30" Width="38" Padding="0" CornerRadius="7" HorizontalAlignment="Center"
                                       Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
+                                      services:CursorHelper.UseHandCursor="True"
                                       IsChecked="{x:Bind ViewModel.Muted, Mode=TwoWay}"
                                       ToolTipService.ToolTip="Stream stummschalten">
                             <FontIcon Glyph="{x:Bind MuteGlyph(ViewModel.Muted), Mode=OneWay}" FontSize="12" />
@@ -312,6 +314,7 @@
                     <!-- Row 4: Smart Mute toggle button -->
                     <ToggleButton Grid.Row="4" Height="32" Width="40" Padding="0" CornerRadius="8" HorizontalAlignment="Center"
                                   Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
+                                  services:CursorHelper.UseHandCursor="True"
                                   IsChecked="{x:Bind ViewModel.ActiveMuted, Mode=TwoWay}"
                                   ToolTipService.ToolTip="{x:Bind ViewModel.ActiveMuteTooltip, Mode=OneWay}"
                                   AutomationProperties.Name="{x:Bind MuteName(ViewModel.Name), Mode=OneWay}">

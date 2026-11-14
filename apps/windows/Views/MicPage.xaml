@@ -20,11 +20,15 @@
     </Page.Resources>
 
     <ScrollViewer Style="{StaticResource PageScroller}">
-        <StackPanel Spacing="16" MaxWidth="1080" HorizontalAlignment="Center">
-            <!-- Studio Header: Title -->
-            <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center" Margin="0,0,0,8">
-                <TextBlock x:Uid="MicTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
-            </StackPanel>
+        <StackPanel Spacing="16" MaxWidth="1200" HorizontalAlignment="Center">
+            <!-- Studio Header: Title & Subtitle -->
+            <Grid Margin="0,0,0,4">
+                <StackPanel Spacing="3" VerticalAlignment="Center">
+                    <TextBlock x:Uid="MicTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
+                    <TextBlock Text="Mikrofontyp, Gain-Kalibrierung, integrierte Studio-DSP-Effektkette und KI-Rauschunterdrückung."
+                               Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
+                </StackPanel>
+            </Grid>
 
             <!-- Mic profiles: gate, compressor, EQ, de-esser -->
             <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
@@ -42,17 +46,22 @@
                         </StackPanel>
                         <ComboBox x:Name="MicProfileBox" x:Uid="MicProfileBox" Grid.Column="1" HorizontalAlignment="Stretch" />
                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
-                            <Button x:Uid="MicProfileLoad" Style="{StaticResource AccentButtonStyle}" Click="MicLoad_Click" />
-                            <Button x:Uid="MicProfileDefault" Click="MicDefault_Click">
+                            <Button x:Uid="MicProfileLoad" Style="{StaticResource AccentButtonStyle}" Click="MicLoad_Click"
+                                    services:CursorHelper.UseHandCursor="True" />
+                            <Button x:Uid="MicProfileDefault" Click="MicDefault_Click"
+                                    services:CursorHelper.UseHandCursor="True">
                                 <FontIcon x:Name="MicDefaultIcon" Glyph="&#xE734;" FontSize="14" />
                             </Button>
-                            <Button x:Uid="MicProfileExport" Click="MicExport_Click">
+                            <Button x:Uid="MicProfileExport" Click="MicExport_Click"
+                                    services:CursorHelper.UseHandCursor="True">
                                 <FontIcon Glyph="&#xEDE1;" FontSize="14" />
                             </Button>
-                            <Button x:Uid="MicProfileImport" Click="MicImport_Click">
+                            <Button x:Uid="MicProfileImport" Click="MicImport_Click"
+                                    services:CursorHelper.UseHandCursor="True">
                                 <FontIcon Glyph="&#xE8B5;" FontSize="14" />
                             </Button>
-                            <Button x:Uid="MicProfileDelete" Click="MicDelete_Click">
+                            <Button x:Uid="MicProfileDelete" Click="MicDelete_Click"
+                                    services:CursorHelper.UseHandCursor="True">
                                 <FontIcon Glyph="&#xE74D;" FontSize="14" />
                             </Button>
                         </StackPanel>
@@ -63,7 +72,8 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBox x:Name="MicProfileName" x:Uid="MicProfileName" MaxLength="40" PlaceholderText="Profilname eingeben..." />
-                        <Button x:Uid="MicProfileSave" Grid.Column="1" Click="MicSave_Click" />
+                        <Button x:Uid="MicProfileSave" Grid.Column="1" Click="MicSave_Click"
+                                services:CursorHelper.UseHandCursor="True" />
                     </Grid>
                     <InfoBar x:Name="MicProfileResult" IsClosable="True" />
                 </StackPanel>

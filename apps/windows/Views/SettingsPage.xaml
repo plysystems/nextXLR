@@ -24,7 +24,12 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBlock x:Uid="SettingsTitle" Style="{StaticResource PageTitle}" />
+        <!-- Studio Header -->
+        <StackPanel Spacing="3" Margin="0,0,0,4">
+            <TextBlock x:Uid="SettingsTitle" Style="{StaticResource PageTitle}" />
+            <TextBlock Text="Erscheinungsbild, Windows-Autostart, Audio-Treiber, Elgato Stream Deck API und Profilverwaltung."
+                       Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
+        </StackPanel>
 
         <!-- Side navigation; collapses to a top bar on narrow windows (see VisualStateManager). -->
         <Grid x:Name="Body" Grid.Row="1" ColumnSpacing="28" RowSpacing="16">

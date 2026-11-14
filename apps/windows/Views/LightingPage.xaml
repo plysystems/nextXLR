@@ -25,11 +25,15 @@
     </Page.Resources>
 
     <ScrollViewer Style="{StaticResource PageScroller}">
-        <StackPanel Spacing="20" MaxWidth="1400" HorizontalAlignment="Center">
-            <!-- Clean Header without badges -->
-            <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center" Margin="0,0,0,8">
-                <TextBlock x:Uid="LightTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
-            </StackPanel>
+        <StackPanel Spacing="20" MaxWidth="1360" HorizontalAlignment="Center">
+            <!-- Studio Header -->
+            <Grid Margin="0,0,0,4">
+                <StackPanel Spacing="3" VerticalAlignment="Center">
+                    <TextBlock x:Uid="LightTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
+                    <TextBlock Text="Echtzeit-Farbsteuerung aller Tasten, Fader, Screens und Zonen auf deinem GoXLR."
+                               Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
+                </StackPanel>
+            </Grid>
 
             <!-- Live device: mirrors the LED colours, button states, faders and knobs of the GoXLR -->
             <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"

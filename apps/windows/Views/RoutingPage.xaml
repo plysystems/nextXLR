@@ -13,11 +13,15 @@
       The Sampler (recording input of the sampler) is a separate, highlighted column on the right.
     -->
     <ScrollViewer Style="{StaticResource PageScroller}">
-        <StackPanel Spacing="24" MaxWidth="1240" HorizontalAlignment="Center">
-            <!-- Studio Header: Title -->
-            <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center" Margin="0,0,0,8">
-                <TextBlock x:Uid="RoutingTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
-            </StackPanel>
+        <StackPanel Spacing="24" MaxWidth="1320" HorizontalAlignment="Center">
+            <!-- Studio Header: Title & Subtitle -->
+            <Grid Margin="0,0,0,4">
+                <StackPanel Spacing="3" VerticalAlignment="Center">
+                    <TextBlock x:Uid="RoutingTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
+                    <TextBlock Text="Weise Audioquellen (Mikrofon, Chat, Musik, Game, System) flexibel den physischen und virtuellen Ausgängen zu."
+                               Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
+                </StackPanel>
+            </Grid>
 
             <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
                     BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,18">

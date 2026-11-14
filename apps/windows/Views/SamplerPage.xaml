@@ -10,7 +10,7 @@
     Background="Transparent">
 
     <ScrollViewer Style="{StaticResource PageScroller}">
-        <Grid x:Name="Root" ColumnSpacing="20" RowSpacing="20" MaxWidth="1500" HorizontalAlignment="Center">
+        <Grid x:Name="Root" ColumnSpacing="20" RowSpacing="20" MaxWidth="1360" HorizontalAlignment="Center">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition x:Name="BrowserCol" Width="400" />
@@ -37,7 +37,12 @@
                 </VisualStateGroup>
             </VisualStateManager.VisualStateGroups>
 
-            <TextBlock x:Uid="SamplerTitle" Grid.ColumnSpan="2" Style="{StaticResource PageTitle}" />
+            <!-- Header: Title & Subtitle -->
+            <StackPanel Grid.ColumnSpan="2" Spacing="3" Margin="0,0,0,4">
+                <TextBlock x:Uid="SamplerTitle" Style="{StaticResource PageTitle}" />
+                <TextBlock Text="Hardware-Pads mit Sample-Bänken, Fade-Modes, Loop-Wiedergabe und integriertem Waveform-Editor."
+                           Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
+            </StackPanel>
 
             <!-- ===== Left: pages + pads (hardware layout) and the selected pad's settings ===== -->
             <StackPanel Grid.Row="1" Spacing="20">

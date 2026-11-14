@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:NextXLR"
     xmlns:vm="using:NextXLR.ViewModels"
+    xmlns:services="using:NextXLR.Services"
     Background="Transparent">
 
     <Grid Padding="{StaticResource PagePadding}" RowSpacing="20" HorizontalAlignment="Stretch">
@@ -20,8 +21,10 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+            <StackPanel Spacing="3" VerticalAlignment="Center">
                 <TextBlock x:Uid="MixerTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
+                <TextBlock Text="4 physische Fader, Submix-Routing für Kopfhörer &amp; Stream sowie Echtzeit-Pegelanzeigen."
+                           Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
@@ -37,6 +40,7 @@
                         </StackPanel>
                         <Button x:Name="BtnDualPhones" Click="DualTargetPhones_Click"
                                 Padding="12,5" CornerRadius="7" BorderThickness="0"
+                                services:CursorHelper.UseHandCursor="True"
                                 Background="{x:Bind DualPhonesBackground(ViewModel.DualFaderTarget), Mode=OneWay}"
                                 ToolTipService.ToolTip="Physische GoXLR-Fader steuern Kopfhörer-Lautstärke">
                             <StackPanel Orientation="Horizontal" Spacing="6">
@@ -47,6 +51,7 @@
                         </Button>
                         <Button x:Name="BtnDualStream" Click="DualTargetStream_Click"
                                 Padding="12,5" CornerRadius="7" BorderThickness="0"
+                                services:CursorHelper.UseHandCursor="True"
                                 Background="{x:Bind DualStreamBackground(ViewModel.DualFaderTarget), Mode=OneWay}"
                                 ToolTipService.ToolTip="Physische GoXLR-Fader steuern Stream-Lautstärke">
                             <StackPanel Orientation="Horizontal" Spacing="6">
@@ -65,6 +70,7 @@
                     <StackPanel Orientation="Horizontal" Spacing="3">
                         <Button x:Name="BtnHeadphonesMix" Click="HeadphonesMix_Click"
                                 Padding="14,5" CornerRadius="7" BorderThickness="0"
+                                services:CursorHelper.UseHandCursor="True"
                                 Background="{x:Bind HeadphonesMixBackground(ViewModel.ActiveMixIndex), Mode=OneWay}">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <FontIcon Glyph="&#xE7F6;" FontSize="12" Foreground="{x:Bind HeadphonesMixForeground(ViewModel.ActiveMixIndex), Mode=OneWay}" />
@@ -74,6 +80,7 @@
                         </Button>
                         <Button x:Name="BtnStreamMix" Click="StreamMix_Click"
                                 Padding="14,5" CornerRadius="7" BorderThickness="0"
+                                services:CursorHelper.UseHandCursor="True"
                                 Background="{x:Bind StreamMixBackground(ViewModel.ActiveMixIndex), Mode=OneWay}">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <FontIcon Glyph="&#xE774;" FontSize="12" Foreground="{x:Bind StreamMixForeground(ViewModel.ActiveMixIndex), Mode=OneWay}" />
@@ -83,6 +90,7 @@
                         </Button>
                         <Button x:Name="BtnBothMixes" Click="BothMixes_Click"
                                 Padding="14,5" CornerRadius="7" BorderThickness="0"
+                                services:CursorHelper.UseHandCursor="True"
                                 Background="{x:Bind BothMixesBackground(ViewModel.ActiveMixIndex), Mode=OneWay}">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <FontIcon Glyph="&#xE8D4;" FontSize="12" Foreground="{x:Bind BothMixesForeground(ViewModel.ActiveMixIndex), Mode=OneWay}" />
@@ -117,6 +125,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="3">
                                 <Button x:Name="BtnMixerPage1" Click="MixerPage1_Click"
                                         Padding="12,5" CornerRadius="7" BorderThickness="0"
+                                        services:CursorHelper.UseHandCursor="True"
                                         Background="{x:Bind Page1Background(ViewModel.ActiveMixerPage), Mode=OneWay}">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <FontIcon Glyph="&#xE7F6;" FontSize="11" Foreground="{x:Bind Page1Foreground(ViewModel.ActiveMixerPage), Mode=OneWay}" />
@@ -126,6 +135,7 @@
                                 </Button>
                                 <Button x:Name="BtnMixerPage2" Click="MixerPage2_Click"
                                         Padding="12,5" CornerRadius="7" BorderThickness="0"
+                                        services:CursorHelper.UseHandCursor="True"
                                         Background="{x:Bind Page2Background(ViewModel.ActiveMixerPage), Mode=OneWay}">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <FontIcon Glyph="&#xE7FC;" FontSize="11" Foreground="{x:Bind Page2Foreground(ViewModel.ActiveMixerPage), Mode=OneWay}" />
@@ -146,6 +156,7 @@
                                 <!-- Mic Mute (Husten) Button - Only Mic Icon -->
                                 <ToggleButton x:Uid="MicMuteButton" Width="48" Height="38" Padding="0" CornerRadius="9,0,0,9"
                                               BorderThickness="0" Style="{StaticResource SmoothDangerToggle}"
+                                              services:CursorHelper.UseHandCursor="True"
                                               IsChecked="{x:Bind ViewModel.MicMuted, Mode=TwoWay}"
                                               ToolTipService.ToolTip="Mikrofon stummschalten (Husten-Taste)">
                                     <FontIcon Glyph="{x:Bind MicGlyph(ViewModel.MicMuted), Mode=OneWay}" FontSize="16" />
@@ -157,6 +168,7 @@
                                 <!-- Bleep Button - Only !@#$?* -->
                                 <ToggleButton x:Name="BleepButton" x:Uid="BleepButton" Width="62" Height="38" Padding="0" CornerRadius="0,9,9,0"
                                               BorderThickness="0" Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
+                                              services:CursorHelper.UseHandCursor="True"
                                               IsChecked="{x:Bind ViewModel.BleepActive, Mode=OneWay}"
                                               ToolTipService.ToolTip="Zensurton (Halten)">
                                     <TextBlock Text="!@#$?*" FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}"
