@@ -146,7 +146,7 @@ public sealed partial class MainWindow : Window
                 }
                 else
                 {
-                    ViewModel.SetMetersActive(ContentFrame.CurrentSourcePageType == typeof(MixerPage));
+                    ViewModel.SetMetersActive(ContentFrame?.CurrentSourcePageType == typeof(MixerPage));
                     StreamDeckStatusService.Instance.StartMonitoring(DispatcherQueue);
                 }
             }
@@ -162,7 +162,7 @@ public sealed partial class MainWindow : Window
             }
             else
             {
-                ViewModel.SetMetersActive(ContentFrame.CurrentSourcePageType == typeof(MixerPage));
+                ViewModel.SetMetersActive(ContentFrame?.CurrentSourcePageType == typeof(MixerPage));
                 StreamDeckStatusService.Instance.StartMonitoring(DispatcherQueue);
             }
         };
