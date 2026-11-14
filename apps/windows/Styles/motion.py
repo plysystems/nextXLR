@@ -112,16 +112,16 @@ def generate_styles(neutral, hover, pressed, on, on_hover, on_pressed, on_fg, da
 
 dark_styles = generate_styles(
     DARK_NEUTRAL, DARK_HOVER, DARK_PRESSED,
-    "#3DDFD9", "#5EE5DF", "#24C5BF", "#0A0A0A",
+    "#24C5BF", "#3DDFD9", "#1AA29D", "#050505",
     "#F0506A", "#F46B82", "#D9455D", "#FFFFFF",
-    "#3DDFD9"
+    "#24C5BF"
 )
 
 light_styles = generate_styles(
     LIGHT_NEUTRAL, LIGHT_HOVER, LIGHT_PRESSED,
-    "#1AA29D", "#24C5BF", "#137E7A", "#FFFFFF",
+    "#168B87", "#1AA29D", "#137E7A", "#FFFFFF",
     "#EF4444", "#F87171", "#DC2626", "#FFFFFF",
-    "#1AA29D"
+    "#168B87"
 )
 
 xml = f'''<?xml version="1.0" encoding="utf-8"?>

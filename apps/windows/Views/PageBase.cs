@@ -25,7 +25,6 @@ public partial class MixerPage : Page
 
     public MixerPage()
     {
-        NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
         // Bleep is press-and-hold: the toggle's own click state is ignored; the daemon's
         // broadcast (state.bleep) drives IsChecked, also when the hardware button is held.
@@ -255,7 +254,6 @@ public partial class RoutingPage : Page
 
     public RoutingPage()
     {
-        NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
     }
 
@@ -302,7 +300,6 @@ public partial class MicPage : Page
     public Visibility Visible(bool b) => b ? Visibility.Visible : Visibility.Collapsed;
     public MicPage()
     {
-        NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
     }
 
@@ -816,7 +813,6 @@ public partial class EffectsPage : Page
     public EffectsViewModel Fx => ViewModel.Effects;
     public EffectsPage()
     {
-        NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
     }
     protected override void OnNavigatedTo(NavigationEventArgs e) => ViewModel = (MainViewModel)e.Parameter;
@@ -830,7 +826,6 @@ public partial class SamplerPage : Page
     public SamplerViewModel Sampler => ViewModel.Sampler;
     public SamplerPage()
     {
-        NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
     }
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -1021,7 +1016,6 @@ public partial class VirtualChannelsPage : Page
 
     public VirtualChannelsPage()
     {
-        NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
     }
 
@@ -1075,7 +1069,6 @@ public partial class LightingPage : Page
     public MainViewModel ViewModel { get; private set; } = null!;
     public LightingPage()
     {
-        NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
     }
 

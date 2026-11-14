@@ -588,7 +588,11 @@ public sealed partial class MainWindow : Window
         if (TitleBarPaneColumn == null || Nav == null) return;
         bool isOpen = Nav.IsPaneOpen;
         TitleBarPaneColumn.Width = new GridLength(isOpen ? Nav.OpenPaneLength : Nav.CompactPaneLength);
-        if (LogoFull != null)
+        if (LogoContainer != null)
+        {
+            LogoContainer.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
+        }
+        else if (LogoFull != null)
         {
             LogoFull.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -831,6 +835,10 @@ public sealed partial class MainWindow : Window
             if (ContentFrame.Content is FrameworkElement fe)
             {
                 fe.RequestedTheme = requestedTheme;
+            }
+            if (ContentFrame.CurrentSourcePageType != null)
+            {
+                ContentFrame.Navigate(ContentFrame.CurrentSourcePageType, ViewModel, new SuppressNavigationTransitionInfo());
             }
         }
 

@@ -73,32 +73,32 @@
                                 </VisualState>
                                 <VisualState x:Name="Checked">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#0A0A0A" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#050505" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="CheckedPointerOver">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#5EE5DF" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#5EE5DF" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#0A0A0A" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#050505" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="CheckedPressed">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#0A0A0A" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#1AA29D" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#1AA29D" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#050505" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX" To="0.97" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY" To="0.97" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="CheckedDisabled">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#0A0A0A" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#050505" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="0.45" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
@@ -254,14 +254,14 @@
                                 <VisualState x:Name="PointerOver">
                                     <Storyboard>
                                     <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#1C1C20" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
                                     <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#F8FAFC" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <Storyboard>
                                     <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#0A0A0A" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
                                     <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#F8FAFC" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX" To="0.97" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY" To="0.97" Duration="0" />
@@ -349,32 +349,32 @@
                                 </VisualState>
                                 <VisualState x:Name="Checked">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#0A0A0A" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#050505" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="CheckedPointerOver">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#5EE5DF" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#5EE5DF" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#0A0A0A" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#050505" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="CheckedPressed">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#0A0A0A" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#1AA29D" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#1AA29D" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#050505" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX" To="0.97" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY" To="0.97" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="CheckedDisabled">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#0A0A0A" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#050505" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="0.45" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
@@ -530,14 +530,14 @@
                                 <VisualState x:Name="PointerOver">
                                     <Storyboard>
                                     <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#1C1C20" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
                                     <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#F8FAFC" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <Storyboard>
                                     <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#0A0A0A" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#3DDFD9" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
                                     <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#F8FAFC" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX" To="0.97" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY" To="0.97" Duration="0" />
@@ -625,15 +625,15 @@
                                 </VisualState>
                                 <VisualState x:Name="Checked">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#1AA29D" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#1AA29D" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#168B87" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#168B87" Duration="0" />
                                     <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#FFFFFF" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="CheckedPointerOver">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#24C5BF" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#1AA29D" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#1AA29D" Duration="0" />
                                     <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#FFFFFF" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
@@ -648,8 +648,8 @@
                                 </VisualState>
                                 <VisualState x:Name="CheckedDisabled">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#1AA29D" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#1AA29D" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#168B87" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#168B87" Duration="0" />
                                     <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#FFFFFF" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="0.45" Duration="0" />
                                     </Storyboard>
@@ -806,14 +806,14 @@
                                 <VisualState x:Name="PointerOver">
                                     <Storyboard>
                                     <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#E7E9EF" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#1AA29D" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#168B87" Duration="0" />
                                     <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#0F172A" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <Storyboard>
                                     <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#DCE0E8" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#1AA29D" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#168B87" Duration="0" />
                                     <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#0F172A" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX" To="0.97" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY" To="0.97" Duration="0" />

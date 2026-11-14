@@ -19,7 +19,7 @@ public sealed partial class SettingsPage : Page
     public string StreamDeckAppStatusText => StreamDeckService.IsAppRunning ? "Software läuft im Hintergrund" : "Software ist aktuell nicht gestartet";
 
     private static readonly SolidColorBrush StreamDeckActiveBrush = new(ColorHelper.FromArgb(255, 16, 185, 129));
-    private static readonly SolidColorBrush StreamDeckReadyBrush = new(ColorHelper.FromArgb(255, 0x4F, 0xE0, 0xB8));
+    private static readonly SolidColorBrush StreamDeckReadyBrush = new(ColorHelper.FromArgb(255, 0x3D, 0xDF, 0xD9));
     private static readonly SolidColorBrush StreamDeckOfflineBrush = new(ColorHelper.FromArgb(255, 120, 130, 145));
 
     public SolidColorBrush StreamDeckStatusBrush(bool isApiOnline, bool isAppRunning)
@@ -33,7 +33,6 @@ public sealed partial class SettingsPage : Page
 
     public SettingsPage()
     {
-        NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
     }
 

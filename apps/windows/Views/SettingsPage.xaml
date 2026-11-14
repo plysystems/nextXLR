@@ -104,7 +104,7 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
-                                        <FontIcon Glyph="&#xE7E8;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                        <FontIcon Glyph="&#xE7E8;" FontSize="16" Foreground="{ThemeResource TextPrimaryBrush}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock x:Uid="SetAutostartTitle" FontWeight="SemiBold" />
@@ -123,7 +123,7 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
-                                        <FontIcon Glyph="&#xE921;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                        <FontIcon Glyph="&#xE921;" FontSize="16" Foreground="{ThemeResource TextPrimaryBrush}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock x:Uid="SetTrayTitle" FontWeight="SemiBold" />
@@ -142,7 +142,7 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
-                                        <FontIcon Glyph="&#xE921;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                        <FontIcon Glyph="&#xE921;" FontSize="16" Foreground="{ThemeResource TextPrimaryBrush}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Minimiert starten" FontWeight="SemiBold" />
@@ -184,13 +184,13 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
-                                        <FontIcon Glyph="&#xE775;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                        <FontIcon Glyph="&#xE775;" FontSize="16" Foreground="{ThemeResource TextPrimaryBrush}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock x:Uid="SetLanguageTitle" FontWeight="SemiBold" />
                                         <TextBlock Text="Systemsprache und Regionseinstellungen in Windows konfigurieren." Style="{StaticResource Caption}" />
                                     </StackPanel>
-                                    <HyperlinkButton x:Uid="SetLanguageLink" Grid.Column="2" VerticalAlignment="Center" NavigateUri="ms-settings:regionlanguage" />
+                                    <HyperlinkButton x:Uid="SetLanguageLink" Grid.Column="2" VerticalAlignment="Center" Foreground="{ThemeResource TextPrimaryBrush}" NavigateUri="ms-settings:regionlanguage" />
                                 </Grid>
 
                                 <Border Height="1" Background="{ThemeResource SurfaceStrokeSubtleBrush}" Margin="68,0,20,0" />
@@ -203,13 +203,13 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
-                                        <FontIcon Glyph="&#xE767;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                        <FontIcon Glyph="&#xE767;" FontSize="16" Foreground="{ThemeResource TextPrimaryBrush}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock x:Uid="SetSoundTitle" FontWeight="SemiBold" />
                                         <TextBlock Text="Windows Sound-Systemsteuerung für Ein- und Ausgabegeräte öffnen." Style="{StaticResource Caption}" />
                                     </StackPanel>
-                                    <HyperlinkButton x:Uid="SetSoundLink" Grid.Column="2" VerticalAlignment="Center" NavigateUri="ms-settings:sound" />
+                                    <HyperlinkButton x:Uid="SetSoundLink" Grid.Column="2" VerticalAlignment="Center" Foreground="{ThemeResource TextPrimaryBrush}" NavigateUri="ms-settings:sound" />
                                 </Grid>
 
                                 <Border Height="1" Background="{ThemeResource SurfaceStrokeSubtleBrush}" Margin="68,0,20,0" />
@@ -222,13 +222,13 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
-                                        <FontIcon Glyph="&#xE720;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                        <FontIcon Glyph="&#xE720;" FontSize="16" Foreground="{ThemeResource TextPrimaryBrush}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Windows Mikrofon-Datenschutz" FontWeight="SemiBold" />
                                         <TextBlock Text="Erlaube Desktop-Apps und NEXT : XLR Zugriff auf dein Mikrofon." Style="{StaticResource Caption}" />
                                     </StackPanel>
-                                    <HyperlinkButton Content="Öffnen" Grid.Column="2" VerticalAlignment="Center" NavigateUri="ms-settings:privacy-microphone" />
+                                    <HyperlinkButton Content="Öffnen" Grid.Column="2" VerticalAlignment="Center" Foreground="{ThemeResource TextPrimaryBrush}" NavigateUri="ms-settings:privacy-microphone" />
                                 </Grid>
                             </StackPanel>
                         </Border>

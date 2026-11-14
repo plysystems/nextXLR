@@ -4,22 +4,22 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Grid x:Name="RootWindowGrid" Background="{ThemeResource SurfaceL1Brush}"
+    <Grid x:Name="RootWindowGrid" Background="{ThemeResource SurfaceL3Brush}"
           AllowDrop="True" DragOver="App_DragOver" Drop="App_Drop">
         <Grid.RowDefinitions>
             <RowDefinition Height="48" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Title bar: the NEXT : XLR logo. Draggable; caption buttons on the right. -->
-        <Grid x:Name="AppTitleBar">
+        <!-- Title bar: the NEXT : XLR logo. Draggable; caption buttons on the right. Both columns unified in SurfaceL3Brush (#050505 Dark / #EAECEF Light) -->
+        <Grid x:Name="AppTitleBar" Background="{ThemeResource SurfaceL3Brush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="TitleBarPaneColumn" Width="248" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <!-- Left pane header (matches sidebar) -->
-            <Grid Grid.Column="0" Background="{ThemeResource NavigationViewDefaultPaneBackground}">
+            <Grid Grid.Column="0" Background="{ThemeResource SurfaceL3Brush}">
                 <Border BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="0,0,1,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Padding="4,0,0,0">
                     <Button x:Name="MenuToggleButton" Width="36" Height="36" Margin="6,0,8,0"
@@ -27,13 +27,24 @@
                             Click="MenuToggleButton_Click" ToolTipService.ToolTip="Menü ein-/ausklappen">
                         <FontIcon Glyph="&#xE700;" FontSize="15" Foreground="{StaticResource BrandBrush}" />
                     </Button>
-                    <Image x:Name="LogoFull" Height="28"
-                           VerticalAlignment="Center" Stretch="Uniform" AutomationProperties.Name="NEXT : XLR" />
+                    <Grid x:Name="LogoContainer" VerticalAlignment="Center">
+                        <!-- Ambient Brand Glow behind the logo -->
+                        <Border Width="110" Height="26" CornerRadius="13" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                            <Border.Background>
+                                <RadialGradientBrush Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5" GradientOrigin="0.5,0.5">
+                                    <GradientStop Color="#2A3DDFD9" Offset="0" />
+                                    <GradientStop Color="#003DDFD9" Offset="1" />
+                                </RadialGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <Image x:Name="LogoFull" Height="28"
+                               VerticalAlignment="Center" Stretch="Uniform" AutomationProperties.Name="NEXT : XLR" />
+                    </Grid>
                 </StackPanel>
             </Grid>
 
             <!-- Right content header: draggable window titlebar -->
-            <Grid x:Name="AppDragArea" Grid.Column="1" Background="{ThemeResource SurfaceL1Brush}" Padding="0,0,150,0">
+            <Grid x:Name="AppDragArea" Grid.Column="1" Background="{ThemeResource SurfaceL3Brush}" Padding="0,0,150,0">
                 <!-- Allgemeiner animierter Lade-Indikator -->
                 <StackPanel x:Name="AppLoadingPanel" Orientation="Horizontal" Spacing="8"
                             HorizontalAlignment="Right" VerticalAlignment="Center"

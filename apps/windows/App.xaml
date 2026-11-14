@@ -24,19 +24,28 @@
                     <SolidColorBrush x:Key="TextMutedBrush" Color="#8E98AB" />
                     <SolidColorBrush x:Key="MutedTextBrush" Color="#8E98AB" />
 
-                    <!-- NavigationView styling for Dark: Base #0A0A0A -->
+                    <!-- NavigationView styling for Dark: Sidebar & Topbar chassis in #050505 -->
                     <SolidColorBrush x:Key="NavigationViewContentBackground" Color="#0A0A0A" />
                     <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
-                    <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#0A0A0A" />
-                    <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#0A0A0A" />
-                    <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="#0A0A0A" />
-                    <SolidColorBrush x:Key="NavigationViewMinimalHeaderBackground" Color="#0A0A0A" />
+                    <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#050505" />
+                    <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#050505" />
+                    <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="#050505" />
+                    <SolidColorBrush x:Key="NavigationViewMinimalHeaderBackground" Color="#050505" />
                     <SolidColorBrush x:Key="NavigationViewItemIndicatorBrush" Color="#3DDFD9" />
                     <SolidColorBrush x:Key="NavigationViewItemBackgroundSelected" Color="#141416" />
                     <SolidColorBrush x:Key="NavigationViewItemForegroundSelected" Color="#3DDFD9" />
+
+                    <!-- Refined Studio ToggleSwitches (No radioactive neon) -->
+                    <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#24C5BF" />
+                    <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#3DDFD9" />
+                    <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#1AA29D" />
+                    <SolidColorBrush x:Key="ToggleSwitchKnobFillOn" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="ToggleSwitchFillOff" Color="#18181C" />
+                    <SolidColorBrush x:Key="ToggleSwitchStrokeOff" Color="#2E2E36" />
+                    <SolidColorBrush x:Key="ToggleSwitchKnobFillOff" Color="#8E98AB" />
                 </ResourceDictionary>
 
-                <!-- ============ Dark Theme (Studio Cyber Onyx #0A0A0A) ============ -->
+                <!-- ============ Dark Theme (Studio Cyber Onyx #0A0A0A / Sidebar & Topbar #050505) ============ -->
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="SurfaceL1Brush" Color="#0A0A0A" />
                     <SolidColorBrush x:Key="SurfaceL2Brush" Color="#141416" />
@@ -49,23 +58,32 @@
                     <SolidColorBrush x:Key="TextMutedBrush" Color="#8E98AB" />
                     <SolidColorBrush x:Key="MutedTextBrush" Color="#8E98AB" />
 
-                    <!-- NavigationView styling for Dark: Base #0A0A0A -->
+                    <!-- NavigationView styling for Dark: Sidebar & Topbar chassis in #050505 -->
                     <SolidColorBrush x:Key="NavigationViewContentBackground" Color="#0A0A0A" />
                     <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
-                    <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#0A0A0A" />
-                    <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#0A0A0A" />
-                    <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="#0A0A0A" />
-                    <SolidColorBrush x:Key="NavigationViewMinimalHeaderBackground" Color="#0A0A0A" />
+                    <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#050505" />
+                    <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#050505" />
+                    <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="#050505" />
+                    <SolidColorBrush x:Key="NavigationViewMinimalHeaderBackground" Color="#050505" />
                     <SolidColorBrush x:Key="NavigationViewItemIndicatorBrush" Color="#3DDFD9" />
                     <SolidColorBrush x:Key="NavigationViewItemBackgroundSelected" Color="#141416" />
                     <SolidColorBrush x:Key="NavigationViewItemForegroundSelected" Color="#3DDFD9" />
+
+                    <!-- Refined Studio ToggleSwitches (No radioactive neon) -->
+                    <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#24C5BF" />
+                    <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#3DDFD9" />
+                    <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#1AA29D" />
+                    <SolidColorBrush x:Key="ToggleSwitchKnobFillOn" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="ToggleSwitchFillOff" Color="#18181C" />
+                    <SolidColorBrush x:Key="ToggleSwitchStrokeOff" Color="#2E2E36" />
+                    <SolidColorBrush x:Key="ToggleSwitchKnobFillOff" Color="#8E98AB" />
                 </ResourceDictionary>
 
-                <!-- ============ Light Theme (Nordic Studio #F6F7F9) ============ -->
+                <!-- ============ Light Theme (Nordic Studio #F6F7F9 / Sidebar & Topbar #EAECEF) ============ -->
                 <ResourceDictionary x:Key="Light">
                     <SolidColorBrush x:Key="SurfaceL1Brush" Color="#F6F7F9" />
                     <SolidColorBrush x:Key="SurfaceL2Brush" Color="#FFFFFF" />
-                    <SolidColorBrush x:Key="SurfaceL3Brush" Color="#E7E9EF" />
+                    <SolidColorBrush x:Key="SurfaceL3Brush" Color="#EAECEF" />
                     <SolidColorBrush x:Key="SurfaceStrokeBrush" Color="#D8DCE4" />
                     <SolidColorBrush x:Key="SurfaceStrokeSubtleBrush" Color="#E4E7EE" />
                     <SolidColorBrush x:Key="SurfaceHighlightBrush" Color="#FFFFFF" />
@@ -74,16 +92,25 @@
                     <SolidColorBrush x:Key="TextMutedBrush" Color="#64748B" />
                     <SolidColorBrush x:Key="MutedTextBrush" Color="#64748B" />
 
-                    <!-- NavigationView styling for Light: Soft chassis / Studio White Content -->
+                    <!-- NavigationView styling for Light: Soft Platinum chassis #EAECEF / Content #F6F7F9 -->
                     <SolidColorBrush x:Key="NavigationViewContentBackground" Color="#F6F7F9" />
                     <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
-                    <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#EDEDF2" />
-                    <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#EDEDF2" />
-                    <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="#F6F7F9" />
-                    <SolidColorBrush x:Key="NavigationViewMinimalHeaderBackground" Color="#F6F7F9" />
-                    <SolidColorBrush x:Key="NavigationViewItemIndicatorBrush" Color="#1AA29D" />
+                    <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#EAECEF" />
+                    <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#EAECEF" />
+                    <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="#EAECEF" />
+                    <SolidColorBrush x:Key="NavigationViewMinimalHeaderBackground" Color="#EAECEF" />
+                    <SolidColorBrush x:Key="NavigationViewItemIndicatorBrush" Color="#168B87" />
                     <SolidColorBrush x:Key="NavigationViewItemBackgroundSelected" Color="#FFFFFF" />
-                    <SolidColorBrush x:Key="NavigationViewItemForegroundSelected" Color="#1AA29D" />
+                    <SolidColorBrush x:Key="NavigationViewItemForegroundSelected" Color="#168B87" />
+
+                    <!-- Refined Studio ToggleSwitches for Light Mode -->
+                    <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#168B87" />
+                    <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#1AA29D" />
+                    <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#137E7A" />
+                    <SolidColorBrush x:Key="ToggleSwitchKnobFillOn" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="ToggleSwitchFillOff" Color="#E2E6ED" />
+                    <SolidColorBrush x:Key="ToggleSwitchStrokeOff" Color="#C8CED8" />
+                    <SolidColorBrush x:Key="ToggleSwitchKnobFillOff" Color="#64748B" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
@@ -100,6 +127,9 @@
 
             <!-- Surfaces / Fallbacks -->
             <SolidColorBrush x:Key="BrandBrush" Color="#3DDFD9" />
+            <SolidColorBrush x:Key="BrandGlowBrush" Color="#333DDFD9" />
+            <SolidColorBrush x:Key="BrandGlowSubtleBrush" Color="#1A3DDFD9" />
+            <SolidColorBrush x:Key="BrandGlowStrongBrush" Color="#553DDFD9" />
             <SolidColorBrush x:Key="DangerBrush" Color="#F0506A" />
             <SolidColorBrush x:Key="ErrorBrush" Color="#F0506A" />
             <SolidColorBrush x:Key="WarningBrush" Color="#F5B942" />
