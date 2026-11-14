@@ -1025,10 +1025,17 @@ public partial class VirtualChannelsPage : Page
             ViewModel = vm;
         }
         AppRouting.StartMonitoring();
-        Task.Run(async () =>
+        _ = Task.Run(async () =>
         {
-            Service.ScanWindowsEndpoints();
-            await AppRouting.RefreshAsync();
+            try
+            {
+                Service.ScanWindowsEndpoints();
+                await AppRouting.RefreshAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"VirtualChannels background scan error: {ex}");
+            }
         });
     }
 
@@ -1045,11 +1052,18 @@ public partial class VirtualChannelsPage : Page
 
     private void ReSync_Click(object sender, RoutedEventArgs e)
     {
-        Task.Run(async () =>
+        _ = Task.Run(async () =>
         {
-            Service.ScanWindowsEndpoints();
-            Service.Load();
-            await AppRouting.RefreshAsync();
+            try
+            {
+                Service.ScanWindowsEndpoints();
+                Service.Load();
+                await AppRouting.RefreshAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"VirtualChannels ReSync error: {ex}");
+            }
         });
     }
 

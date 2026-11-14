@@ -245,6 +245,26 @@ public partial class AppSessionItemViewModel : ObservableObject
 
 public partial class AppRoutingManagerViewModel : ObservableObject
 {
+    private readonly Microsoft.UI.Dispatching.DispatcherQueue? _dispatcherQueue;
+
+    public AppRoutingManagerViewModel()
+    {
+        _dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+    }
+
+    private void RunOnUI(Action action)
+    {
+        var queue = _dispatcherQueue ?? Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+        if (queue == null || queue.HasThreadAccess)
+        {
+            action();
+        }
+        else
+        {
+            queue.TryEnqueue(() => action());
+        }
+    }
+
     public ObservableCollection<AppSessionItemViewModel> AppSessions { get; } = new();
     public List<AudioEndpointChoice> OutputChoices { get; private set; } = new();
     public List<AudioEndpointChoice> InputChoices { get; private set; } = new();
@@ -260,7 +280,7 @@ public partial class AppRoutingManagerViewModel : ObservableObject
     {
         if (_meterTimer == null)
         {
-            var queue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+            var queue = _dispatcherQueue ?? Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
             if (queue != null)
             {
                 _meterTimer = queue.CreateTimer();
@@ -293,8 +313,12 @@ public partial class AppRoutingManagerViewModel : ObservableObject
 
     public async Task RefreshAsync()
     {
-        IsScanning = true;
-        HasNoApps = false;
+        RunOnUI(() =>
+        {
+            IsScanning = true;
+            HasNoApps = false;
+        });
+
         try
         {
             var outChoices = await Task.Run(WindowsAppAudioRouter.GetOutputChoices);
@@ -302,51 +326,60 @@ public partial class AppRoutingManagerViewModel : ObservableObject
             var sessions = await Task.Run(WindowsAppAudioRouter.GetActiveAppSessions);
             var rules = await Task.Run(WindowsAppAudioRouter.LoadRules);
 
-            OutputChoices = outChoices;
-            InputChoices = inChoices;
-
-            var existingByPid = AppSessions.ToDictionary(a => a.ProcessId);
-            var currentPids = new HashSet<uint>(sessions.Select(s => s.ProcessId));
-
-            // Remove apps that have closed
-            for (int i = AppSessions.Count - 1; i >= 0; i--)
+            RunOnUI(() =>
             {
-                if (!currentPids.Contains(AppSessions[i].ProcessId))
-                {
-                    AppSessions.RemoveAt(i);
-                }
-            }
+                OutputChoices = outChoices;
+                InputChoices = inChoices;
 
-            // Update existing or add new apps
-            foreach (var s in sessions)
-            {
-                rules.TryGetValue(s.ProcessName, out var rule);
-                if (existingByPid.TryGetValue(s.ProcessId, out var existing))
-                {
-                    existing.Volume = Math.Round(s.Volume * 100);
-                    existing.IsMuted = s.IsMuted;
-                }
-                else
-                {
-                    var vm = new AppSessionItemViewModel(s, OutputChoices, InputChoices, rule);
-                    AppSessions.Add(vm);
-                }
-            }
+                var existingByPid = AppSessions.ToDictionary(a => a.ProcessId);
+                var currentPids = new HashSet<uint>(sessions.Select(s => s.ProcessId));
 
-            HasApps = AppSessions.Count > 0;
-            HasNoApps = !HasApps;
-            StatusMessage = HasApps
-                ? $"{AppSessions.Count} aktive Audio-Anwendung{(AppSessions.Count > 1 ? "en" : "")} erkannt"
-                : "Keine aktiven Audio-Anwendungen gefunden. Spiele Ton in einer App ab, damit sie hier erscheint.";
+                // Remove apps that have closed
+                for (int i = AppSessions.Count - 1; i >= 0; i--)
+                {
+                    if (!currentPids.Contains(AppSessions[i].ProcessId))
+                    {
+                        AppSessions.RemoveAt(i);
+                    }
+                }
+
+                // Update existing or add new apps
+                foreach (var s in sessions)
+                {
+                    rules.TryGetValue(s.ProcessName, out var rule);
+                    if (existingByPid.TryGetValue(s.ProcessId, out var existing))
+                    {
+                        existing.Volume = Math.Round(s.Volume * 100);
+                        existing.IsMuted = s.IsMuted;
+                    }
+                    else
+                    {
+                        var vm = new AppSessionItemViewModel(s, OutputChoices, InputChoices, rule);
+                        AppSessions.Add(vm);
+                    }
+                }
+
+                HasApps = AppSessions.Count > 0;
+                HasNoApps = !HasApps;
+                StatusMessage = HasApps
+                    ? $"{AppSessions.Count} aktive Audio-Anwendung{(AppSessions.Count > 1 ? "en" : "")} erkannt"
+                    : "Keine aktiven Audio-Anwendungen gefunden. Spiele Ton in einer App ab, damit sie hier erscheint.";
+            });
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"AppRoutingManager.RefreshAsync error: {ex}");
-            HasNoApps = AppSessions.Count == 0;
+            RunOnUI(() =>
+            {
+                HasNoApps = AppSessions.Count == 0;
+            });
         }
         finally
         {
-            IsScanning = false;
+            RunOnUI(() =>
+            {
+                IsScanning = false;
+            });
         }
     }
 
