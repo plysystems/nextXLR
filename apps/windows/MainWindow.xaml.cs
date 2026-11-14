@@ -88,7 +88,11 @@ public sealed partial class MainWindow : Window
 
         if (RootWindowGrid != null)
         {
-            RootWindowGrid.ActualThemeChanged += (_, _) => UpdateTitleBarTheme();
+            RootWindowGrid.ActualThemeChanged += (_, _) =>
+            {
+                UpdateTitleBarTheme();
+                UpdateLogoTheme();
+            };
         }
         if (ContentFrame != null)
         {
@@ -101,6 +105,17 @@ public sealed partial class MainWindow : Window
             };
         }
         ApplyTheme(AppSettings.Load().AppTheme);
+        UpdateLogoTheme();
+        UpdatePaneLayout();
+
+        SizeChanged += (s, e) =>
+        {
+            if (e.Size.Width < 1080 && Nav != null && Nav.IsPaneOpen)
+            {
+                Nav.IsPaneOpen = false;
+                UpdatePaneLayout();
+            }
+        };
 
         AppWindow.Resize(new SizeInt32(1440, 920));
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "nextXLR_icon.ico"));
@@ -550,6 +565,7 @@ public sealed partial class MainWindow : Window
     private void MenuToggleButton_Click(object sender, RoutedEventArgs e)
     {
         Nav.IsPaneOpen = !Nav.IsPaneOpen;
+        UpdatePaneLayout();
     }
 
     private void Nav_PaneOpened(NavigationView sender, object args)
@@ -569,22 +585,12 @@ public sealed partial class MainWindow : Window
 
     private void UpdatePaneLayout()
     {
-        if (TitleBarPaneColumn == null) return;
+        if (TitleBarPaneColumn == null || Nav == null) return;
         bool isOpen = Nav.IsPaneOpen;
-        if (Nav.DisplayMode == NavigationViewDisplayMode.Minimal)
+        TitleBarPaneColumn.Width = new GridLength(isOpen ? Nav.OpenPaneLength : Nav.CompactPaneLength);
+        if (LogoFull != null)
         {
-            TitleBarPaneColumn.Width = new GridLength(isOpen ? Nav.OpenPaneLength : 48);
-            if (LogoFull != null) LogoFull.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
-        }
-        else if (Nav.DisplayMode == NavigationViewDisplayMode.Compact)
-        {
-            TitleBarPaneColumn.Width = new GridLength(isOpen ? Nav.OpenPaneLength : Nav.CompactPaneLength);
-            if (LogoFull != null) LogoFull.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
-        }
-        else
-        {
-            TitleBarPaneColumn.Width = new GridLength(isOpen ? Nav.OpenPaneLength : Nav.CompactPaneLength);
-            if (LogoFull != null) LogoFull.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
+            LogoFull.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 
@@ -829,6 +835,24 @@ public sealed partial class MainWindow : Window
         }
 
         UpdateTitleBarTheme();
+        UpdateLogoTheme();
+    }
+
+    private void UpdateLogoTheme()
+    {
+        try
+        {
+            if (LogoFull == null) return;
+            bool isDark = true;
+            if (RootWindowGrid != null)
+            {
+                isDark = RootWindowGrid.ActualTheme != ElementTheme.Light;
+            }
+
+            string logoFile = isDark ? "nextXLR_logo_dark.png" : "nextXLR_logo_light.png";
+            LogoFull.Source = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri($"ms-appx:///Assets/{logoFile}"));
+        }
+        catch { }
     }
 
     private void UpdateTitleBarTheme()

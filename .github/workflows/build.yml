@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node.js for Stream Deck CLI
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Cache Cargo dependencies
         uses: actions/cache@v4
@@ -49,11 +49,14 @@ jobs:
           cargo build --release --bin mixforged
 
       - name: Package Stream Deck Plugin
+        shell: pwsh
         run: |
           npm install -g @elgato/cli
           streamdeck pack plugins/streamdeck/com.plysystems.nextxlr.sdPlugin -o dist -f --ignore-validation
-          mkdir -p apps/windows/Assets/StreamDeck
-          cp dist/com.plysystems.nextxlr.streamDeckPlugin apps/windows/Assets/StreamDeck/
+          if (!(Test-Path "apps/windows/Assets/StreamDeck")) {
+            New-Item -ItemType Directory -Force -Path "apps/windows/Assets/StreamDeck"
+          }
+          Copy-Item "dist/com.plysystems.nextxlr.streamDeckPlugin" -Destination "apps/windows/Assets/StreamDeck/" -Force
 
       - name: Build Windows WinUI 3 Application (NextXLR)
         run: |

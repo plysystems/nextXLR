@@ -22,12 +22,12 @@
             <Grid Grid.Column="0" Background="{ThemeResource NavigationViewDefaultPaneBackground}">
                 <Border BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="0,0,1,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Padding="4,0,0,0">
-                    <Button x:Name="MenuToggleButton" Width="40" Height="40" Margin="4,0,6,0"
+                    <Button x:Name="MenuToggleButton" Width="36" Height="36" Margin="6,0,8,0"
                             Background="Transparent" BorderThickness="0" CornerRadius="8"
                             Click="MenuToggleButton_Click" ToolTipService.ToolTip="Menü ein-/ausklappen">
-                        <FontIcon Glyph="&#xE700;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                        <FontIcon Glyph="&#xE700;" FontSize="15" Foreground="{StaticResource BrandBrush}" />
                     </Button>
-                    <Image x:Name="LogoFull" Source="Assets/nextXLR_logo.png" Height="36"
+                    <Image x:Name="LogoFull" Height="28"
                            VerticalAlignment="Center" Stretch="Uniform" AutomationProperties.Name="NEXT : XLR" />
                 </StackPanel>
             </Grid>
@@ -48,8 +48,7 @@
 
         <NavigationView x:Name="Nav" Grid.Row="1"
                         Background="{ThemeResource SurfaceL1Brush}"
-                        PaneDisplayMode="Auto" OpenPaneLength="248" CompactPaneLength="48"
-                        ExpandedModeThresholdWidth="1180" CompactModeThresholdWidth="720"
+                        PaneDisplayMode="Left" OpenPaneLength="248" CompactPaneLength="48"
                         IsBackButtonVisible="Collapsed" IsSettingsVisible="False"
                         IsPaneToggleButtonVisible="False"
                         AlwaysShowHeader="False" Header="{x:Null}"

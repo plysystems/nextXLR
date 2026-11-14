@@ -50,6 +50,8 @@
   <ItemGroup>
     <Content Include="Assets\nextXLR_icon.ico" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\nextXLR_logo.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\nextXLR_logo_dark.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\nextXLR_logo_light.png" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\Driver\**" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\StreamDeck\**" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" />
