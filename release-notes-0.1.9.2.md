@@ -4,7 +4,16 @@ Offizieller Release **v0.1.9.2-alpha** für NEXT : XLR, die Mixforge Audio Engin
 
 ## Highlights & Neuerungen
 
-### 1. Hardware-Ruhemodus (Standby beim Herunterfahren & Schließen)
+### 1. Fader-Kalibrierung & Standby-Verhalten (Motor-Fader)
+* **Startup-Justierung (0 -> 100 -> Eingestellter Wert)**:
+  * Beim Starten der Software / Initialisieren des GoXLR fahren alle motorisierten Fader automatisch einen Kalibrierungssweep von 0 bis 100% (Endstop-Kalibrierung) ab.
+  * Anschließend stellen sich die Fader sofort sanft und präzise auf die im Profil eingestellten Lautstärkewerte ein.
+  * Eine intelligente Filterung sorgt dafür, dass die Motorfahrten während der Initialisierung nicht als Benutzerinteraktion fehlinterpretiert werden.
+* **Shutdown (Fader auf 0 ohne Speichern)**:
+  * Beim Herunterfahren des PCs oder Beenden der Software werden die motorisierten Fader automatisch auf 0 gefahren.
+  * **Wichtig**: Die ursprünglichen Lautstärkewerte bleiben im Profil und in den Einstellungen vollständig erhalten und werden nicht mit 0 überschrieben. Beim nächsten Starten stehen alle Fader wieder auf ihren gewünschten Werten.
+
+### 2. Hardware-Ruhemodus (Standby beim Herunterfahren & Schließen)
 * **Automatischer Standby bei PC-Shutdown / Neustart / Energiesparmodus**:
   * Dedizierter Windows-Power-Watcher registriert Systemereignisse (`WM_QUERYENDSESSION`, `WM_ENDSESSION`, `WM_POWERBROADCAST`).
   * Beim Herunterfahren, Abmelden oder Energiesparmodus schaltet NEXT : XLR die GoXLR-Hardware unmittelbar in einen stromsparenden und lautlosen Ruhemodus (Beleuchtung dunkel, Scribble-Strips aus, alle Tasten-LEDs abgeschaltet).

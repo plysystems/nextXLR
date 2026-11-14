@@ -385,15 +385,18 @@ async fn run_hub(
                         } else if !matches!(ev, HardwareEvent::FaderMoved { .. } | HardwareEvent::MicLevel(_)) {
                             tracing::debug!(?ev, "← hardware");
                         }
-                        // Touching the device (button, knob, fader) wakes it from standby. The
-                        // waking touch itself is swallowed so it doesn't toggle a mute by accident.
-                        if sleeping && !matches!(ev, HardwareEvent::MicLevel(_) | HardwareEvent::Disconnected) {
-                            sleeping = false;
-                            tracing::info!("GoXLR input during standby — waking up");
-                            if let Some(h) = &hw { h.send(HardwareCommand::Wake); }
-                            if !matches!(ev, HardwareEvent::FaderMoved { .. }) {
-                                continue;
+                        if sleeping {
+                            // While sleeping, faders are parked at 0 and mic polling is ignored.
+                            // Only physical button presses or encoder turns wake the device.
+                            if matches!(ev, HardwareEvent::Button { pressed: true, .. }
+                                | HardwareEvent::MuteButton { pressed: true, .. }
+                                | HardwareEvent::EncoderTurned { .. })
+                            {
+                                sleeping = false;
+                                tracing::info!("GoXLR button/encoder input during standby — waking up");
+                                if let Some(h) = &hw { h.send(HardwareCommand::Wake); }
                             }
+                            continue; // Discard all inputs while asleep so fader 0 is never dispatched or saved!
                         }
                         (Input::Hardware(ev), None)
                     }

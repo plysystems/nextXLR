@@ -515,6 +515,7 @@ mod tests {
             metered: true,
             icon: None,
             restore_volume: None,
+            restore_submix_volume: None,
             fixed: false,
         };
         let v = serde_json::to_value(&c).unwrap();

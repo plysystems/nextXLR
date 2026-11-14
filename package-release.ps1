@@ -39,7 +39,7 @@ cargo build --release --bin mixforged
 
 # 0b. Compile projects to ensure latest binaries
 Write-Host "Building Windows Application in Release Mode..."
-dotnet build (Join-Path $root "apps\windows\NextXLR.csproj") -c Release -p:SourceRevisionId=$gitSha -p:InformationalVersion="$version+$gitSha"
+dotnet build (Join-Path $root "apps\windows\NextXLR.csproj") -c Release --no-restore -p:SourceRevisionId=$gitSha -p:InformationalVersion="$version+$gitSha"
 if ($LASTEXITCODE -ne 0) {
     throw "dotnet build for NextXLR failed with exit code $LASTEXITCODE"
 }

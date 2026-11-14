@@ -53,6 +53,11 @@ pub struct GoXlrDevice {
     colour_map: Option<Vec<u8>>,
     /// Last fader LED display mode per fader — restored on wake.
     fader_gradient: [Option<bool>; 4],
+    /// Last configured volume per fader (0..=255) — restored on wake from standby.
+    fader_target_volume: [u8; 4],
+    /// Until this instant, faders are running startup calibration or motor travel;
+    /// position reports are discarded so travel is never mistaken for human input.
+    calibrating_until: Instant,
 }
 
 const MIC_POLL: Duration = Duration::from_millis(33);
@@ -97,6 +102,8 @@ impl GoXlrDevice {
             sleeping: false,
             colour_map: None,
             fader_gradient: [None; 4],
+            fader_target_volume: [128; 4],
+            calibrating_until: Instant::now(),
         };
         me.handshake()?;
         me.serial = me.read_serial().ok();
@@ -111,6 +118,11 @@ impl GoXlrDevice {
         }
         me.bind_faders()?;
         me.push_leds()?;
+        if me.model == Model::Full {
+            if let Err(e) = me.startup_calibrate() {
+                tracing::warn!("fader startup calibration error: {e:#}");
+            }
+        }
         Ok(me)
     }
 
@@ -180,14 +192,47 @@ impl GoXlrDevice {
         Ok(())
     }
 
-    /// Standby: black colour map (buttons, faders, encoders, logo), every button LED on its
-    /// (now black) inactive colour and blank scribble strips. Each step is best effort so one
-    /// failing write never leaves the device half-lit.
+    /// Startup calibration: sweep physical motorized faders from 0 to 100% (255) so the motors
+    /// calibrate their endstops, then return to normal operation where configured levels are applied.
+    fn startup_calibrate(&mut self) -> Result<()> {
+        tracing::info!("GoXLR motorized faders calibrating (0 -> 100)...");
+        self.calibrating_until = Instant::now() + Duration::from_millis(1800);
+
+        // 1. Move all faders to 0
+        let channels = self.fader_page;
+        for ch in channels {
+            let _ = self.request(Command::SetChannelVolume(ch), &[0]);
+        }
+        std::thread::sleep(Duration::from_millis(350));
+
+        // 2. Move all faders to 100% (255)
+        for ch in channels {
+            let _ = self.request(Command::SetChannelVolume(ch), &[255]);
+        }
+        std::thread::sleep(Duration::from_millis(400));
+        tracing::info!("GoXLR fader calibration sweep complete");
+        Ok(())
+    }
+
+    /// Standby: drive motorized faders down to 0 (without saving to profile), set black colour map,
+    /// turn off button LEDs and clear scribble strips.
     fn enter_sleep(&mut self) -> Result<()> {
         if self.sleeping {
             return Ok(());
         }
+        self.sleeping = true;
         let mut first_err = None;
+
+        // Drive motorized faders to 0 on shutdown / sleep
+        if self.model == Model::Full {
+            let channels = self.fader_page;
+            for ch in channels {
+                if let Err(e) = self.request(Command::SetChannelVolume(ch), &[0]) {
+                    first_err.get_or_insert(e);
+                }
+            }
+        }
+
         let black = vec![0u8; self.map_format.byte_len()];
         if let Err(e) = self.request(Command::SetColourMap, &black) {
             first_err.get_or_insert(e);
@@ -204,17 +249,28 @@ impl GoXlrDevice {
                 }
             }
         }
-        self.sleeping = true;
-        tracing::info!("GoXLR entered standby");
+        tracing::info!("GoXLR entered standby (faders at 0, lights off)");
         first_err.map_or(Ok(()), Err)
     }
 
-    /// Leave standby: restore colour map, fader display modes, button LEDs and scribbles.
+    /// Leave standby: restore configured fader positions, colour map, fader display modes, button LEDs and scribbles.
     fn leave_sleep(&mut self) -> Result<()> {
         if !self.sleeping {
             return Ok(());
         }
         self.sleeping = false;
+
+        // Restore configured fader positions from saved target volumes
+        if self.model == Model::Full {
+            self.calibrating_until = Instant::now() + Duration::from_millis(1000);
+            let channels = self.fader_page;
+            let targets = self.fader_target_volume;
+            for (i, ch) in channels.into_iter().enumerate() {
+                let v = targets[i];
+                let _ = self.request(Command::SetChannelVolume(ch), &[v]);
+            }
+        }
+
         if let Some(map) = self.colour_map.clone() {
             self.request(Command::SetColourMap, &map)?;
         }
@@ -229,7 +285,7 @@ impl GoXlrDevice {
             }
         }
         self.push_leds()?;
-        tracing::info!("GoXLR left standby");
+        tracing::info!("GoXLR left standby (faders and lights restored)");
         Ok(())
     }
 
@@ -238,8 +294,12 @@ impl GoXlrDevice {
         let state = InputState::parse(&body).context("short button-state response")?;
         let mut events = state.diff(self.last_input.as_ref());
         let now = Instant::now();
+        let is_calibrating = now < self.calibrating_until;
         events.retain(|ev| {
             let HardwareEvent::FaderMoved { fader, .. } = ev else { return true };
+            if is_calibrating || self.sleeping {
+                return false;
+            }
             let slot = &mut self.motor[fader.index()];
             match slot {
                 Some(w) if now < w.quiet_until && now < w.deadline => {
@@ -290,7 +350,10 @@ impl HardwareDevice for GoXlrDevice {
             HardwareCommand::ChannelVolume { channel, volume } => {
                 if let Some(ch) = goxlr_channel(*channel) {
                     let v = (volume.clamp(0.0, 1.0) * 255.0).round() as u8;
-                    if self.model == Model::Full {
+                    if let Some(i) = self.fader_page.iter().position(|&c| c == ch) {
+                        self.fader_target_volume[i] = v;
+                    }
+                    if self.model == Model::Full && !self.sleeping {
                         if let Some(i) = self.fader_page.iter().position(|&c| c == ch) {
                             let now = Instant::now();
                             self.motor[i] = Some(MotorWindow {
@@ -298,8 +361,10 @@ impl HardwareDevice for GoXlrDevice {
                                 deadline: now + MOTOR_MAX,
                             });
                         }
+                        self.request(Command::SetChannelVolume(ch), &[v])?;
+                    } else if self.model != Model::Full {
+                        self.request(Command::SetChannelVolume(ch), &[v])?;
                     }
-                    self.request(Command::SetChannelVolume(ch), &[v])?;
                 }
             }
             HardwareCommand::ChannelMute { channel, muted } => {
