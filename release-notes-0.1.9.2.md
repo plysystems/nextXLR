@@ -27,16 +27,26 @@ Offizieller Release **v0.1.9.2-alpha** für NEXT : XLR, die Mixforge Audio Engin
 * Neuer Endpunkt `/api/power` zur direkten Steuerung des Hardware-Standbys (`sleep`, `wake`, `shutdown`) über Skripte, Stream Deck oder App.
 * Synchronisierte Thread-Kommunikation für Hardware-Flush garantiert, dass das Standby-Kommando zuverlässig und vollständig an die GoXLR USB-Schnittstelle übermittelt wird, bevor Prozesse beendet werden.
 
-### 3. Design & Theme-Auswahl (Dunkel / Hell / System)
-* **Theme-Umschaltung in Einstellungen**:
-  * Unter *Einstellungen -> Allgemein* steht nun die Option **Erscheinungsbild & Design** bereit (Dunkel, Hell, System).
-  * Wechsel erfolgt sofort zur Laufzeit ohne Neustart der App.
+### 3. Design & Theme-Architektur (Dunkel / Hell / System)
 * **Farbschema "Dunkel"**:
-  * Der Content-Hintergrund erstrahlt in modernem `#252525`.
-  * Sidebar und Titelzeile bilden ein edles `#1D1D1D` Studio-Chassis.
-  * Modul-Karten und Boxen heben sich dezent bei `#2E2E2E` ab, mit vertieften Reglerschächten in `#1D1D1D`.
+  * **Sidebar & Topbar**: Durchgängig und bündig in edlem `#050505` Studio-Chassis (keine Farbbrüche oder störende Zwischenstreifen mehr).
+  * **Content-Bereich**: Tiefe, hochmoderne Studio-Basis in `#0A0A0A`.
+  * **Modul-Karten**: Elegante Konsolen-Karten in `#141416` mit präzisem Kontur-Stroke `#222226`.
 * **Farbschema "Hell"**:
-  * Elegante Sidebar in warmem Creamweiß (`#F6F5F2`) und reiner Content-Bereich in `#FFFFFF`.
+  * **Sidebar & Topbar**: Feine, hochwertige Platin-Chassis-Abstufung in `#EAECEF`.
+  * **Content-Bereich**: Heller, klarer Studio-Arbeitsbereich in `#F6F7F9`.
+  * **Modul-Karten**: Schwebende reinweiße Karten `#FFFFFF` mit dezentem `#D8DCE4` Kontur-Stroke.
+* **Behebung des Theme-Wechsels**:
+  * Vollständige Entfernung statischer Instanz-Caches (`NavigationCacheMode = Disabled`) auf allen Seiten. Beim Umschalten auf "Hell" oder "Dunkel" werden der gesamte Content-Bereich und alle Subseiten in Echtzeit sofort im gewählten Design neu gerendert.
+* **Branding & Glow-Effekt**:
+  * Offizielles NEXT : XLR Markenlogo in `#3DDFD9` (Electric Aqua / Cyan) mit dezentem, atmosphärischem Ambient-Glow im Header.
+  * Adaptive Umschaltung zwischen Dark- und Light-Logo je nach gewähltem Theme.
+* **Entschärfung aggressiver Neon-Mint-Farben**:
+  * Reduzierung übertriebener greller Neon-Elemente.
+  * Toggles, Schalter und Text-Aktionen wurden auf professionelle, dezente Studio-Farben mit ausgewogenem Kontrast und weißem Thumb umgestellt.
+* **Responsives Menü & Titelleiste**:
+  * Interaktiver Menü-Button (`≡`) oben links zum Umschalten zwischen voller Seitenleiste (248 px) und kompaktem Modus (48 px).
+  * Nahtloses Verhalten bei Fenster-Resizing; Titelleiste bleibt im Inhaltsbereich butterweich verschiebbar.
 * **Optische Mixer- & Sampler-Optimierungen**:
   * **Motor-Fader**: Neu gestalteter anodisierter Aluminium-Faderknopf mit feinen Bevels, Grip-Rillen und hochpräziser LED-Indikatorlinie sowie neutralgrauen Skalenstrichen.
   * **Sampler-Pads (Button 1–4)**: Vollständig überarbeitete Hardware-Pad-Optik mit taktilem Button-Badge, Modus-Chip, dynamischen LED-Statusfarben und intuitiven Zustandsanzeigen.
