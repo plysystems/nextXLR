@@ -20,14 +20,14 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
                 <TextBlock x:Uid="MixerTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
-                <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="6"
-                        Padding="8,3" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1"
+                <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="8"
+                        Padding="10,4" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1"
                         VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <Ellipse Width="6" Height="6" Fill="{StaticResource BrandBrush}" />
-                        <TextBlock Text="STUDIO CONSOLE" FontSize="10" FontWeight="Bold"
+                    <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
+                        <Ellipse Width="7" Height="7" Fill="{StaticResource BrandBrush}" />
+                        <TextBlock Text="STUDIO CONSOLE" FontSize="11" FontWeight="Bold"
                                    Foreground="{StaticResource BrandBrush}" />
                     </StackPanel>
                 </Border>
@@ -146,47 +146,47 @@
                         </Border>
                     </StackPanel>
 
-                    <!-- Master Live Controls: Segmented Buttongroup [ Mic_ICON | !@#$?* ] + Unabhängige Zensur -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <!-- Master Live Controls: Segmented Buttongroup [ Mic_ICON | !@#$?* ] + Unabhängige Zensur (GRÖSSER) -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                         <!-- Buttongroup [ Mic_ICON | !@#$?* ] -->
-                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="10"
-                                Padding="2" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1">
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="12"
+                                Padding="3" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1">
                             <StackPanel Orientation="Horizontal" Spacing="0">
                                 <!-- Mic Mute (Husten) Button - Only Mic Icon -->
-                                <ToggleButton x:Uid="MicMuteButton" Width="38" Height="32" Padding="0" CornerRadius="8,0,0,8"
+                                <ToggleButton x:Uid="MicMuteButton" Width="48" Height="38" Padding="0" CornerRadius="9,0,0,9"
                                               BorderThickness="0" Style="{StaticResource SmoothDangerToggle}"
                                               IsChecked="{x:Bind ViewModel.MicMuted, Mode=TwoWay}"
                                               ToolTipService.ToolTip="Mikrofon stummschalten (Husten-Taste)">
-                                    <FontIcon Glyph="{x:Bind MicGlyph(ViewModel.MicMuted), Mode=OneWay}" FontSize="13" />
+                                    <FontIcon Glyph="{x:Bind MicGlyph(ViewModel.MicMuted), Mode=OneWay}" FontSize="16" />
                                 </ToggleButton>
 
                                 <!-- Subtle 1px Divider -->
-                                <Border Width="1" Height="20" Background="{ThemeResource GlassCardBorderBrush}" VerticalAlignment="Center" />
+                                <Border Width="1" Height="24" Background="{ThemeResource GlassCardBorderBrush}" VerticalAlignment="Center" />
 
                                 <!-- Bleep Button - Only !@#$?* -->
-                                <ToggleButton x:Name="BleepButton" x:Uid="BleepButton" Width="48" Height="32" Padding="0" CornerRadius="0,8,8,0"
+                                <ToggleButton x:Name="BleepButton" x:Uid="BleepButton" Width="62" Height="38" Padding="0" CornerRadius="0,9,9,0"
                                               BorderThickness="0" Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
                                               IsChecked="{x:Bind ViewModel.BleepActive, Mode=OneWay}"
                                               ToolTipService.ToolTip="Zensurton (Halten)">
-                                    <TextBlock Text="!@#$?*" FontSize="11" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}"
+                                    <TextBlock Text="!@#$?*" FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}"
                                                HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </ToggleButton>
                             </StackPanel>
                         </Border>
 
-                        <!-- Unabhängige Zensur-Karte (Pegel) -->
-                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="10"
-                                Height="38" Padding="10,0" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1"
+                        <!-- Unabhängige Zensur-Karte (Pegel) (GRÖSSER) -->
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="12"
+                                Height="46" Padding="14,0" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1"
                                 VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                <TextBlock Text="Zensur:" FontSize="11.5" FontWeight="SemiBold"
+                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                <TextBlock Text="Zensur:" FontSize="13" FontWeight="SemiBold"
                                            Foreground="{ThemeResource TextMutedBrush}" VerticalAlignment="Center" />
                                 <Slider x:Name="BleepSlider" Minimum="0" Maximum="100" StepFrequency="1"
-                                        Width="80" VerticalAlignment="Center"
+                                        Width="120" Height="36" VerticalAlignment="Center"
                                         Value="{x:Bind ViewModel.BleepVolume, Mode=TwoWay}"
                                         AutomationProperties.Name="Zensur Lautstärke" />
                                 <TextBlock Text="{x:Bind ViewModel.BleepVolumeText, Mode=OneWay}"
-                                           FontSize="11.5" FontWeight="SemiBold" Width="44" VerticalAlignment="Center"
+                                           FontSize="13" FontWeight="Bold" Width="50" VerticalAlignment="Center"
                                            Foreground="{StaticResource BrandBrush}" FontFamily="{StaticResource MonoFont}"
                                            ToolTipService.ToolTip="{x:Bind ViewModel.BleepVolumePercentText, Mode=OneWay}" />
                             </StackPanel>

@@ -186,7 +186,7 @@ public sealed class VirtualChannelsService
     {
         InitializeGoXlrTracks();
         Load();
-        ScanWindowsEndpoints();
+        Task.Run(ScanWindowsEndpoints);
     }
 
     private void InitializeGoXlrTracks()

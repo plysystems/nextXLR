@@ -1024,9 +1024,12 @@ public partial class VirtualChannelsPage : Page
         {
             ViewModel = vm;
         }
-        Service.ScanWindowsEndpoints();
         AppRouting.StartMonitoring();
-        AppRouting.Refresh();
+        Task.Run(async () =>
+        {
+            Service.ScanWindowsEndpoints();
+            await AppRouting.RefreshAsync();
+        });
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -1042,9 +1045,12 @@ public partial class VirtualChannelsPage : Page
 
     private void ReSync_Click(object sender, RoutedEventArgs e)
     {
-        Service.ScanWindowsEndpoints();
-        Service.Load();
-        AppRouting.Refresh();
+        Task.Run(async () =>
+        {
+            Service.ScanWindowsEndpoints();
+            Service.Load();
+            await AppRouting.RefreshAsync();
+        });
     }
 
     private void OpenSoundControlPanel_Click(object sender, RoutedEventArgs e)

@@ -321,7 +321,7 @@
                             </Grid>
                         </Border>
 
-                        <!-- Card 2: Stream Deck / Aktiv -->
+                        <!-- Card 2: Stream Deck / Verfügbarkeit (1:1 wie NEXT:XLR Verbunden) -->
                         <Border x:Name="StatusCardStreamDeck" CornerRadius="12" Padding="12,10"
                                 Background="{ThemeResource SurfaceL2Brush}" BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1"
                                 ToolTipService.ToolTip="{x:Bind ViewModel.StreamDeck.StatusDetail, Mode=OneWay}">
@@ -330,12 +330,14 @@
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
+                                <!-- Glowing Status Dot (1:1 wie NEXT:XLR) -->
                                 <Grid Width="16" Height="16" VerticalAlignment="Center">
-                                    <FontIcon Glyph="&#xE93C;" FontSize="14" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <Ellipse Fill="{x:Bind StatusBrush(ViewModel.StreamDeck.IsAppRunning), Mode=OneWay}" Opacity="0.35" Width="16" Height="16" />
+                                    <Ellipse Fill="{x:Bind StatusBrush(ViewModel.StreamDeck.IsAppRunning), Mode=OneWay}" Width="8" Height="8" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Grid>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" x:Name="StatusStreamDeckPanel">
                                     <TextBlock Text="Stream Deck" FontSize="12.5" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}" />
-                                    <TextBlock Text="{x:Bind ViewModel.StreamDeck.StatusText, Mode=OneWay}" FontSize="11" Foreground="{ThemeResource TextMutedBrush}" />
+                                    <TextBlock Text="{x:Bind ViewModel.StreamDeck.SoftwareStatusText, Mode=OneWay}" FontSize="11" Foreground="{ThemeResource TextMutedBrush}" />
                                 </StackPanel>
                             </Grid>
                         </Border>
