@@ -109,7 +109,7 @@
                         </Grid.RowDefinitions>
 
                         <!-- Tall precision Kopfhörer Fader with meter -->
-                        <controls:Fader x:Name="PhonesFader" Width="44"
+                        <controls:Fader x:Name="PhonesFader" Width="48"
                                         HorizontalAlignment="Center" VerticalAlignment="Stretch"
                                         Minimum="{x:Bind ViewModel.MinVolumePercent, Mode=OneWay}"
                                         Maximum="{x:Bind ViewModel.MaxVolumePercent, Mode=OneWay}"
@@ -169,7 +169,7 @@
                         </Grid.RowDefinitions>
 
                         <!-- Tall precision Stream Fader with meter -->
-                        <controls:Fader x:Name="StreamFader" Width="44"
+                        <controls:Fader x:Name="StreamFader" Width="48"
                                         HorizontalAlignment="Center" VerticalAlignment="Stretch"
                                         Minimum="{x:Bind ViewModel.MinVolumePercent, Mode=OneWay}"
                                         Maximum="{x:Bind ViewModel.MaxVolumePercent, Mode=OneWay}"
@@ -230,7 +230,7 @@
                     </Grid.RowDefinitions>
 
                     <!-- Precision Fader with meter -->
-                    <controls:Fader x:Name="Fader" Width="44"
+                    <controls:Fader x:Name="Fader" Width="58"
                                     HorizontalAlignment="Center" VerticalAlignment="Stretch"
                                     Minimum="{x:Bind ViewModel.MinVolumePercent, Mode=OneWay}"
                                     Maximum="{x:Bind ViewModel.MaxVolumePercent, Mode=OneWay}"

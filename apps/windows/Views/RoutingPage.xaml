@@ -48,10 +48,10 @@
                             </ItemsRepeater.ItemTemplate>
                         </ItemsRepeater>
                         <!-- Sampler: separate, highlighted -->
-                        <Border Grid.Column="2" CornerRadius="12,12,0,0" Background="#1F2A2F" Padding="0,8,0,12"
-                                BorderBrush="#2E4A45" BorderThickness="1,1,1,0">
+                        <Border Grid.Column="2" CornerRadius="12,12,0,0" Background="{ThemeResource SurfaceL3Brush}" Padding="0,8,0,12"
+                                BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1,1,1,0">
                             <StackPanel Spacing="6">
-                                <Border Width="36" Height="36" CornerRadius="12" Background="#26403B">
+                                <Border Width="36" Height="36" CornerRadius="12" Background="{ThemeResource SurfaceL2Brush}">
                                     <FontIcon Glyph="&#xE7C8;" FontSize="16" Foreground="{StaticResource WarningBrush}" />
                                 </Border>
                                 <TextBlock Text="{x:Bind ViewModel.SamplerBusName, Mode=OneWay}" FontSize="12" FontWeight="SemiBold"
@@ -100,7 +100,7 @@
                                         </ItemsRepeater.ItemTemplate>
                                     </ItemsRepeater>
                                     <!-- Sampler column -->
-                                    <Border Grid.Column="2" Background="#1F2A2F" BorderBrush="#2E4A45" BorderThickness="1,0,1,0"
+                                    <Border Grid.Column="2" Background="{ThemeResource SurfaceL3Brush}" BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1,0,1,0"
                                             Padding="12,5">
                                         <ToggleButton Style="{StaticResource SmoothToggle}" CornerRadius="10" Height="44" IsThreeState="False"
                                                       IsChecked="{x:Bind SamplerCell.IsRouted, Mode=TwoWay}"
@@ -122,8 +122,8 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="132" />
                         </Grid.ColumnDefinitions>
-                        <Border Grid.Column="2" Height="10" CornerRadius="0,0,12,12" Background="#1F2A2F"
-                                BorderBrush="#2E4A45" BorderThickness="1,0,1,1" />
+                        <Border Grid.Column="2" Height="10" CornerRadius="0,0,12,12" Background="{ThemeResource SurfaceL3Brush}"
+                                BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1,0,1,1" />
                     </Grid>
                 </StackPanel>
             </Border>

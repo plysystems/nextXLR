@@ -24,12 +24,14 @@ namespace NextXLR.Controls;
 /// </summary>
 public sealed partial class Fader : UserControl
 {
-    private const double CapHeight = 36;
+    private const double CapHeight = 34;
     private const double GlideTimeConstant = 0.06; // seconds; critically damped approach
 
     private static readonly SolidColorBrush StudioWhiteBrush = new(Windows.UI.Color.FromArgb(255, 0xF5, 0xF5, 0xF5));
-    private static readonly SolidColorBrush TickMajorBrush = new(ColorHelper.FromArgb(255, 0x75, 0x75, 0x75));
-    private static readonly SolidColorBrush TickMinorBrush = new(ColorHelper.FromArgb(255, 0x3E, 0x3E, 0x3E));
+    private static readonly SolidColorBrush TickMajorBrushDark = new(ColorHelper.FromArgb(255, 0x9E, 0x9E, 0x9E));
+    private static readonly SolidColorBrush TickMinorBrushDark = new(ColorHelper.FromArgb(255, 0x55, 0x55, 0x55));
+    private static readonly SolidColorBrush TickMajorBrushLight = new(ColorHelper.FromArgb(255, 0x6E, 0x6E, 0x6E));
+    private static readonly SolidColorBrush TickMinorBrushLight = new(ColorHelper.FromArgb(255, 0xB0, 0xB0, 0xB0));
 
     private double _shown;          // what is drawn (eases toward Value)
     private bool _dragging;
@@ -51,6 +53,7 @@ public sealed partial class Fader : UserControl
         MeterHold.Opacity = 0.0;
         UpdateIndicatorBrush();
 
+        ActualThemeChanged += (_, _) => DrawTicks();
         Root.PointerPressed += OnPressed;
         Root.PointerMoved += OnMoved;
         Root.PointerReleased += OnReleased;
@@ -189,28 +192,34 @@ public sealed partial class Fader : UserControl
 
     private void DrawTicks()
     {
-        MeterHost.Margin = new Thickness(3, CapHeight / 2, 0, CapHeight / 2);
+        MeterHost.Margin = new Thickness(2, CapHeight / 2, 0, CapHeight / 2);
         Track.Margin = new Thickness(0, CapHeight / 2, 0, CapHeight / 2);
         Ticks.Children.Clear();
         if (Root.ActualHeight <= 0) return;
 
         var startY = CapHeight / 2;
         var travel = Travel;
+        var w = Root.ActualWidth > 0 ? Root.ActualWidth : (double.IsNaN(Width) ? 48.0 : Width);
 
-        // Calibrated scale ticks on the right (x = 51) at 100%, 75%, 50%, 25%, 0%
+        var isDark = ActualTheme != ElementTheme.Light;
+        var majorBrush = isDark ? TickMajorBrushDark : TickMajorBrushLight;
+        var minorBrush = isDark ? TickMinorBrushDark : TickMinorBrushLight;
+
+        // Calibrated scale ticks on the right (neutral grey) at 100%, 75%, 50%, 25%, 0%
         for (var i = 0; i <= 4; i++)
         {
             var y = startY + travel * i / 4.0;
             var major = (i % 2 == 0); // 100%, 50%, 0%
-            var len = major ? 6.0 : 4.0;
-            var brush = major ? TickMajorBrush : TickMinorBrush;
+            var len = major ? 5.0 : 3.5;
+            var brush = major ? majorBrush : minorBrush;
+            var tickX = Math.Max(w - len - 1.5, (w / 2.0) + (Cap.Width / 2.0) + 1.5);
 
             Ticks.Children.Add(new Rectangle
             {
                 Width = len,
                 Height = 1,
                 Fill = brush,
-                Margin = new Thickness(51, y - 0.5, 0, 0),
+                Margin = new Thickness(tickX, y - 0.5, 0, 0),
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Top
             });

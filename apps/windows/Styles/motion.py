@@ -8,9 +8,13 @@ switch instantly; only storyboard values are interpolated.)
 """
 from pathlib import Path
 
-NEUTRAL = dict(bg="#303030", stroke="#383838", fg="#EAEAEA")
-HOVER = dict(bg="#3A3A3A", stroke="#484848")
-PRESSED = dict(bg="#262626")
+DARK_NEUTRAL = dict(bg="#2E2E2E", stroke="#3D3D3D", fg="#F0F0F0")
+DARK_HOVER = dict(bg="#3A3A3A", stroke="#4D4D4D")
+DARK_PRESSED = dict(bg="#222222")
+
+LIGHT_NEUTRAL = dict(bg="#F0F1F3", stroke="#D1D5DB", fg="#111827")
+LIGHT_HOVER = dict(bg="#E5E7EB", stroke="#9CA3AF")
+LIGHT_PRESSED = dict(bg="#D1D5DB")
 
 def anim(target, prop, value):
     if prop == "Color":
@@ -32,22 +36,22 @@ def state(name, bg=None, stroke=None, fg=None, press=False, opacity=None):
                                     </Storyboard>
                                 </VisualState>'''
 
-def template(target_type, states, hover_stroke=None):
+def template(target_type, states, neutral_cfg):
     states_xml = "\n".join(states)
     return f'''        <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{target_type}">
                     <Grid x:Name="Root" CornerRadius="{{TemplateBinding CornerRadius}}" RenderTransformOrigin="0.5,0.5">
                         <Grid.RenderTransform><ScaleTransform x:Name="Scale" /></Grid.RenderTransform>
-                        <Grid.Background><SolidColorBrush x:Name="Bg" Color="{NEUTRAL['bg']}" /></Grid.Background>
+                        <Grid.Background><SolidColorBrush x:Name="Bg" Color="{neutral_cfg['bg']}" /></Grid.Background>
                         <Border CornerRadius="{{TemplateBinding CornerRadius}}" BorderThickness="{{TemplateBinding BorderThickness}}">
-                            <Border.BorderBrush><SolidColorBrush x:Name="Stroke" Color="{NEUTRAL['stroke']}" /></Border.BorderBrush>
+                            <Border.BorderBrush><SolidColorBrush x:Name="Stroke" Color="{neutral_cfg['stroke']}" /></Border.BorderBrush>
                         </Border>
                         <ContentPresenter Padding="{{TemplateBinding Padding}}" Content="{{TemplateBinding Content}}"
                                           ContentTemplate="{{TemplateBinding ContentTemplate}}"
                                           HorizontalContentAlignment="{{TemplateBinding HorizontalContentAlignment}}"
                                           VerticalContentAlignment="{{TemplateBinding VerticalContentAlignment}}">
-                            <ContentPresenter.Foreground><SolidColorBrush x:Name="Fg" Color="{NEUTRAL['fg']}" /></ContentPresenter.Foreground>
+                            <ContentPresenter.Foreground><SolidColorBrush x:Name="Fg" Color="{neutral_cfg['fg']}" /></ContentPresenter.Foreground>
                         </ContentPresenter>
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
@@ -64,12 +68,12 @@ def template(target_type, states, hover_stroke=None):
             </Setter.Value>
         </Setter>'''
 
-def toggle_states(on, on_hover, on_pressed, on_fg):
+def toggle_states(neutral, hover, pressed, on, on_hover, on_pressed, on_fg):
     return [
-        state("Normal", **NEUTRAL),
-        state("PointerOver", bg=HOVER["bg"], stroke=HOVER["stroke"], fg=NEUTRAL["fg"]),
-        state("Pressed", bg=PRESSED["bg"], stroke=NEUTRAL["stroke"], fg=NEUTRAL["fg"], press=True),
-        state("Disabled", **NEUTRAL, opacity="0.45"),
+        state("Normal", **neutral),
+        state("PointerOver", bg=hover["bg"], stroke=hover["stroke"], fg=neutral["fg"]),
+        state("Pressed", bg=pressed["bg"], stroke=neutral["stroke"], fg=neutral["fg"], press=True),
+        state("Disabled", **neutral, opacity="0.45"),
         state("Checked", bg=on, stroke=on, fg=on_fg),
         state("CheckedPointerOver", bg=on_hover, stroke=on_hover, fg=on_fg),
         state("CheckedPressed", bg=on_pressed, stroke=on_pressed, fg=on_fg, press=True),
@@ -86,18 +90,39 @@ COMMON_SETTERS = '''        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="UseSystemFocusVisuals" Value="True" />'''
 
-def style(key, target, states):
+def style(key, target, states, neutral_cfg):
     return f'''    <Style x:Key="{key}" TargetType="{target}">
 {COMMON_SETTERS}
-{template(target, states)}
+{template(target, states, neutral_cfg)}
     </Style>'''
 
-button_states = [
-    state("Normal", **NEUTRAL),
-    state("PointerOver", bg=HOVER["bg"], stroke="#4FE0B8", fg=NEUTRAL["fg"]),
-    state("Pressed", bg=PRESSED["bg"], stroke="#4FE0B8", fg=NEUTRAL["fg"], press=True),
-    state("Disabled", **NEUTRAL, opacity="0.45"),
-]
+def button_states(neutral, hover, pressed, accent_color):
+    return [
+        state("Normal", **neutral),
+        state("PointerOver", bg=hover["bg"], stroke=accent_color, fg=neutral["fg"]),
+        state("Pressed", bg=pressed["bg"], stroke=accent_color, fg=neutral["fg"], press=True),
+        state("Disabled", **neutral, opacity="0.45"),
+    ]
+
+def generate_styles(neutral, hover, pressed, on, on_hover, on_pressed, on_fg, danger_on, danger_hover, danger_pressed, danger_fg, accent_color):
+    toggle = style("SmoothToggle", "ToggleButton", toggle_states(neutral, hover, pressed, on, on_hover, on_pressed, on_fg), neutral)
+    danger = style("SmoothDangerToggle", "ToggleButton", toggle_states(neutral, hover, pressed, danger_on, danger_hover, danger_pressed, danger_fg), neutral)
+    btn = style("SmoothButton", "Button", button_states(neutral, hover, pressed, accent_color), neutral)
+    return f"{toggle}\n\n{danger}\n\n{btn}"
+
+dark_styles = generate_styles(
+    DARK_NEUTRAL, DARK_HOVER, DARK_PRESSED,
+    "#4FE0B8", "#6FE8C7", "#3CCFA6", "#0E1015",
+    "#F0506A", "#F46B82", "#D9455D", "#FFFFFF",
+    "#4FE0B8"
+)
+
+light_styles = generate_styles(
+    LIGHT_NEUTRAL, LIGHT_HOVER, LIGHT_PRESSED,
+    "#1FC79A", "#33D6AA", "#18A982", "#FFFFFF",
+    "#EF4444", "#F87171", "#DC2626", "#FFFFFF",
+    "#1FC79A"
+)
 
 xml = f'''<?xml version="1.0" encoding="utf-8"?>
 <!-- Generated by Styles/motion.py — edit there, not here.
@@ -107,12 +132,17 @@ xml = f'''<?xml version="1.0" encoding="utf-8"?>
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-{style("SmoothToggle", "ToggleButton", toggle_states("#4FE0B8", "#6FE8C7", "#3CCFA6", "#0E1015"))}
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Dark">
+{dark_styles}
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Light">
+{light_styles}
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
 
-{style("SmoothDangerToggle", "ToggleButton", toggle_states("#F0506A", "#F46B82", "#D9455D", "#FFFFFF"))}
-
-{style("SmoothButton", "Button", button_states)}
+{dark_styles}
 </ResourceDictionary>
 '''
 (Path(__file__).parent / "Motion.xaml").write_text(xml, encoding="utf-8")
-print("Motion.xaml written")
+print("Motion.xaml written with Dark and Light ThemeDictionaries")

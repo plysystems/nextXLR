@@ -438,8 +438,8 @@ public sealed class BluetoothAudioRouter : IDisposable
                     streamProvider = new SampleToWaveProvider16(pipeline);
                 }
 
-                // 5. Initialize Output: WASAPI Shared with ultra-low latency event buffer (15ms for crystal-clear playback)
-                int bufferLatencyMs = 15;
+                // 5. Initialize Output: WASAPI Shared with ultra-low latency event buffer (20ms for crystal-clear, stutter-free playback)
+                int bufferLatencyMs = 20;
                 try
                 {
                     _player = new WasapiOut(targetDevice, AudioClientShareMode.Shared, true, bufferLatencyMs);
@@ -557,9 +557,9 @@ public sealed class BluetoothAudioRouter : IDisposable
 
     private void AddCaptureToMixer(WasapiCapture capture, MixingSampleProvider mixer, string fullName, string shortName)
     {
-        // Real-time ultra-low latency jitter buffer with active drift compensation and micro-crossfades (20ms max lag, 6ms cushion)
+        // Real-time ultra-low latency jitter buffer with active drift compensation and micro-crossfades (40ms max lag, 10ms cushion)
         // guaranteeing pristine, glitch-free audio output without dropouts or crackles.
-        var jitterBuffer = new RealtimeJitterBuffer(capture.WaveFormat, maxLatencyMs: 20, prebufferMs: 6);
+        var jitterBuffer = new RealtimeJitterBuffer(capture.WaveFormat, maxLatencyMs: 40, prebufferMs: 10);
 
         capture.DataAvailable += (s, e) =>
         {
@@ -780,12 +780,11 @@ public sealed class BluetoothAudioRouter : IDisposable
         private int _readPos;
         private int _bufferedSamples;
         private bool _isBuffering = true;
-        private int _consecutiveUnderruns = 0;
         private readonly object _lock = new();
 
         public WaveFormat WaveFormat { get; }
 
-        public RealtimeJitterBuffer(WaveFormat format, int maxLatencyMs = 20, int prebufferMs = 6)
+        public RealtimeJitterBuffer(WaveFormat format, int maxLatencyMs = 40, int prebufferMs = 10)
         {
             WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(format.SampleRate, format.Channels);
             int samplesPerMs = Math.Max((format.SampleRate * format.Channels) / 1000, 1);
@@ -847,7 +846,6 @@ public sealed class BluetoothAudioRouter : IDisposable
                 if (_isBuffering && _bufferedSamples >= _prebufferSamples)
                 {
                     _isBuffering = false;
-                    _consecutiveUnderruns = 0;
                 }
             }
         }
@@ -882,17 +880,9 @@ public sealed class BluetoothAudioRouter : IDisposable
             {
                 if (_bufferedSamples <= 0)
                 {
-                    _consecutiveUnderruns++;
-                    // Only re-enter buffering mode on sustained starvation (e.g. >10 consecutive frames = ~100ms)
-                    if (_consecutiveUnderruns > 10)
-                    {
-                        _isBuffering = true;
-                    }
                     Array.Clear(buffer, offset, count);
                     return count;
                 }
-
-                _consecutiveUnderruns = 0;
 
                 if (_isBuffering)
                 {

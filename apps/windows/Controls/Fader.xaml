@@ -3,17 +3,17 @@
     x:Class="NextXLR.Controls.Fader"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Width="60" MinHeight="140">
+    Width="48" MinHeight="140">
 
     <Grid x:Name="Root" Background="Transparent">
         <!-- Level Meter on the left (runs parallel to the fader track) -->
-        <Grid x:Name="MeterHost" Width="6" HorizontalAlignment="Left" Margin="3,18,0,18" VerticalAlignment="Stretch">
+        <Grid x:Name="MeterHost" Width="5" HorizontalAlignment="Left" Margin="2,17,0,17" VerticalAlignment="Stretch">
             <!-- Meter background track -->
-            <Border CornerRadius="3" Background="#121212" BorderBrush="#262626" BorderThickness="1" />
+            <Border CornerRadius="2.5" Background="#121212" BorderBrush="#262626" BorderThickness="1" />
             <!-- Gradient level fill -->
-            <Border x:Name="MeterGradient" CornerRadius="3" Background="{StaticResource MeterBrush}" Opacity="0.0" />
+            <Border x:Name="MeterGradient" CornerRadius="2.5" Background="{StaticResource MeterBrush}" Opacity="0.0" />
             <!-- Top mask to hide gradient down to current audio level -->
-            <Border x:Name="MeterMask" VerticalAlignment="Top" CornerRadius="3,3,0,0" Background="#121212" />
+            <Border x:Name="MeterMask" VerticalAlignment="Top" CornerRadius="2.5,2.5,0,0" Background="#121212" />
             <!-- Peak hold line -->
             <Border x:Name="MeterHold" VerticalAlignment="Top" Height="2" CornerRadius="1"
                     Background="#FFFFFF" Opacity="0.0">
@@ -31,20 +31,20 @@
 
         <!-- Central recessed studio fader track slot -->
         <Border x:Name="Track" Width="4" CornerRadius="2" HorizontalAlignment="Center"
-                Margin="0,18,0,18" VerticalAlignment="Stretch"
+                Margin="0,17,0,17" VerticalAlignment="Stretch"
                 Background="#101010" BorderBrush="#282828" BorderThickness="1" />
 
         <!-- Tactile hardware studio fader cap -->
-        <Grid x:Name="Cap" Width="36" Height="36" VerticalAlignment="Top" HorizontalAlignment="Center">
+        <Grid x:Name="Cap" Width="32" Height="34" VerticalAlignment="Top" HorizontalAlignment="Center">
             <Grid.RenderTransform>
                 <TranslateTransform x:Name="CapOffset" />
             </Grid.RenderTransform>
 
             <!-- Subtle soft drop shadow under the fader knob -->
-            <Border CornerRadius="5" Margin="-1,2,-1,-3" Background="#000000" Opacity="0.55" />
+            <Border CornerRadius="4" Margin="-1,2,-1,-3" Background="#000000" Opacity="0.55" />
 
             <!-- Main sculpted knob body with metallic studio bevel -->
-            <Border CornerRadius="5" BorderThickness="1" BorderBrush="#505050">
+            <Border CornerRadius="4" BorderThickness="1" BorderBrush="#505050">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                         <GradientStop Color="#5A5A5A" Offset="0.0" />
@@ -58,17 +58,17 @@
             </Border>
 
             <!-- Tactile finger grip ridges (top) -->
-            <Border Height="1" Margin="5,6,5,0" VerticalAlignment="Top" Background="#141414" />
-            <Border Height="1" Margin="5,8,5,0" VerticalAlignment="Top" Background="#4A4A4A" />
+            <Border Height="1" Margin="4,5,4,0" VerticalAlignment="Top" Background="#141414" />
+            <Border Height="1" Margin="4,7,4,0" VerticalAlignment="Top" Background="#4A4A4A" />
 
             <!-- Tactile finger grip ridges (bottom) -->
-            <Border Height="1" Margin="5,0,5,8" VerticalAlignment="Bottom" Background="#141414" />
-            <Border Height="1" Margin="5,0,5,6" VerticalAlignment="Bottom" Background="#4A4A4A" />
+            <Border Height="1" Margin="4,0,4,7" VerticalAlignment="Bottom" Background="#141414" />
+            <Border Height="1" Margin="4,0,4,5" VerticalAlignment="Bottom" Background="#4A4A4A" />
 
-            <!-- Center indicator index mark (high-contrast illuminated bar) -->
-            <Grid Height="3" Margin="3,0" VerticalAlignment="Center">
-                <Border Height="3" CornerRadius="1.5" Background="#101010" />
-                <Border x:Name="IndicatorLine" Height="2" CornerRadius="1" Margin="0,0.5" />
+            <!-- Center indicator index mark (high-precision illuminated studio LED line) -->
+            <Grid Height="4" Margin="2,0" VerticalAlignment="Center">
+                <Border Height="4" CornerRadius="2" Background="#0A0A0A" />
+                <Border x:Name="IndicatorLine" Height="2" CornerRadius="1" Margin="1,1" />
             </Grid>
         </Grid>
     </Grid>

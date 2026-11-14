@@ -31,6 +31,7 @@
                         PaneDisplayMode="Auto" OpenPaneLength="248"
                         ExpandedModeThresholdWidth="1180" CompactModeThresholdWidth="720"
                         IsBackButtonVisible="Collapsed" IsSettingsVisible="False"
+                        AlwaysShowHeader="False" Header="{x:Null}"
                         SelectionChanged="Nav_SelectionChanged">
             <NavigationView.Resources>
                 <Thickness x:Key="NavigationViewContentGridBorderThickness">1,1,0,0</Thickness>
@@ -132,17 +133,18 @@
                 </StackPanel>
             </NavigationView.PaneFooter>
 
-            <Grid>
+            <Grid Background="{ThemeResource NavigationViewContentBackground}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <StackPanel Margin="{StaticResource InfoBarMargin}" Spacing="8">
+                <StackPanel Spacing="8">
                     <InfoBar x:Uid="EngineOffline" IsOpen="{x:Bind Not(ViewModel.IsConnected), Mode=OneWay}"
-                             Severity="Warning" IsClosable="False" />
+                             Margin="40,8,40,0" Severity="Warning" IsClosable="False" />
                     <InfoBar x:Uid="EngineError" IsOpen="{x:Bind HasText(ViewModel.LastError), Mode=OneWay}"
-                             Severity="Error" Message="{x:Bind ViewModel.LastError, Mode=OneWay}" />
+                             Margin="40,8,40,0" Severity="Error" Message="{x:Bind ViewModel.LastError, Mode=OneWay}" />
                     <InfoBar x:Name="DriverMissingBar" IsOpen="False" Severity="Warning"
+                             Margin="40,8,40,0"
                              Title="GoXLR Audiotreiber nicht eingerichtet"
                              Message="Damit Windows alle Kanäle (System, Chat, Musik, Game) anbietet, muss der GoXLR Treiber installiert werden."
                              IsClosable="True">
