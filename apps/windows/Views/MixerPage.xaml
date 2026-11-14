@@ -20,8 +20,17 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <StackPanel Spacing="3">
-                <TextBlock x:Uid="MixerTitle" Style="{StaticResource PageTitle}" />
+            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <TextBlock x:Uid="MixerTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
+                <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="6"
+                        Padding="8,3" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1"
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Ellipse Width="6" Height="6" Fill="{StaticResource BrandBrush}" />
+                        <TextBlock Text="STUDIO CONSOLE" FontSize="10" FontWeight="Bold"
+                                   Foreground="{StaticResource BrandBrush}" />
+                    </StackPanel>
+                </Border>
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
@@ -137,48 +146,52 @@
                         </Border>
                     </StackPanel>
 
-                    <!-- Top Area Controls: Directly aligned with header -->
-                    <Border Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center"
-                            Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="10"
-                            Padding="8,3" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1">
-                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                            <!-- Mic Mute (Husten) Button - Only Icon -->
-                            <ToggleButton x:Uid="MicMuteButton" Width="36" Height="32" Padding="0" CornerRadius="7"
-                                          Style="{StaticResource SmoothDangerToggle}"
-                                          IsChecked="{x:Bind ViewModel.MicMuted, Mode=TwoWay}"
-                                          ToolTipService.ToolTip="Mikrofon stummschalten (Husten-Taste)">
-                                <FontIcon Glyph="{x:Bind MicGlyph(ViewModel.MicMuted), Mode=OneWay}" FontSize="13" />
-                            </ToggleButton>
+                    <!-- Master Live Controls: Segmented Buttongroup [ Mic_ICON | !@#$?* ] + Unabhängige Zensur -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <!-- Buttongroup [ Mic_ICON | !@#$?* ] -->
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="10"
+                                Padding="2" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1">
+                            <StackPanel Orientation="Horizontal" Spacing="0">
+                                <!-- Mic Mute (Husten) Button - Only Mic Icon -->
+                                <ToggleButton x:Uid="MicMuteButton" Width="38" Height="32" Padding="0" CornerRadius="8,0,0,8"
+                                              BorderThickness="0" Style="{StaticResource SmoothDangerToggle}"
+                                              IsChecked="{x:Bind ViewModel.MicMuted, Mode=TwoWay}"
+                                              ToolTipService.ToolTip="Mikrofon stummschalten (Husten-Taste)">
+                                    <FontIcon Glyph="{x:Bind MicGlyph(ViewModel.MicMuted), Mode=OneWay}" FontSize="13" />
+                                </ToggleButton>
 
-                            <!-- Bleep (Zensur) Button -->
-                            <ToggleButton x:Name="BleepButton" x:Uid="BleepButton" Height="32" Padding="10,3" CornerRadius="7"
-                                          Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
-                                          IsChecked="{x:Bind ViewModel.BleepActive, Mode=OneWay}"
-                                          ToolTipService.ToolTip="Zensurton (Halten)">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBlock Text="!@#$?*" FontSize="11" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}" />
-                                    <TextBlock Text="Zensur" FontWeight="SemiBold" FontSize="11" />
-                                </StackPanel>
-                            </ToggleButton>
+                                <!-- Subtle 1px Divider -->
+                                <Border Width="1" Height="20" Background="{ThemeResource GlassCardBorderBrush}" VerticalAlignment="Center" />
 
-                            <!-- Subtle vertical divider -->
-                            <Border Width="1" Height="18" Background="{ThemeResource GlassCardBorderBrush}" VerticalAlignment="Center" />
+                                <!-- Bleep Button - Only !@#$?* -->
+                                <ToggleButton x:Name="BleepButton" x:Uid="BleepButton" Width="48" Height="32" Padding="0" CornerRadius="0,8,8,0"
+                                              BorderThickness="0" Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
+                                              IsChecked="{x:Bind ViewModel.BleepActive, Mode=OneWay}"
+                                              ToolTipService.ToolTip="Zensurton (Halten)">
+                                    <TextBlock Text="!@#$?*" FontSize="11" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </ToggleButton>
+                            </StackPanel>
+                        </Border>
 
-                            <!-- Bleep Slider (Pegel) -->
-                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                <TextBlock Text="Bleep:" FontSize="11" FontWeight="SemiBold"
+                        <!-- Unabhängige Zensur-Karte (Pegel) -->
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="10"
+                                Height="38" Padding="10,0" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1"
+                                VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="Zensur:" FontSize="11.5" FontWeight="SemiBold"
                                            Foreground="{ThemeResource TextMutedBrush}" VerticalAlignment="Center" />
                                 <Slider x:Name="BleepSlider" Minimum="0" Maximum="100" StepFrequency="1"
-                                        Width="72" VerticalAlignment="Center"
+                                        Width="80" VerticalAlignment="Center"
                                         Value="{x:Bind ViewModel.BleepVolume, Mode=TwoWay}"
-                                        AutomationProperties.Name="Bleep Lautstärke" />
+                                        AutomationProperties.Name="Zensur Lautstärke" />
                                 <TextBlock Text="{x:Bind ViewModel.BleepVolumeText, Mode=OneWay}"
-                                           FontSize="11" FontWeight="SemiBold" Width="42" VerticalAlignment="Center"
-                                           FontFamily="{StaticResource MonoFont}"
+                                           FontSize="11.5" FontWeight="SemiBold" Width="44" VerticalAlignment="Center"
+                                           Foreground="{StaticResource BrandBrush}" FontFamily="{StaticResource MonoFont}"
                                            ToolTipService.ToolTip="{x:Bind ViewModel.BleepVolumePercentText, Mode=OneWay}" />
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </Border>
+                    </StackPanel>
                 </Grid>
 
                 <!-- Hardware Fader Assignment Ribbon (A - D) -->

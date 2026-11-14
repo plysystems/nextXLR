@@ -285,6 +285,7 @@ public sealed partial class MainWindow : Window
         {
             try
             {
+                Activate();
                 ShowWindow(Handle, 9); // SW_RESTORE
                 ShowWindow(Handle, 5); // SW_SHOW
                 AppWindow.Show(activateWindow: true);
@@ -297,10 +298,7 @@ public sealed partial class MainWindow : Window
                 }
                 AppWindow.MoveInZOrderAtTop();
                 SetForegroundWindow(Handle);
-                if (ContentFrame?.Content == null)
-                {
-                    NavigateToPage(_currentNavTag ?? "mixer");
-                }
+                EnsureInitialPageLoaded();
                 ViewModel.SetMetersActive(ContentFrame?.CurrentSourcePageType == typeof(MixerPage));
                 StreamDeckStatusService.Instance.StartMonitoring(DispatcherQueue);
             }
@@ -347,9 +345,9 @@ public sealed partial class MainWindow : Window
                 targetPage = page;
             }
 
-            if (targetPage != null && ContentFrame.CurrentSourcePageType != targetPage)
+            if (targetPage != null && (ContentFrame.CurrentSourcePageType != targetPage || ContentFrame.Content == null))
             {
-                if (_isInitialNavigation)
+                if (_isInitialNavigation || ContentFrame.Content == null)
                 {
                     _isInitialNavigation = false;
                     ContentFrame.Navigate(targetPage, ViewModel, new SuppressNavigationTransitionInfo());
@@ -579,6 +577,7 @@ public sealed partial class MainWindow : Window
         {
             if (ContentFrame != null && ContentFrame.Content == null)
             {
+                _isInitialNavigation = true;
                 NavigateToPage("mixer");
             }
         }
