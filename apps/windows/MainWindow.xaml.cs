@@ -68,6 +68,19 @@ public sealed partial class MainWindow : Window
         {
             ExtendsContentIntoTitleBar = true;
             SetTitleBar(AppTitleBar);
+
+            // Modern Windows 11 hardware-accelerated translucent Mica Alt / Acrylic backdrop
+            if (Microsoft.UI.Composition.SystemBackdrops.MicaController.IsSupported())
+            {
+                SystemBackdrop = new Microsoft.UI.Xaml.Media.MicaBackdrop
+                {
+                    Kind = Microsoft.UI.Composition.SystemBackdrops.MicaKind.BaseAlt
+                };
+            }
+            else if (Microsoft.UI.Composition.SystemBackdrops.DesktopAcrylicController.IsSupported())
+            {
+                SystemBackdrop = new Microsoft.UI.Xaml.Media.DesktopAcrylicBackdrop();
+            }
         }
         catch { }
 

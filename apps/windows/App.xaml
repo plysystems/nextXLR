@@ -11,92 +11,104 @@
             </ResourceDictionary.MergedDictionaries>
 
             <ResourceDictionary.ThemeDictionaries>
-                <!-- ============ Default Theme (Fallback to Dark - Obsidian Stealth Pro) ============ -->
+                <!-- ============ Default Theme (Fallback to Dark - Obsidian Cyber Studio) ============ -->
                 <ResourceDictionary x:Key="Default">
-                    <SolidColorBrush x:Key="SurfaceL1Brush" Color="#1C1D21" />
-                    <SolidColorBrush x:Key="SurfaceL2Brush" Color="#23252B" />
-                    <SolidColorBrush x:Key="SurfaceL3Brush" Color="#121316" />
-                    <SolidColorBrush x:Key="SurfaceStrokeBrush" Color="#333742" />
-                    <SolidColorBrush x:Key="SurfaceStrokeSubtleBrush" Color="#282B33" />
-                    <SolidColorBrush x:Key="MeterTrackBrush" Color="#121316" />
-                    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F3F4F6" />
-                    <SolidColorBrush x:Key="TextMutedBrush" Color="#9CA3AF" />
-                    <SolidColorBrush x:Key="MutedTextBrush" Color="#9CA3AF" />
+                    <SolidColorBrush x:Key="SurfaceL1Brush" Color="#0D0F15" />
+                    <SolidColorBrush x:Key="SurfaceL2Brush" Color="#151822" />
+                    <SolidColorBrush x:Key="SurfaceL3Brush" Color="#090A0E" />
+                    <SolidColorBrush x:Key="SurfaceStrokeBrush" Color="#262A38" />
+                    <SolidColorBrush x:Key="SurfaceStrokeSubtleBrush" Color="#1C1F2B" />
+                    <SolidColorBrush x:Key="SurfaceHighlightBrush" Color="#32384D" />
+                    <SolidColorBrush x:Key="MeterTrackBrush" Color="#090A0E" />
+                    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F8FAFC" />
+                    <SolidColorBrush x:Key="TextMutedBrush" Color="#8E98AB" />
+                    <SolidColorBrush x:Key="MutedTextBrush" Color="#8E98AB" />
 
-                    <!-- NavigationView styling for Dark: Header matches Content #1C1D21 perfectly -->
-                    <SolidColorBrush x:Key="NavigationViewContentBackground" Color="#1C1D21" />
+                    <!-- NavigationView styling for Dark: Header matches Content #0D0F15 perfectly -->
+                    <SolidColorBrush x:Key="NavigationViewContentBackground" Color="#0D0F15" />
                     <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
-                    <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#16171A" />
-                    <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#16171A" />
-                    <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="#1C1D21" />
-                    <SolidColorBrush x:Key="NavigationViewMinimalHeaderBackground" Color="#1C1D21" />
+                    <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#090A0E" />
+                    <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#090A0E" />
+                    <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="#0D0F15" />
+                    <SolidColorBrush x:Key="NavigationViewMinimalHeaderBackground" Color="#0D0F15" />
+                    <SolidColorBrush x:Key="NavigationViewItemIndicatorBrush" Color="#00F5A0" />
+                    <SolidColorBrush x:Key="NavigationViewItemBackgroundSelected" Color="#151822" />
+                    <SolidColorBrush x:Key="NavigationViewItemForegroundSelected" Color="#00F5A0" />
                 </ResourceDictionary>
 
-                <!-- ============ Dark Theme (Obsidian Stealth Pro) ============ -->
+                <!-- ============ Dark Theme (Obsidian Cyber Studio) ============ -->
                 <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="SurfaceL1Brush" Color="#1C1D21" />
-                    <SolidColorBrush x:Key="SurfaceL2Brush" Color="#23252B" />
-                    <SolidColorBrush x:Key="SurfaceL3Brush" Color="#121316" />
-                    <SolidColorBrush x:Key="SurfaceStrokeBrush" Color="#333742" />
-                    <SolidColorBrush x:Key="SurfaceStrokeSubtleBrush" Color="#282B33" />
-                    <SolidColorBrush x:Key="MeterTrackBrush" Color="#121316" />
-                    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F3F4F6" />
-                    <SolidColorBrush x:Key="TextMutedBrush" Color="#9CA3AF" />
-                    <SolidColorBrush x:Key="MutedTextBrush" Color="#9CA3AF" />
+                    <SolidColorBrush x:Key="SurfaceL1Brush" Color="#0D0F15" />
+                    <SolidColorBrush x:Key="SurfaceL2Brush" Color="#151822" />
+                    <SolidColorBrush x:Key="SurfaceL3Brush" Color="#090A0E" />
+                    <SolidColorBrush x:Key="SurfaceStrokeBrush" Color="#262A38" />
+                    <SolidColorBrush x:Key="SurfaceStrokeSubtleBrush" Color="#1C1F2B" />
+                    <SolidColorBrush x:Key="SurfaceHighlightBrush" Color="#32384D" />
+                    <SolidColorBrush x:Key="MeterTrackBrush" Color="#090A0E" />
+                    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F8FAFC" />
+                    <SolidColorBrush x:Key="TextMutedBrush" Color="#8E98AB" />
+                    <SolidColorBrush x:Key="MutedTextBrush" Color="#8E98AB" />
 
-                    <!-- NavigationView styling for Dark: Header matches Content #1C1D21 perfectly -->
-                    <SolidColorBrush x:Key="NavigationViewContentBackground" Color="#1C1D21" />
+                    <!-- NavigationView styling for Dark: Header matches Content #0D0F15 perfectly -->
+                    <SolidColorBrush x:Key="NavigationViewContentBackground" Color="#0D0F15" />
                     <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
-                    <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#16171A" />
-                    <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#16171A" />
-                    <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="#1C1D21" />
-                    <SolidColorBrush x:Key="NavigationViewMinimalHeaderBackground" Color="#1C1D21" />
+                    <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#090A0E" />
+                    <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#090A0E" />
+                    <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="#0D0F15" />
+                    <SolidColorBrush x:Key="NavigationViewMinimalHeaderBackground" Color="#0D0F15" />
+                    <SolidColorBrush x:Key="NavigationViewItemIndicatorBrush" Color="#00F5A0" />
+                    <SolidColorBrush x:Key="NavigationViewItemBackgroundSelected" Color="#151822" />
+                    <SolidColorBrush x:Key="NavigationViewItemForegroundSelected" Color="#00F5A0" />
                 </ResourceDictionary>
 
-                <!-- ============ Light Theme (Nordic Studio White) ============ -->
+                <!-- ============ Light Theme (Nordic Studio Titanium) ============ -->
                 <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="SurfaceL1Brush" Color="#FAFAF9" />
+                    <SolidColorBrush x:Key="SurfaceL1Brush" Color="#F5F7FA" />
                     <SolidColorBrush x:Key="SurfaceL2Brush" Color="#FFFFFF" />
-                    <SolidColorBrush x:Key="SurfaceL3Brush" Color="#ECEAE4" />
-                    <SolidColorBrush x:Key="SurfaceStrokeBrush" Color="#E2E0D8" />
-                    <SolidColorBrush x:Key="SurfaceStrokeSubtleBrush" Color="#ECEAE4" />
-                    <SolidColorBrush x:Key="MeterTrackBrush" Color="#ECEAE4" />
-                    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#111827" />
-                    <SolidColorBrush x:Key="TextMutedBrush" Color="#6B7280" />
-                    <SolidColorBrush x:Key="MutedTextBrush" Color="#6B7280" />
+                    <SolidColorBrush x:Key="SurfaceL3Brush" Color="#E9EDF3" />
+                    <SolidColorBrush x:Key="SurfaceStrokeBrush" Color="#D2D7E0" />
+                    <SolidColorBrush x:Key="SurfaceStrokeSubtleBrush" Color="#E2E6ED" />
+                    <SolidColorBrush x:Key="SurfaceHighlightBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="MeterTrackBrush" Color="#E4E8EF" />
+                    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#0F172A" />
+                    <SolidColorBrush x:Key="TextMutedBrush" Color="#64748B" />
+                    <SolidColorBrush x:Key="MutedTextBrush" Color="#64748B" />
 
-                    <!-- NavigationView styling for Light: Sandstone Sidebar / Pure Studio White Content -->
-                    <SolidColorBrush x:Key="NavigationViewContentBackground" Color="#FAFAF9" />
+                    <!-- NavigationView styling for Light: Titanium Sidebar / Crisp Studio White Content -->
+                    <SolidColorBrush x:Key="NavigationViewContentBackground" Color="#F5F7FA" />
                     <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
-                    <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#F4F3EF" />
-                    <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#F4F3EF" />
-                    <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="#FAFAF9" />
-                    <SolidColorBrush x:Key="NavigationViewMinimalHeaderBackground" Color="#FAFAF9" />
+                    <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#EBEEF3" />
+                    <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#EBEEF3" />
+                    <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="#F5F7FA" />
+                    <SolidColorBrush x:Key="NavigationViewMinimalHeaderBackground" Color="#F5F7FA" />
+                    <SolidColorBrush x:Key="NavigationViewItemIndicatorBrush" Color="#0D9488" />
+                    <SolidColorBrush x:Key="NavigationViewItemBackgroundSelected" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="NavigationViewItemForegroundSelected" Color="#0D9488" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
             <!-- ============ Design tokens ============ -->
 
             <!-- Accent: one brand colour drives every Fluent control (sliders, toggles, focus). -->
-            <Color x:Key="SystemAccentColor">#1FC79A</Color>
-            <Color x:Key="SystemAccentColorLight1">#33D6AA</Color>
-            <Color x:Key="SystemAccentColorLight2">#4FE0B8</Color>
-            <Color x:Key="SystemAccentColorLight3">#7DEACB</Color>
-            <Color x:Key="SystemAccentColorDark1">#18A982</Color>
-            <Color x:Key="SystemAccentColorDark2">#128A6A</Color>
-            <Color x:Key="SystemAccentColorDark3">#0C6B52</Color>
+            <Color x:Key="SystemAccentColor">#00F5A0</Color>
+            <Color x:Key="SystemAccentColorLight1">#33F7B3</Color>
+            <Color x:Key="SystemAccentColorLight2">#66F9C6</Color>
+            <Color x:Key="SystemAccentColorLight3">#99FBD9</Color>
+            <Color x:Key="SystemAccentColorDark1">#00D48A</Color>
+            <Color x:Key="SystemAccentColorDark2">#00A86D</Color>
+            <Color x:Key="SystemAccentColorDark3">#007D51</Color>
 
             <!-- Surfaces / Fallbacks -->
-            <SolidColorBrush x:Key="BrandBrush" Color="#4FE0B8" />
+            <SolidColorBrush x:Key="BrandBrush" Color="#00F5A0" />
             <SolidColorBrush x:Key="DangerBrush" Color="#F0506A" />
             <SolidColorBrush x:Key="ErrorBrush" Color="#F0506A" />
             <SolidColorBrush x:Key="WarningBrush" Color="#F5B942" />
-            <SolidColorBrush x:Key="HeadphoneBrush" Color="#58A6FF" />
-            <SolidColorBrush x:Key="StreamBrush" Color="#4FE0B8" />
+            <SolidColorBrush x:Key="HeadphoneBrush" Color="#38BDF8" />
+            <SolidColorBrush x:Key="StreamBrush" Color="#00F5A0" />
 
             <LinearGradientBrush x:Key="MeterBrush" StartPoint="0,1" EndPoint="0,0">
-                <GradientStop Color="#1BB38C" Offset="0" />
-                <GradientStop Color="#4FE0B8" Offset="0.65" />
+                <GradientStop Color="#00D48A" Offset="0" />
+                <GradientStop Color="#00F5A0" Offset="0.65" />
                 <GradientStop Color="#F5B942" Offset="0.85" />
                 <GradientStop Color="#F0506A" Offset="1" />
             </LinearGradientBrush>

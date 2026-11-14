@@ -120,10 +120,13 @@
                                         IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}" />
 
                         <!-- Volume dB readout -->
-                        <TextBlock Grid.Row="1" Text="{x:Bind ViewModel.SubmixVolumeDbLabel, Mode=OneWay}"
-                                   FontSize="13" FontWeight="Bold" FontFamily="{StaticResource MonoFont}"
-                                   HorizontalAlignment="Center"
-                                   ToolTipService.ToolTip="{x:Bind ViewModel.SubmixVolumePercentLabel, Mode=OneWay}" />
+                        <Border Grid.Row="1" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="4" Padding="5,1"
+                                HorizontalAlignment="Center" BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                            <TextBlock Text="{x:Bind ViewModel.SubmixVolumeDbLabel, Mode=OneWay}"
+                                       FontSize="12" FontWeight="Bold" FontFamily="{StaticResource MonoFont}"
+                                       Foreground="{StaticResource HeadphoneBrush}" HorizontalAlignment="Center"
+                                       ToolTipService.ToolTip="{x:Bind ViewModel.SubmixVolumePercentLabel, Mode=OneWay}" />
+                        </Border>
 
                         <!-- Kopfhörer Pill + Hardware Fader Badge -->
                         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
@@ -181,10 +184,13 @@
                                         IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}" />
 
                         <!-- Volume dB readout -->
-                        <TextBlock Grid.Row="1" Text="{x:Bind ViewModel.StreamVolumeDbLabel, Mode=OneWay}"
-                                   FontSize="13" FontWeight="Bold" FontFamily="{StaticResource MonoFont}"
-                                   HorizontalAlignment="Center"
-                                   ToolTipService.ToolTip="{x:Bind ViewModel.StreamVolumePercentLabel, Mode=OneWay}" />
+                        <Border Grid.Row="1" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="4" Padding="5,1"
+                                HorizontalAlignment="Center" BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                            <TextBlock Text="{x:Bind ViewModel.StreamVolumeDbLabel, Mode=OneWay}"
+                                       FontSize="12" FontWeight="Bold" FontFamily="{StaticResource MonoFont}"
+                                       Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Center"
+                                       ToolTipService.ToolTip="{x:Bind ViewModel.StreamVolumePercentLabel, Mode=OneWay}" />
+                        </Border>
 
                         <!-- Stream Pill + Hardware Fader Badge -->
                         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
@@ -244,15 +250,19 @@
 
                     <!-- Row 1: Volume dB readout (Click to edit) -->
                     <Grid Grid.Row="1" HorizontalAlignment="Center">
-                        <StackPanel x:Name="LevelDisplayPanel" Orientation="Horizontal" HorizontalAlignment="Center"
-                                    Background="Transparent" CornerRadius="4" Padding="4,1"
-                                    ToolTipService.ToolTip="{x:Bind EditTooltip(ViewModel.IsFixed), Mode=OneWay}"
-                                    Tapped="LevelDisplay_Tapped" PointerPressed="LevelDisplay_PointerPressed">
-                            <TextBlock Text="{x:Bind LevelText(ViewModel.IsFixed, ViewModel.VolumeDbLabel, ViewModel.PeakLabel), Mode=OneWay}"
-                                       FontSize="14" FontWeight="Bold"
-                                       FontFamily="{StaticResource MonoFont}" HorizontalAlignment="Center"
-                                       IsHitTestVisible="False" />
-                        </StackPanel>
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="6" Padding="6,2"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                            <StackPanel x:Name="LevelDisplayPanel" Orientation="Horizontal" HorizontalAlignment="Center"
+                                        Background="Transparent"
+                                        ToolTipService.ToolTip="{x:Bind EditTooltip(ViewModel.IsFixed), Mode=OneWay}"
+                                        Tapped="LevelDisplay_Tapped" PointerPressed="LevelDisplay_PointerPressed">
+                                <TextBlock Text="{x:Bind LevelText(ViewModel.IsFixed, ViewModel.VolumeDbLabel, ViewModel.PeakLabel), Mode=OneWay}"
+                                           FontSize="13" FontWeight="Bold"
+                                           Foreground="{StaticResource BrandBrush}"
+                                           FontFamily="{StaticResource MonoFont}" HorizontalAlignment="Center"
+                                           IsHitTestVisible="False" />
+                            </StackPanel>
+                        </Border>
                         <TextBox x:Name="LevelInputBox" Width="68" TextAlignment="Center" FontSize="13" Height="28" Padding="2"
                                  FontFamily="{StaticResource MonoFont}"
                                  Visibility="Collapsed" KeyDown="LevelInputBox_KeyDown" LostFocus="LevelInputBox_LostFocus" />

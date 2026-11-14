@@ -61,96 +61,220 @@
             <ScrollViewer x:Name="ContentScroller" Grid.Column="1" Grid.RowSpan="2" VerticalScrollBarVisibility="Auto">
                 <Grid HorizontalAlignment="Stretch">
                     <!-- ===== General ===== -->
-                    <StackPanel x:Name="GeneralPanel" Spacing="10">
-                        <TextBlock x:Uid="SettingsGeneralHeader" Style="{StaticResource SectionTitle}" Margin="0,0,0,6" />
+                    <StackPanel x:Name="GeneralPanel" Spacing="16">
+                        <StackPanel Spacing="4">
+                            <TextBlock x:Uid="SettingsGeneralHeader" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="Passe Erscheinungsbild, Autostart-Verhalten und Windows-Systemintegration an." Style="{StaticResource Caption}" />
+                        </StackPanel>
 
-                        <!-- Design & Erscheinungsbild -->
-                        <Grid Style="{StaticResource SettingRow}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE790;" />
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="Erscheinungsbild &amp; Design" FontWeight="SemiBold" />
-                                <TextBlock Text="Wähle zwischen dunklem, hellem oder System-Design." Style="{StaticResource Caption}" />
+                        <!-- Card 1: Erscheinungsbild & Design -->
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="14"
+                                BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1" Padding="20,16">
+                            <Grid ColumnSpacing="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="40" Height="40" CornerRadius="10" Background="{ThemeResource SurfaceL3Brush}">
+                                    <FontIcon Glyph="&#xE790;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Erscheinungsbild &amp; Design" FontWeight="SemiBold" FontSize="15" />
+                                    <TextBlock Text="Wähle zwischen Studio Dark (Obsidian), Studio Light (Nordic) oder System." Style="{StaticResource Caption}" />
+                                </StackPanel>
+                                <ComboBox x:Name="ThemeComboBox" Grid.Column="2" MinWidth="160" VerticalAlignment="Center"
+                                          SelectionChanged="ThemeComboBox_SelectionChanged">
+                                    <ComboBoxItem Content="Dunkel (Obsidian)" Tag="Dark" />
+                                    <ComboBoxItem Content="Hell (Nordic Studio)" Tag="Light" />
+                                    <ComboBoxItem Content="System-Standard" Tag="System" />
+                                </ComboBox>
+                            </Grid>
+                        </Border>
+
+                        <!-- Card 2: Systemverhalten & Autostart -->
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="14"
+                                BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1" Padding="0">
+                            <StackPanel>
+                                <!-- Row 1: Mit Windows starten -->
+                                <Grid Padding="20,14" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
+                                        <FontIcon Glyph="&#xE7E8;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock x:Uid="SetAutostartTitle" FontWeight="SemiBold" />
+                                        <TextBlock Text="Startet NEXT : XLR automatisch beim Hochfahren des PCs." Style="{StaticResource Caption}" />
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="AutostartToggle" Grid.Column="2" OnContent="" OffContent="" MinWidth="0" VerticalAlignment="Center" Toggled="Autostart_Toggled" />
+                                </Grid>
+
+                                <Border Height="1" Background="{ThemeResource SurfaceStrokeSubtleBrush}" Margin="68,0,20,0" />
+
+                                <!-- Row 2: In den Infobereich minimieren -->
+                                <Grid Padding="20,14" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
+                                        <FontIcon Glyph="&#xE921;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock x:Uid="SetTrayTitle" FontWeight="SemiBold" />
+                                        <TextBlock Text="Schließen-Button (X) minimiert die App in den Windows Infobereich." Style="{StaticResource Caption}" />
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="TrayToggle" Grid.Column="2" OnContent="" OffContent="" MinWidth="0" VerticalAlignment="Center" Toggled="Tray_Toggled" />
+                                </Grid>
+
+                                <Border Height="1" Background="{ThemeResource SurfaceStrokeSubtleBrush}" Margin="68,0,20,0" />
+
+                                <!-- Row 3: Minimiert starten -->
+                                <Grid Padding="20,14" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
+                                        <FontIcon Glyph="&#xE921;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Minimiert starten" FontWeight="SemiBold" />
+                                        <TextBlock Text="Startet NEXT : XLR direkt minimiert im System-Tray ohne Hauptfenster." Style="{StaticResource Caption}" />
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="StartMinimizedToggle" Grid.Column="2" OnContent="" OffContent="" MinWidth="0" VerticalAlignment="Center" Toggled="StartMinimized_Toggled" />
+                                </Grid>
+
+                                <Border Height="1" Background="{ThemeResource SurfaceStrokeSubtleBrush}" Margin="68,0,20,0" />
+
+                                <!-- Row 4: Beim Start stummschalten (Mute on Startup) -->
+                                <Grid Padding="20,14" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
+                                        <FontIcon Glyph="&#xE74F;" FontSize="16" Foreground="{StaticResource WarningBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock x:Uid="SetMuteOnStartupTitle" FontWeight="SemiBold" />
+                                        <TextBlock x:Uid="SetMuteOnStartupDesc" Style="{StaticResource Caption}" />
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="MuteOnStartupToggle" Grid.Column="2" OnContent="" OffContent="" MinWidth="0" VerticalAlignment="Center" Toggled="MuteOnStartup_Toggled" />
+                                </Grid>
                             </StackPanel>
-                            <ComboBox x:Name="ThemeComboBox" Grid.Column="2" MinWidth="150" SelectionChanged="ThemeComboBox_SelectionChanged">
-                                <ComboBoxItem Content="Dunkel" Tag="Dark" />
-                                <ComboBoxItem Content="Hell" Tag="Light" />
-                                <ComboBoxItem Content="System" Tag="System" />
-                            </ComboBox>
-                        </Grid>
-                        <Grid Style="{StaticResource SettingRow}">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE7E8;" />
-                            <StackPanel Grid.Column="1"><TextBlock x:Uid="SetAutostartTitle" FontWeight="SemiBold" /></StackPanel>
-                            <ToggleSwitch x:Name="AutostartToggle" Grid.Column="2" OnContent="" OffContent="" MinWidth="0" Toggled="Autostart_Toggled" />
-                        </Grid>
-                        <Grid Style="{StaticResource SettingRow}">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE921;" />
-                            <StackPanel Grid.Column="1"><TextBlock x:Uid="SetTrayTitle" FontWeight="SemiBold" /></StackPanel>
-                            <ToggleSwitch x:Name="TrayToggle" Grid.Column="2" OnContent="" OffContent="" MinWidth="0" Toggled="Tray_Toggled" />
-                        </Grid>
-                        <Grid Style="{StaticResource SettingRow}">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE921;" />
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="Minimiert starten" FontWeight="SemiBold" />
-                                <TextBlock Text="Startet NEXT : XLR direkt minimiert im System-Tray." Style="{StaticResource Caption}" />
+                        </Border>
+
+                        <!-- Card 3: Windows Audio & Datenschutz -->
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="14"
+                                BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1" Padding="0">
+                            <StackPanel>
+                                <!-- Sprache -->
+                                <Grid Padding="20,14" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
+                                        <FontIcon Glyph="&#xE775;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock x:Uid="SetLanguageTitle" FontWeight="SemiBold" />
+                                        <TextBlock Text="Systemsprache und Regionseinstellungen in Windows konfigurieren." Style="{StaticResource Caption}" />
+                                    </StackPanel>
+                                    <HyperlinkButton x:Uid="SetLanguageLink" Grid.Column="2" VerticalAlignment="Center" NavigateUri="ms-settings:regionlanguage" />
+                                </Grid>
+
+                                <Border Height="1" Background="{ThemeResource SurfaceStrokeSubtleBrush}" Margin="68,0,20,0" />
+
+                                <!-- Soundgeräte -->
+                                <Grid Padding="20,14" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
+                                        <FontIcon Glyph="&#xE767;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock x:Uid="SetSoundTitle" FontWeight="SemiBold" />
+                                        <TextBlock Text="Windows Sound-Systemsteuerung für Ein- und Ausgabegeräte öffnen." Style="{StaticResource Caption}" />
+                                    </StackPanel>
+                                    <HyperlinkButton x:Uid="SetSoundLink" Grid.Column="2" VerticalAlignment="Center" NavigateUri="ms-settings:sound" />
+                                </Grid>
+
+                                <Border Height="1" Background="{ThemeResource SurfaceStrokeSubtleBrush}" Margin="68,0,20,0" />
+
+                                <!-- Mikrofon-Datenschutz -->
+                                <Grid Padding="20,14" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
+                                        <FontIcon Glyph="&#xE720;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Windows Mikrofon-Datenschutz" FontWeight="SemiBold" />
+                                        <TextBlock Text="Erlaube Desktop-Apps und NEXT : XLR Zugriff auf dein Mikrofon." Style="{StaticResource Caption}" />
+                                    </StackPanel>
+                                    <HyperlinkButton Content="Öffnen" Grid.Column="2" VerticalAlignment="Center" NavigateUri="ms-settings:privacy-microphone" />
+                                </Grid>
                             </StackPanel>
-                            <ToggleSwitch x:Name="StartMinimizedToggle" Grid.Column="2" OnContent="" OffContent="" MinWidth="0" Toggled="StartMinimized_Toggled" />
-                        </Grid>
-                        <Grid Style="{StaticResource SettingRow}">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE74F;" Foreground="{StaticResource WarningBrush}" />
-                            <StackPanel Grid.Column="1">
-                                <TextBlock x:Uid="SetMuteOnStartupTitle" FontWeight="SemiBold" />
-                                <TextBlock x:Uid="SetMuteOnStartupDesc" Style="{StaticResource Caption}" />
+                        </Border>
+
+                        <!-- Card 4: Wartung & Dienststeuerung -->
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="14"
+                                BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1" Padding="0">
+                            <StackPanel>
+                                <!-- Altlasten bereinigen -->
+                                <Grid Padding="20,14" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
+                                        <FontIcon Glyph="&#xE74D;" FontSize="16" Foreground="{StaticResource WarningBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Altlasten &amp; alte Software-Reste bereinigen" FontWeight="SemiBold" />
+                                        <TextBlock Text="Entfernt veraltete Autostarts der TC-Helicon App, verwaiste Dienste und temporäre Cache-Dateien." Style="{StaticResource Caption}" />
+                                    </StackPanel>
+                                    <Button x:Name="CleanupRemnantsButton" Content="Bereinigen" Grid.Column="2" VerticalAlignment="Center" Click="CleanupRemnants_Click" />
+                                </Grid>
+
+                                <Border Height="1" Background="{ThemeResource SurfaceStrokeSubtleBrush}" Margin="68,0,20,0" />
+
+                                <!-- Beenden -->
+                                <Grid Padding="20,14" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
+                                        <FontIcon Glyph="&#xE7E8;" FontSize="16" Foreground="{StaticResource DangerBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Software &amp; Hintergrunddienst beenden" FontWeight="SemiBold" />
+                                        <TextBlock Text="Beendet NEXT : XLR und stoppt den mixforged Hintergrunddienst vollständig." Style="{StaticResource Caption}" />
+                                    </StackPanel>
+                                    <Button x:Name="QuitAppAndServiceButton" Content="Vollständig beenden" Grid.Column="2" VerticalAlignment="Center" Click="QuitAppAndService_Click" />
+                                </Grid>
                             </StackPanel>
-                            <ToggleSwitch x:Name="MuteOnStartupToggle" Grid.Column="2" OnContent="" OffContent="" MinWidth="0" Toggled="MuteOnStartup_Toggled" />
-                        </Grid>
-                        <Grid Style="{StaticResource SettingRow}">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE775;" />
-                            <StackPanel Grid.Column="1"><TextBlock x:Uid="SetLanguageTitle" FontWeight="SemiBold" /></StackPanel>
-                            <HyperlinkButton x:Uid="SetLanguageLink" Grid.Column="2" NavigateUri="ms-settings:regionlanguage" />
-                        </Grid>
-                        <Grid Style="{StaticResource SettingRow}">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE767;" />
-                            <StackPanel Grid.Column="1"><TextBlock x:Uid="SetSoundTitle" FontWeight="SemiBold" /></StackPanel>
-                            <HyperlinkButton x:Uid="SetSoundLink" Grid.Column="2" NavigateUri="ms-settings:sound" />
-                        </Grid>
-                        <Grid Style="{StaticResource SettingRow}">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE720;" />
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="Windows Mikrofon-Datenschutz" FontWeight="SemiBold" />
-                                <TextBlock Text="Erlaube Apps den Zugriff auf dein Mikrofon" Style="{StaticResource Caption}" />
-                            </StackPanel>
-                            <HyperlinkButton Content="Öffnen" Grid.Column="2" NavigateUri="ms-settings:privacy-microphone" />
-                        </Grid>
-                        <Grid Style="{StaticResource SettingRow}">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE74D;" Foreground="{StaticResource WarningBrush}" />
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="Altlasten &amp; alte Software-Reste bereinigen" FontWeight="SemiBold" />
-                                <TextBlock Text="Entfernt veraltete Autostarts der TC-Helicon App, verwaiste Dienste und temporäre Cache-Dateien." Style="{StaticResource Caption}" />
-                            </StackPanel>
-                            <Button x:Name="CleanupRemnantsButton" Content="Bereinigen" Grid.Column="2" Click="CleanupRemnants_Click" />
-                        </Grid>
-                        <Grid Style="{StaticResource SettingRow}">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE7E8;" Foreground="{StaticResource DangerBrush}" />
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="Software &amp; Hintergrunddienst beenden" FontWeight="SemiBold" />
-                                <TextBlock Text="Beendet NEXT : XLR und stoppt den mixforged Hintergrunddienst vollständig." Style="{StaticResource Caption}" />
-                            </StackPanel>
-                            <Button x:Name="QuitAppAndServiceButton" Content="Vollständig beenden" Grid.Column="2" Click="QuitAppAndService_Click" />
-                        </Grid>
+                        </Border>
+
                         <InfoBar x:Name="GeneralResult" IsOpen="False" Margin="0,4,0,0" />
                     </StackPanel>
 
