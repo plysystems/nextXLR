@@ -214,8 +214,9 @@
                                         Value="{x:Bind ViewModel.BleepVolume, Mode=TwoWay}"
                                         AutomationProperties.Name="Bleep Lautstärke" />
                                 <TextBlock Text="{x:Bind ViewModel.BleepVolumeText, Mode=OneWay}"
-                                           FontSize="11" FontWeight="SemiBold" Width="36" VerticalAlignment="Center"
-                                           FontFamily="{StaticResource DisplayFont}" />
+                                           FontSize="11" FontWeight="SemiBold" Width="44" VerticalAlignment="Center"
+                                           FontFamily="{StaticResource DisplayFont}"
+                                           ToolTipService.ToolTip="{x:Bind ViewModel.BleepVolumePercentText, Mode=OneWay}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>

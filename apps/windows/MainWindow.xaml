@@ -31,11 +31,16 @@
                         PaneDisplayMode="Auto" OpenPaneLength="248"
                         ExpandedModeThresholdWidth="1180" CompactModeThresholdWidth="720"
                         IsBackButtonVisible="Collapsed" IsSettingsVisible="False"
+                        IsPaneToggleButtonVisible="False"
                         AlwaysShowHeader="False" Header="{x:Null}"
                         SelectionChanged="Nav_SelectionChanged">
             <NavigationView.Resources>
-                <Thickness x:Key="NavigationViewContentGridBorderThickness">1,1,0,0</Thickness>
-                <CornerRadius x:Key="NavigationViewContentGridCornerRadius">12,0,0,0</CornerRadius>
+                <Thickness x:Key="NavigationViewContentGridBorderThickness">0</Thickness>
+                <CornerRadius x:Key="NavigationViewContentGridCornerRadius">0</CornerRadius>
+                <Thickness x:Key="NavigationViewHeaderMargin">0</Thickness>
+                <x:Double x:Key="NavigationViewTopPadding">0</x:Double>
+                <x:Double x:Key="NavigationViewContentTopMargin">0</x:Double>
+                <Thickness x:Key="NavigationViewContentMargin">0</Thickness>
             </NavigationView.Resources>
 
             <NavigationView.MenuItems>
@@ -133,12 +138,12 @@
                 </StackPanel>
             </NavigationView.PaneFooter>
 
-            <Grid Background="{ThemeResource NavigationViewContentBackground}">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <StackPanel Spacing="8">
+            <Grid Background="{ThemeResource SurfaceL1Brush}">
+                <Frame x:Name="ContentFrame" Background="{ThemeResource SurfaceL1Brush}"
+                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+
+                <!-- InfoBars overlay on top when active, zero height/gap when closed -->
+                <StackPanel VerticalAlignment="Top" Spacing="8">
                     <InfoBar x:Uid="EngineOffline" IsOpen="{x:Bind Not(ViewModel.IsConnected), Mode=OneWay}"
                              Margin="40,8,40,0" Severity="Warning" IsClosable="False" />
                     <InfoBar x:Uid="EngineError" IsOpen="{x:Bind HasText(ViewModel.LastError), Mode=OneWay}"
@@ -153,10 +158,9 @@
                         </InfoBar.ActionButton>
                     </InfoBar>
                 </StackPanel>
-                <Frame x:Name="ContentFrame" Grid.Row="1" Background="{ThemeResource SurfaceL1Brush}" />
 
                 <!-- Animiertes Lade-Overlay bei Start, Seitenwechsel, Plugin-Scan oder Profil-Laden -->
-                <Grid x:Name="GlobalLoadingOverlay" Grid.Row="1" Background="#550A0C10"
+                <Grid x:Name="GlobalLoadingOverlay" Background="#550A0C10"
                       Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
                       IsHitTestVisible="False" Canvas.ZIndex="500">
                     <Border Background="{ThemeResource SurfaceL2Brush}" BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}"

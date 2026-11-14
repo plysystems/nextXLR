@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <UserControl
     x:Class="NextXLR.ChannelStrip"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -119,10 +119,11 @@
                                         PeakHold="{x:Bind ViewModel.PeakHold, Mode=OneWay}"
                                         IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}" />
 
-                        <!-- Volume % readout -->
-                        <TextBlock Grid.Row="1" Text="{x:Bind ViewModel.SubmixVolumeLabel, Mode=OneWay}"
-                                   FontSize="14" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}"
-                                   HorizontalAlignment="Center" />
+                        <!-- Volume dB readout -->
+                        <TextBlock Grid.Row="1" Text="{x:Bind ViewModel.SubmixVolumeDbLabel, Mode=OneWay}"
+                                   FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}"
+                                   HorizontalAlignment="Center"
+                                   ToolTipService.ToolTip="{x:Bind ViewModel.SubmixVolumePercentLabel, Mode=OneWay}" />
 
                         <!-- Kopfhörer Pill + Hardware Fader Badge -->
                         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
@@ -179,10 +180,11 @@
                                         PeakHold="{x:Bind ViewModel.PeakHold, Mode=OneWay}"
                                         IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}" />
 
-                        <!-- Volume % readout -->
-                        <TextBlock Grid.Row="1" Text="{x:Bind ViewModel.StreamVolumeLabel, Mode=OneWay}"
-                                   FontSize="14" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}"
-                                   HorizontalAlignment="Center" />
+                        <!-- Volume dB readout -->
+                        <TextBlock Grid.Row="1" Text="{x:Bind ViewModel.StreamVolumeDbLabel, Mode=OneWay}"
+                                   FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}"
+                                   HorizontalAlignment="Center"
+                                   ToolTipService.ToolTip="{x:Bind ViewModel.StreamVolumePercentLabel, Mode=OneWay}" />
 
                         <!-- Stream Pill + Hardware Fader Badge -->
                         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
@@ -240,25 +242,25 @@
                                     IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}"
                                     Accent="{x:Bind SingleFaderAccent(ViewModel.IsSubmixActive, ViewModel.Accent), Mode=OneWay}" />
 
-                    <!-- Row 1: Volume % readout (Click to edit) -->
+                    <!-- Row 1: Volume dB readout (Click to edit) -->
                     <Grid Grid.Row="1" HorizontalAlignment="Center">
                         <StackPanel x:Name="LevelDisplayPanel" Orientation="Horizontal" HorizontalAlignment="Center"
                                     Background="Transparent" CornerRadius="4" Padding="4,1"
                                     ToolTipService.ToolTip="{x:Bind EditTooltip(ViewModel.IsFixed), Mode=OneWay}"
                                     Tapped="LevelDisplay_Tapped" PointerPressed="LevelDisplay_PointerPressed">
-                            <TextBlock Text="{x:Bind LevelText(ViewModel.IsFixed, ViewModel.VolumeLabel, ViewModel.PeakLabel), Mode=OneWay}"
+                            <TextBlock Text="{x:Bind LevelText(ViewModel.IsFixed, ViewModel.VolumeDbLabel, ViewModel.PeakLabel), Mode=OneWay}"
                                        FontSize="14" FontWeight="Bold"
                                        FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center"
                                        IsHitTestVisible="False" />
                         </StackPanel>
-                        <TextBox x:Name="LevelInputBox" Width="56" TextAlignment="Center" FontSize="13" Height="28" Padding="2"
+                        <TextBox x:Name="LevelInputBox" Width="68" TextAlignment="Center" FontSize="13" Height="28" Padding="2"
                                  Visibility="Collapsed" KeyDown="LevelInputBox_KeyDown" LostFocus="LevelInputBox_LostFocus" />
                     </Grid>
 
-                    <!-- Row 2: Sub-label (Spitze: -XX dB or Mute restore or Meter-Only) -->
+                    <!-- Row 2: Sub-label (% and Peak or Mute restore or Meter-Only) -->
                     <TextBlock Grid.Row="2" HorizontalAlignment="Center" Style="{StaticResource Caption}" FontSize="10"
                                Foreground="{ThemeResource TextMutedBrush}"
-                               Text="{x:Bind SubLabel(ViewModel.ActiveMuted, ViewModel.RestoreLabel, ViewModel.Metered, ViewModel.PeakLabel, ViewModel.IsFixed), Mode=OneWay}" />
+                               Text="{x:Bind SubLabel(ViewModel.ActiveMuted, ViewModel.RestoreLabel, ViewModel.Metered, ViewModel.PeakLabel, ViewModel.IsFixed, ViewModel.VolumePercentLabel), Mode=OneWay}" />
 
                     <!-- Row 3: Active Mix & Hardware Fader Badge Bar -->
                     <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">

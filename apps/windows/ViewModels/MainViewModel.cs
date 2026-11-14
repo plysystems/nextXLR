@@ -64,7 +64,8 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _bleepActive;
     /// <summary>Bleep volume level (0-100%).</summary>
     [ObservableProperty] private double _bleepVolume = 100;
-    public string BleepVolumeText => $"{Math.Round(BleepVolume)} %";
+    public string BleepVolumeText => ChannelViewModel.ToDbString(BleepVolume / 100.0);
+    public string BleepVolumePercentText => $"{Math.Round(BleepVolume)} %";
 
     /// <summary>Mixer Mode: 0 = Kopfhörer-Mix (Default & Standard), 1 = Stream-Mix, 2 = Dual-Mix (Beide gleichzeitig).</summary>
     [ObservableProperty] private int _activeMixIndex = 0;
@@ -130,6 +131,7 @@ public partial class MainViewModel : ObservableObject
     partial void OnBleepVolumeChanged(double value)
     {
         OnPropertyChanged(nameof(BleepVolumeText));
+        OnPropertyChanged(nameof(BleepVolumePercentText));
         BleepSound.Volume = Math.Clamp(value / 100.0, 0.0, 1.0);
         try
         {

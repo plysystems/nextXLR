@@ -102,6 +102,8 @@ public partial class ChannelViewModel : ObservableObject
         UpdateRouterLevels();
         OnPropertyChanged(nameof(VolumePercent));
         OnPropertyChanged(nameof(VolumeLabel));
+        OnPropertyChanged(nameof(VolumeDbLabel));
+        OnPropertyChanged(nameof(VolumePercentLabel));
         OnPropertyChanged(nameof(ActiveMuted));
         OnPropertyChanged(nameof(ActiveMuteTooltip));
     }
@@ -120,7 +122,19 @@ public partial class ChannelViewModel : ObservableObject
         }
     }
 
+    public static string ToDbString(double volume)
+    {
+        if (volume >= 0.999) return "0.0 dB";
+        if (volume <= 0.001) return "-∞ dB";
+        // GoXLR cubic taper: gain = v^3, dB = 60 * log10(v)
+        double db = Math.Round(60.0 * Math.Log10(volume), 1);
+        if (db >= 0.0) return "0.0 dB";
+        return $"{db:0.0} dB";
+    }
+
     public string VolumeLabel => $"{Math.Round((IsSubmixActive ? SubmixVolume : Volume) * 100)}";
+    public string VolumeDbLabel => ToDbString(IsSubmixActive ? SubmixVolume : Volume);
+    public string VolumePercentLabel => $"{Math.Round((IsSubmixActive ? SubmixVolume : Volume) * 100)}%";
 
     public double StreamVolumePercent
     {
@@ -128,6 +142,8 @@ public partial class ChannelViewModel : ObservableObject
         set => Volume = Math.Clamp(value / 100.0, 0.0, 1.0);
     }
     public string StreamVolumeLabel => $"{Math.Round(Volume * 100)}";
+    public string StreamVolumeDbLabel => ToDbString(Volume);
+    public string StreamVolumePercentLabel => $"{Math.Round(Volume * 100)}%";
 
     public double SubmixVolumePercent
     {
@@ -135,6 +151,8 @@ public partial class ChannelViewModel : ObservableObject
         set => SubmixVolume = Math.Clamp(value / 100.0, 0.0, 1.0);
     }
     public string SubmixVolumeLabel => $"{Math.Round(SubmixVolume * 100)}";
+    public string SubmixVolumeDbLabel => ToDbString(SubmixVolume);
+    public string SubmixVolumePercentLabel => $"{Math.Round(SubmixVolume * 100)}%";
 
     public bool ActiveMuted
     {
@@ -244,10 +262,14 @@ public partial class ChannelViewModel : ObservableObject
         UpdateRouterLevels();
         OnPropertyChanged(nameof(StreamVolumePercent));
         OnPropertyChanged(nameof(StreamVolumeLabel));
+        OnPropertyChanged(nameof(StreamVolumeDbLabel));
+        OnPropertyChanged(nameof(StreamVolumePercentLabel));
         if (!IsSubmixActive)
         {
             OnPropertyChanged(nameof(VolumePercent));
             OnPropertyChanged(nameof(VolumeLabel));
+            OnPropertyChanged(nameof(VolumeDbLabel));
+            OnPropertyChanged(nameof(VolumePercentLabel));
         }
         if (value <= 0.001)
         {
@@ -274,10 +296,14 @@ public partial class ChannelViewModel : ObservableObject
         UpdateRouterLevels();
         OnPropertyChanged(nameof(SubmixVolumePercent));
         OnPropertyChanged(nameof(SubmixVolumeLabel));
+        OnPropertyChanged(nameof(SubmixVolumeDbLabel));
+        OnPropertyChanged(nameof(SubmixVolumePercentLabel));
         if (IsSubmixActive)
         {
             OnPropertyChanged(nameof(VolumePercent));
             OnPropertyChanged(nameof(VolumeLabel));
+            OnPropertyChanged(nameof(VolumeDbLabel));
+            OnPropertyChanged(nameof(VolumePercentLabel));
         }
         if (value > 0.001 && SubmixMuted && !_applyingServer)
         {

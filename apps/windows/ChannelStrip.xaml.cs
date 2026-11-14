@@ -189,13 +189,25 @@ public sealed partial class ChannelStrip : UserControl
     private void CommitLevelInput()
     {
         if (LevelInputBox.Visibility != Visibility.Visible) return;
-        var text = LevelInputBox.Text.Trim().TrimEnd('%');
+        var text = LevelInputBox.Text.Trim();
+        bool isDb = text.EndsWith("db", StringComparison.OrdinalIgnoreCase);
+        text = text.Replace("dB", "", StringComparison.OrdinalIgnoreCase).Replace("db", "", StringComparison.OrdinalIgnoreCase).Trim().TrimEnd('%');
         if (double.TryParse(text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out var val) ||
             double.TryParse(text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out val))
         {
+            double targetPercent;
+            if (isDb || val < 0)
+            {
+                // Convert dB to volume percent: gain = 10^(dB/20) = p^3 -> p = 10^(dB/60)
+                targetPercent = Math.Clamp(Math.Pow(10.0, val / 60.0) * 100.0, 0.0, 100.0);
+            }
+            else
+            {
+                targetPercent = val;
+            }
             var min = ViewModel?.MinVolumePercent ?? 0.0;
             var max = ViewModel?.MaxVolumePercent ?? 100.0;
-            var clamped = Math.Clamp(val, min, max);
+            var clamped = Math.Clamp(targetPercent, min, max);
             if (ViewModel is not null)
             {
                 ViewModel.VolumePercent = clamped;
@@ -270,10 +282,10 @@ public sealed partial class ChannelStrip : UserControl
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> PeakStringCache = new();
     private static string FormatPeak(string peak) => PeakStringCache.GetOrAdd(peak, p => Loc.Format("MixerPeak", p));
 
-    public string SubLabel(bool muted, string restore, bool metered, string peak, bool isFixed) =>
+    public string SubLabel(bool muted, string restore, bool metered, string peak, bool isFixed, string percent) =>
         isFixed ? Loc.Get("MixerMeterOnly")
-        : muted ? restore : metered ? FormatPeak(peak) : Loc.Get("MixerNoMeterShort");
-    public string LevelText(bool isFixed, string level, string peak) => isFixed ? peak : level;
+        : muted ? restore : metered ? $"{percent} • {FormatPeak(peak)}" : percent;
+    public string LevelText(bool isFixed, string volumeDb, string peak) => isFixed ? $"{peak} dB" : volumeDb;
     public Visibility HideIf(bool value) => value ? Visibility.Collapsed : Visibility.Visible;
     public Visibility ShowIfDual(bool showDual, bool isFixed, bool isOutput) => (showDual && !isFixed && !isOutput) ? Visibility.Visible : Visibility.Collapsed;
     public Visibility ShowIfSingle(bool showDual, bool isFixed, bool isOutput) => (!showDual || isFixed || isOutput) ? Visibility.Visible : Visibility.Collapsed;

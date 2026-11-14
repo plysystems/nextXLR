@@ -133,6 +133,9 @@ xml = f'''<?xml version="1.0" encoding="utf-8"?>
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Default">
+{dark_styles}
+        </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
 {dark_styles}
         </ResourceDictionary>
@@ -141,8 +144,7 @@ xml = f'''<?xml version="1.0" encoding="utf-8"?>
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
-{dark_styles}
 </ResourceDictionary>
 '''
 (Path(__file__).parent / "Motion.xaml").write_text(xml, encoding="utf-8")
-print("Motion.xaml written with Dark and Light ThemeDictionaries")
+print("Motion.xaml written with Default, Dark and Light ThemeDictionaries")

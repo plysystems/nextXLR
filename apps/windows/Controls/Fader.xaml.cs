@@ -187,6 +187,10 @@ public sealed partial class Fader : UserControl
         var top = ValueToTop(_shown);
         CapOffset.Y = top;
 
+        var v = Math.Clamp(_shown / 100.0, 0.0, 1.0);
+        string dbStr = v >= 0.999 ? "0.0 dB" : v <= 0.001 ? "-∞ dB" : $"{Math.Round(60.0 * Math.Log10(v), 1):0.0} dB";
+        ToolTipService.SetToolTip(Cap, $"{dbStr} ({Math.Round(_shown)}%)");
+
         UpdateMeterLevels();
     }
 

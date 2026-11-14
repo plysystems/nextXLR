@@ -75,6 +75,16 @@ public sealed partial class MainWindow : Window
         {
             RootWindowGrid.ActualThemeChanged += (_, _) => UpdateTitleBarTheme();
         }
+        if (ContentFrame != null)
+        {
+            ContentFrame.Navigated += (s, e) =>
+            {
+                if (ContentFrame.Content is FrameworkElement fe)
+                {
+                    fe.RequestedTheme = ContentFrame.RequestedTheme;
+                }
+            };
+        }
         ApplyTheme(AppSettings.Load().AppTheme);
 
         AppWindow.Resize(new SizeInt32(1440, 920));
@@ -746,6 +756,20 @@ public sealed partial class MainWindow : Window
         if (RootWindowGrid != null)
         {
             RootWindowGrid.RequestedTheme = requestedTheme;
+        }
+
+        if (Nav != null)
+        {
+            Nav.RequestedTheme = requestedTheme;
+        }
+
+        if (ContentFrame != null)
+        {
+            ContentFrame.RequestedTheme = requestedTheme;
+            if (ContentFrame.Content is FrameworkElement fe)
+            {
+                fe.RequestedTheme = requestedTheme;
+            }
         }
 
         UpdateTitleBarTheme();
