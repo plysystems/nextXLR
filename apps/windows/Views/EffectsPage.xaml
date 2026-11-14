@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="NextXLR.Views.EffectsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="using:NextXLR.ViewModels"
     xmlns:controls="using:NextXLR.Controls"
-    Background="{StaticResource SurfaceL1Brush}">
+    Background="{ThemeResource SurfaceL1Brush}">
 
     <ScrollViewer Style="{StaticResource PageScroller}">
         <StackPanel Spacing="24" MaxWidth="1320" HorizontalAlignment="Center">

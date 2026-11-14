@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <UserControl
     x:Class="NextXLR.PadTile"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -63,7 +63,7 @@
                            TextTrimming="CharacterEllipsis" MaxWidth="200"
                            HorizontalAlignment="{x:Bind Side}" Opacity="0.85" />
                 <Button x:Name="EditPadButton" Click="EditPad_Click" Padding="8,4" CornerRadius="6"
-                        Background="{StaticResource SurfaceL3Brush}" BorderThickness="0"
+                        Background="{ThemeResource SurfaceL3Brush}" BorderThickness="0"
                         Visibility="{x:Bind ViewModel.HasSample, Mode=OneWay}"
                         HorizontalAlignment="{x:Bind Side}">
                     <StackPanel Orientation="Horizontal" Spacing="6">

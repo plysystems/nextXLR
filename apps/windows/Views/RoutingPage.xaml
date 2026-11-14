@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="NextXLR.Views.RoutingPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="using:NextXLR.ViewModels"
     xmlns:services="using:NextXLR.Services"
-    Background="{StaticResource SurfaceL1Brush}">
+    Background="{ThemeResource SurfaceL1Brush}">
 
     <!--
       GoXLR routing table. Rows (inputs): Mic, Chat, Music, Game, Console, Line In, System, Samples.
@@ -38,7 +38,7 @@
                             <ItemsRepeater.ItemTemplate>
                                 <DataTemplate x:DataType="vm:BusView">
                                     <StackPanel Spacing="6" Padding="0,0,0,12" HorizontalAlignment="Stretch">
-                                        <Border Width="36" Height="36" CornerRadius="12" Background="{StaticResource SurfaceL3Brush}" HorizontalAlignment="Center">
+                                        <Border Width="36" Height="36" CornerRadius="12" Background="{ThemeResource SurfaceL3Brush}" HorizontalAlignment="Center">
                                             <FontIcon Glyph="{x:Bind Glyph}" FontSize="16" Foreground="{StaticResource BrandBrush}" />
                                         </Border>
                                         <TextBlock Text="{x:Bind Name}" FontSize="11" FontWeight="SemiBold"
@@ -141,7 +141,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                 <FontIcon Glyph="&#xE7F5;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
                                 <TextBlock Text="Auto-Ducking" Style="{StaticResource SectionTitle}" />
-                                <Border Background="{StaticResource SurfaceL3Brush}" BorderBrush="{StaticResource BrandBrush}"
+                                <Border Background="{ThemeResource SurfaceL3Brush}" BorderBrush="{StaticResource BrandBrush}"
                                         BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
                                     <TextBlock Text="{x:Bind AutoDucking.StatusText, Mode=OneWay}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
                                 </Border>
@@ -165,8 +165,8 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Column 1: Trigger &amp; Target Channel ComboBoxes -->
-                        <Border Background="{StaticResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
-                                BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
                             <StackPanel Spacing="10">
                                 <TextBlock Text="Signal-Zuweisung" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource BrandBrush}" />
                                 <StackPanel Spacing="4">
@@ -185,8 +185,8 @@
                         </Border>
 
                         <!-- Column 2: Ducking Amount (Absenkung) -->
-                        <Border Grid.Column="1" Background="{StaticResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
-                                BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                        <Border Grid.Column="1" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
                             <StackPanel Spacing="8">
                                 <Grid>
                                     <TextBlock Text="Dämpfung (Tiefe)" FontWeight="SemiBold" FontSize="12" />
@@ -195,19 +195,19 @@
                                 </Grid>
                                 <Slider Minimum="-30" Maximum="-6" StepFrequency="1"
                                         Value="{x:Bind AutoDucking.DuckAmountDb, Mode=TwoWay}" />
-                                <TextBlock Text="Wie stark das Ziel gedämpft wird" Style="{StaticResource Caption}" Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBlock Text="Wie stark das Ziel gedämpft wird" Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
                                 <!-- Live Gain Reduction Indicator -->
                                 <StackPanel Spacing="2" Margin="0,4,0,0">
                                     <TextBlock Text="Aktuelle Reduktion:" Style="{StaticResource Overline}" FontSize="9" />
                                     <ProgressBar Minimum="0" Maximum="100" Value="{x:Bind AutoDucking.DuckReductionPercent, Mode=OneWay}"
-                                                 Height="4" CornerRadius="2" Foreground="{StaticResource WarningBrush}" Background="{StaticResource SurfaceL3Brush}" />
+                                                 Height="4" CornerRadius="2" Foreground="{StaticResource WarningBrush}" Background="{ThemeResource SurfaceL3Brush}" />
                                 </StackPanel>
                             </StackPanel>
                         </Border>
 
                         <!-- Column 3: Threshold (Ansprechschwelle) -->
-                        <Border Grid.Column="2" Background="{StaticResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
-                                BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                        <Border Grid.Column="2" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
                             <StackPanel Spacing="8">
                                 <Grid>
                                     <TextBlock Text="Schwelle (Trigger)" FontWeight="SemiBold" FontSize="12" />
@@ -216,13 +216,13 @@
                                 </Grid>
                                 <Slider Minimum="-50" Maximum="-15" StepFrequency="1"
                                         Value="{x:Bind AutoDucking.ThresholdDb, Mode=TwoWay}" />
-                                <TextBlock Text="Ab welchem Sprachpegel Ducking startet" Style="{StaticResource Caption}" Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBlock Text="Ab welchem Sprachpegel Ducking startet" Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
                             </StackPanel>
                         </Border>
 
                         <!-- Column 4: Hold &amp; Release Timers -->
-                        <Border Grid.Column="3" Background="{StaticResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
-                                BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                        <Border Grid.Column="3" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
                             <StackPanel Spacing="8">
                                 <Grid>
                                     <TextBlock Text="Haltezeit (Hold)" FontWeight="SemiBold" FontSize="12" />

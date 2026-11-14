@@ -5,14 +5,14 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Width="10">
 
-    <Grid x:Name="Root" CornerRadius="4" Background="{StaticResource MeterTrackBrush}">
+    <Grid x:Name="Root" CornerRadius="4" Background="{ThemeResource MeterTrackBrush}">
         <!-- Full-height gradient (colours fixed to the dB scale), masked from the top. -->
         <Border x:Name="Gradient" CornerRadius="4" Background="{StaticResource MeterBrush}" />
-        <Border x:Name="Mask" VerticalAlignment="Top" CornerRadius="4,4,0,0" Background="{StaticResource MeterTrackBrush}" />
+        <Border x:Name="Mask" VerticalAlignment="Top" CornerRadius="4,4,0,0" Background="{ThemeResource MeterTrackBrush}" />
         <Border x:Name="Hold" VerticalAlignment="Top" Height="2" Background="#FFFFFF" Opacity="0.85">
             <Border.RenderTransform><TranslateTransform x:Name="HoldOffset" /></Border.RenderTransform>
         </Border>
         <!-- Analog inputs have no level: show an empty groove -->
-        <Border x:Name="NoMeter" Width="2" HorizontalAlignment="Center" Background="#2A303C" Visibility="Collapsed" />
+        <Border x:Name="NoMeter" Width="2" HorizontalAlignment="Center" Background="{ThemeResource SurfaceStrokeBrush}" Visibility="Collapsed" />
     </Grid>
 </UserControl>

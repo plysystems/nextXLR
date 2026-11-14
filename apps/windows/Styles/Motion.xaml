@@ -21,15 +21,15 @@
                 <ControlTemplate TargetType="ToggleButton">
                     <Grid x:Name="Root" CornerRadius="{TemplateBinding CornerRadius}" RenderTransformOrigin="0.5,0.5">
                         <Grid.RenderTransform><ScaleTransform x:Name="Scale" /></Grid.RenderTransform>
-                        <Grid.Background><SolidColorBrush x:Name="Bg" Color="#232833" /></Grid.Background>
+                        <Grid.Background><SolidColorBrush x:Name="Bg" Color="#303030" /></Grid.Background>
                         <Border CornerRadius="{TemplateBinding CornerRadius}" BorderThickness="{TemplateBinding BorderThickness}">
-                            <Border.BorderBrush><SolidColorBrush x:Name="Stroke" Color="#2A303C" /></Border.BorderBrush>
+                            <Border.BorderBrush><SolidColorBrush x:Name="Stroke" Color="#383838" /></Border.BorderBrush>
                         </Border>
                         <ContentPresenter Padding="{TemplateBinding Padding}" Content="{TemplateBinding Content}"
                                           ContentTemplate="{TemplateBinding ContentTemplate}"
                                           HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
-                            <ContentPresenter.Foreground><SolidColorBrush x:Name="Fg" Color="#E6E8EE" /></ContentPresenter.Foreground>
+                            <ContentPresenter.Foreground><SolidColorBrush x:Name="Fg" Color="#EAEAEA" /></ContentPresenter.Foreground>
                         </ContentPresenter>
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
@@ -40,32 +40,32 @@
                                 </VisualStateGroup.Transitions>
                                 <VisualState x:Name="Normal">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#232833" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#2A303C" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#E6E8EE" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#303030" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#383838" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#EAEAEA" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="PointerOver">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#2C3240" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#3A4252" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#E6E8EE" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#3A3A3A" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#484848" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#EAEAEA" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#1D2129" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#2A303C" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#E6E8EE" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#262626" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#383838" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#EAEAEA" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX" To="0.97" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY" To="0.97" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Disabled">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#232833" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#2A303C" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#E6E8EE" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#303030" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#383838" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#EAEAEA" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="0.45" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
@@ -123,15 +123,15 @@
                 <ControlTemplate TargetType="ToggleButton">
                     <Grid x:Name="Root" CornerRadius="{TemplateBinding CornerRadius}" RenderTransformOrigin="0.5,0.5">
                         <Grid.RenderTransform><ScaleTransform x:Name="Scale" /></Grid.RenderTransform>
-                        <Grid.Background><SolidColorBrush x:Name="Bg" Color="#232833" /></Grid.Background>
+                        <Grid.Background><SolidColorBrush x:Name="Bg" Color="#303030" /></Grid.Background>
                         <Border CornerRadius="{TemplateBinding CornerRadius}" BorderThickness="{TemplateBinding BorderThickness}">
-                            <Border.BorderBrush><SolidColorBrush x:Name="Stroke" Color="#2A303C" /></Border.BorderBrush>
+                            <Border.BorderBrush><SolidColorBrush x:Name="Stroke" Color="#383838" /></Border.BorderBrush>
                         </Border>
                         <ContentPresenter Padding="{TemplateBinding Padding}" Content="{TemplateBinding Content}"
                                           ContentTemplate="{TemplateBinding ContentTemplate}"
                                           HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
-                            <ContentPresenter.Foreground><SolidColorBrush x:Name="Fg" Color="#E6E8EE" /></ContentPresenter.Foreground>
+                            <ContentPresenter.Foreground><SolidColorBrush x:Name="Fg" Color="#EAEAEA" /></ContentPresenter.Foreground>
                         </ContentPresenter>
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
@@ -142,32 +142,32 @@
                                 </VisualStateGroup.Transitions>
                                 <VisualState x:Name="Normal">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#232833" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#2A303C" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#E6E8EE" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#303030" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#383838" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#EAEAEA" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="PointerOver">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#2C3240" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#3A4252" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#E6E8EE" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#3A3A3A" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#484848" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#EAEAEA" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#1D2129" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#2A303C" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#E6E8EE" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#262626" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#383838" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#EAEAEA" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX" To="0.97" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY" To="0.97" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Disabled">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#232833" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#2A303C" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#E6E8EE" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#303030" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#383838" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#EAEAEA" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="0.45" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
@@ -225,15 +225,15 @@
                 <ControlTemplate TargetType="Button">
                     <Grid x:Name="Root" CornerRadius="{TemplateBinding CornerRadius}" RenderTransformOrigin="0.5,0.5">
                         <Grid.RenderTransform><ScaleTransform x:Name="Scale" /></Grid.RenderTransform>
-                        <Grid.Background><SolidColorBrush x:Name="Bg" Color="#232833" /></Grid.Background>
+                        <Grid.Background><SolidColorBrush x:Name="Bg" Color="#303030" /></Grid.Background>
                         <Border CornerRadius="{TemplateBinding CornerRadius}" BorderThickness="{TemplateBinding BorderThickness}">
-                            <Border.BorderBrush><SolidColorBrush x:Name="Stroke" Color="#2A303C" /></Border.BorderBrush>
+                            <Border.BorderBrush><SolidColorBrush x:Name="Stroke" Color="#383838" /></Border.BorderBrush>
                         </Border>
                         <ContentPresenter Padding="{TemplateBinding Padding}" Content="{TemplateBinding Content}"
                                           ContentTemplate="{TemplateBinding ContentTemplate}"
                                           HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
-                            <ContentPresenter.Foreground><SolidColorBrush x:Name="Fg" Color="#E6E8EE" /></ContentPresenter.Foreground>
+                            <ContentPresenter.Foreground><SolidColorBrush x:Name="Fg" Color="#EAEAEA" /></ContentPresenter.Foreground>
                         </ContentPresenter>
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
@@ -244,32 +244,32 @@
                                 </VisualStateGroup.Transitions>
                                 <VisualState x:Name="Normal">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#232833" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#2A303C" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#E6E8EE" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#303030" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#383838" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#EAEAEA" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="PointerOver">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#2C3240" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#3A3A3A" Duration="0" />
                                     <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#4FE0B8" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#E6E8EE" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#EAEAEA" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#1D2129" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#262626" Duration="0" />
                                     <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#4FE0B8" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#E6E8EE" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#EAEAEA" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleX" To="0.97" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Scale" Storyboard.TargetProperty="ScaleY" To="0.97" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="Disabled">
                                     <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#232833" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#2A303C" Duration="0" />
-                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#E6E8EE" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Color" To="#303030" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Stroke" Storyboard.TargetProperty="Color" To="#383838" Duration="0" />
+                                    <ColorAnimation Storyboard.TargetName="Fg" Storyboard.TargetProperty="Color" To="#EAEAEA" Duration="0" />
                                     <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="0.45" Duration="0" />
                                     </Storyboard>
                                 </VisualState>

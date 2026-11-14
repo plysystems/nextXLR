@@ -22,6 +22,9 @@ public sealed class AppSettings
     public double BleepVolume { get; set; } = 100.0;
     public bool HasCompletedTour { get; set; } = true;
 
+    // Theme: "Dark", "Light", "System"
+    public string AppTheme { get; set; } = "Dark";
+
     // Auto-Ducking (Sidechain Speech Detection)
     public bool AutoDuckingEnabled { get; set; } = false;
     public string AutoDuckingTrigger { get; set; } = "Mic";

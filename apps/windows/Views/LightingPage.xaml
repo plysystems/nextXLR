@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="NextXLR.Views.LightingPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -6,7 +6,7 @@
     xmlns:vm="using:NextXLR.ViewModels"
     xmlns:controls="using:NextXLR.Controls"
     xmlns:services="using:NextXLR.Services"
-    Background="{StaticResource SurfaceL1Brush}">
+    Background="{ThemeResource SurfaceL1Brush}">
 
     <Page.Resources>
         <!-- Colour flyout: ring picker + hex input + quick swatches. Shared by both swatch buttons. -->
@@ -15,7 +15,7 @@
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="Background" Value="{StaticResource SurfaceL2Brush}" />
+            <Setter Property="Background" Value="{ThemeResource SurfaceL2Brush}" />
         </Style>
         <DataTemplate x:Key="PaletteItem" x:DataType="vm:PaletteSwatch">
             <Button Width="30" Height="30" Padding="0" Margin="0,0,6,6" CornerRadius="15" Background="{x:Bind Brush}"
@@ -34,8 +34,8 @@
             <Border Style="{StaticResource Card}" Padding="20">
                 <StackPanel Spacing="16">
                     <!-- Auto-detected hardware badge (GoXLR vs GoXLR Mini) -->
-                    <Border HorizontalAlignment="Center" Background="{StaticResource SurfaceL2Brush}"
-                            BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1"
+                    <Border HorizontalAlignment="Center" Background="{ThemeResource SurfaceL2Brush}"
+                            BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1"
                             CornerRadius="20" Padding="16,6">
                         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                             <FontIcon Glyph="&#xE7F6;" FontSize="14" Foreground="{StaticResource BrandBrush}" />
@@ -113,7 +113,7 @@
                             </ItemsRepeater.Layout>
                             <ItemsRepeater.ItemTemplate>
                                 <DataTemplate x:DataType="services:CustomLightingTheme">
-                                    <Border Background="{StaticResource SurfaceL2Brush}" BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}"
+                                    <Border Background="{ThemeResource SurfaceL2Brush}" BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}"
                                             BorderThickness="1" CornerRadius="12" Padding="12,8">
                                         <Grid ColumnSpacing="10" VerticalAlignment="Center">
                                             <Grid.ColumnDefinitions>
@@ -198,7 +198,7 @@
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="vm:LightingZoneViewModel">
-                                <Grid Padding="16" CornerRadius="14" ColumnSpacing="16" Background="{StaticResource SurfaceL3Brush}">
+                                <Grid Padding="16" CornerRadius="14" ColumnSpacing="16" Background="{ThemeResource SurfaceL3Brush}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
@@ -223,7 +223,7 @@
                                                 <Border Width="22" Height="22" CornerRadius="6" Background="{x:Bind ActiveBrush, Mode=OneWay}"
                                                         BorderBrush="#30FFFFFF" BorderThickness="1" />
                                                 <StackPanel>
-                                                    <TextBlock Text="{x:Bind ActiveLabel}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                                                    <TextBlock Text="{x:Bind ActiveLabel}" FontSize="11" Foreground="{ThemeResource TextMutedBrush}" />
                                                     <TextBlock Text="{x:Bind ActiveHex, Mode=OneWay}" FontSize="12" FontFamily="Consolas" />
                                                 </StackPanel>
                                             </StackPanel>
@@ -247,7 +247,7 @@
                                                 <Border Width="22" Height="22" CornerRadius="6" Background="{x:Bind InactiveBrush, Mode=OneWay}"
                                                         BorderBrush="#30FFFFFF" BorderThickness="1" />
                                                 <StackPanel>
-                                                    <TextBlock Text="{x:Bind InactiveLabel}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                                                    <TextBlock Text="{x:Bind InactiveLabel}" FontSize="11" Foreground="{ThemeResource TextMutedBrush}" />
                                                     <TextBlock Text="{x:Bind InactiveHex, Mode=OneWay}" FontSize="12" FontFamily="Consolas" />
                                                 </StackPanel>
                                             </StackPanel>
@@ -296,7 +296,7 @@
                                     <ItemsRepeater.ItemTemplate>
                                         <DataTemplate x:DataType="vm:LightingZoneViewModel">
                                             <Grid Padding="14" CornerRadius="14" ColumnSpacing="14"
-                                                  Background="{StaticResource SurfaceL3Brush}">
+                                                  Background="{ThemeResource SurfaceL3Brush}">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="*" />
@@ -321,7 +321,7 @@
                                                                 <Border Width="22" Height="22" CornerRadius="6" Background="{x:Bind ActiveBrush, Mode=OneWay}"
                                                                         BorderBrush="#30FFFFFF" BorderThickness="1" />
                                                                 <StackPanel>
-                                                                    <TextBlock Text="{x:Bind ActiveLabel}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                                                                    <TextBlock Text="{x:Bind ActiveLabel}" FontSize="11" Foreground="{ThemeResource TextMutedBrush}" />
                                                                     <TextBlock Text="{x:Bind ActiveHex, Mode=OneWay}" FontSize="12" FontFamily="Consolas" />
                                                                 </StackPanel>
                                                             </StackPanel>
@@ -346,7 +346,7 @@
                                                                 <Border Width="22" Height="22" CornerRadius="6" Background="{x:Bind InactiveBrush, Mode=OneWay}"
                                                                         BorderBrush="#30FFFFFF" BorderThickness="1" />
                                                                 <StackPanel>
-                                                                    <TextBlock Text="{x:Bind InactiveLabel}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                                                                    <TextBlock Text="{x:Bind InactiveLabel}" FontSize="11" Foreground="{ThemeResource TextMutedBrush}" />
                                                                     <TextBlock Text="{x:Bind InactiveHex, Mode=OneWay}" FontSize="12" FontFamily="Consolas" />
                                                                 </StackPanel>
                                                             </StackPanel>

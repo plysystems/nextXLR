@@ -8,9 +8,9 @@ switch instantly; only storyboard values are interpolated.)
 """
 from pathlib import Path
 
-NEUTRAL = dict(bg="#232833", stroke="#2A303C", fg="#E6E8EE")
-HOVER = dict(bg="#2C3240", stroke="#3A4252")
-PRESSED = dict(bg="#1D2129")
+NEUTRAL = dict(bg="#303030", stroke="#383838", fg="#EAEAEA")
+HOVER = dict(bg="#3A3A3A", stroke="#484848")
+PRESSED = dict(bg="#262626")
 
 def anim(target, prop, value):
     if prop == "Color":

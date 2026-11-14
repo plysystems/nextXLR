@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <UserControl
     x:Class="NextXLR.ChannelStrip"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -7,8 +7,8 @@
     xmlns:controls="using:NextXLR.Controls">
 
     <!-- Responsive channel strip: modular studio console bay -->
-    <Border Width="{x:Bind ViewModel.StripWidth, Mode=OneWay}" Background="{StaticResource SurfaceL2Brush}" CornerRadius="12" Padding="6,10" MinWidth="84"
-            VerticalAlignment="Stretch" BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+    <Border Width="{x:Bind ViewModel.StripWidth, Mode=OneWay}" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="6,10" MinWidth="84"
+            VerticalAlignment="Stretch" BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
         <Grid RowSpacing="10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -22,7 +22,7 @@
             <Grid Height="42">
                 <Button x:Name="CustomizeButton" x:Uid="MixerCustomize" Width="40" Height="40" Padding="0"
                         CornerRadius="20" HorizontalAlignment="Center" BorderThickness="1"
-                        BorderBrush="{StaticResource SurfaceStrokeBrush}"
+                        BorderBrush="{ThemeResource SurfaceStrokeBrush}"
                         Background="{x:Bind ChannelIconBackground(ViewModel.Accent), Mode=OneWay}"
                         IsHitTestVisible="{x:Bind ViewModel.CanEdit, Mode=OneWay}"
                         ToolTipService.ToolTip="{x:Bind ChannelTooltip(ViewModel.CanEdit, ViewModel.Name), Mode=OneWay}">
@@ -65,12 +65,12 @@
                 <Button x:Uid="MixerEditButton" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="4"
                         Background="Transparent" BorderThickness="0" Click="Edit_Click"
                         Visibility="{x:Bind ViewModel.CanEdit, Mode=OneWay}">
-                    <FontIcon Glyph="&#xE70F;" FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                    <FontIcon Glyph="&#xE70F;" FontSize="11" Foreground="{ThemeResource TextMutedBrush}" />
                 </Button>
 
                 <!-- Hardware fader letter badge (Single-Mix mode only; in Dual-Mix mode it's placed on the active mix column) -->
                 <Border HorizontalAlignment="Right" VerticalAlignment="Top" CornerRadius="6" Padding="6,2"
-                        Background="{StaticResource SurfaceL3Brush}" BorderBrush="{x:Bind ViewModel.Accent, Mode=OneWay}"
+                        Background="{ThemeResource SurfaceL3Brush}" BorderBrush="{x:Bind ViewModel.Accent, Mode=OneWay}"
                         BorderThickness="1"
                         Visibility="{x:Bind ShowSingleBadge(ViewModel.HasFader, ViewModel.ShowDualMix), Mode=OneWay}">
                     <TextBlock Text="{x:Bind ViewModel.FaderLetter, Mode=OneWay}" FontSize="10" FontWeight="Bold"
@@ -97,7 +97,7 @@
                 <!-- Left Column: Kopfhörer-Mix (Submix) -->
                 <Border CornerRadius="8" Padding="3,6"
                         VerticalAlignment="Stretch"
-                        Background="{StaticResource SurfaceL3Brush}"
+                        Background="{ThemeResource SurfaceL3Brush}"
                         BorderBrush="{x:Bind TrackBorderPhones(ViewModel.ShowFaderOnPhones), Mode=OneWay}"
                         BorderThickness="1">
                     <Grid RowSpacing="6" VerticalAlignment="Stretch">
@@ -126,14 +126,14 @@
 
                         <!-- Kopfhörer Pill + Hardware Fader Badge -->
                         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
-                            <Border Background="{StaticResource SurfaceL2Brush}" CornerRadius="4" Padding="5,2">
+                            <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="4" Padding="5,2">
                                 <StackPanel Orientation="Horizontal" Spacing="3">
                                     <FontIcon Glyph="&#xE7F6;" FontSize="9" Foreground="{StaticResource HeadphoneBrush}" />
                                     <TextBlock Text="PHONES" FontSize="9" FontWeight="Bold" Foreground="{StaticResource HeadphoneBrush}" />
                                 </StackPanel>
                             </Border>
                             <Border Visibility="{x:Bind ViewModel.ShowFaderOnPhones, Mode=OneWay}"
-                                    Background="{StaticResource SurfaceL2Brush}" CornerRadius="4" Padding="4,2"
+                                    Background="{ThemeResource SurfaceL2Brush}" CornerRadius="4" Padding="4,2"
                                     BorderBrush="{StaticResource HeadphoneBrush}" BorderThickness="1">
                                 <TextBlock Text="{x:Bind ViewModel.FaderLetter, Mode=OneWay}" FontSize="9" FontWeight="Bold"
                                            Foreground="{StaticResource HeadphoneBrush}" />
@@ -151,13 +151,13 @@
                 </Border>
 
                 <!-- Subtle vertical divider between Kopfhörer and Stream tracks -->
-                <Border Grid.Column="1" Width="1" Background="{StaticResource SurfaceStrokeSubtleBrush}"
+                <Border Grid.Column="1" Width="1" Background="{ThemeResource SurfaceStrokeSubtleBrush}"
                         VerticalAlignment="Stretch" Margin="0,4" />
 
                 <!-- Right Column: Stream-Mix -->
                 <Border Grid.Column="2" CornerRadius="8" Padding="3,6"
                         VerticalAlignment="Stretch"
-                        Background="{StaticResource SurfaceL3Brush}"
+                        Background="{ThemeResource SurfaceL3Brush}"
                         BorderBrush="{x:Bind TrackBorderStream(ViewModel.ShowFaderOnStream), Mode=OneWay}"
                         BorderThickness="1">
                     <Grid RowSpacing="6" VerticalAlignment="Stretch">
@@ -186,14 +186,14 @@
 
                         <!-- Stream Pill + Hardware Fader Badge -->
                         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
-                            <Border Background="{StaticResource SurfaceL2Brush}" CornerRadius="4" Padding="5,2">
+                            <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="4" Padding="5,2">
                                 <StackPanel Orientation="Horizontal" Spacing="3">
                                     <FontIcon Glyph="&#xE774;" FontSize="9" Foreground="{StaticResource BrandBrush}" />
                                     <TextBlock Text="STREAM" FontSize="9" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
                                 </StackPanel>
                             </Border>
                             <Border Visibility="{x:Bind ViewModel.ShowFaderOnStream, Mode=OneWay}"
-                                    Background="{StaticResource SurfaceL2Brush}" CornerRadius="4" Padding="4,2"
+                                    Background="{ThemeResource SurfaceL2Brush}" CornerRadius="4" Padding="4,2"
                                     BorderBrush="{StaticResource BrandBrush}" BorderThickness="1">
                                 <TextBlock Text="{x:Bind ViewModel.FaderLetter, Mode=OneWay}" FontSize="9" FontWeight="Bold"
                                            Foreground="{StaticResource BrandBrush}" />
@@ -217,7 +217,7 @@
                     Visibility="{x:Bind ShowIfSingle(ViewModel.ShowDualMix, ViewModel.IsFixed, ViewModel.IsOutput), Mode=OneWay}"
                     CornerRadius="8" Padding="4,6" MaxWidth="124"
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                    Background="{StaticResource SurfaceL3Brush}"
+                    Background="{ThemeResource SurfaceL3Brush}"
                     BorderBrush="{x:Bind SingleTrackBorder(ViewModel.HasFader, ViewModel.IsSubmixActive, ViewModel.Accent), Mode=OneWay}"
                     BorderThickness="1">
                 <Grid RowSpacing="6" VerticalAlignment="Stretch">
@@ -257,13 +257,13 @@
 
                     <!-- Row 2: Sub-label (Spitze: -XX dB or Mute restore or Meter-Only) -->
                     <TextBlock Grid.Row="2" HorizontalAlignment="Center" Style="{StaticResource Caption}" FontSize="10"
-                               Foreground="{StaticResource TextMutedBrush}"
+                               Foreground="{ThemeResource TextMutedBrush}"
                                Text="{x:Bind SubLabel(ViewModel.ActiveMuted, ViewModel.RestoreLabel, ViewModel.Metered, ViewModel.PeakLabel, ViewModel.IsFixed), Mode=OneWay}" />
 
                     <!-- Row 3: Active Mix & Hardware Fader Badge Bar -->
                     <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
                         <!-- Active Mix Badge Pill -->
-                        <Border Background="{StaticResource SurfaceL2Brush}" CornerRadius="4" Padding="5,2">
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="4" Padding="5,2">
                             <StackPanel Orientation="Horizontal" Spacing="3">
                                 <FontIcon Glyph="{x:Bind SingleMixGlyph(ViewModel.IsOutput, ViewModel.IsSubmixActive), Mode=OneWay}"
                                           FontSize="9"
@@ -276,7 +276,7 @@
 
                         <!-- Hardware Fader Assignment Pill (e.g. [ A ]) -->
                         <Border Visibility="{x:Bind SingleFaderBadgeVisibility(ViewModel.HasFader), Mode=OneWay}"
-                                Background="{StaticResource SurfaceL2Brush}" CornerRadius="4" Padding="4,2"
+                                Background="{ThemeResource SurfaceL2Brush}" CornerRadius="4" Padding="4,2"
                                 BorderBrush="{x:Bind SingleTrackBorder(ViewModel.HasFader, ViewModel.IsSubmixActive, ViewModel.Accent), Mode=OneWay}"
                                 BorderThickness="1">
                             <TextBlock Text="{x:Bind ViewModel.FaderLetter, Mode=OneWay}" FontSize="9" FontWeight="Bold"

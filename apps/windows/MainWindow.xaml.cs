@@ -70,20 +70,13 @@ public sealed partial class MainWindow : Window
             SetTitleBar(AppTitleBar);
         }
         catch { }
-        try
+
+        if (RootWindowGrid != null)
         {
-            if (Microsoft.UI.Windowing.AppWindowTitleBar.IsCustomizationSupported())
-            {
-                var titleBar = AppWindow.TitleBar;
-                titleBar.ButtonBackgroundColor = Colors.Transparent;
-                titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-                titleBar.ButtonHoverBackgroundColor = ColorHelper.FromArgb(30, 255, 255, 255);
-                titleBar.ButtonPressedBackgroundColor = ColorHelper.FromArgb(50, 255, 255, 255);
-                titleBar.ButtonForegroundColor = Colors.White;
-                titleBar.ButtonInactiveForegroundColor = ColorHelper.FromArgb(180, 255, 255, 255);
-            }
+            RootWindowGrid.ActualThemeChanged += (_, _) => UpdateTitleBarTheme();
         }
-        catch { }
+        ApplyTheme(AppSettings.Load().AppTheme);
+
         AppWindow.Resize(new SizeInt32(1440, 920));
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "nextXLR_icon.ico"));
 
@@ -726,5 +719,57 @@ public sealed partial class MainWindow : Window
             DriverMissingBar.Title = "Installation fehlgeschlagen";
             DriverMissingBar.Message = msg;
         }
+    }
+
+    public void ApplyTheme(string? theme)
+    {
+        var requestedTheme = (theme?.ToLowerInvariant()) switch
+        {
+            "light" => ElementTheme.Light,
+            "dark" => ElementTheme.Dark,
+            _ => ElementTheme.Default // "System"
+        };
+
+        if (RootWindowGrid != null)
+        {
+            RootWindowGrid.RequestedTheme = requestedTheme;
+        }
+
+        UpdateTitleBarTheme();
+    }
+
+    private void UpdateTitleBarTheme()
+    {
+        try
+        {
+            if (Microsoft.UI.Windowing.AppWindowTitleBar.IsCustomizationSupported())
+            {
+                var titleBar = AppWindow.TitleBar;
+                bool isDark = true;
+                if (RootWindowGrid != null)
+                {
+                    isDark = RootWindowGrid.ActualTheme != ElementTheme.Light;
+                }
+
+                titleBar.ButtonBackgroundColor = Colors.Transparent;
+                titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+
+                if (isDark)
+                {
+                    titleBar.ButtonHoverBackgroundColor = ColorHelper.FromArgb(30, 255, 255, 255);
+                    titleBar.ButtonPressedBackgroundColor = ColorHelper.FromArgb(50, 255, 255, 255);
+                    titleBar.ButtonForegroundColor = Colors.White;
+                    titleBar.ButtonInactiveForegroundColor = ColorHelper.FromArgb(180, 255, 255, 255);
+                }
+                else
+                {
+                    titleBar.ButtonHoverBackgroundColor = ColorHelper.FromArgb(30, 0, 0, 0);
+                    titleBar.ButtonPressedBackgroundColor = ColorHelper.FromArgb(50, 0, 0, 0);
+                    titleBar.ButtonForegroundColor = Colors.Black;
+                    titleBar.ButtonInactiveForegroundColor = ColorHelper.FromArgb(180, 0, 0, 0);
+                }
+            }
+        }
+        catch { }
     }
 }

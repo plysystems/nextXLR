@@ -48,6 +48,20 @@ public sealed partial class SettingsPage : Page
         EngineVersionText.Text = Loc.Format("SetEngineVersion", ViewModel.EngineVersion);
         UpdateDriverStatus();
 
+        string currentTheme = _settings.AppTheme ?? "Dark";
+        foreach (ComboBoxItem item in ThemeComboBox.Items)
+        {
+            if (string.Equals(item.Tag as string, currentTheme, StringComparison.OrdinalIgnoreCase))
+            {
+                ThemeComboBox.SelectedItem = item;
+                break;
+            }
+        }
+        if (ThemeComboBox.SelectedItem == null && ThemeComboBox.Items.Count > 0)
+        {
+            ThemeComboBox.SelectedIndex = 0;
+        }
+
         BluetoothToggle.IsOn = _settings.EnableBluetoothHeadset;
         BluetoothSidetoneCheck.IsChecked = _settings.BluetoothMuteMicSidetone;
         BluetoothAudioRouter.Instance.StatusChanged -= OnBluetoothRouterStatusChanged;
@@ -75,6 +89,17 @@ public sealed partial class SettingsPage : Page
         if (tag == "profiles") RefreshProfiles();
         UpdatesPanel.Visibility = tag == "updates" ? Visibility.Visible : Visibility.Collapsed;
         HelpPanel.Visibility = tag == "help" ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void ThemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading) return;
+        if (ThemeComboBox.SelectedItem is ComboBoxItem item && item.Tag is string themeTag)
+        {
+            _settings.AppTheme = themeTag;
+            _settings.Save();
+            MainWindow.CurrentInstance?.ApplyTheme(themeTag);
+        }
     }
 
     private void Autostart_Toggled(object sender, RoutedEventArgs e)

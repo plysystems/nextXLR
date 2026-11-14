@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="NextXLR.Views.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:services="using:NextXLR.Services"
     xmlns:views="using:NextXLR.Views"
-    Background="{StaticResource SurfaceL1Brush}">
+    Background="{ThemeResource SurfaceL1Brush}">
 
     <Page.Resources>
         <!-- A settings row: icon, title + description, control on the right. -->
@@ -13,8 +13,8 @@
             <Setter Property="Padding" Value="18,14" />
             <Setter Property="ColumnSpacing" Value="16" />
             <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="Background" Value="{StaticResource SurfaceL2Brush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource SurfaceStrokeSubtleBrush}" />
+            <Setter Property="Background" Value="{ThemeResource SurfaceL2Brush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource SurfaceStrokeSubtleBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
     </Page.Resources>
@@ -63,6 +63,25 @@
                     <!-- ===== General ===== -->
                     <StackPanel x:Name="GeneralPanel" Spacing="10">
                         <TextBlock x:Uid="SettingsGeneralHeader" Style="{StaticResource SectionTitle}" Margin="0,0,0,6" />
+
+                        <!-- Design & Erscheinungsbild -->
+                        <Grid Style="{StaticResource SettingRow}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <FontIcon Glyph="&#xE790;" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Erscheinungsbild &amp; Design" FontWeight="SemiBold" />
+                                <TextBlock Text="Wähle zwischen dunklem, hellem oder System-Design." Style="{StaticResource Caption}" />
+                            </StackPanel>
+                            <ComboBox x:Name="ThemeComboBox" Grid.Column="2" MinWidth="150" SelectionChanged="ThemeComboBox_SelectionChanged">
+                                <ComboBoxItem Content="Dunkel" Tag="Dark" />
+                                <ComboBoxItem Content="Hell" Tag="Light" />
+                                <ComboBoxItem Content="System" Tag="System" />
+                            </ComboBox>
+                        </Grid>
                         <Grid Style="{StaticResource SettingRow}">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                             <FontIcon Glyph="&#xE7E8;" />
@@ -196,13 +215,13 @@
                                         <TextBlock x:Name="DriverStatusText" Text="Treiberstatus wird geprüft..." Style="{StaticResource Caption}" />
                                     </StackPanel>
                                     <Border x:Name="DriverStatusBadge" Grid.Column="1" CornerRadius="12" Padding="10,4"
-                                            Background="{StaticResource SurfaceL3Brush}" VerticalAlignment="Center">
+                                            Background="{ThemeResource SurfaceL3Brush}" VerticalAlignment="Center">
                                         <TextBlock x:Name="DriverBadgeText" Text="Prüfe..." FontSize="12" FontWeight="SemiBold" />
                                     </Border>
                                 </Grid>
 
                                 <TextBlock x:Name="DriverEndpointsText" Text="Prüfe Windows Audio-Endpunkte..."
-                                           FontSize="13" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
+                                           FontSize="13" Foreground="{ThemeResource TextMutedBrush}" TextWrapping="Wrap" />
 
                                 <InfoBar x:Name="DriverResultBar" IsOpen="False" IsClosable="True" />
 
@@ -233,7 +252,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <Border Width="48" Height="48" CornerRadius="12" Background="{StaticResource SurfaceL3Brush}">
+                                    <Border Width="48" Height="48" CornerRadius="12" Background="{ThemeResource SurfaceL3Brush}">
                                         <FontIcon Glyph="&#xE93C;" FontSize="24" Foreground="{StaticResource BrandBrush}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
@@ -283,18 +302,18 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <Border Width="48" Height="48" CornerRadius="12" Background="{StaticResource SurfaceL3Brush}">
+                                    <Border Width="48" Height="48" CornerRadius="12" Background="{ThemeResource SurfaceL3Brush}">
                                         <FontIcon Glyph="&#xE74C;" FontSize="24" Foreground="{StaticResource BrandBrush}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
                                         <StackPanel Orientation="Horizontal" Spacing="10">
                                             <TextBlock Text="Offizielles NEXT : XLR Stream Deck Plugin" FontWeight="SemiBold" FontSize="16" />
-                                            <Border Background="{StaticResource SurfaceL2Brush}" CornerRadius="4" Padding="6,2">
+                                            <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="4" Padding="6,2">
                                                 <TextBlock Text="v0.1.9.1" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
                                             </Border>
                                         </StackPanel>
                                         <TextBlock Text="{x:Bind StreamDeckService.PluginStatusText, Mode=OneWay}"
-                                                   Foreground="{StaticResource TextMutedBrush}" Style="{StaticResource Caption}" />
+                                                   Foreground="{ThemeResource TextMutedBrush}" Style="{StaticResource Caption}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                         <Button Style="{StaticResource AccentButtonStyle}"
@@ -311,10 +330,10 @@
                                     </StackPanel>
                                 </Grid>
 
-                                <Border Background="{StaticResource SurfaceL2Brush}" CornerRadius="10" Padding="14"
-                                        BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                                <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="10" Padding="14"
+                                        BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
                                     <StackPanel Spacing="10">
-                                        <TextBlock Text="Enthaltene Aktionen &amp; Features:" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                        <TextBlock Text="Enthaltene Aktionen &amp; Features:" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TextMutedBrush}" />
                                         <Grid RowSpacing="6" ColumnSpacing="16">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
@@ -540,7 +559,7 @@
                                     <TextBlock Text="© plysystems. Alle Rechte vorbehalten." FontWeight="SemiBold" />
                                 </StackPanel>
                                 <TextBlock Text="Erlaubt für private &amp; kommerzielle Nutzung (Streaming, YouTube, Twitch, firmenintern) sowie Änderungen &amp; Weiterverteilung unter Beibehaltung des Copyright-Hinweises."
-                                           FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
+                                           FontSize="12" Foreground="{ThemeResource TextMutedBrush}" TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
 
@@ -557,14 +576,14 @@
                         <TextBlock x:Uid="SettingsHelpHeader" Style="{StaticResource SectionTitle}" Margin="0,0,0,6" />
 
                         <!-- Guided Tour Button -->
-                        <Border Style="{StaticResource Card}" Background="{StaticResource SurfaceL2Brush}">
+                        <Border Style="{StaticResource Card}" Background="{ThemeResource SurfaceL2Brush}">
                             <Grid ColumnSpacing="16">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <Border Width="40" Height="40" CornerRadius="12" Background="{StaticResource SurfaceL3Brush}">
+                                <Border Width="40" Height="40" CornerRadius="12" Background="{ThemeResource SurfaceL3Brush}">
                                     <FontIcon Glyph="&#xE735;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
                                 </Border>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
@@ -642,9 +661,9 @@
                                             <FontIcon Glyph="&#xE8D7;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
                                             <TextBlock Text="Urheberrecht &amp; Lizenz (plysystems)" FontWeight="SemiBold" FontSize="16" />
                                         </StackPanel>
-                                        <TextBlock Text="NEXT : XLR ist ein Projekt von plysystems. © 2026 plysystems. Alle Rechte vorbehalten." FontSize="13" Foreground="{StaticResource TextMutedBrush}" />
+                                        <TextBlock Text="NEXT : XLR ist ein Projekt von plysystems. © 2026 plysystems. Alle Rechte vorbehalten." FontSize="13" Foreground="{ThemeResource TextMutedBrush}" />
                                     </StackPanel>
-                                    <Border Grid.Column="1" CornerRadius="8" Padding="10,4" Background="{StaticResource SurfaceL3Brush}" VerticalAlignment="Center">
+                                    <Border Grid.Column="1" CornerRadius="8" Padding="10,4" Background="{ThemeResource SurfaceL3Brush}" VerticalAlignment="Center">
                                         <TextBlock Text="MIT-Lizenz" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource BrandBrush}" />
                                     </Border>
                                 </Grid>
@@ -656,30 +675,30 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Erlaubt -->
-                                    <Border Background="{StaticResource SurfaceL3Brush}" CornerRadius="10" Padding="14,12">
+                                    <Border Background="{ThemeResource SurfaceL3Brush}" CornerRadius="10" Padding="14,12">
                                         <StackPanel Spacing="6">
                                             <StackPanel Orientation="Horizontal" Spacing="8">
                                                 <FontIcon Glyph="&#xE73E;" FontSize="14" Foreground="#10B981" />
                                                 <TextBlock Text="Erlaubt (MIT)" FontWeight="Bold" FontSize="13" Foreground="#10B981" />
                                             </StackPanel>
-                                            <TextBlock Text="• Private Nutzung (kostenfrei &amp; unbegrenzt)" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
-                                            <TextBlock Text="• Kommerzielle Nutzung (Streaming, YouTube, Twitch, Podcasts)" FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
-                                            <TextBlock Text="• Firmeninterne Nutzung in Unternehmen &amp; Studios" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
-                                            <TextBlock Text="• Modifikation &amp; Erweiterung des Quellcodes" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
-                                            <TextBlock Text="• Weiterverteilung &amp; Integration" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                            <TextBlock Text="• Private Nutzung (kostenfrei &amp; unbegrenzt)" FontSize="12" Foreground="{ThemeResource TextMutedBrush}" />
+                                            <TextBlock Text="• Kommerzielle Nutzung (Streaming, YouTube, Twitch, Podcasts)" FontSize="12" Foreground="{ThemeResource TextMutedBrush}" TextWrapping="Wrap" />
+                                            <TextBlock Text="• Firmeninterne Nutzung in Unternehmen &amp; Studios" FontSize="12" Foreground="{ThemeResource TextMutedBrush}" />
+                                            <TextBlock Text="• Modifikation &amp; Erweiterung des Quellcodes" FontSize="12" Foreground="{ThemeResource TextMutedBrush}" />
+                                            <TextBlock Text="• Weiterverteilung &amp; Integration" FontSize="12" Foreground="{ThemeResource TextMutedBrush}" />
                                         </StackPanel>
                                     </Border>
 
                                     <!-- Pflicht -->
-                                    <Border Grid.Column="1" Background="{StaticResource SurfaceL3Brush}" CornerRadius="10" Padding="14,12">
+                                    <Border Grid.Column="1" Background="{ThemeResource SurfaceL3Brush}" CornerRadius="10" Padding="14,12">
                                         <StackPanel Spacing="6">
                                             <StackPanel Orientation="Horizontal" Spacing="8">
                                                 <FontIcon Glyph="&#xE7BA;" FontSize="14" Foreground="#F59E0B" />
                                                 <TextBlock Text="Bedingungen &amp; Hinweise" FontWeight="Bold" FontSize="13" Foreground="#F59E0B" />
                                             </StackPanel>
-                                            <TextBlock Text="• Copyright-Hinweis (plysystems) beibehalten" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
-                                            <TextBlock Text="• MIT-Lizenztext beibehalten" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
-                                            <TextBlock Text="• Drittanbieter-Lizenzen (Third-Party Notices) beachten" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                            <TextBlock Text="• Copyright-Hinweis (plysystems) beibehalten" FontSize="12" Foreground="{ThemeResource TextMutedBrush}" />
+                                            <TextBlock Text="• MIT-Lizenztext beibehalten" FontSize="12" Foreground="{ThemeResource TextMutedBrush}" />
+                                            <TextBlock Text="• Drittanbieter-Lizenzen (Third-Party Notices) beachten" FontSize="12" Foreground="{ThemeResource TextMutedBrush}" />
                                         </StackPanel>
                                     </Border>
                                 </Grid>

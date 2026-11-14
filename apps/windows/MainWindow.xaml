@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Window
     x:Class="NextXLR.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Grid x:Name="RootWindowGrid" Background="{StaticResource SurfaceL1Brush}"
+    <Grid x:Name="RootWindowGrid" Background="{ThemeResource SurfaceL1Brush}"
           AllowDrop="True" DragOver="App_DragOver" Drop="App_Drop">
         <Grid.RowDefinitions>
             <RowDefinition Height="48" />
@@ -33,17 +33,8 @@
                         IsBackButtonVisible="Collapsed" IsSettingsVisible="False"
                         SelectionChanged="Nav_SelectionChanged">
             <NavigationView.Resources>
-                <!-- Content area sits on the darkest surface; the pane blends into the title bar. -->
-                <SolidColorBrush x:Key="NavigationViewContentBackground" Color="#111318" />
                 <Thickness x:Key="NavigationViewContentGridBorderThickness">1,1,0,0</Thickness>
-                <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="#20252E" />
                 <CornerRadius x:Key="NavigationViewContentGridCornerRadius">12,0,0,0</CornerRadius>
-                <!-- The pane is solid in every mode. In compact/minimal mode it opens as an overlay
-                     over the content; a transparent pane made the page show through it. -->
-                <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#15181E" />
-                <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#15181E" />
-                <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="#15181E" />
-                <SolidColorBrush x:Key="NavigationViewMinimalHeaderBackground" Color="#15181E" />
             </NavigationView.Resources>
 
             <NavigationView.MenuItems>
@@ -79,7 +70,7 @@
                 <StackPanel Spacing="6" Margin="0,0,0,8">
                     <!-- Connection status: always visible. Pill when the pane is open, dot when compact. -->
                     <Border Margin="10,0" Padding="12,8" CornerRadius="10"
-                            Background="{StaticResource SurfaceL2Brush}" BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}"
+                            Background="{ThemeResource SurfaceL2Brush}" BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}"
                             BorderThickness="1" Visibility="{x:Bind Nav.IsPaneOpen, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <Grid Width="10" Height="10" VerticalAlignment="Center">
@@ -98,7 +89,7 @@
 
                     <!-- Stream Deck integration status -->
                     <Border Margin="10,0" Padding="12,8" CornerRadius="10"
-                            Background="{StaticResource SurfaceL2Brush}" BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}"
+                            Background="{ThemeResource SurfaceL2Brush}" BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}"
                             BorderThickness="1" Visibility="{x:Bind Nav.IsPaneOpen, Mode=OneWay}"
                             ToolTipService.ToolTip="{x:Bind ViewModel.StreamDeck.StatusDetail, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal" Spacing="10">
@@ -120,14 +111,14 @@
                     <!-- Detected device (USB PID → GoXLR / GoXLR Mini); only when the pane is open. -->
                     <Border Margin="10,0" Padding="14,12" CornerRadius="12"
                             Visibility="{x:Bind Nav.IsPaneOpen, Mode=OneWay}"
-                            Background="{StaticResource SurfaceL2Brush}"
-                            BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                            Background="{ThemeResource SurfaceL2Brush}"
+                            BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Border Width="34" Height="34" CornerRadius="10" Background="{StaticResource SurfaceL3Brush}">
+                            <Border Width="34" Height="34" CornerRadius="10" Background="{ThemeResource SurfaceL3Brush}">
                                 <FontIcon Glyph="&#xE88E;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -160,13 +151,13 @@
                         </InfoBar.ActionButton>
                     </InfoBar>
                 </StackPanel>
-                <Frame x:Name="ContentFrame" Grid.Row="1" Background="{StaticResource SurfaceL1Brush}" />
+                <Frame x:Name="ContentFrame" Grid.Row="1" Background="{ThemeResource SurfaceL1Brush}" />
 
                 <!-- Animiertes Lade-Overlay bei Start, Seitenwechsel, Plugin-Scan oder Profil-Laden -->
                 <Grid x:Name="GlobalLoadingOverlay" Grid.Row="1" Background="#550A0C10"
                       Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
                       IsHitTestVisible="False" Canvas.ZIndex="500">
-                    <Border Background="{StaticResource SurfaceL2Brush}" BorderBrush="{StaticResource SurfaceStrokeSubtleBrush}"
+                    <Border Background="{ThemeResource SurfaceL2Brush}" BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}"
                             BorderThickness="1" CornerRadius="16" Padding="28,20"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -187,7 +178,7 @@
             <Border Style="{StaticResource Card}" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Width="620" Padding="32" CornerRadius="20"
                     BorderBrush="{StaticResource BrandBrush}" BorderThickness="1.5"
-                    Background="{StaticResource SurfaceL1Brush}">
+                    Background="{ThemeResource SurfaceL1Brush}">
                 <StackPanel Spacing="20">
                     <!-- Header with Icon & Step Count -->
                     <Grid>
@@ -196,7 +187,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Border Width="48" Height="48" CornerRadius="14" Background="{StaticResource SurfaceL2Brush}">
+                        <Border Width="48" Height="48" CornerRadius="14" Background="{ThemeResource SurfaceL2Brush}">
                             <FontIcon x:Name="TourIcon" Glyph="&#xE735;" FontSize="22" Foreground="{StaticResource BrandBrush}" />
                         </Border>
                         <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" Spacing="2">
@@ -212,7 +203,7 @@
                     <ProgressBar x:Name="TourProgressBar" Maximum="7" Value="1" Height="4" CornerRadius="2" Foreground="{StaticResource BrandBrush}" />
 
                     <!-- Content Text -->
-                    <Border CornerRadius="12" Background="{StaticResource SurfaceL2Brush}" Padding="18">
+                    <Border CornerRadius="12" Background="{ThemeResource SurfaceL2Brush}" Padding="18">
                         <TextBlock x:Name="TourDescription" FontSize="14" LineHeight="22" TextWrapping="Wrap" />
                     </Border>
 
