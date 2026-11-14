@@ -78,6 +78,12 @@ public sealed partial class ChannelStrip : UserControl
         };
         Fader.DragStarted += (_, _) => SetDragging(true);
         Fader.DragCompleted += (_, _) => SetDragging(false);
+
+        if (EditMenuButton != null)
+        {
+            CursorHelper.AttachHandCursor(EditMenuButton);
+            EditMenuButton.Loaded += (_, _) => CursorHelper.AttachHandCursor(EditMenuButton);
+        }
     }
 
     private void SetDragging(bool dragging)
@@ -224,15 +230,6 @@ public sealed partial class ChannelStrip : UserControl
     }
 
     // ---- x:Bind helpers ------------------------------------------------------------------
-    public Brush ChannelCardBorder(bool hasFader, Brush? accent)
-    {
-        if (hasFader)
-        {
-            return accent ?? (Brush)Application.Current.Resources["BrandBrush"];
-        }
-        return (Brush)Application.Current.Resources["GlassCardBorderBrush"];
-    }
-
     public Brush ChannelIconBackground(Brush? accent)
     {
         if (accent is SolidColorBrush sb && (sb.Color.R == 0x5E && sb.Color.G == 0x66 && sb.Color.B == 0x75))

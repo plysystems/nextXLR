@@ -168,54 +168,48 @@
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel Spacing="4">
                             <!-- Mixer -->
-                            <Button x:Name="Btn_Mixer" Tag="mixer" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click">
-                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                            <Button x:Name="Btn_Mixer" Tag="mixer" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click"
+                                    ToolTipService.ToolTip="Mixer">
+                                <Grid Height="40" Padding="8,0" ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="24" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border x:Name="Ind_Mixer" Width="3" Height="20" CornerRadius="1.5"
-                                            Background="{StaticResource BrandBrush}" Visibility="Visible" Margin="0,0,2,0" />
-                                    <FontIcon x:Name="Icon_Mixer" Grid.Column="1" Glyph="&#xE9E9;" FontSize="16"
-                                              Foreground="{StaticResource BrandBrush}" Width="22" VerticalAlignment="Center" />
-                                    <TextBlock x:Name="Text_Mixer" Grid.Column="2" Text="Mixer" FontSize="13.5"
+                                    <FontIcon x:Name="Icon_Mixer" Grid.Column="0" Glyph="&#xE9E9;" FontSize="17"
+                                              Foreground="{StaticResource BrandBrush}" Width="24" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Mixer" Grid.Column="1" Text="Mixer" FontSize="13.5"
                                                FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}"
                                                VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
 
                             <!-- Mikrofon -->
-                            <Button x:Name="Btn_Mic" Tag="mic" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click">
-                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                            <Button x:Name="Btn_Mic" Tag="mic" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click"
+                                    ToolTipService.ToolTip="Mikrofon">
+                                <Grid Height="40" Padding="8,0" ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="24" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border x:Name="Ind_Mic" Width="3" Height="20" CornerRadius="1.5"
-                                            Background="{StaticResource BrandBrush}" Visibility="Collapsed" Margin="0,0,2,0" />
-                                    <FontIcon x:Name="Icon_Mic" Grid.Column="1" Glyph="&#xE720;" FontSize="16"
-                                              Foreground="{ThemeResource TextMutedBrush}" Width="22" VerticalAlignment="Center" />
-                                    <TextBlock x:Name="Text_Mic" Grid.Column="2" Text="Mikrofon" FontSize="13.5"
+                                    <FontIcon x:Name="Icon_Mic" Grid.Column="0" Glyph="&#xE720;" FontSize="17"
+                                              Foreground="{ThemeResource TextMutedBrush}" Width="24" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Mic" Grid.Column="1" Text="Mikrofon" FontSize="13.5"
                                                FontWeight="Normal" Foreground="{ThemeResource TextMutedBrush}"
                                                VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
 
                             <!-- Routing -->
-                            <Button x:Name="Btn_Routing" Tag="routing" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click">
-                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                            <Button x:Name="Btn_Routing" Tag="routing" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click"
+                                    ToolTipService.ToolTip="Routing">
+                                <Grid Height="40" Padding="8,0" ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="24" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border x:Name="Ind_Routing" Width="3" Height="20" CornerRadius="1.5"
-                                            Background="{StaticResource BrandBrush}" Visibility="Collapsed" Margin="0,0,2,0" />
-                                    <FontIcon x:Name="Icon_Routing" Grid.Column="1" Glyph="&#xE8AB;" FontSize="16"
-                                              Foreground="{ThemeResource TextMutedBrush}" Width="22" VerticalAlignment="Center" />
-                                    <TextBlock x:Name="Text_Routing" Grid.Column="2" Text="Routing" FontSize="13.5"
+                                    <FontIcon x:Name="Icon_Routing" Grid.Column="0" Glyph="&#xE8AB;" FontSize="17"
+                                              Foreground="{ThemeResource TextMutedBrush}" Width="24" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Routing" Grid.Column="1" Text="Routing" FontSize="13.5"
                                                FontWeight="Normal" Foreground="{ThemeResource TextMutedBrush}"
                                                VerticalAlignment="Center" />
                                 </Grid>
@@ -223,18 +217,16 @@
 
                             <!-- Effekte (HasEffects) -->
                             <Button x:Name="Btn_Effects" Tag="effects" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click"
-                                    Visibility="{x:Bind ViewModel.Hardware.HasEffects, Mode=OneWay}">
-                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                                    Visibility="{x:Bind ViewModel.Hardware.HasEffects, Mode=OneWay}"
+                                    ToolTipService.ToolTip="Effekte">
+                                <Grid Height="40" Padding="8,0" ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="24" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border x:Name="Ind_Effects" Width="3" Height="20" CornerRadius="1.5"
-                                            Background="{StaticResource BrandBrush}" Visibility="Collapsed" Margin="0,0,2,0" />
-                                    <FontIcon x:Name="Icon_Effects" Grid.Column="1" Glyph="&#xE945;" FontSize="16"
-                                              Foreground="{ThemeResource TextMutedBrush}" Width="22" VerticalAlignment="Center" />
-                                    <TextBlock x:Name="Text_Effects" Grid.Column="2" Text="Effekte" FontSize="13.5"
+                                    <FontIcon x:Name="Icon_Effects" Grid.Column="0" Glyph="&#xE945;" FontSize="17"
+                                              Foreground="{ThemeResource TextMutedBrush}" Width="24" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Effects" Grid.Column="1" Text="Effekte" FontSize="13.5"
                                                FontWeight="Normal" Foreground="{ThemeResource TextMutedBrush}"
                                                VerticalAlignment="Center" />
                                 </Grid>
@@ -242,72 +234,64 @@
 
                             <!-- Sampler (HasSampler) -->
                             <Button x:Name="Btn_Sampler" Tag="sampler" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click"
-                                    Visibility="{x:Bind ViewModel.Hardware.HasSampler, Mode=OneWay}">
-                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                                    Visibility="{x:Bind ViewModel.Hardware.HasSampler, Mode=OneWay}"
+                                    ToolTipService.ToolTip="Sampler">
+                                <Grid Height="40" Padding="8,0" ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="24" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border x:Name="Ind_Sampler" Width="3" Height="20" CornerRadius="1.5"
-                                            Background="{StaticResource BrandBrush}" Visibility="Collapsed" Margin="0,0,2,0" />
-                                    <FontIcon x:Name="Icon_Sampler" Grid.Column="1" Glyph="&#xE93C;" FontSize="16"
-                                              Foreground="{ThemeResource TextMutedBrush}" Width="22" VerticalAlignment="Center" />
-                                    <TextBlock x:Name="Text_Sampler" Grid.Column="2" Text="Sampler" FontSize="13.5"
+                                    <FontIcon x:Name="Icon_Sampler" Grid.Column="0" Glyph="&#xE93C;" FontSize="17"
+                                              Foreground="{ThemeResource TextMutedBrush}" Width="24" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Sampler" Grid.Column="1" Text="Sampler" FontSize="13.5"
                                                FontWeight="Normal" Foreground="{ThemeResource TextMutedBrush}"
                                                VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
 
                             <!-- Beleuchtung -->
-                            <Button x:Name="Btn_Lighting" Tag="lighting" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click">
-                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                            <Button x:Name="Btn_Lighting" Tag="lighting" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click"
+                                    ToolTipService.ToolTip="Beleuchtung">
+                                <Grid Height="40" Padding="8,0" ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="24" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border x:Name="Ind_Lighting" Width="3" Height="20" CornerRadius="1.5"
-                                            Background="{StaticResource BrandBrush}" Visibility="Collapsed" Margin="0,0,2,0" />
-                                    <FontIcon x:Name="Icon_Lighting" Grid.Column="1" Glyph="&#xE781;" FontSize="16"
-                                              Foreground="{ThemeResource TextMutedBrush}" Width="22" VerticalAlignment="Center" />
-                                    <TextBlock x:Name="Text_Lighting" Grid.Column="2" Text="Beleuchtung" FontSize="13.5"
+                                    <FontIcon x:Name="Icon_Lighting" Grid.Column="0" Glyph="&#xE781;" FontSize="17"
+                                              Foreground="{ThemeResource TextMutedBrush}" Width="24" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Lighting" Grid.Column="1" Text="Beleuchtung" FontSize="13.5"
                                                FontWeight="Normal" Foreground="{ThemeResource TextMutedBrush}"
                                                VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
 
                             <!-- Virtuelle Kanäle -->
-                            <Button x:Name="Btn_Virtual" Tag="virtual" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click">
-                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                            <Button x:Name="Btn_Virtual" Tag="virtual" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click"
+                                    ToolTipService.ToolTip="Virtuelle Kanäle">
+                                <Grid Height="40" Padding="8,0" ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="24" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border x:Name="Ind_Virtual" Width="3" Height="20" CornerRadius="1.5"
-                                            Background="{StaticResource BrandBrush}" Visibility="Collapsed" Margin="0,0,2,0" />
-                                    <FontIcon x:Name="Icon_Virtual" Grid.Column="1" Glyph="&#xE7F4;" FontSize="16"
-                                              Foreground="{ThemeResource TextMutedBrush}" Width="22" VerticalAlignment="Center" />
-                                    <TextBlock x:Name="Text_Virtual" Grid.Column="2" Text="Virtuelle Kanäle" FontSize="13.5"
+                                    <FontIcon x:Name="Icon_Virtual" Grid.Column="0" Glyph="&#xE7F4;" FontSize="17"
+                                              Foreground="{ThemeResource TextMutedBrush}" Width="24" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Virtual" Grid.Column="1" Text="Virtuelle Kanäle" FontSize="13.5"
                                                FontWeight="Normal" Foreground="{ThemeResource TextMutedBrush}"
                                                VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
 
                             <!-- Einstellungen -->
-                            <Button x:Name="Btn_Settings" Tag="settings" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click">
-                                <Grid Height="42" Padding="6,0" ColumnSpacing="10">
+                            <Button x:Name="Btn_Settings" Tag="settings" Style="{StaticResource NavCapsuleButtonStyle}" Click="NavButton_Click"
+                                    ToolTipService.ToolTip="Einstellungen">
+                                <Grid Height="40" Padding="8,0" ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="24" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border x:Name="Ind_Settings" Width="3" Height="20" CornerRadius="1.5"
-                                            Background="{StaticResource BrandBrush}" Visibility="Collapsed" Margin="0,0,2,0" />
-                                    <FontIcon x:Name="Icon_Settings" Grid.Column="1" Glyph="&#xE713;" FontSize="16"
-                                              Foreground="{ThemeResource TextMutedBrush}" Width="22" VerticalAlignment="Center" />
-                                    <TextBlock x:Name="Text_Settings" Grid.Column="2" Text="Einstellungen" FontSize="13.5"
+                                    <FontIcon x:Name="Icon_Settings" Grid.Column="0" Glyph="&#xE713;" FontSize="17"
+                                              Foreground="{ThemeResource TextMutedBrush}" Width="24" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="Text_Settings" Grid.Column="1" Text="Einstellungen" FontSize="13.5"
                                                FontWeight="Normal" Foreground="{ThemeResource TextMutedBrush}"
                                                VerticalAlignment="Center" />
                                 </Grid>

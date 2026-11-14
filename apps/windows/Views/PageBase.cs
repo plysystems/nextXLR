@@ -153,26 +153,25 @@ public partial class MixerPage : Page
         ViewModel?.SwitchMixerPage(2);
     }
 
-    private readonly SolidColorBrush ActiveBrandBg = new(Windows.UI.Color.FromArgb(255, 0x4F, 0xE0, 0xB8));
-    private readonly SolidColorBrush ActiveHeadphonesBg = new(Windows.UI.Color.FromArgb(255, 0x58, 0xA6, 0xFF));
-    private readonly SolidColorBrush ActiveTextFg = new(Windows.UI.Color.FromArgb(255, 14, 16, 21));
-    private readonly SolidColorBrush TransparentBg = new(Windows.UI.Color.FromArgb(0, 0, 0, 0));
-    private readonly SolidColorBrush MutedTextFg = new(Windows.UI.Color.FromArgb(255, 0x8B, 0x93, 0xA3));
+    private static Microsoft.UI.Xaml.Media.Brush BrandAccentBg => (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["BrandBrush"];
+    private static Microsoft.UI.Xaml.Media.Brush ActiveTextBrush => (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AccentButtonForeground"];
+    private static readonly SolidColorBrush TransparentBg = new(Windows.UI.Color.FromArgb(0, 0, 0, 0));
+    private static readonly SolidColorBrush MutedTextFg = new(Windows.UI.Color.FromArgb(255, 0x8B, 0x93, 0xA3));
 
-    public Microsoft.UI.Xaml.Media.Brush Page1Background(int activePage) => activePage == 1 ? ActiveBrandBg : TransparentBg;
-    public Microsoft.UI.Xaml.Media.Brush Page1Foreground(int activePage) => activePage == 1 ? ActiveTextFg : MutedTextFg;
-    public Microsoft.UI.Xaml.Media.Brush Page2Background(int activePage) => activePage == 2 ? ActiveBrandBg : TransparentBg;
-    public Microsoft.UI.Xaml.Media.Brush Page2Foreground(int activePage) => activePage == 2 ? ActiveTextFg : MutedTextFg;
-    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixBackground(int index) => index == 0 ? ActiveHeadphonesBg : TransparentBg;
-    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixForeground(int index) => index == 0 ? ActiveTextFg : MutedTextFg;
-    public Microsoft.UI.Xaml.Media.Brush StreamMixBackground(int index) => index == 1 ? ActiveBrandBg : TransparentBg;
-    public Microsoft.UI.Xaml.Media.Brush StreamMixForeground(int index) => index == 1 ? ActiveTextFg : MutedTextFg;
-    public Microsoft.UI.Xaml.Media.Brush BothMixesBackground(int index) => index == 2 ? ActiveBrandBg : TransparentBg;
-    public Microsoft.UI.Xaml.Media.Brush BothMixesForeground(int index) => index == 2 ? ActiveTextFg : MutedTextFg;
-    public Microsoft.UI.Xaml.Media.Brush DualPhonesBackground(int target) => target == 0 ? ActiveHeadphonesBg : TransparentBg;
-    public Microsoft.UI.Xaml.Media.Brush DualPhonesForeground(int target) => target == 0 ? ActiveTextFg : MutedTextFg;
-    public Microsoft.UI.Xaml.Media.Brush DualStreamBackground(int target) => target == 1 ? ActiveBrandBg : TransparentBg;
-    public Microsoft.UI.Xaml.Media.Brush DualStreamForeground(int target) => target == 1 ? ActiveTextFg : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush Page1Background(int activePage) => activePage == 1 ? BrandAccentBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush Page1Foreground(int activePage) => activePage == 1 ? ActiveTextBrush : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush Page2Background(int activePage) => activePage == 2 ? BrandAccentBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush Page2Foreground(int activePage) => activePage == 2 ? ActiveTextBrush : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixBackground(int index) => index == 0 ? BrandAccentBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush HeadphonesMixForeground(int index) => index == 0 ? ActiveTextBrush : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush StreamMixBackground(int index) => index == 1 ? BrandAccentBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush StreamMixForeground(int index) => index == 1 ? ActiveTextBrush : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush BothMixesBackground(int index) => index == 2 ? BrandAccentBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush BothMixesForeground(int index) => index == 2 ? ActiveTextBrush : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush DualPhonesBackground(int target) => target == 0 ? BrandAccentBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush DualPhonesForeground(int target) => target == 0 ? ActiveTextBrush : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush DualStreamBackground(int target) => target == 1 ? BrandAccentBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush DualStreamForeground(int target) => target == 1 ? ActiveTextBrush : MutedTextFg;
 
     private static double RowWidth(int n, double strip) => n * strip + Math.Max(0, n - 1) * Gap;
 

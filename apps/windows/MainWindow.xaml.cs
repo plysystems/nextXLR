@@ -39,7 +39,7 @@ public sealed partial class MainWindow : Window
     /// <summary>HWND for pickers in an unpackaged app (FileOpenPicker needs an owner window).</summary>
     public static nint Handle { get; private set; }
 
-    private readonly Dictionary<string, (Button btn, Border ind, FontIcon icon, TextBlock text)> _navControls = new();
+    private readonly Dictionary<string, (Button btn, FontIcon icon, TextBlock text)> _navControls = new();
     private string _currentNavTag = "mixer";
     private bool _isPaneOpen = true;
 
@@ -601,14 +601,14 @@ public sealed partial class MainWindow : Window
 
     private void InitNavControls()
     {
-        _navControls["mixer"] = (Btn_Mixer, Ind_Mixer, Icon_Mixer, Text_Mixer);
-        _navControls["mic"] = (Btn_Mic, Ind_Mic, Icon_Mic, Text_Mic);
-        _navControls["routing"] = (Btn_Routing, Ind_Routing, Icon_Routing, Text_Routing);
-        _navControls["effects"] = (Btn_Effects, Ind_Effects, Icon_Effects, Text_Effects);
-        _navControls["sampler"] = (Btn_Sampler, Ind_Sampler, Icon_Sampler, Text_Sampler);
-        _navControls["lighting"] = (Btn_Lighting, Ind_Lighting, Icon_Lighting, Text_Lighting);
-        _navControls["virtual"] = (Btn_Virtual, Ind_Virtual, Icon_Virtual, Text_Virtual);
-        _navControls["settings"] = (Btn_Settings, Ind_Settings, Icon_Settings, Text_Settings);
+        _navControls["mixer"] = (Btn_Mixer, Icon_Mixer, Text_Mixer);
+        _navControls["mic"] = (Btn_Mic, Icon_Mic, Text_Mic);
+        _navControls["routing"] = (Btn_Routing, Icon_Routing, Text_Routing);
+        _navControls["effects"] = (Btn_Effects, Icon_Effects, Text_Effects);
+        _navControls["sampler"] = (Btn_Sampler, Icon_Sampler, Text_Sampler);
+        _navControls["lighting"] = (Btn_Lighting, Icon_Lighting, Text_Lighting);
+        _navControls["virtual"] = (Btn_Virtual, Icon_Virtual, Text_Virtual);
+        _navControls["settings"] = (Btn_Settings, Icon_Settings, Text_Settings);
     }
 
     private void UpdatePaneLayout()
@@ -634,6 +634,11 @@ public sealed partial class MainWindow : Window
             StatusStreamDeckPanel.Visibility = _isPaneOpen ? Visibility.Visible : Visibility.Collapsed;
         if (StatusHardwarePanel != null)
             StatusHardwarePanel.Visibility = _isPaneOpen ? Visibility.Visible : Visibility.Collapsed;
+
+        var cardPadding = _isPaneOpen ? new Thickness(12, 10, 12, 10) : new Thickness(8, 10, 8, 10);
+        if (StatusCardConnection != null) StatusCardConnection.Padding = cardPadding;
+        if (StatusCardStreamDeck != null) StatusCardStreamDeck.Padding = cardPadding;
+        if (StatusCardHardware != null) StatusCardHardware.Padding = cardPadding;
     }
 
     private void UpdateNavVisuals()
@@ -649,10 +654,9 @@ public sealed partial class MainWindow : Window
             foreach (var kvp in _navControls)
             {
                 var tag = kvp.Key;
-                var (btn, ind, icon, text) = kvp.Value;
+                var (btn, icon, text) = kvp.Value;
                 bool isSelected = tag == _currentNavTag;
 
-                if (ind != null) ind.Visibility = isSelected ? Visibility.Visible : Visibility.Collapsed;
                 if (icon != null) icon.Foreground = isSelected ? brandBrush : textMutedBrush;
                 if (text != null)
                 {
