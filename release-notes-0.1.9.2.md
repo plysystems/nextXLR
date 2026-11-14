@@ -27,7 +27,17 @@ Offizieller Release **v0.1.9.2-alpha** für NEXT : XLR, die Mixforge Audio Engin
 * Neuer Endpunkt `/api/power` zur direkten Steuerung des Hardware-Standbys (`sleep`, `wake`, `shutdown`) über Skripte, Stream Deck oder App.
 * Synchronisierte Thread-Kommunikation für Hardware-Flush garantiert, dass das Standby-Kommando zuverlässig und vollständig an die GoXLR USB-Schnittstelle übermittelt wird, bevor Prozesse beendet werden.
 
-### 3. Sicherheit & Code-Signing
+### 3. Design & Theme-Auswahl (Dunkel / Hell / System)
+* **Theme-Umschaltung in Einstellungen**:
+  * Unter *Einstellungen -> Allgemein* steht nun die Option **Erscheinungsbild & Design** bereit.
+  * Auswahl zwischen **Dunkel**, **Hell** und **System** (passt sich automatisch dem Windows-Design an).
+  * Wechsel erfolgt sofort zur Laufzeit ohne Neustart der App.
+* **Neue Basisfarbe `#1D1D1D` für Dark Mode**:
+  * Der bisherige bläuliche Farbton (`#15181E` / `#111318`) wurde vollständig verworfen.
+  * Das gesamte UI erstrahlt in tiefem, neutralem Studio-Schwarz (`#1D1D1D`), harmonisch abgestimmt mit Karten (`#262626`), Steuerelementen (`#303030`) und Randkonturen (`#383838`).
+  * Optimierte Titelzeilen-Buttons für perfekte Lesbarkeit in hellen und dunklen Umgebungen.
+
+### 4. Sicherheit & Code-Signing
 * Alle Binärdateien (`NextXLR.exe`, `NextXLR.dll`, `mixforged.exe`, `mixforge.exe`, `NextXLR-Setup-0.1.9.2-alpha.exe`, `NextXLR-Uninstall.exe`) sind mit dem offiziellen plysystems-Zertifikat code-signiert.
 
 ---
