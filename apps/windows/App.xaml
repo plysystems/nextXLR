@@ -303,8 +303,16 @@
 
             <!-- ============ Surfaces ============ -->
             <Style x:Key="Card" TargetType="Border">
-                <Setter Property="Background" Value="{ThemeResource SurfaceL2Brush}" />
-                <Setter Property="BorderBrush" Value="{ThemeResource SurfaceStrokeSubtleBrush}" />
+                <Setter Property="Background" Value="{ThemeResource GlassCardBackgroundBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource GlassCardBorderBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="{StaticResource CardRadius}" />
+                <Setter Property="Padding" Value="{StaticResource CardPadding}" />
+            </Style>
+
+            <Style x:Key="GlassCard" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource GlassCardBackgroundBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource GlassCardBorderBrush}" />
                 <Setter Property="BorderThickness" Value="1" />
                 <Setter Property="CornerRadius" Value="{StaticResource CardRadius}" />
                 <Setter Property="Padding" Value="{StaticResource CardPadding}" />

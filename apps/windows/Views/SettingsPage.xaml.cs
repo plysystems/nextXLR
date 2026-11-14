@@ -43,6 +43,8 @@ public sealed partial class SettingsPage : Page
         TrayToggle.IsOn = _settings.MinimizeToTray;
         StartMinimizedToggle.IsOn = _settings.StartMinimized;
         MuteOnStartupToggle.IsOn = _settings.MuteOnStartup;
+        AutoSaveProfilesToggle.IsOn = _settings.AutoSaveProfiles;
+        GeneralAutoSaveToggle.IsOn = _settings.AutoSaveProfiles;
         AutoUpdateToggle.IsOn = _settings.CheckForUpdatesOnStart;
         AppVersionText.Text = Loc.Format("SetAppVersion", AppSettings.VersionDisplay);
         EngineVersionText.Text = Loc.Format("SetEngineVersion", ViewModel.EngineVersion);
@@ -128,6 +130,25 @@ public sealed partial class SettingsPage : Page
         if (_loading) return;
         _settings.MuteOnStartup = MuteOnStartupToggle.IsOn;
         _settings.Save();
+    }
+
+    private void AutoSaveProfiles_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_loading) return;
+        if (sender is ToggleSwitch ts)
+        {
+            _settings.AutoSaveProfiles = ts.IsOn;
+            _settings.Save();
+            if (AutoSaveProfilesToggle != null && AutoSaveProfilesToggle.IsOn != ts.IsOn)
+                AutoSaveProfilesToggle.IsOn = ts.IsOn;
+            if (GeneralAutoSaveToggle != null && GeneralAutoSaveToggle.IsOn != ts.IsOn)
+                GeneralAutoSaveToggle.IsOn = ts.IsOn;
+
+            if (ts.IsOn)
+            {
+                Show(InfoBarSeverity.Success, "Auto Save aktiviert: Änderungen am aktiven Profil oder Mikrofon-Profil werden fortan automatisch gespeichert.");
+            }
+        }
     }
 
     private void ShowGeneralInfo(InfoBarSeverity severity, string message)
@@ -599,7 +620,7 @@ public sealed partial class SettingsPage : Page
 
     private void RefreshProfiles()
     {
-        var items = ProfileService.Setups.List();
+        var items = ProfileService.Setups.List(ProfileService.ActiveSetupProfileName);
         ProfileList.ItemsSource = items;
         ProfileEmpty.Visibility = items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -618,6 +639,7 @@ public sealed partial class SettingsPage : Page
             : ProfileNameBox.Text.Trim();
         try
         {
+            ProfileService.ActiveSetupProfileName = name;
             ProfileService.Setups.Save(name, await ViewModel.GetProfileAsync());
             ProfileNameBox.Text = "";
             RefreshProfiles();
@@ -631,6 +653,7 @@ public sealed partial class SettingsPage : Page
         if ((sender as FrameworkElement)?.Tag is not ProfileEntry entry) return;
         try
         {
+            ProfileService.ActiveSetupProfileName = entry.Name;
             ProfileService.Setups.Save(entry.Name, await ViewModel.GetProfileAsync());
             RefreshProfiles();
             Show(InfoBarSeverity.Success, Loc.Format("ProfileOverwritten", entry.Name));
@@ -652,7 +675,12 @@ public sealed partial class SettingsPage : Page
     private async Task Apply(string name, System.Text.Json.Nodes.JsonNode profile)
     {
         var error = await ViewModel.LoadProfileAsync(profile);
-        if (error is null) Show(InfoBarSeverity.Success, Loc.Format("ProfileLoaded", name));
+        if (error is null)
+        {
+            ProfileService.ActiveSetupProfileName = name;
+            RefreshProfiles();
+            Show(InfoBarSeverity.Success, Loc.Format("ProfileLoaded", name));
+        }
         else Show(InfoBarSeverity.Error, Loc.Format("ProfileLoadFailed", error));
     }
 

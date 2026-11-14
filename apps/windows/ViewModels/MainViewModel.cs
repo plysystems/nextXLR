@@ -252,6 +252,8 @@ public partial class MainViewModel : ObservableObject
         Sampler = new SamplerViewModel(transport, ui);
         _transport.MessageReceived += OnTransportMessage;
         _transport.StateChanged += s => _ui.TryEnqueue(() => OnConnection(s));
+        _transport.MessageSending += OnTransportMessageSending;
+        AutoSaveService.Instance.Initialize(this, _ui);
 
         try
         {
@@ -267,6 +269,28 @@ public partial class MainViewModel : ObservableObject
 
     private TaskCompletionSource<System.Text.Json.Nodes.JsonNode>? _profileRequest;
     private TaskCompletionSource<string?>? _profileLoad;
+    private volatile bool _isLoadingProfile;
+    private volatile bool _isInitialStateLoaded;
+
+    private void OnTransportMessageSending(ClientMessage msg)
+    {
+        if (_isLoadingProfile) return;
+        if (msg is LoadProfile or GetProfile or GetState or ScanVstPlugins) return;
+
+        HasPendingChanges = true;
+
+        if (AppSettings.Current.AutoSaveProfiles)
+        {
+            if (msg is SetMicSettings)
+            {
+                AutoSaveService.Instance.NotifyMicChanged();
+            }
+            else
+            {
+                AutoSaveService.Instance.NotifySetupChanged();
+            }
+        }
+    }
 
     /// <summary>The current setup from the daemon (labels, icons, volumes, mutes, routing, lighting).</summary>
     public async Task<System.Text.Json.Nodes.JsonNode> GetProfileAsync()
@@ -288,6 +312,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (!IsConnected) return Loc.Get("StatusOffline");
         SetBusy(true, "Lade Profil...");
+        _isLoadingProfile = true;
         try
         {
             _profileLoad = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -295,10 +320,12 @@ public partial class MainViewModel : ObservableObject
             _transport.Send(new LoadProfile(profile));
             // Success = no error within a short window (the state broadcast arrives meanwhile).
             var done = await Task.WhenAny(_profileLoad.Task, Task.Delay(700));
+            HasPendingChanges = false;
             return done == _profileLoad.Task ? await _profileLoad.Task : null;
         }
         finally
         {
+            _isLoadingProfile = false;
             SetBusy(false);
         }
     }
@@ -366,6 +393,12 @@ public partial class MainViewModel : ObservableObject
         switch (msg)
         {
             case StateMessage s:
+                if (_isInitialStateLoaded && !_isLoadingProfile && AppSettings.Current.AutoSaveProfiles)
+                {
+                    AutoSaveService.Instance.NotifySetupChanged();
+                }
+                _isInitialStateLoaded = true;
+
                 ReconcileChannels(s.Channels);
                 ReconcileRouting(s);
                 Hardware.Apply(s.Hardware.FirstOrDefault());

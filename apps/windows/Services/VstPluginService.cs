@@ -1104,6 +1104,7 @@ public sealed partial class VstPluginService : ObservableObject
             {
                 SaveRackForProfile(CurrentProfileName);
             }
+            AutoSaveService.Instance?.NotifyMicChanged();
         }
         catch (Exception ex)
         {

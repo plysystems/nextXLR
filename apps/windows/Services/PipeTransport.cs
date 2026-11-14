@@ -26,6 +26,7 @@ public sealed class PipeTransport : IAsyncDisposable
 
     public event Action<ServerMessage>? MessageReceived;
     public event Action<ConnectionState>? StateChanged;
+    public event Action<ClientMessage>? MessageSending;
 
     public void Start()
     {
@@ -34,7 +35,11 @@ public sealed class PipeTransport : IAsyncDisposable
     }
 
     /// <summary>Send immediately (mute, route, …).</summary>
-    public void Send(ClientMessage msg) => _ = WriteAsync(msg);
+    public void Send(ClientMessage msg)
+    {
+        MessageSending?.Invoke(msg);
+        _ = WriteAsync(msg);
+    }
 
     /// <summary>
     /// Keep only the latest message per key and flush every ~16 ms: a fast slider drag sends at
@@ -42,6 +47,7 @@ public sealed class PipeTransport : IAsyncDisposable
     /// </summary>
     public void SendCoalesced(string key, ClientMessage msg)
     {
+        MessageSending?.Invoke(msg);
         lock (_pendingLock) _pending[key] = msg;
     }
 

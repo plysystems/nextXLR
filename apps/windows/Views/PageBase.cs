@@ -337,6 +337,7 @@ public partial class MicPage : Page
         UpdateDefaultIcon();
         if (Selected is { } entry)
         {
+            ProfileService.ActiveMicProfileName = entry.Name;
             try
             {
                 var (_, _, rawDoc) = ProfileService.Mic.ReadFull(entry.Path);
@@ -384,8 +385,8 @@ public partial class MicPage : Page
 
     private void RefreshMicProfiles(string? select = null)
     {
-        var items = ProfileService.Mic.List();
-        var keep = select ?? Selected?.Name;
+        var keep = select ?? ProfileService.ActiveMicProfileName ?? Selected?.Name;
+        var items = ProfileService.Mic.List(keep);
         MicProfileBox.ItemsSource = items;
         MicProfileBox.SelectedItem = items.FirstOrDefault(i => i.Name == keep) ?? items.FirstOrDefault(i => i.IsDefault);
         UpdateDefaultIcon();
@@ -462,6 +463,7 @@ public partial class MicPage : Page
 
         try
         {
+            ProfileService.ActiveMicProfileName = targetName;
             ProfileService.Mic.Save(targetName, Current());
             VstPluginService.Instance.SaveRackForProfile(targetName);
             MicProfileName.Text = "";
@@ -476,6 +478,7 @@ public partial class MicPage : Page
         if (Selected is not { } entry) { Show(InfoBarSeverity.Informational, Loc.Get("MicProfilePick")); return; }
         try
         {
+            ProfileService.ActiveMicProfileName = entry.Name;
             var (name, profile, rawDoc) = ProfileService.Mic.ReadFull(entry.Path);
             if (Apply(profile))
             {

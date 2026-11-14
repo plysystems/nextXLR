@@ -59,11 +59,17 @@ public partial class RouteCellViewModel : ObservableObject
                 settings.WirelessRouting[channelKey] = value;
                 settings.Save();
                 BluetoothAudioRouter.Instance.SetChannelRouted(channelKey, value);
+                MainViewModel.HasPendingChanges = true;
+                AutoSaveService.Instance?.NotifySetupChanged();
             }
             return;
         }
 
-        if (!_applyingServer) _transport.Send(new SetRoute(ChannelId, BusId, value ? 1.0 : 0.0));
+        if (!_applyingServer)
+        {
+            MainViewModel.HasPendingChanges = true;
+            _transport.Send(new SetRoute(ChannelId, BusId, value ? 1.0 : 0.0));
+        }
     }
 }
 

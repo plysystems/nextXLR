@@ -6,17 +6,20 @@ using System.Text.Json.Nodes;
 namespace NextXLR.Services;
 
 /// <summary>A saved profile in a library.</summary>
-public sealed class ProfileEntry(string name, string path, DateTime saved, bool isDefault)
+public sealed class ProfileEntry(string name, string path, DateTime saved, bool isDefault, bool isActive = false)
 {
     public string Name { get; } = name;
     public string Path { get; } = path;
     public DateTime Saved { get; } = saved;
     public bool IsDefault { get; } = isDefault;
+    public bool IsActive { get; } = isActive;
     public string SavedText => Saved.ToString("g");
     /// <summary>Filled star = loaded automatically at start.</summary>
     public string DefaultGlyph => IsDefault ? "\uE735" : "\uE734";
     public Microsoft.UI.Xaml.Visibility DefaultBadge =>
         IsDefault ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+    public Microsoft.UI.Xaml.Visibility ActiveBadge =>
+        IsActive ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
     public string OverwriteTooltip => Loc.Format("ProfileOverwriteTooltip", Name);
     public override string ToString() => IsDefault ? $"[Standard] {Name}" : Name;
 }
@@ -46,14 +49,14 @@ public sealed class ProfileLibrary(string folder, string defaultFile, string kin
         }
     }
 
-    public IReadOnlyList<ProfileEntry> List()
+    public IReadOnlyList<ProfileEntry> List(string? activeName = null)
     {
         if (!Directory.Exists(LibraryDir)) return [];
         var def = DefaultName;
         return Directory.EnumerateFiles(LibraryDir, "*.json")
-            .Select(p => TryReadEntry(p, def))
+            .Select(p => TryReadEntry(p, def, activeName))
             .OfType<ProfileEntry>()
-            .OrderByDescending(e => e.IsDefault).ThenByDescending(e => e.Saved)
+            .OrderByDescending(e => e.IsActive).ThenByDescending(e => e.IsDefault).ThenByDescending(e => e.Saved)
             .ToList();
     }
 
@@ -139,12 +142,14 @@ public sealed class ProfileLibrary(string folder, string defaultFile, string kin
         if (e.IsDefault) ClearDefault();
     }
 
-    private ProfileEntry? TryReadEntry(string path, string? defaultName)
+    private ProfileEntry? TryReadEntry(string path, string? defaultName, string? activeName = null)
     {
         try
         {
             var (name, _) = Read(path);
-            return new ProfileEntry(name, path, File.GetLastWriteTime(path), name == defaultName);
+            var isDefault = name == defaultName;
+            var isActive = !string.IsNullOrEmpty(activeName) && string.Equals(name, activeName, StringComparison.OrdinalIgnoreCase);
+            return new ProfileEntry(name, path, File.GetLastWriteTime(path), isDefault, isActive);
         }
         catch { return null; }
     }
@@ -166,4 +171,36 @@ public static class ProfileService
     /// <summary>Mic processing only (gate, compressor, EQ, de-esser). Default: loaded at start.</summary>
     public static readonly ProfileLibrary Mic = new("mic-profiles", "default-mic-profile.json", "mic",
         p => p["gate_threshold"] is not null && p["comp_ratio"] is not null);
+
+    private static string? _activeSetupProfile;
+    public static string ActiveSetupProfileName
+    {
+        get => _activeSetupProfile ?? AppSettings.Current.ActiveSetupProfile ?? Setups.DefaultName ?? "Standard";
+        set
+        {
+            _activeSetupProfile = value;
+            var s = AppSettings.Current;
+            if (s.ActiveSetupProfile != value)
+            {
+                s.ActiveSetupProfile = value;
+                s.Save();
+            }
+        }
+    }
+
+    private static string? _activeMicProfile;
+    public static string ActiveMicProfileName
+    {
+        get => _activeMicProfile ?? AppSettings.Current.ActiveMicProfile ?? Mic.DefaultName ?? "Standard";
+        set
+        {
+            _activeMicProfile = value;
+            var s = AppSettings.Current;
+            if (s.ActiveMicProfile != value)
+            {
+                s.ActiveMicProfile = value;
+                s.Save();
+            }
+        }
+    }
 }

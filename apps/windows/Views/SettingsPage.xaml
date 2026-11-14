@@ -174,6 +174,27 @@
                                     </StackPanel>
                                     <ToggleSwitch x:Name="MuteOnStartupToggle" Grid.Column="2" OnContent="" OffContent="" MinWidth="0" VerticalAlignment="Center" Toggled="MuteOnStartup_Toggled" />
                                 </Grid>
+
+                                <Border Height="1" Background="{ThemeResource SurfaceStrokeSubtleBrush}" Margin="68,0,20,0" />
+
+                                <!-- Row 5: Auto Save (Automatisches Speichern) -->
+                                <Grid Padding="20,14" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="36" Height="36" CornerRadius="8" Background="{ThemeResource SurfaceL3Brush}">
+                                        <FontIcon Glyph="&#xE74E;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Auto Save (Automatisches Speichern)" FontWeight="SemiBold" />
+                                        <TextBlock Text="Änderungen am aktiven Profil oder Mikrofon-Profil sofort automatisch sichern." Style="{StaticResource Caption}" />
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="GeneralAutoSaveToggle" Grid.Column="2" OnContent="" OffContent="" MinWidth="0"
+                                                  VerticalAlignment="Center" Toggled="AutoSaveProfiles_Toggled"
+                                                  services:CursorHelper.UseHandCursor="True" />
+                                </Grid>
                             </StackPanel>
                         </Border>
 
@@ -587,6 +608,29 @@
                         <TextBlock x:Uid="SettingsProfilesHeader" Style="{StaticResource SectionTitle}" Margin="0,0,0,2" />
                         <InfoBar x:Name="ProfileResult" IsClosable="True" />
 
+                        <!-- Auto Save Card -->
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="18">
+                            <Grid ColumnSpacing="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="38" Height="38" CornerRadius="10" Background="{ThemeResource SurfaceL3Brush}">
+                                    <FontIcon Glyph="&#xE74E;" FontSize="17" Foreground="{StaticResource BrandBrush}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Automatisches Speichern (Auto Save)" FontWeight="SemiBold" FontSize="14" />
+                                    <TextBlock Text="Speichert jede Änderung an Audio-Mix, Routing, Beleuchtung, Effekten und Mikrofon-DSP direkt im aktiven Profil."
+                                               Style="{StaticResource Caption}" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <ToggleSwitch x:Name="AutoSaveProfilesToggle" Grid.Column="2" OnContent="" OffContent="" MinWidth="0"
+                                              VerticalAlignment="Center" Toggled="AutoSaveProfiles_Toggled"
+                                              services:CursorHelper.UseHandCursor="True" />
+                            </Grid>
+                        </Border>
+
                         <!-- Save current setup -->
                         <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
                                 BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="18">
@@ -629,6 +673,11 @@
                                         <StackPanel Grid.Column="1">
                                             <StackPanel Orientation="Horizontal" Spacing="8">
                                                 <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" />
+                                                <Border CornerRadius="6" Padding="6,1" Background="{ThemeResource SurfaceHighlightBrush}"
+                                                        BorderBrush="{StaticResource BrandBrush}" BorderThickness="1"
+                                                        Visibility="{x:Bind ActiveBadge}" VerticalAlignment="Center">
+                                                    <TextBlock Text="Aktiv" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource BrandBrush}" />
+                                                </Border>
                                                 <Border CornerRadius="6" Padding="6,1" Background="{StaticResource BrandBrush}"
                                                         Visibility="{x:Bind DefaultBadge}" VerticalAlignment="Center">
                                                     <TextBlock x:Uid="ProfileDefaultBadge" FontSize="11" FontWeight="SemiBold" Foreground="#0E1015" />

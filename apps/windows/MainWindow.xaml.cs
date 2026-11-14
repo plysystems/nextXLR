@@ -412,6 +412,17 @@ public sealed partial class MainWindow : Window
 
     public async Task<bool> ConfirmExitWithUnsavedChangesAsync()
     {
+        if (AppSettings.Current.AutoSaveProfiles)
+        {
+            try
+            {
+                await AutoSaveService.Instance.FlushAsync();
+                MainViewModel.HasPendingChanges = false;
+            }
+            catch { }
+            return true;
+        }
+
         if (!MainViewModel.HasPendingChanges)
         {
             return true;
