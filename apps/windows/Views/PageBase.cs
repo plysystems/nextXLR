@@ -845,7 +845,11 @@ public partial class EffectsPage : Page
     {
         InitializeComponent();
     }
-    protected override void OnNavigatedTo(NavigationEventArgs e) => ViewModel = (MainViewModel)e.Parameter;
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        ViewModel = (MainViewModel)e.Parameter;
+        Bindings.Update();
+    }
 
     private Visibility BoolToVisibility(bool active) => active ? Visibility.Visible : Visibility.Collapsed;
 }
@@ -1055,6 +1059,7 @@ public partial class VirtualChannelsPage : Page
         if (e.Parameter is MainViewModel vm)
         {
             ViewModel = vm;
+            Bindings.Update();
         }
         AppRouting.StartMonitoring();
         _ = Task.Run(async () =>
@@ -1126,6 +1131,7 @@ public partial class LightingPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         ViewModel = (MainViewModel)e.Parameter;
+        Bindings.Update();
         DevicePreview.ForceMini = ViewModel.Hardware.IsMini;
         UpdateModelBadge();
         ViewModel.Hardware.PropertyChanged += Hardware_PropertyChanged;
