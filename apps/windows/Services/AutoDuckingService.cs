@@ -38,6 +38,8 @@ public sealed partial class AutoDuckingService : ObservableObject
 
     private double _holdRemainingMs;
     private double _lastNotifiedAttenuation;
+    private double _timeSinceLastStatusMs;
+    private string _currentDuckingState = "idle";
 
     public string ThresholdLabel => $"{Math.Round(ThresholdDb)} dB";
     public string DuckAmountLabel => $"{Math.Round(DuckAmountDb)} dB";
@@ -156,6 +158,7 @@ public sealed partial class AutoDuckingService : ObservableObject
         double meter = trigger?.Meter ?? 0.0;
         double inputDb = meter > 0.0005 ? 20.0 * Math.Log10(meter) : -90.0;
 
+        _timeSinceLastStatusMs += dtMs;
         bool speaking = inputDb > ThresholdDb;
 
         if (speaking)
@@ -165,12 +168,23 @@ public sealed partial class AutoDuckingService : ObservableObject
             double attackStep = (Math.Abs(DuckAmountDb) / Math.Max(10.0, 30.0)) * dtMs;
             CurrentAttenuationDb = Math.Max(DuckAmountDb, CurrentAttenuationDb - attackStep);
             IsDuckingActive = true;
-            StatusText = $"Aktiv: {TargetChannel} gedämpft um {Math.Abs(CurrentAttenuationDb):0.0} dB";
+
+            if (_currentDuckingState != "speaking" || _timeSinceLastStatusMs >= 150.0)
+            {
+                _currentDuckingState = "speaking";
+                _timeSinceLastStatusMs = 0;
+                StatusText = $"Aktiv: {TargetChannel} gedämpft um {Math.Abs(CurrentAttenuationDb):0.0} dB";
+            }
         }
         else if (_holdRemainingMs > 0)
         {
             _holdRemainingMs -= dtMs;
-            StatusText = $"Hold: Dämpfung wird gehalten ({Math.Round(_holdRemainingMs)} ms)";
+            if (_currentDuckingState != "hold" || _timeSinceLastStatusMs >= 150.0)
+            {
+                _currentDuckingState = "hold";
+                _timeSinceLastStatusMs = 0;
+                StatusText = $"Hold: Dämpfung wird gehalten ({Math.Round(_holdRemainingMs)} ms)";
+            }
         }
         else if (CurrentAttenuationDb < -0.1)
         {
@@ -181,19 +195,34 @@ public sealed partial class AutoDuckingService : ObservableObject
             {
                 CurrentAttenuationDb = 0;
                 IsDuckingActive = false;
+                _currentDuckingState = "idle";
                 StatusText = "Bereit (Wartet auf Sprache)";
+            }
+            else if (_currentDuckingState != "release" || _timeSinceLastStatusMs >= 150.0)
+            {
+                _currentDuckingState = "release";
+                _timeSinceLastStatusMs = 0;
+                StatusText = $"Release: Blendet zurück ({Math.Abs(CurrentAttenuationDb):0.0} dB)";
             }
         }
         else
         {
             CurrentAttenuationDb = 0;
             IsDuckingActive = false;
-            StatusText = "Bereit (Wartet auf Sprache)";
+            if (_currentDuckingState != "idle")
+            {
+                _currentDuckingState = "idle";
+                StatusText = "Bereit (Wartet auf Sprache)";
+            }
         }
 
-        // Calculate 0..100% reduction meter for UI bar
+        // Calculate 0..100% reduction meter for UI bar with throttling
         double maxDuck = Math.Abs(DuckAmountDb);
-        DuckReductionPercent = maxDuck > 0.01 ? Math.Clamp((Math.Abs(CurrentAttenuationDb) / maxDuck) * 100.0, 0.0, 100.0) : 0;
+        double targetReduction = maxDuck > 0.01 ? Math.Clamp((Math.Abs(CurrentAttenuationDb) / maxDuck) * 100.0, 0.0, 100.0) : 0;
+        if (Math.Abs(targetReduction - DuckReductionPercent) > 0.4 || (targetReduction == 0 && DuckReductionPercent != 0))
+        {
+            DuckReductionPercent = targetReduction;
+        }
 
         // Apply audio attenuation when it shifts
         if (Math.Abs(CurrentAttenuationDb - _lastNotifiedAttenuation) > 0.1 || (CurrentAttenuationDb == 0 && _lastNotifiedAttenuation != 0))

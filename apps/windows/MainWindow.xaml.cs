@@ -357,7 +357,7 @@ public sealed partial class MainWindow : Window
                 }
                 else
                 {
-                    var transition = new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromBottom };
+                    var transition = new EntranceNavigationTransitionInfo();
                     ContentFrame.Navigate(targetPage, ViewModel, transition);
                 }
             }

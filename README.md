@@ -1,11 +1,16 @@
 # NEXT : XLR
 
-[![Release](https://img.shields.io/badge/Release-v0.1.0--alpha-00d2b4.svg)](https://github.com/plysystems/nextXLR/releases)
+[![Release](https://img.shields.io/badge/Release-v0.2.0--beta-00d2b4.svg)](https://github.com/plysystems/nextXLR/releases)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-blue.svg)](https://github.com/plysystems/nextXLR)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Author](https://img.shields.io/badge/Author-plysystems-informational.svg)](https://github.com/plysystems)
 
 > **NEXT : XLR** ist die moderne, modulare Open-Source Audiosteuerung und Routing-Suite für TC-Helicon GoXLR und GoXLR Mini Geräte sowie Standalone-Virtuelle Mixer unter Windows. Entwickelt von **plysystems**.
+
+> [!IMPORTANT]
+> **Wichtiger Hinweis & Haftungsausschluss / Important Notice & Disclaimer:**  
+> **NEXT : XLR** ist ein unabhängiges Open-Source-Projekt von **plysystems** und ist **ausdrücklich KEINE offizielle Software von TC-Helicon oder Music Tribe**.  
+> Es besteht keinerlei geschäftliche Verbindung, Partnerschaft, Autorisierung oder Sponsoring durch TC-Helicon oder Music Tribe Global Brands Ltd. *GoXLR*, *GoXLR Mini*, *TC-Helicon* sowie entsprechende Logos und Namen sind eingetragene Warenzeichen ihrer jeweiligen Eigentümer. Die Nutzung dieser Software erfolgt auf eigenes Risiko (siehe [Haftungsausschluss](#haftungsausschluss--disclaimer)).
 
 ---
 
@@ -17,6 +22,7 @@
   - [Installation & Setup](#installation--setup)
   - [Architektur](#architektur)
   - [Bauen aus dem Quellcode](#bauen-aus-dem-quellcode)
+  - [Haftungsausschluss / Disclaimer](#haftungsausschluss--disclaimer)
   - [Lizenz & Urheberrecht](#lizenz--urheberrecht)
 - [English](#english)
   - [Overview](#overview)
@@ -25,6 +31,7 @@
   - [Installation & Setup](#installation--setup-1)
   - [Architecture](#architecture)
   - [Building from Source](#building-from-source)
+  - [Disclaimer / Legal Notice](#haftungsausschluss--disclaimer)
   - [License & Copyright](#license--copyright)
 
 ---
@@ -266,6 +273,22 @@ dotnet build apps/windows/NextXLR.csproj
 # 3. Build the Installer:
 dotnet build installer/NextXLR.Installer.csproj
 ```
+
+---
+
+## Haftungsausschluss / Disclaimer
+
+### Deutsch: Rechtlicher Hinweis & Haftungsausschluss
+1. **Keine offizielle Software:** NEXT : XLR ist ein unabhängiges Software- und Treiberpaket der Community, entwickelt von **plysystems**. Es handelt sich ausdrücklich **nicht** um offizielle Software von TC-Helicon, Music Tribe Global Brands Ltd. oder deren Mutter- bzw. Tochtergesellschaften.
+2. **Markenrechte & Warenzeichen:** Alle in diesem Projekt, der Dokumentation und der Software genannten Marken, Produktbezeichnungen, Handelsnamen und Logos (insbesondere *GoXLR*, *GoXLR Mini*, *TC-Helicon*, *Music Tribe*, *Windows*, *Elgato*, *Stream Deck*) sind eingetragene Warenzeichen ihrer jeweiligen Eigentümer. Ihre Nennung dient ausschließlich der Beschreibung technischer Kompatibilitäten und Schnittstellen.
+3. **Gewährleistungsausschluss:** Die Software wird unentgeltlich und unter den Bedingungen der [MIT-Lizenz](LICENSE) „wie besehen“ (*as is*) bereitgestellt. Es wird keinerlei Garantie oder Gewährleistung für die Mängelfreiheit, Funktionsfähigkeit oder Eignung für einen bestimmten Einsatzzweck übernommen.
+4. **Haftungsbeschränkung:** plysystems und die Mitwirkenden an diesem Projekt haften in keinem Fall für direkte, indirekte, zufällige oder Folgeschäden (einschließlich, aber nicht beschränkt auf Hardware-Defekte, Audio-Aussetzer, Datenverlust, Betriebsunterbrechungen oder finanzielle Einbußen), die aus dem Betrieb, der Installation oder der Unfähigkeit zur Nutzung von NEXT : XLR entstehen. Die Verwendung erfolgt vollständig auf eigene Verantwortung des Nutzers.
+
+### English: Legal Notice & Disclaimer
+1. **Non-Official Software:** NEXT : XLR is an independent open-source audio suite created by **plysystems**. It is **NOT** official software produced, maintained, or endorsed by TC-Helicon, Music Tribe Global Brands Ltd., or any of their affiliates.
+2. **Trademarks:** All trademarks, service marks, trade names, product names, and logos appearing in this repository (specifically *GoXLR*, *GoXLR Mini*, *TC-Helicon*, *Music Tribe*, *Windows*, *Elgato*, *Stream Deck*) are the property of their respective owners. Their mention does not imply any affiliation, sponsorship, or endorsement.
+3. **Warranty Disclaimer:** The software is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement.
+4. **Limitation of Liability:** In no event shall plysystems or the individual contributors be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.
 
 ---
 
