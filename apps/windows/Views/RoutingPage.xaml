@@ -39,14 +39,14 @@
                             CornerRadius="8" Padding="10,6">
                         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                             <Border Width="8" Height="8" CornerRadius="4" Background="{StaticResource BrandBrush}" />
-                            <TextBlock Text="Aktiv Geroutet" FontSize="11" Foreground="{ThemeResource TextSecondaryBrush}" />
+                            <TextBlock Text="Aktiv Geroutet" FontSize="11" Foreground="{ThemeResource TextMutedBrush}" />
                         </StackPanel>
                     </Border>
                     <Border Background="{ThemeResource SurfaceL2Brush}" BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1"
                             CornerRadius="8" Padding="10,6">
                         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                             <Border Width="8" Height="8" CornerRadius="4" Background="{StaticResource WarningBrush}" />
-                            <TextBlock Text="Sampler Record" FontSize="11" Foreground="{ThemeResource TextSecondaryBrush}" />
+                            <TextBlock Text="Sampler Record" FontSize="11" Foreground="{ThemeResource TextMutedBrush}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>

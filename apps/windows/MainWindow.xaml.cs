@@ -128,7 +128,7 @@ public sealed partial class MainWindow : Window
             }
         };
 
-        AppWindow.Resize(new SizeInt32(1440, 920));
+        AppWindow.Resize(new SizeInt32(1720, 960));
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "nextXLR_icon.ico"));
 
         ViewModel.Hardware.PropertyChanged += OnHardwareChanged;

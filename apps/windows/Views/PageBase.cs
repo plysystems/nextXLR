@@ -861,6 +861,7 @@ public partial class SamplerPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         ViewModel = (MainViewModel)e.Parameter;
+        Bindings.Update();
         Sampler.PropertyChanged += OnSamplerPropertyChanged;
         UpdatePadEditorVisibility();
     }

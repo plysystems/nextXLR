@@ -22,6 +22,7 @@
                     <SolidColorBrush x:Key="SurfaceHighlightBrush" Color="#1E222D" />
                     <SolidColorBrush x:Key="MeterTrackBrush" Color="#050505" />
                     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F8FAFC" />
+                    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#A0ABBA" />
                     <SolidColorBrush x:Key="TextMutedBrush" Color="#8E98AB" />
                     <SolidColorBrush x:Key="MutedTextBrush" Color="#8E98AB" />
 
@@ -94,6 +95,7 @@
                     <SolidColorBrush x:Key="SurfaceHighlightBrush" Color="#1E222D" />
                     <SolidColorBrush x:Key="MeterTrackBrush" Color="#050505" />
                     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F8FAFC" />
+                    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#A0ABBA" />
                     <SolidColorBrush x:Key="TextMutedBrush" Color="#8E98AB" />
                     <SolidColorBrush x:Key="MutedTextBrush" Color="#8E98AB" />
 
@@ -166,6 +168,7 @@
                     <SolidColorBrush x:Key="SurfaceHighlightBrush" Color="#FFFFFF" />
                     <SolidColorBrush x:Key="MeterTrackBrush" Color="#E2E5EC" />
                     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#0F172A" />
+                    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#475569" />
                     <SolidColorBrush x:Key="TextMutedBrush" Color="#64748B" />
                     <SolidColorBrush x:Key="MutedTextBrush" Color="#64748B" />
 
