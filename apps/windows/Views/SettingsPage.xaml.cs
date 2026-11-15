@@ -34,6 +34,18 @@ public sealed partial class SettingsPage : Page
     public SettingsPage()
     {
         InitializeComponent();
+        StorageLoggerService.EntriesChanged += OnStorageEntriesChanged;
+    }
+
+    private void OnStorageEntriesChanged(object? sender, EventArgs e)
+    {
+        DispatcherQueue?.TryEnqueue(() =>
+        {
+            if (LoggingPanel?.Visibility == Visibility.Visible)
+            {
+                RefreshStorageLogs();
+            }
+        });
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

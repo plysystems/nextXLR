@@ -271,6 +271,7 @@ public partial class MainViewModel : ObservableObject
     private TaskCompletionSource<string?>? _profileLoad;
     private volatile bool _isLoadingProfile;
     private volatile bool _isInitialStateLoaded;
+    private volatile bool _hasBaseline;
 
     private void OnTransportMessageSending(ClientMessage msg)
     {
@@ -321,6 +322,7 @@ public partial class MainViewModel : ObservableObject
             // Success = no error within a short window (the state broadcast arrives meanwhile).
             var done = await Task.WhenAny(_profileLoad.Task, Task.Delay(700));
             HasPendingChanges = false;
+            ChangeDeltaTracker.Instance.InitializeBaseline(this);
             return done == _profileLoad.Task ? await _profileLoad.Task : null;
         }
         finally
@@ -425,6 +427,12 @@ public partial class MainViewModel : ObservableObject
                 if (s.Mic is { } mic) Mic.ApplyFromServer(mic);
                 Lighting.Apply(Hardware.LightingZoneIds, s.Lighting);
                 UpdateDevice(s);
+
+                if (!_hasBaseline)
+                {
+                    _hasBaseline = true;
+                    ChangeDeltaTracker.Instance.InitializeBaseline(this);
+                }
                 break;
             case HelloMessage h:
                 EngineVersion = h.Version;

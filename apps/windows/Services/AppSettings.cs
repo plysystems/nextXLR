@@ -22,8 +22,8 @@ public sealed class AppSettings
     public double BleepVolume { get; set; } = 100.0;
     public bool HasCompletedTour { get; set; } = true;
 
-    // Auto-Save Profiles & Mic Profiles (Default: false)
-    public bool AutoSaveProfiles { get; set; } = false;
+    // Auto-Save Profiles & Mic Profiles (Default: true)
+    public bool AutoSaveProfiles { get; set; } = true;
     public string ActiveSetupProfile { get; set; } = "Standard";
     public string ActiveMicProfile { get; set; } = "Standard";
 

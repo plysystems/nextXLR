@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using NextXLR.ViewModels;
 
 namespace NextXLR.Services;
 
@@ -90,14 +91,29 @@ public sealed class ProfileLibrary(string folder, string defaultFile, string kin
     }
 
     /// <summary>Saves into the library (same name overwrites; updates the default copy too).</summary>
-    public ProfileEntry Save(string name, JsonNode profile)
+    public ProfileEntry Save(string name, JsonNode profile, bool isAutosave = false)
     {
         Directory.CreateDirectory(LibraryDir);
         var path = System.IO.Path.Combine(LibraryDir, SafeFileName(name) + ".json");
         Write(path, name, profile);
         var isDefault = DefaultName == name;
         if (isDefault) Write(DefaultFile, name, profile);
-        StorageLoggerService.Log($"Profil ({kind}): {name}", $"Gespeichert in {SafeFileName(name)}.json", "Manuell", path);
+
+        if (!isAutosave)
+        {
+            if (MainViewModel.Instance != null)
+            {
+                if (kind == "mic")
+                    ChangeDeltaTracker.Instance.DetectAndCommitMicChanges(MainViewModel.Instance, isAutosave: false, path);
+                else
+                    ChangeDeltaTracker.Instance.DetectAndCommitSetupChanges(MainViewModel.Instance, isAutosave: false, path);
+            }
+            else
+            {
+                StorageLoggerService.Log($"Profil ({kind}): {name}", $"Profil '{name}' manuell gespeichert. [MANUELL]", "Manuell", path);
+            }
+        }
+
         return new ProfileEntry(name, path, DateTime.Now, isDefault);
     }
 
