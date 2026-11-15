@@ -18,13 +18,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Spacing="3" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                        <TextBlock x:Uid="FxTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
-                        <Border Background="{ThemeResource SurfaceL3Brush}" BorderBrush="{StaticResource BrandBrush}"
-                                BorderThickness="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
-                            <TextBlock Text="NEXT : XLR HARDWARE DSP EFFECTS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
-                        </Border>
-                    </StackPanel>
+                    <TextBlock x:Uid="FxTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
                     <TextBlock Text="Hardware-basierte Stimmformer: Megaphon, Roboter-Vocoder, Hardtune, Pitch-Shifter, Reverb &amp; Echo mit 0 ms Latenz."
                                Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
                 </StackPanel>

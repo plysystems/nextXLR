@@ -19,7 +19,7 @@
         </Style>
     </Page.Resources>
 
-    <Grid Padding="{StaticResource PagePadding}" RowSpacing="20" MaxWidth="1120" HorizontalAlignment="Center">
+    <Grid Padding="{StaticResource PagePadding}" RowSpacing="20" MaxWidth="1620" HorizontalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -34,7 +34,7 @@
         <!-- Side navigation; collapses to a top bar on narrow windows (see VisualStateManager). -->
         <Grid x:Name="Body" Grid.Row="1" ColumnSpacing="28" RowSpacing="16">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="NavColumn" Width="220" />
+                <ColumnDefinition x:Name="NavColumn" Width="250" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
@@ -604,9 +604,35 @@
                     </StackPanel>
 
                     <!-- ===== Profiles ===== -->
-                    <StackPanel x:Name="ProfilesPanel" Spacing="12" Visibility="Collapsed">
+                    <StackPanel x:Name="ProfilesPanel" Spacing="14" Visibility="Collapsed">
                         <TextBlock x:Uid="SettingsProfilesHeader" Style="{StaticResource SectionTitle}" Margin="0,0,0,2" />
                         <InfoBar x:Name="ProfileResult" IsClosable="True" />
+
+                        <!-- Storage Directory Banner -->
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="18,14">
+                            <Grid ColumnSpacing="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="40" Height="40" CornerRadius="10" Background="{ThemeResource SurfaceL3Brush}">
+                                    <FontIcon Glyph="&#xED25;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                    <TextBlock Text="Speicherort für Profile" FontWeight="SemiBold" FontSize="14" />
+                                    <TextBlock Text="%LOCALAPPDATA%\nextxlr\profiles" FontFamily="Consolas, Segoe UI Variable" FontSize="12" Foreground="{ThemeResource TextMutedBrush}" />
+                                </StackPanel>
+                                <Button Grid.Column="2" Style="{StaticResource SmoothButton}" VerticalAlignment="Center"
+                                        services:CursorHelper.UseHandCursor="True" Click="OpenProfilesFolder_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="&#xE8DA;" FontSize="14" />
+                                        <TextBlock Text="Im Explorer öffnen" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
 
                         <!-- Auto Save Card -->
                         <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
@@ -686,17 +712,17 @@
                                             <TextBlock Text="{x:Bind SavedText}" Style="{StaticResource Caption}" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
-                                            <Button x:Uid="ProfileLoad" Style="{StaticResource AccentButtonStyle}" Tag="{x:Bind}" Click="LoadProfile_Click" />
-                                            <Button Tag="{x:Bind}" Click="OverwriteProfile_Click" ToolTipService.ToolTip="{x:Bind OverwriteTooltip}">
+                                            <Button x:Uid="ProfileLoad" Style="{StaticResource AccentButtonStyle}" Tag="{x:Bind}" Click="LoadProfile_Click" services:CursorHelper.UseHandCursor="True" />
+                                            <Button Tag="{x:Bind}" Click="OverwriteProfile_Click" ToolTipService.ToolTip="{x:Bind OverwriteTooltip}" services:CursorHelper.UseHandCursor="True">
                                                 <FontIcon Glyph="&#xE74E;" FontSize="14" />
                                             </Button>
-                                            <Button Tag="{x:Bind}" Click="DefaultProfile_Click" x:Uid="ProfileSetDefault">
+                                            <Button Tag="{x:Bind}" Click="DefaultProfile_Click" x:Uid="ProfileSetDefault" services:CursorHelper.UseHandCursor="True">
                                                 <FontIcon Glyph="{x:Bind DefaultGlyph}" FontSize="14" />
                                             </Button>
-                                            <Button Tag="{x:Bind}" Click="ExportProfile_Click" x:Uid="ProfileExportOne">
+                                            <Button Tag="{x:Bind}" Click="ExportProfile_Click" x:Uid="ProfileExportOne" services:CursorHelper.UseHandCursor="True">
                                                 <FontIcon Glyph="&#xEDE1;" FontSize="14" />
                                             </Button>
-                                            <Button Tag="{x:Bind}" Click="DeleteProfile_Click" x:Uid="ProfileDelete">
+                                            <Button Tag="{x:Bind}" Click="DeleteProfile_Click" x:Uid="ProfileDelete" services:CursorHelper.UseHandCursor="True">
                                                 <FontIcon Glyph="&#xE74D;" FontSize="14" />
                                             </Button>
                                         </StackPanel>

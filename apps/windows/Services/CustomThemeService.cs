@@ -25,7 +25,7 @@ public sealed class ZoneColorData
 public static class CustomThemeService
 {
     private static readonly string ThemesDir =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NextXLR", "themes");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "nextxlr", "themes");
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {

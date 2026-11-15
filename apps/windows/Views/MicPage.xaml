@@ -29,13 +29,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Spacing="3" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                        <TextBlock x:Uid="MicTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
-                        <Border Background="{ThemeResource SurfaceL3Brush}" BorderBrush="{StaticResource BrandBrush}"
-                                BorderThickness="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
-                            <TextBlock Text="NEXT : XLR PRO CHANNEL STRIP" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
-                        </Border>
-                    </StackPanel>
+                    <TextBlock x:Uid="MicTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
                     <TextBlock Text="Analoge Vorverstärkung, KI-Signalbereinigung, 10-Band Studio-EQ mit Live-RTA, Dynamikprozessoren und VST3-Rack."
                                Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
                 </StackPanel>

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -31,6 +32,8 @@ public sealed class SampleEntry
     /// <summary>Copy inside the library folder (the original may move or disappear).</summary>
     public string File { get; set; } = "";
     public double Duration { get; set; }
+    [JsonIgnore]
+    public string DurationText => $"{TimeSpan.FromSeconds(Duration):m\\:ss}";
     /// <summary>Waveform overview: <see cref="SamplerStore.PeakCount"/> peaks, 0..255.</summary>
     public byte[] Peaks { get; set; } = [];
     public DateTime Added { get; set; } = DateTime.Now;
@@ -57,7 +60,7 @@ public sealed class SamplerStore
 {
     public const int Pages = 3, PadsPerPage = 4, PeakCount = 480;
 
-    public static readonly string Dir = Path.Combine(ProfileLibrary.DataDir, "sampler");
+    public static readonly string Dir = Path.Combine(ProfileLibrary.DataDir, "samplers");
     private static readonly string FilePath = Path.Combine(Dir, "sampler.json");
     public static readonly string SamplesDir = Path.Combine(Dir, "samples");
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
@@ -73,6 +76,32 @@ public sealed class SamplerStore
     {
         try
         {
+            // Auto-migrate from old "sampler" folder if "samplers" does not exist yet
+            var oldDir = Path.Combine(ProfileLibrary.DataDir, "sampler");
+            if (Directory.Exists(oldDir) && !Directory.Exists(Dir))
+            {
+                try
+                {
+                    Directory.CreateDirectory(Dir);
+                    foreach (var file in Directory.GetFiles(oldDir))
+                    {
+                        var dest = Path.Combine(Dir, Path.GetFileName(file));
+                        if (!File.Exists(dest)) File.Copy(file, dest);
+                    }
+                    var oldSamples = Path.Combine(oldDir, "samples");
+                    if (Directory.Exists(oldSamples))
+                    {
+                        Directory.CreateDirectory(SamplesDir);
+                        foreach (var sFile in Directory.GetFiles(oldSamples))
+                        {
+                            var destSample = Path.Combine(SamplesDir, Path.GetFileName(sFile));
+                            if (!File.Exists(destSample)) File.Copy(sFile, destSample);
+                        }
+                    }
+                }
+                catch { }
+            }
+
             if (System.IO.File.Exists(FilePath))
             {
                 var s = JsonSerializer.Deserialize<SamplerStore>(System.IO.File.ReadAllText(FilePath), Options) ?? new();
@@ -535,5 +564,105 @@ public sealed class VolumeProvider : IWaveProvider
             }
         }
         return read;
+    }
+}
+
+/// <summary>
+/// High-performance audio recorder for GoXLR Sampler pads.
+/// Automatically captures audio from the GoXLR "Sample" endpoint (hardware sampler routing bus)
+/// while an empty pad button is pressed and held.
+/// </summary>
+public sealed class SamplerAudioRecorder : IDisposable
+{
+    private WasapiCapture? _capture;
+    private WaveFileWriter? _writer;
+    private string? _filePath;
+    private DateTime _startTime;
+    private bool _isRecording;
+
+    public bool IsRecording => _isRecording;
+    public string? CurrentFilePath => _filePath;
+    public double ElapsedSeconds => _isRecording ? (DateTime.UtcNow - _startTime).TotalSeconds : 0.0;
+
+    public bool StartRecording(string targetWavPath)
+    {
+        try
+        {
+            StopRecording();
+            _filePath = targetWavPath;
+            var parentDir = Path.GetDirectoryName(targetWavPath);
+            if (!string.IsNullOrEmpty(parentDir)) Directory.CreateDirectory(parentDir);
+
+            using var enumerator = new MMDeviceEnumerator();
+            var captureDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active).ToList();
+
+            // Look for GoXLR "Sample" endpoint first (corresponds to GoXLR Sampler Routing column)
+            var targetDev = captureDevices.FirstOrDefault(d =>
+                d.FriendlyName.Contains("Sample", StringComparison.OrdinalIgnoreCase) &&
+                (d.FriendlyName.Contains("GoXLR", StringComparison.OrdinalIgnoreCase) ||
+                 d.FriendlyName.Contains("TC-Helicon", StringComparison.OrdinalIgnoreCase)))
+                ?? captureDevices.FirstOrDefault(d => d.FriendlyName.Contains("Broadcast", StringComparison.OrdinalIgnoreCase))
+                ?? captureDevices.FirstOrDefault(d => d.FriendlyName.Contains("Chat Mic", StringComparison.OrdinalIgnoreCase))
+                ?? enumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Console);
+
+            if (targetDev == null) return false;
+
+            _capture = new WasapiCapture(targetDev);
+            _writer = new WaveFileWriter(targetWavPath, _capture.WaveFormat);
+
+            _capture.DataAvailable += (s, e) =>
+            {
+                if (_writer != null && e.BytesRecorded > 0)
+                {
+                    _writer.Write(e.Buffer, 0, e.BytesRecorded);
+                }
+            };
+
+            _capture.RecordingStopped += (s, e) =>
+            {
+                try
+                {
+                    _writer?.Flush();
+                    _writer?.Dispose();
+                }
+                catch { }
+                _writer = null;
+            };
+
+            _startTime = DateTime.UtcNow;
+            _isRecording = true;
+            _capture.StartRecording();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[SamplerRecorder] Start recording failed: {ex.Message}");
+            StopRecording();
+            return false;
+        }
+    }
+
+    public double StopRecording()
+    {
+        if (!_isRecording) return 0.0;
+        _isRecording = false;
+        var duration = (DateTime.UtcNow - _startTime).TotalSeconds;
+        try
+        {
+            _capture?.StopRecording();
+            _capture?.Dispose();
+            _capture = null;
+
+            _writer?.Flush();
+            _writer?.Dispose();
+            _writer = null;
+        }
+        catch { }
+        return duration;
+    }
+
+    public void Dispose()
+    {
+        StopRecording();
     }
 }

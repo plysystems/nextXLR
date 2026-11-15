@@ -38,6 +38,9 @@ public partial class SamplerViewModel : ObservableObject
     [ObservableProperty] private string _search = "";
     [ObservableProperty] private bool _isImporting;
 
+    private readonly SamplerAudioRecorder _recorder = new();
+    private PadViewModel? _recordingPad;
+
     public IEnumerable<SampleItemViewModel> FilteredLibrary =>
         string.IsNullOrWhiteSpace(Search) ? Library : Library.Where(l => l.Name.Contains(Search, StringComparison.CurrentCultureIgnoreCase));
     public bool LibraryEmpty => Library.Count == 0;
@@ -108,7 +111,18 @@ public partial class SamplerViewModel : ObservableObject
         if (Store.Find(cfg.SampleId) is not { } sample)
         {
             SelectedPad = pad;
-            Status = Loc.Format("SamplerPadEmpty", pad.Number);
+            // Pad is empty: Record audio from GoXLR Sampler routing bus while held down!
+            var targetFile = System.IO.Path.Combine(SamplerStore.SamplesDir, $"Recording_{PageLetter}{pad.Number}_{DateTime.Now:yyyyMMdd_HHmmss}.wav");
+            if (_recorder.StartRecording(targetFile))
+            {
+                _recordingPad = pad;
+                pad.IsPlaying = true;
+                Status = $"🔴 Aufnahme läuft für Bank {PageLetter} • Pad {pad.Number}... (Halten zum Aufnehmen, Loslassen zum Speichern)";
+            }
+            else
+            {
+                Status = Loc.Format("SamplerPadEmpty", pad.Number);
+            }
             return;
         }
         var voice = Voice(ActivePage, pad.Index);
@@ -117,9 +131,45 @@ public partial class SamplerViewModel : ObservableObject
         Status = "";
     }
 
-    /// <summary>Pad released: only "hold to play" reacts.</summary>
-    public void Release(PadViewModel pad)
+    /// <summary>Pad released: if recording on this empty pad, save sample; else handle hold-to-play.</summary>
+    public async void Release(PadViewModel pad)
     {
+        if (_recordingPad == pad)
+        {
+            pad.IsPlaying = false;
+            var duration = _recorder.StopRecording();
+            var wavFile = _recorder.CurrentFilePath;
+            _recordingPad = null;
+
+            if (duration >= 0.25 && !string.IsNullOrEmpty(wavFile) && System.IO.File.Exists(wavFile))
+            {
+                try
+                {
+                    var entry = await Store.ImportAsync(wavFile);
+                    entry.Name = $"Aufnahme {PageLetter}{pad.Number}";
+                    pad.Config.SampleId = entry.Id;
+                    pad.Config.Start = 0;
+                    pad.Config.End = entry.Duration;
+                    ScheduleSave();
+                    Refresh();
+                    Status = $"✓ Aufnahme gespeichert: Bank {PageLetter} • Pad {pad.Number} ({entry.DurationText})";
+                }
+                catch (Exception ex)
+                {
+                    Status = $"Fehler beim Speichern der Aufnahme: {ex.Message}";
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(wavFile) && System.IO.File.Exists(wavFile))
+                {
+                    try { System.IO.File.Delete(wavFile); } catch { }
+                }
+                Status = $"Aufnahme abgebrochen (zu kurz). Halte das Pad gedrückt, um aufzunehmen.";
+            }
+            return;
+        }
+
         if (pad.Config.Mode == PadMode.Hold) Voice(ActivePage, pad.Index).Stop();
     }
 

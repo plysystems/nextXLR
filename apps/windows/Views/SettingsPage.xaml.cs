@@ -752,6 +752,22 @@ public sealed partial class SettingsPage : Page
         catch (Exception ex) { Show(InfoBarSeverity.Error, ex.Message); }
     }
 
+    private async void OpenProfilesFolder_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var folder = ProfileService.Setups.Dir;
+            if (!System.IO.Directory.Exists(folder))
+                System.IO.Directory.CreateDirectory(folder);
+            var storageFolder = await Windows.Storage.StorageFolder.GetFolderFromPathAsync(folder);
+            await Windows.System.Launcher.LaunchFolderAsync(storageFolder);
+        }
+        catch (Exception ex)
+        {
+            Show(InfoBarSeverity.Error, ex.Message);
+        }
+    }
+
     private async Task Export(string name, System.Text.Json.Nodes.JsonNode profile)
     {
         var picker = new Windows.Storage.Pickers.FileSavePicker { SuggestedFileName = name };

@@ -33,9 +33,38 @@ public sealed class ProfileEntry(string name, string path, DateTime saved, bool 
 public sealed class ProfileLibrary(string folder, string defaultFile, string kind, Func<JsonNode, bool> isValid)
 {
     public static readonly string DataDir = System.IO.Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NextXLR");
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "nextxlr");
 
-    public string LibraryDir { get; } = System.IO.Path.Combine(DataDir, folder);
+    private readonly string _folder = folder;
+    public string Dir => LibraryDir;
+    public string LibraryDir
+    {
+        get
+        {
+            var dir = System.IO.Path.Combine(DataDir, _folder);
+            if (!Directory.Exists(dir))
+            {
+                try
+                {
+                    Directory.CreateDirectory(dir);
+                    if (_folder == "micprofiles")
+                    {
+                        var oldDir = System.IO.Path.Combine(DataDir, "mic-profiles");
+                        if (Directory.Exists(oldDir))
+                        {
+                            foreach (var f in Directory.GetFiles(oldDir, "*.json"))
+                            {
+                                var dest = System.IO.Path.Combine(dir, System.IO.Path.GetFileName(f));
+                                if (!File.Exists(dest)) File.Copy(f, dest);
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+            return dir;
+        }
+    }
     public string DefaultFile { get; } = System.IO.Path.Combine(DataDir, defaultFile);
 
     private static readonly JsonSerializerOptions Pretty = new() { WriteIndented = true };
@@ -169,7 +198,7 @@ public static class ProfileService
         p => p["format"] is not null && p["channels"] is JsonArray);
 
     /// <summary>Mic processing only (gate, compressor, EQ, de-esser). Default: loaded at start.</summary>
-    public static readonly ProfileLibrary Mic = new("mic-profiles", "default-mic-profile.json", "mic",
+    public static readonly ProfileLibrary Mic = new("micprofiles", "default-mic-profile.json", "mic",
         p => p["gate_threshold"] is not null && p["comp_ratio"] is not null);
 
     private static string? _activeSetupProfile;
