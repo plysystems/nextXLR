@@ -19,7 +19,7 @@
         </Style>
     </Page.Resources>
 
-    <Grid Padding="{StaticResource PagePadding}" RowSpacing="20" MaxWidth="1620" HorizontalAlignment="Stretch">
+    <Grid Padding="{StaticResource PagePadding}" RowSpacing="20" MaxWidth="1620" HorizontalAlignment="Center">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />

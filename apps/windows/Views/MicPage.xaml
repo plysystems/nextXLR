@@ -20,7 +20,7 @@
     </Page.Resources>
 
     <ScrollViewer Style="{StaticResource PageScroller}">
-        <StackPanel Spacing="20" MaxWidth="1340" HorizontalAlignment="Center" Margin="0,0,0,32">
+        <StackPanel Spacing="20" MaxWidth="1620" HorizontalAlignment="Center" Margin="0,0,0,32">
             
             <!-- ================= STUDIO HEADER ================= -->
             <Grid Margin="0,0,0,4">

@@ -254,7 +254,7 @@
                                             <Button.Flyout>
                                                 <Flyout Placement="Bottom">
                                                     <StackPanel Spacing="12" Width="300">
-                                                        <ColorPicker Color="{x:Bind ActiveColor, Mode=TwoWay}" ColorSpectrumShape="Ring"
+                                                        <ColorPicker Color="{x:Bind ActiveColor, Mode=TwoWay}" ColorSpectrumShape="Box"
                                                                      IsAlphaEnabled="False" IsMoreButtonVisible="False"
                                                                      IsColorChannelTextInputVisible="False" IsHexInputVisible="True" />
                                                         <ItemsControl ItemsSource="{x:Bind ActivePalette}" ItemTemplate="{StaticResource PaletteItem}">
@@ -278,7 +278,7 @@
                                             <Button.Flyout>
                                                 <Flyout Placement="Bottom">
                                                     <StackPanel Spacing="12" Width="300">
-                                                        <ColorPicker Color="{x:Bind InactiveColor, Mode=TwoWay}" ColorSpectrumShape="Ring"
+                                                        <ColorPicker Color="{x:Bind InactiveColor, Mode=TwoWay}" ColorSpectrumShape="Box"
                                                                      IsAlphaEnabled="False" IsMoreButtonVisible="False"
                                                                      IsColorChannelTextInputVisible="False" IsHexInputVisible="True" />
                                                         <ItemsControl ItemsSource="{x:Bind InactivePalette}" ItemTemplate="{StaticResource PaletteItem}">
@@ -353,7 +353,7 @@
                                                             <Button.Flyout>
                                                                 <Flyout Placement="Bottom">
                                                                     <StackPanel Spacing="12" Width="300">
-                                                                        <ColorPicker Color="{x:Bind ActiveColor, Mode=TwoWay}" ColorSpectrumShape="Ring"
+                                                                        <ColorPicker Color="{x:Bind ActiveColor, Mode=TwoWay}" ColorSpectrumShape="Box"
                                                                                      IsAlphaEnabled="False" IsMoreButtonVisible="False"
                                                                                      IsColorChannelTextInputVisible="False" IsHexInputVisible="True" />
                                                                         <ItemsControl ItemsSource="{x:Bind ActivePalette}" ItemTemplate="{StaticResource PaletteItem}">
@@ -378,7 +378,7 @@
                                                             <Button.Flyout>
                                                                 <Flyout Placement="Bottom">
                                                                     <StackPanel Spacing="12" Width="300">
-                                                                        <ColorPicker Color="{x:Bind InactiveColor, Mode=TwoWay}" ColorSpectrumShape="Ring"
+                                                                        <ColorPicker Color="{x:Bind InactiveColor, Mode=TwoWay}" ColorSpectrumShape="Box"
                                                                                      IsAlphaEnabled="False" IsMoreButtonVisible="False"
                                                                                      IsColorChannelTextInputVisible="False" IsHexInputVisible="True" />
                                                                         <ItemsControl ItemsSource="{x:Bind InactivePalette}" ItemTemplate="{StaticResource PaletteItem}">

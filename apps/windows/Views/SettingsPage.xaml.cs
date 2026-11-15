@@ -304,140 +304,58 @@ public sealed partial class SettingsPage : Page
 
         try
         {
-            var handler = new System.Net.Http.SocketsHttpHandler
-            {
-                AllowAutoRedirect = true,
-                MaxAutomaticRedirections = 10,
-                ConnectTimeout = TimeSpan.FromSeconds(10)
-            };
-            using var client = new System.Net.Http.HttpClient(handler) { Timeout = TimeSpan.FromSeconds(15) };
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("NextXLR-App/" + AppSettings.AppVersion);
-
-            // 1. Fetch releases (including prereleases) from GitHub Releases API
-            string? latestReleaseTag = null;
-            string? latestReleaseName = null;
-            string? latestReleaseBody = null;
-            string? targetCommitish = null;
-            string? exeDownloadUrl = null;
-
-            try
-            {
-                var releasesUrl = "https://api.github.com/repos/plysystems/nextXLR/releases";
-                var releasesResp = await client.GetAsync(releasesUrl);
-                if (releasesResp.IsSuccessStatusCode)
-                {
-                    var json = await releasesResp.Content.ReadAsStringAsync();
-                    using var doc = System.Text.Json.JsonDocument.Parse(json);
-                    if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0)
-                    {
-                        var newestRel = doc.RootElement[0];
-                        latestReleaseTag = newestRel.TryGetProperty("tag_name", out var tElem) ? tElem.GetString() : null;
-                        latestReleaseName = newestRel.TryGetProperty("name", out var nElem) ? nElem.GetString() : null;
-                        latestReleaseBody = newestRel.TryGetProperty("body", out var bElem) ? bElem.GetString() : null;
-                        targetCommitish = newestRel.TryGetProperty("target_commitish", out var tcElem) ? tcElem.GetString() : null;
-
-                        if (newestRel.TryGetProperty("assets", out var assetsElem) && assetsElem.ValueKind == System.Text.Json.JsonValueKind.Array)
-                        {
-                            foreach (var asset in assetsElem.EnumerateArray())
-                            {
-                                var aName = asset.TryGetProperty("name", out var an) ? an.GetString() ?? "" : "";
-                                if (aName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    exeDownloadUrl = asset.TryGetProperty("browser_download_url", out var bu) ? bu.GetString() : null;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch { }
-
+            var result = await UpdateService.CheckForUpdatesAsync();
             UpdateProgressBar.Visibility = Visibility.Collapsed;
 
-            var currentVer = AppSettings.AppVersion.TrimStart('v', 'V');
-            var localHash = AppSettings.BuildCommitHash;
-
-            if (string.IsNullOrEmpty(latestReleaseTag))
+            if (result.IsNewVersion)
             {
-                latestReleaseTag = "v" + currentVer;
+                UpdateResult.Severity = InfoBarSeverity.Success;
+                UpdateResult.Title = $"Neues Update verfügbar: {result.LatestTag}";
+                UpdateResult.Message = $"Version {result.LatestTag} ({result.LatestName ?? "Release"}) steht auf GitHub bereit.\n• Installierte Version: v{AppSettings.AppVersion}\n\nKlicke unten, um das Update im Hintergrund herunterzuladen und automatisch zu installieren.";
+
+                var btnAuto = new Button
+                {
+                    Content = "Update jetzt installieren & neu starten",
+                    Style = (Style)Application.Current.Resources["AccentButtonStyle"]
+                };
+                btnAuto.Click += async (_, _) =>
+                {
+                    await DownloadAndInstallUpdateAsync(result.DownloadUrl ?? "", result.LatestTag);
+                };
+                UpdateResult.ActionButton = btnAuto;
             }
-
-            // Check official GitHub Releases
-            if (!string.IsNullOrEmpty(latestReleaseTag))
+            else if (result.IsDifferentBuild)
             {
-                var targetTag = latestReleaseTag;
-                if (string.IsNullOrEmpty(exeDownloadUrl))
+                UpdateResult.Severity = InfoBarSeverity.Informational;
+                UpdateResult.Title = $"Neuerer Build für {result.LatestTag} verfügbar!";
+                UpdateResult.Message = $"Es gibt einen aktualisierten Build von Version {result.LatestTag} auf GitHub.\n• Installierter Build: {result.LocalCommit}\n• GitHub Build: {result.RemoteCommit}\n\nKlicke unten, um den neuesten Build herunterzuladen und zu installieren.";
+
+                var btnReinstall = new Button
                 {
-                    var cleanTarget = targetTag.TrimStart('v', 'V');
-                    exeDownloadUrl = $"https://github.com/plysystems/nextXLR/releases/download/{targetTag}/NextXLR-Setup-{cleanTarget}.exe";
-                }
-
-                bool isNewerRelease = IsNewerRelease(latestReleaseTag, currentVer);
-
-                if (isNewerRelease)
+                    Content = "Aktualisierten Build jetzt installieren",
+                    Style = (Style)Application.Current.Resources["AccentButtonStyle"]
+                };
+                btnReinstall.Click += async (_, _) =>
                 {
-                    UpdateResult.Severity = InfoBarSeverity.Success;
-                    UpdateResult.Title = $"Neues Update verfügbar: {latestReleaseTag}";
-                    UpdateResult.Message = $"Version {latestReleaseTag} ({latestReleaseName ?? "Release"}) steht auf GitHub bereit.\n• Installierte Version: v{AppSettings.AppVersion}\n\nKlicke unten, um das Update im Hintergrund herunterzuladen und automatisch zu installieren.";
+                    await DownloadAndInstallUpdateAsync(result.DownloadUrl ?? "", result.LatestTag);
+                };
+                UpdateResult.ActionButton = btnReinstall;
+            }
+            else
+            {
+                UpdateResult.Severity = InfoBarSeverity.Success;
+                UpdateResult.Title = "NextXLR ist auf dem neuesten Stand!";
+                UpdateResult.Message = $"Version v{AppSettings.AppVersion} (Build {result.LocalCommit}) ist aktuell und identisch mit GitHub.";
 
-                    var btnAuto = new Button
-                    {
-                        Content = "Update jetzt installieren & neu starten",
-                        Style = (Style)Application.Current.Resources["AccentButtonStyle"]
-                    };
-                    btnAuto.Click += async (_, _) =>
-                    {
-                        await DownloadAndInstallUpdateAsync(exeDownloadUrl, targetTag);
-                    };
-                    UpdateResult.ActionButton = btnAuto;
-                    return;
-                }
-                else
+                var btnReinstall = new Button
                 {
-                    // Check if the remote GitHub release has a different/newer commit than our local build
-                    bool isDifferentCommit = !string.IsNullOrEmpty(targetCommitish) &&
-                                             !string.Equals(targetCommitish, localHash, StringComparison.OrdinalIgnoreCase) &&
-                                             !targetCommitish.StartsWith(localHash, StringComparison.OrdinalIgnoreCase) &&
-                                             !localHash.StartsWith(targetCommitish, StringComparison.OrdinalIgnoreCase);
-
-                    if (isDifferentCommit)
-                    {
-                        UpdateResult.Severity = InfoBarSeverity.Informational;
-                        UpdateResult.Title = $"Neuerer Build für {latestReleaseTag} verfügbar!";
-                        var shortRemote = targetCommitish!.Length > 7 ? targetCommitish.Substring(0, 7) : targetCommitish;
-                        UpdateResult.Message = $"Es gibt einen aktualisierten Build von Version {latestReleaseTag} auf GitHub.\n• Installierter Build: {localHash}\n• GitHub Build: {shortRemote}\n\nKlicke unten, um den neuesten Build herunterzuladen und zu installieren.";
-
-                        var btnReinstall = new Button
-                        {
-                            Content = "Aktualisierten Build jetzt installieren",
-                            Style = (Style)Application.Current.Resources["AccentButtonStyle"]
-                        };
-                        btnReinstall.Click += async (_, _) =>
-                        {
-                            await DownloadAndInstallUpdateAsync(exeDownloadUrl, targetTag);
-                        };
-                        UpdateResult.ActionButton = btnReinstall;
-                        return;
-                    }
-                    else
-                    {
-                        UpdateResult.Severity = InfoBarSeverity.Success;
-                        UpdateResult.Title = "NextXLR ist auf dem neuesten Stand!";
-                        UpdateResult.Message = $"Version v{AppSettings.AppVersion} (Build {localHash}) ist aktuell.";
-
-                        var btnReinstall = new Button
-                        {
-                            Content = $"Aktuellen Build von {latestReleaseTag} neu laden & installieren"
-                        };
-                        btnReinstall.Click += async (_, _) =>
-                        {
-                            await DownloadAndInstallUpdateAsync(exeDownloadUrl, targetTag);
-                        };
-                        UpdateResult.ActionButton = btnReinstall;
-                        return;
-                    }
-                }
+                    Content = $"Aktuellen Build von {result.LatestTag} neu laden & installieren"
+                };
+                btnReinstall.Click += async (_, _) =>
+                {
+                    await DownloadAndInstallUpdateAsync(result.DownloadUrl ?? "", result.LatestTag);
+                };
+                UpdateResult.ActionButton = btnReinstall;
             }
         }
         catch (Exception ex)

@@ -8,7 +8,7 @@
     Background="Transparent">
 
     <ScrollViewer Style="{StaticResource PageScroller}">
-        <StackPanel Padding="{StaticResource PagePadding}" Spacing="24" MaxWidth="1620" HorizontalAlignment="Center">
+        <StackPanel Spacing="24" MaxWidth="1620" HorizontalAlignment="Center">
             <!-- Studio Cockpit Header -->
             <Grid Margin="0,0,0,4">
                 <Grid.ColumnDefinitions>

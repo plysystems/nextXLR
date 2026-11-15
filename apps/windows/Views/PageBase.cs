@@ -257,8 +257,15 @@ public partial class RoutingPage : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        ViewModel = (MainViewModel)e.Parameter;
-        Bindings.Update();
+        try
+        {
+            ViewModel = (MainViewModel)e.Parameter;
+            Bindings.Update();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[EffectsPage] OnNavigatedTo error: {ex.Message}");
+        }
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -847,8 +854,15 @@ public partial class EffectsPage : Page
     }
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        ViewModel = (MainViewModel)e.Parameter;
-        Bindings.Update();
+        try
+        {
+            ViewModel = (MainViewModel)e.Parameter;
+            Bindings.Update();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[EffectsPage] OnNavigatedTo error: {ex.Message}");
+        }
     }
 
     private Visibility BoolToVisibility(bool active) => active ? Visibility.Visible : Visibility.Collapsed;
@@ -864,10 +878,17 @@ public partial class SamplerPage : Page
     }
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        ViewModel = (MainViewModel)e.Parameter;
-        Bindings.Update();
-        Sampler.PropertyChanged += OnSamplerPropertyChanged;
-        UpdatePadEditorVisibility();
+        try
+        {
+            ViewModel = (MainViewModel)e.Parameter;
+            Bindings.Update();
+            Sampler.PropertyChanged += OnSamplerPropertyChanged;
+            UpdatePadEditorVisibility();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[SamplerPage] OnNavigatedTo error: {ex.Message}");
+        }
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -1056,24 +1077,31 @@ public partial class VirtualChannelsPage : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        if (e.Parameter is MainViewModel vm)
+        try
         {
-            ViewModel = vm;
-            Bindings.Update();
+            if (e.Parameter is MainViewModel vm)
+            {
+                ViewModel = vm;
+                Bindings.Update();
+            }
+            AppRouting.StartMonitoring();
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    Service.ScanWindowsEndpoints();
+                    await AppRouting.RefreshAsync();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"VirtualChannels background scan error: {ex}");
+                }
+            });
         }
-        AppRouting.StartMonitoring();
-        _ = Task.Run(async () =>
+        catch (Exception ex)
         {
-            try
-            {
-                Service.ScanWindowsEndpoints();
-                await AppRouting.RefreshAsync();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"VirtualChannels background scan error: {ex}");
-            }
-        });
+            Debug.WriteLine($"[VirtualChannelsPage] OnNavigatedTo error: {ex.Message}");
+        }
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -1130,13 +1158,20 @@ public partial class LightingPage : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        ViewModel = (MainViewModel)e.Parameter;
-        Bindings.Update();
-        DevicePreview.ForceMini = ViewModel.Hardware.IsMini;
-        UpdateModelBadge();
-        ViewModel.Hardware.PropertyChanged += Hardware_PropertyChanged;
-        ViewModel.Lighting.RefreshCustomThemes();
-        UpdateCustomThemesVisibility();
+        try
+        {
+            ViewModel = (MainViewModel)e.Parameter;
+            Bindings.Update();
+            DevicePreview.ForceMini = ViewModel.Hardware.IsMini;
+            UpdateModelBadge();
+            ViewModel.Hardware.PropertyChanged += Hardware_PropertyChanged;
+            ViewModel.Lighting.RefreshCustomThemes();
+            UpdateCustomThemesVisibility();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[LightingPage] OnNavigatedTo error: {ex.Message}");
+        }
     }
 
     private void UpdateCustomThemesVisibility()

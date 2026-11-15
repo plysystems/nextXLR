@@ -145,6 +145,9 @@ public sealed partial class MainWindow : Window
             onExit: ExitApplication
         );
 
+        // Startup update check with Windows notification
+        UpdateService.StartStartupUpdateCheck(_trayService);
+
         // Minimize / Close to Tray
         AppWindow.Closing += async (sender, args) =>
         {

@@ -82,18 +82,26 @@ public static class CursorHelper
 
     private static void ApplyHandCursorRecursive(DependencyObject parent)
     {
-        int count = VisualTreeHelper.GetChildrenCount(parent);
-        for (int i = 0; i < count; i++)
+        try
         {
-            var child = VisualTreeHelper.GetChild(parent, i);
-            if (child is ButtonBase or ToggleSwitch or HyperlinkButton or ComboBox or RadioButton or CheckBox or Slider)
+            // Do not descend into virtualized or complex controls that manage their own internal C++ visual tree
+            if (parent is ItemsRepeater or ColorPicker or ListView or GridView or ProgressRing or ProgressBar)
+                return;
+
+            int count = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < count; i++)
             {
-                if (child is UIElement ui)
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is ButtonBase or ToggleSwitch or HyperlinkButton or ComboBox or RadioButton or CheckBox or Slider)
                 {
-                    AttachHandCursor(ui);
+                    if (child is UIElement ui)
+                    {
+                        AttachHandCursor(ui);
+                    }
                 }
+                ApplyHandCursorRecursive(child);
             }
-            ApplyHandCursorRecursive(child);
         }
+        catch { }
     }
 }

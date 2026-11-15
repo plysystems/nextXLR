@@ -13,7 +13,7 @@
       The Sampler (recording input of the sampler) is a separate, highlighted column on the right.
     -->
     <ScrollViewer Style="{StaticResource PageScroller}">
-        <StackPanel Spacing="20" MaxWidth="1320" HorizontalAlignment="Center">
+        <StackPanel Spacing="20" MaxWidth="1620" HorizontalAlignment="Center">
             
             <!-- Studio Cockpit Header: Title & Subtitle -->
             <Grid Margin="0,0,0,4">
