@@ -460,8 +460,8 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Noise Gate Card -->
-                <Expander IsExpanded="True">
+                <!-- Noise Gate Card (Exakt gleiche Höhe wie Studio-Kompressor) -->
+                <Expander IsExpanded="True" VerticalAlignment="Stretch">
                     <Expander.Header>
                         <Grid Padding="0,10" ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
@@ -480,8 +480,40 @@
                         </Grid>
                     </Expander.Header>
                     <StackPanel Spacing="16" Padding="6">
-                        <!-- 2x2 Clean Parameter Grid -->
-                        <Grid ColumnSpacing="16" RowSpacing="16">
+                        <!-- Live Gate Status & Threshold Visualizer (Symmetrisch zu Compression Graph) -->
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="10" Padding="14,10"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1" Height="139">
+                            <StackPanel Spacing="6" VerticalAlignment="Center">
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <FontIcon Glyph="&#xE9D9;" FontSize="12" Foreground="{StaticResource BrandBrush}" />
+                                        <TextBlock Text="Echtzeit Gate-Aktivität (Signal vs. Schwelle)" Style="{StaticResource Overline}" />
+                                    </StackPanel>
+                                    <Border HorizontalAlignment="Right" Background="{ThemeResource SurfaceL3Brush}"
+                                            BorderBrush="{StaticResource BrandBrush}" BorderThickness="1" CornerRadius="8" Padding="8,2">
+                                        <TextBlock Text="{x:Bind GateStatusText(ViewModel.MicChannel.Meter, Mic.GateThreshold, Mic.GateEnabled), Mode=OneWay}"
+                                                   FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                                    </Border>
+                                </Grid>
+
+                                <Grid Margin="0,4,0,0">
+                                    <TextBlock Text="Mikrofon-Eingangspegel (dBFS):" Style="{StaticResource Caption}" />
+                                    <TextBlock HorizontalAlignment="Right" Style="{StaticResource Caption}" FontWeight="Bold"
+                                               Text="{x:Bind ViewModel.MicChannel.PeakLabel, Mode=OneWay}" Foreground="{StaticResource BrandBrush}" />
+                                </Grid>
+                                <ProgressBar Height="8" CornerRadius="4" Maximum="1" Value="{x:Bind ViewModel.MicChannel.Meter, Mode=OneWay}"
+                                             Foreground="{StaticResource MeterBrush}" Background="{ThemeResource SurfaceL3Brush}" />
+
+                                <Grid Margin="0,4,0,0">
+                                    <TextBlock Text="Gate-Schwellenwert (Threshold):" Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
+                                    <TextBlock Text="{x:Bind FormatDb(Mic.GateThreshold), Mode=OneWay}"
+                                               HorizontalAlignment="Right" Style="{StaticResource Caption}" FontWeight="SemiBold" Foreground="{StaticResource BrandBrush}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 2x2 Clean Parameter Grid (Exakt gleiche Höhe wie Kompressor-Grid) -->
+                        <Grid ColumnSpacing="16" RowSpacing="14">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="*" />
@@ -494,7 +526,7 @@
                             <!-- Threshold -->
                             <StackPanel Spacing="4">
                                 <Grid>
-                                    <TextBlock Text="Schwellenwert (Threshold):" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="Schwellenwert (Threshold):" FontWeight="SemiBold" FontSize="11" />
                                     <TextBlock Text="{x:Bind Mic.GateThreshold, Mode=OneWay}" Style="{StaticResource Caption}" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Right" />
                                 </Grid>
                                 <Slider x:Uid="MicGateThreshold" Minimum="-59" Maximum="0" StepFrequency="1" Value="{x:Bind Mic.GateThreshold, Mode=TwoWay}"
@@ -504,7 +536,7 @@
                             <!-- Attenuation -->
                             <StackPanel Grid.Column="1" Spacing="4">
                                 <Grid>
-                                    <TextBlock Text="Dämpfung (Attenuation):" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="Dämpfung (Attenuation):" FontWeight="SemiBold" FontSize="11" />
                                     <TextBlock Text="{x:Bind Mic.GateAttenuation, Mode=OneWay}" Style="{StaticResource Caption}" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Right" />
                                 </Grid>
                                 <Slider x:Uid="MicGateAttenuation" Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind Mic.GateAttenuation, Mode=TwoWay}"
@@ -514,7 +546,7 @@
                             <!-- Attack -->
                             <StackPanel Grid.Row="1" Spacing="4">
                                 <Grid>
-                                    <TextBlock Text="Attack-Zeit (Öffnen):" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="Attack-Zeit (Öffnen):" FontWeight="SemiBold" FontSize="11" />
                                     <TextBlock Text="{x:Bind Mic.GateAttackLabel, Mode=OneWay}" Style="{StaticResource Caption}" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Right" />
                                 </Grid>
                                 <Slider x:Uid="MicGateAttack" Minimum="0" Maximum="45" StepFrequency="1" IsThumbToolTipEnabled="False"
@@ -524,7 +556,7 @@
                             <!-- Release -->
                             <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4">
                                 <Grid>
-                                    <TextBlock Text="Release-Zeit (Schließen):" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="Release-Zeit (Schließen):" FontWeight="SemiBold" FontSize="11" />
                                     <TextBlock Text="{x:Bind Mic.GateReleaseLabel, Mode=OneWay}" Style="{StaticResource Caption}" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Right" />
                                 </Grid>
                                 <Slider x:Uid="MicGateRelease" Minimum="0" Maximum="45" StepFrequency="1" IsThumbToolTipEnabled="False"
@@ -534,8 +566,8 @@
                     </StackPanel>
                 </Expander>
 
-                <!-- Studio Kompressor Card -->
-                <Expander IsExpanded="True" Grid.Column="1">
+                <!-- Studio Kompressor Card (Exakt gleiche Höhe wie Noise Gate) -->
+                <Expander IsExpanded="True" Grid.Column="1" VerticalAlignment="Stretch">
                     <Expander.Header>
                         <Grid Padding="0,10" ColumnSpacing="12">
                             <Grid.ColumnDefinitions>

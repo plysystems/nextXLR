@@ -563,6 +563,15 @@ public partial class MicPage : Page
     public string MicMuteGlyph(bool muted) => muted ? "\uF781" : "\uE720";
     public string MicMuteStatus(bool muted) => muted ? "STUMM (Muted)" : "LIVE (Aktiv)";
 
+    public string GateStatusText(double meter, double threshold, bool enabled)
+    {
+        if (!enabled) return "BYPASS";
+        double inputDb = meter > 0.0005 ? 20.0 * Math.Log10(meter) : -90.0;
+        return inputDb > threshold ? "OFFEN (Sprache erkannt)" : "GESCHLOSSEN (Gedämpft)";
+    }
+
+    public string FormatDb(double val) => $"{Math.Round(val)} dB";
+
     private void MicDelete_Click(object sender, RoutedEventArgs e)
     {
         if (Selected is not { } entry) { Show(InfoBarSeverity.Informational, Loc.Get("MicProfilePick")); return; }

@@ -1182,7 +1182,7 @@ public sealed partial class VstPluginService : ObservableObject
         };
 
         var appWin = editorWin.AppWindow;
-        appWin.Resize(new SizeInt32(820, 740));
+        appWin.Resize(new SizeInt32(840, 760));
 
         // Set official app icon
         try
@@ -1200,6 +1200,7 @@ public sealed partial class VstPluginService : ObservableObject
 
         var rootGrid = new Grid
         {
+            Background = Application.Current?.Resources["SurfaceL1Brush"] as Brush ?? new SolidColorBrush(ColorHelper.FromArgb(255, 0x07, 0x08, 0x0B)),
             Padding = new Thickness(24),
             RowDefinitions =
             {
@@ -1268,7 +1269,7 @@ public sealed partial class VstPluginService : ObservableObject
 
         var pluginMeta = new TextBlock
         {
-            Text = $"{plugin.Format} 64-Bit Studio DSP • {plugin.Vendor} • Latenz: 0 Samples (0.0 ms)",
+            Text = $"{plugin.Format} 64-Bit Studio DSP • {plugin.Vendor} • Latenz: 0 Samples (0.0 ms DSP)",
             FontSize = 12,
             Foreground = new SolidColorBrush(ColorHelper.FromArgb(255, 0x88, 0x90, 0xA0)),
             Margin = new Thickness(0, 2, 0, 0)
@@ -1311,6 +1312,7 @@ public sealed partial class VstPluginService : ObservableObject
             MinWidth = 0,
             VerticalAlignment = VerticalAlignment.Center
         };
+        CursorHelper.SetUseHandCursor(bypassToggle, true);
         bypassToggle.Toggled += (_, _) =>
         {
             plugin.IsEnabled = bypassToggle.IsOn;
@@ -1328,7 +1330,7 @@ public sealed partial class VstPluginService : ObservableObject
         // 2. Standard Studio Configuration & Preset Bar
         var presetCard = new Border
         {
-            Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x1E, 0x22, 0x2B)),
+            Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x14, 0x17, 0x1E)),
             BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x2A, 0x30, 0x3C)),
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(10),
@@ -1362,6 +1364,7 @@ public sealed partial class VstPluginService : ObservableObject
             ItemsSource = plugin.AvailablePresets,
             SelectedItem = plugin.PresetName
         };
+        CursorHelper.SetUseHandCursor(presetCombo, true);
 
         // Standard Studio A/B Comparison & Reset Toolbar
         var stdToolbar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(12, 0, 0, 0) };
@@ -1373,6 +1376,8 @@ public sealed partial class VstPluginService : ObservableObject
             Padding = new Thickness(10, 4, 10, 4),
             Style = plugin.ActiveAB == "A" ? (Application.Current?.Resources["AccentButtonStyle"] as Style) : (Application.Current?.Resources["SmoothButton"] as Style)
         };
+        CursorHelper.SetUseHandCursor(btnA, true);
+
         var btnB = new Button
         {
             Content = "B",
@@ -1380,6 +1385,8 @@ public sealed partial class VstPluginService : ObservableObject
             Padding = new Thickness(10, 4, 10, 4),
             Style = plugin.ActiveAB == "B" ? (Application.Current?.Resources["AccentButtonStyle"] as Style) : (Application.Current?.Resources["SmoothButton"] as Style)
         };
+        CursorHelper.SetUseHandCursor(btnB, true);
+
         var btnCopyAB = new Button
         {
             Content = "A \u2192 B",
@@ -1387,6 +1394,8 @@ public sealed partial class VstPluginService : ObservableObject
             Padding = new Thickness(8, 4, 8, 4),
             Style = Application.Current?.Resources["SmoothButton"] as Style
         };
+        CursorHelper.SetUseHandCursor(btnCopyAB, true);
+
         var btnReset = new Button
         {
             Content = new StackPanel
@@ -1398,18 +1407,140 @@ public sealed partial class VstPluginService : ObservableObject
             Padding = new Thickness(8, 4, 8, 4),
             Style = Application.Current?.Resources["SmoothButton"] as Style
         };
+        CursorHelper.SetUseHandCursor(btnReset, true);
+
+        // 3. Scrollable Controls Area
+        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        var mainStack = new StackPanel { Spacing = 16 };
+
+        void BuildParameterControls()
+        {
+            mainStack.Children.Clear();
+
+            // Group 1: Master Gain & Mix
+            var masterCard = new Border
+            {
+                Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x14, 0x17, 0x1E)),
+                BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x25, 0x2B, 0x36)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(16)
+            };
+            var masterStack = new StackPanel { Spacing = 12 };
+            masterStack.Children.Add(new TextBlock
+            {
+                Text = "MASTER GAIN & DRY/WET MIX (GRUND-EINSTELLUNGEN)",
+                FontWeight = Microsoft.UI.Text.FontWeights.Bold,
+                FontSize = 11,
+                Foreground = plugin.TagBrush
+            });
+
+            var inGainSlider = CreateSliderRow("Input Gain (Eingangspegel)", "Pegel vor der Effektbearbeitung anpassen. Empfohlen: 0.0 dB", plugin.InputGainDb, v => plugin.InputGainDb = v, "dB", -24, 24, 0.5);
+            var outGainSlider = CreateSliderRow("Output Gain (Lautstärke-Ausgleich)", "Ausgangspegel zum Ausgleich von Lautstärkeverlusten nach dem Plugin", plugin.OutputGainDb, v => plugin.OutputGainDb = v, "dB", -24, 24, 0.5);
+            var mixSlider = CreateSliderRow("Dry / Wet Mix (Effekt-Anteil)", "Mischungsverhältnis zwischen Originalton (0 %) und 100 % vollem Studio-Effekt", plugin.MixPercent, v => plugin.MixPercent = v, "%", 0, 100, 1.0);
+
+            masterStack.Children.Add(inGainSlider);
+            masterStack.Children.Add(outGainSlider);
+            masterStack.Children.Add(mixSlider);
+            masterCard.Child = masterStack;
+            mainStack.Children.Add(masterCard);
+
+            // Group 2: Dynamic Tailored DSP Parameters Card
+            var dspCard = new Border
+            {
+                Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x14, 0x17, 0x1E)),
+                BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x25, 0x2B, 0x36)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(16)
+            };
+            var dspStack = new StackPanel { Spacing = 12 };
+            dspStack.Children.Add(new TextBlock
+            {
+                Text = $"{plugin.Name.ToUpperInvariant()} — KLANG-PARAMETER & REGLER",
+                FontWeight = Microsoft.UI.Text.FontWeights.Bold,
+                FontSize = 11,
+                Foreground = plugin.TagBrush
+            });
+
+            List<FrameworkElement> dspControls = new();
+
+            if (plugin.Name.Contains("Pro-EQ", StringComparison.OrdinalIgnoreCase))
+            {
+                dspControls.Add(CreateSliderRow("Trittschall & Rumpeln (Low-Cut HPF)", "Schneidet störende Tisch-Erschütterungen und Windgeräusche sauber ab. Empfohlen: 80 Hz", plugin.LowCutFreq, v => plugin.LowCutFreq = v, "Hz", 20, 300, 5));
+                dspControls.Add(CreateSliderRow("Stimm-Fundament & Wärme (Bass 120 Hz)", "Gibt der Stimme Körper und Fülle. Leicht anheben (+1 bis +3 dB) für tieferen Rundfunkklang", plugin.LowGain, v => plugin.LowGain = v, "dB", -12, 12, 0.5));
+                dspControls.Add(CreateSliderRow("Hohlraum-Entmumpfung (Mitten 450 Hz)", "Leichtes Absenken (-1 bis -3 dB) entfernt dumpfen 'Karton-Sound' und Raumhall", plugin.Mid1Gain, v => plugin.Mid1Gain = v, "dB", -12, 12, 0.5));
+                dspControls.Add(CreateSliderRow("Sprachverständlichkeit (Präsenz 2.5 kHz)", "Macht jedes gesprochene Wort im Stream, Podcast und Discord glasklar verständlich", plugin.Mid2Gain, v => plugin.Mid2Gain = v, "dB", -12, 12, 0.5));
+                dspControls.Add(CreateSliderRow("Frische & Glanz (Höhen 8 kHz)", "Verleiht der Stimme einen modernen, professionellen Studio-Glanz", plugin.HighShelfGain, v => plugin.HighShelfGain = v, "dB", -12, 12, 0.5));
+                dspControls.Add(CreateSliderRow("Air-Band Seide (Brillanz 14 kHz)", "Edle, samtige Höhenluft – der unverwechselbare Klang teurer Großmembran-Kondensatormikrofone", plugin.AirBandGain, v => plugin.AirBandGain = v, "dB", -12, 12, 0.5));
+            }
+            else if (plugin.Name.Contains("DeEsser", StringComparison.OrdinalIgnoreCase))
+            {
+                dspControls.Add(CreateSliderRow("Zischlaut-Zielfrequenz (Frequency)", "Frequenzbereich stechender S-, SCH- und Z-Laute (Frauenstimmen 7–8 kHz, Männerstimmen ca. 6 kHz)", plugin.DetectionFreq, v => plugin.DetectionFreq = v, "Hz", 3000, 9500, 100));
+                dspControls.Add(CreateSliderRow("Einsatz-Schwelle (Threshold)", "Pegel, ab dem scharfe Zischlaute gedämpft werden. Empfohlen: -18 dB", plugin.DeEssThreshold, v => plugin.DeEssThreshold = v, "dB", -40, 0, 1));
+                dspControls.Add(CreateSliderRow("Maximale Zisch-Dämpfung (Depth)", "Wie stark stechende S-Laute maximal gezähmt werden. Empfohlen: -6 bis -12 dB", plugin.DeEssDepth, v => plugin.DeEssDepth = v, "dB", -24, 0, 0.5));
+            }
+            else if (plugin.Name.Contains("Opto", StringComparison.OrdinalIgnoreCase))
+            {
+                dspControls.Add(CreateSliderRow("Lautstärke-Glättung (Peak Reduction)", "Gleicht laute Rufe und leises Flüstern automatisch an für einen konstanten Sprachpegel", plugin.OptoPeakReduction, v => plugin.OptoPeakReduction = v, "%", 0, 100, 1));
+                dspControls.Add(CreateSliderRow("Lautstärke-Ausgleich (Makeup Gain)", "Hebt die Gesamtlautstärke nach der Kompression auf optimalen Broadcast-Pegel an", plugin.OptoGain, v => plugin.OptoGain = v, "dB", 0, 24, 0.5));
+                dspControls.Add(CreateSliderRow("Optische Röhrenwärme (Warmth)", "Fügt der Stimme den beliebten analogen LA-2A Röhren-Charakter und Sättigung hinzu", plugin.OptoWarmth, v => plugin.OptoWarmth = v, "%", 0, 100, 1));
+            }
+            else if (plugin.Name.Contains("Tube", StringComparison.OrdinalIgnoreCase) || plugin.Name.Contains("Sat", StringComparison.OrdinalIgnoreCase))
+            {
+                dspControls.Add(CreateSliderRow("Röhrensättigung (Drive)", "Erzeugt harmonische Obertöne für eine volle, durchsetzungsfähige Radiostimme", plugin.SatDrive, v => plugin.SatDrive = v, "%", 0, 100, 1));
+                dspControls.Add(CreateSliderRow("Headroom Pegel-Trim", "Feinabstimmung des Eingangspegels (-6 bis +6 dB)", plugin.SatHeadroom, v => plugin.SatHeadroom = v, "dB", -6, 6, 0.5));
+            }
+            else if (plugin.Name.Contains("Expander", StringComparison.OrdinalIgnoreCase))
+            {
+                dspControls.Add(CreateSliderRow("Stille-Schwellenwert (Threshold)", "Geräusche leiser als dieser Pegel werden ausgeblendet (Tastatur, Atmen, Lüfter). Empfohlen: -36 dB", plugin.ExpanderThreshold, v => plugin.ExpanderThreshold = v, "dB", -60, 0, 1));
+                dspControls.Add(CreateSliderRow("Dämpfungs-Stärke (Ratio)", "Wie drastisch unerwünschte Hintergrundgeräusche abgesenkt werden. Empfohlen: 2.0:1 bis 3.0:1", plugin.ExpanderRatio, v => plugin.ExpanderRatio = v, ":1", 1.2, 8.0, 0.2));
+                dspControls.Add(CreateSliderRow("Öffnungs-Reaktionszeit (Attack)", "Wie blitzschnell das Gate beim ersten Wort öffnet, damit kein Wortanfang verschluckt wird", plugin.ExpanderAttack, v => plugin.ExpanderAttack = v, "ms", 0.5, 50, 0.5));
+                dspControls.Add(CreateSliderRow("Ausblendzeit (Release)", "Wie sanft die Stimme nach dem Sprechen ausklingt, bevor das Gate wieder stumm schaltet", plugin.ExpanderRelease, v => plugin.ExpanderRelease = v, "ms", 20, 800, 10));
+            }
+            else if (plugin.Name.Contains("Limiter", StringComparison.OrdinalIgnoreCase) || plugin.Name.Contains("Master", StringComparison.OrdinalIgnoreCase))
+            {
+                dspControls.Add(CreateSliderRow("Maximalpegel-Schutz (Ceiling)", "Absolutes Limit zur Verhinderung digitaler Verzerrung und Clipping. Empfohlen: -1.0 dBTP", plugin.LimiterCeiling, v => plugin.LimiterCeiling = v, "dBTP", -3.0, 0.0, 0.1));
+                dspControls.Add(CreateSliderRow("Ziel-Lautheit (Target LUFS)", "Internationale Streaming-Norm: -14 LUFS für YouTube, Twitch, Kick und Podcasts", plugin.TargetLufs, v => plugin.TargetLufs = v, "LUFS", -24, -9, 0.5));
+                dspControls.Add(CreateSliderRow("Lookahead Vorhersage-Puffer", "Analysiert Pegelspitzen im Voraus für verzerrungsfreies Abfangen", plugin.LimiterLookahead, v => plugin.LimiterLookahead = v, "ms", 0.5, 5.0, 0.5));
+                dspControls.Add(CreateSliderRow("Rückstellzeit (Release)", "Schnelligkeit, mit der die Lautstärke nach lauten Spitzen wieder freigegeben wird", plugin.LimiterRelease, v => plugin.LimiterRelease = v, "ms", 10, 500, 5));
+            }
+            else
+            {
+                dspControls.Add(CreateSliderRow("Threshold / Einsatzpunkt", "Schwellenwert für den Beginn der Effektbearbeitung", plugin.Threshold, v => plugin.Threshold = v, "dB", -60, 0, 1));
+                dspControls.Add(CreateSliderRow("Trennfrequenz / Filter", "Arbeitsfrequenz des Filters bzw. Equalizers", plugin.Frequency, v => plugin.Frequency = v, "Hz", 20, 20000, 10));
+                dspControls.Add(CreateSliderRow("Gütefaktor / Q-Breite", "Filterbandbreite (schmalbandig bis breitbandig)", plugin.QFactor, v => plugin.QFactor = v, "Q", 0.1, 10.0, 0.1));
+                dspControls.Add(CreateSliderRow("Kompressor / Gate Ratio", "Kompression- oder Dämpfungsfaktor", plugin.Ratio, v => plugin.Ratio = v, ":1", 1.0, 20.0, 0.5));
+                dspControls.Add(CreateSliderRow("Attack / Einschwingzeit", "Reaktionszeit beim Einsetzen des Effekts", plugin.Attack, v => plugin.Attack = v, "ms", 0.1, 200, 0.5));
+                dspControls.Add(CreateSliderRow("Release / Rückstellzeit", "Abklingzeit nach dem Ende des Signals", plugin.Release, v => plugin.Release = v, "ms", 10, 2000, 10));
+                dspControls.Add(CreateSliderRow("Harmonische Sättigung / Drive", "Wärme- und Verzerrungsanteil", plugin.Drive, v => plugin.Drive = v, "%", 0, 100, 1));
+            }
+
+            foreach (var c in dspControls) dspStack.Children.Add(c);
+            dspCard.Child = dspStack;
+            mainStack.Children.Add(dspCard);
+        }
+
+        // Build controls initially
+        BuildParameterControls();
 
         btnA.Click += (_, _) =>
         {
             plugin.SwitchAB("A");
-            editorWin.Close();
-            OpenEditor(parentWindow, plugin);
+            btnA.Style = Application.Current?.Resources["AccentButtonStyle"] as Style;
+            btnB.Style = Application.Current?.Resources["SmoothButton"] as Style;
+            BuildParameterControls();
+            VstPluginService.SyncToHardware(plugin);
+            Instance.SaveRack();
         };
         btnB.Click += (_, _) =>
         {
             plugin.SwitchAB("B");
-            editorWin.Close();
-            OpenEditor(parentWindow, plugin);
+            btnA.Style = Application.Current?.Resources["SmoothButton"] as Style;
+            btnB.Style = Application.Current?.Resources["AccentButtonStyle"] as Style;
+            BuildParameterControls();
+            VstPluginService.SyncToHardware(plugin);
+            Instance.SaveRack();
         };
         btnCopyAB.Click += (_, _) =>
         {
@@ -1422,8 +1553,11 @@ public sealed partial class VstPluginService : ObservableObject
             if (defPresets.Length > 0)
             {
                 plugin.PresetName = defPresets[0];
-                editorWin.Close();
-                OpenEditor(parentWindow, plugin);
+                plugin.ApplyPreset(defPresets[0]);
+                presetCombo.SelectedItem = defPresets[0];
+                BuildParameterControls();
+                VstPluginService.SyncToHardware(plugin);
+                Instance.SaveRack();
             }
         };
 
@@ -1442,129 +1576,20 @@ public sealed partial class VstPluginService : ObservableObject
         Grid.SetRow(presetCard, 1);
         rootGrid.Children.Add(presetCard);
 
-        // 3. Scrollable Controls Area
-        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        var mainStack = new StackPanel { Spacing = 16 };
-
-        // Group 1: Master Gain & Mix
-        var masterCard = new Border
-        {
-            Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x18, 0x1B, 0x22)),
-            BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x25, 0x2B, 0x36)),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(10),
-            Padding = new Thickness(16)
-        };
-        var masterStack = new StackPanel { Spacing = 12 };
-        masterStack.Children.Add(new TextBlock
-        {
-            Text = "MASTER GAIN & DRY/WET MIX (GRUND-EINSTELLUNGEN)",
-            FontWeight = Microsoft.UI.Text.FontWeights.Bold,
-            FontSize = 11,
-            Foreground = plugin.TagBrush
-        });
-
-        var inGainSlider = CreateSliderRow("Input Gain (Eingangspegel)", "Pegel vor der Effektbearbeitung anpassen. Empfohlen: 0.0 dB", plugin.InputGainDb, v => plugin.InputGainDb = v, "dB", -24, 24, 0.5);
-        var outGainSlider = CreateSliderRow("Output Gain (Lautstärke-Ausgleich)", "Ausgangspegel zum Ausgleich von Lautstärkeverlusten nach dem Plugin", plugin.OutputGainDb, v => plugin.OutputGainDb = v, "dB", -24, 24, 0.5);
-        var mixSlider = CreateSliderRow("Dry / Wet Mix (Effekt-Anteil)", "Mischungsverhältnis zwischen Originalton (0 %) und 100 % vollem Studio-Effekt", plugin.MixPercent, v => plugin.MixPercent = v, "%", 0, 100, 1.0);
-
-        masterStack.Children.Add(inGainSlider);
-        masterStack.Children.Add(outGainSlider);
-        masterStack.Children.Add(mixSlider);
-        masterCard.Child = masterStack;
-        mainStack.Children.Add(masterCard);
-
-        // Group 2: Dynamic Tailored DSP Parameters Card
-        var dspCard = new Border
-        {
-            Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x18, 0x1B, 0x22)),
-            BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x25, 0x2B, 0x36)),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(10),
-            Padding = new Thickness(16)
-        };
-        var dspStack = new StackPanel { Spacing = 12 };
-        dspStack.Children.Add(new TextBlock
-        {
-            Text = $"{plugin.Name.ToUpperInvariant()} — KLANG-PARAMETER & REGLER",
-            FontWeight = Microsoft.UI.Text.FontWeights.Bold,
-            FontSize = 11,
-            Foreground = plugin.TagBrush
-        });
-
-        List<FrameworkElement> dspControls = new();
-
-        if (plugin.Name.Contains("Pro-EQ", StringComparison.OrdinalIgnoreCase))
-        {
-            dspControls.Add(CreateSliderRow("Trittschall & Rumpeln (Low-Cut HPF)", "Schneidet störende Tisch-Erschütterungen und Windgeräusche sauber ab. Empfohlen: 80 Hz", plugin.LowCutFreq, v => plugin.LowCutFreq = v, "Hz", 20, 300, 5));
-            dspControls.Add(CreateSliderRow("Stimm-Fundament & Wärme (Bass 120 Hz)", "Gibt der Stimme Körper und Fülle. Leicht anheben (+1 bis +3 dB) für tieferen Rundfunkklang", plugin.LowGain, v => plugin.LowGain = v, "dB", -12, 12, 0.5));
-            dspControls.Add(CreateSliderRow("Hohlraum-Entmumpfung (Mitten 450 Hz)", "Leichtes Absenken (-1 bis -3 dB) entfernt dumpfen 'Karton-Sound' und Raumhall", plugin.Mid1Gain, v => plugin.Mid1Gain = v, "dB", -12, 12, 0.5));
-            dspControls.Add(CreateSliderRow("Sprachverständlichkeit (Präsenz 2.5 kHz)", "Macht jedes gesprochene Wort im Stream, Podcast und Discord glasklar verständlich", plugin.Mid2Gain, v => plugin.Mid2Gain = v, "dB", -12, 12, 0.5));
-            dspControls.Add(CreateSliderRow("Frische & Glanz (Höhen 8 kHz)", "Verleiht der Stimme einen modernen, professionellen Studio-Glanz", plugin.HighShelfGain, v => plugin.HighShelfGain = v, "dB", -12, 12, 0.5));
-            dspControls.Add(CreateSliderRow("Air-Band Seide (Brillanz 14 kHz)", "Edle, samtige Höhenluft – der unverwechselbare Klang teurer Großmembran-Kondensatormikrofone", plugin.AirBandGain, v => plugin.AirBandGain = v, "dB", -12, 12, 0.5));
-        }
-        else if (plugin.Name.Contains("DeEsser", StringComparison.OrdinalIgnoreCase))
-        {
-            dspControls.Add(CreateSliderRow("Zischlaut-Zielfrequenz (Frequency)", "Frequenzbereich stechender S-, SCH- und Z-Laute (Frauenstimmen 7–8 kHz, Männerstimmen ca. 6 kHz)", plugin.DetectionFreq, v => plugin.DetectionFreq = v, "Hz", 3000, 9500, 100));
-            dspControls.Add(CreateSliderRow("Einsatz-Schwelle (Threshold)", "Pegel, ab dem scharfe Zischlaute gedämpft werden. Empfohlen: -18 dB", plugin.DeEssThreshold, v => plugin.DeEssThreshold = v, "dB", -40, 0, 1));
-            dspControls.Add(CreateSliderRow("Maximale Zisch-Dämpfung (Depth)", "Wie stark stechende S-Laute maximal gezähmt werden. Empfohlen: -6 bis -12 dB", plugin.DeEssDepth, v => plugin.DeEssDepth = v, "dB", -24, 0, 0.5));
-        }
-        else if (plugin.Name.Contains("Opto", StringComparison.OrdinalIgnoreCase))
-        {
-            dspControls.Add(CreateSliderRow("Lautstärke-Glättung (Peak Reduction)", "Gleicht laute Rufe und leises Flüstern automatisch an für einen konstanten Sprachpegel", plugin.OptoPeakReduction, v => plugin.OptoPeakReduction = v, "%", 0, 100, 1));
-            dspControls.Add(CreateSliderRow("Lautstärke-Ausgleich (Makeup Gain)", "Hebt die Gesamtlautstärke nach der Kompression auf optimalen Broadcast-Pegel an", plugin.OptoGain, v => plugin.OptoGain = v, "dB", 0, 24, 0.5));
-            dspControls.Add(CreateSliderRow("Optische Röhrenwärme (Warmth)", "Fügt der Stimme den beliebten analogen LA-2A Röhren-Charakter und Sättigung hinzu", plugin.OptoWarmth, v => plugin.OptoWarmth = v, "%", 0, 100, 1));
-        }
-        else if (plugin.Name.Contains("Tube", StringComparison.OrdinalIgnoreCase) || plugin.Name.Contains("Sat", StringComparison.OrdinalIgnoreCase))
-        {
-            dspControls.Add(CreateSliderRow("Röhrensättigung (Drive)", "Erzeugt harmonische Obertöne für eine volle, durchsetzungsfähige Radiostimme", plugin.SatDrive, v => plugin.SatDrive = v, "%", 0, 100, 1));
-            dspControls.Add(CreateSliderRow("Headroom Pegel-Trim", "Feinabstimmung des Eingangspegels (-6 bis +6 dB)", plugin.SatHeadroom, v => plugin.SatHeadroom = v, "dB", -6, 6, 0.5));
-        }
-        else if (plugin.Name.Contains("Expander", StringComparison.OrdinalIgnoreCase))
-        {
-            dspControls.Add(CreateSliderRow("Stille-Schwellenwert (Threshold)", "Geräusche leiser als dieser Pegel werden ausgeblendet (Tastatur, Atmen, Lüfter). Empfohlen: -36 dB", plugin.ExpanderThreshold, v => plugin.ExpanderThreshold = v, "dB", -60, 0, 1));
-            dspControls.Add(CreateSliderRow("Dämpfungs-Stärke (Ratio)", "Wie drastisch unerwünschte Hintergrundgeräusche abgesenkt werden. Empfohlen: 2.0:1 bis 3.0:1", plugin.ExpanderRatio, v => plugin.ExpanderRatio = v, ":1", 1.2, 8.0, 0.2));
-            dspControls.Add(CreateSliderRow("Öffnungs-Reaktionszeit (Attack)", "Wie blitzschnell das Gate beim ersten Wort öffnet, damit kein Wortanfang verschluckt wird", plugin.ExpanderAttack, v => plugin.ExpanderAttack = v, "ms", 0.5, 50, 0.5));
-            dspControls.Add(CreateSliderRow("Ausblendzeit (Release)", "Wie sanft die Stimme nach dem Sprechen ausklingt, bevor das Gate wieder stumm schaltet", plugin.ExpanderRelease, v => plugin.ExpanderRelease = v, "ms", 20, 800, 10));
-        }
-        else if (plugin.Name.Contains("Limiter", StringComparison.OrdinalIgnoreCase) || plugin.Name.Contains("Master", StringComparison.OrdinalIgnoreCase))
-        {
-            dspControls.Add(CreateSliderRow("Maximalpegel-Schutz (Ceiling)", "Absolutes Limit zur Verhinderung digitaler Verzerrung und Clipping. Empfohlen: -1.0 dBTP", plugin.LimiterCeiling, v => plugin.LimiterCeiling = v, "dBTP", -3.0, 0.0, 0.1));
-            dspControls.Add(CreateSliderRow("Ziel-Lautheit (Target LUFS)", "Internationale Streaming-Norm: -14 LUFS für YouTube, Twitch, Kick und Podcasts", plugin.TargetLufs, v => plugin.TargetLufs = v, "LUFS", -24, -9, 0.5));
-            dspControls.Add(CreateSliderRow("Lookahead Vorhersage-Puffer", "Analysiert Pegelspitzen im Voraus für verzerrungsfreies Abfangen", plugin.LimiterLookahead, v => plugin.LimiterLookahead = v, "ms", 0.5, 5.0, 0.5));
-            dspControls.Add(CreateSliderRow("Rückstellzeit (Release)", "Schnelligkeit, mit der die Lautstärke nach lauten Spitzen wieder freigegeben wird", plugin.LimiterRelease, v => plugin.LimiterRelease = v, "ms", 10, 500, 5));
-        }
-        else
-        {
-            dspControls.Add(CreateSliderRow("Threshold / Einsatzpunkt", "Schwellenwert für den Beginn der Effektbearbeitung", plugin.Threshold, v => plugin.Threshold = v, "dB", -60, 0, 1));
-            dspControls.Add(CreateSliderRow("Trennfrequenz / Filter", "Arbeitsfrequenz des Filters bzw. Equalizers", plugin.Frequency, v => plugin.Frequency = v, "Hz", 20, 20000, 10));
-            dspControls.Add(CreateSliderRow("Gütefaktor / Q-Breite", "Filterbandbreite (schmalbandig bis breitbandig)", plugin.QFactor, v => plugin.QFactor = v, "Q", 0.1, 10.0, 0.1));
-            dspControls.Add(CreateSliderRow("Kompressor / Gate Ratio", "Kompression- oder Dämpfungsfaktor", plugin.Ratio, v => plugin.Ratio = v, ":1", 1.0, 20.0, 0.5));
-            dspControls.Add(CreateSliderRow("Attack / Einschwingzeit", "Reaktionszeit beim Einsetzen des Effekts", plugin.Attack, v => plugin.Attack = v, "ms", 0.1, 200, 0.5));
-            dspControls.Add(CreateSliderRow("Release / Rückstellzeit", "Abklingzeit nach dem Ende des Signals", plugin.Release, v => plugin.Release = v, "ms", 10, 2000, 10));
-            dspControls.Add(CreateSliderRow("Harmonische Sättigung / Drive", "Wärme- und Verzerrungsanteil", plugin.Drive, v => plugin.Drive = v, "%", 0, 100, 1));
-        }
-
-        foreach (var c in dspControls) dspStack.Children.Add(c);
-        dspCard.Child = dspStack;
-        mainStack.Children.Add(dspCard);
-
         scroll.Content = mainStack;
         Grid.SetRow(scroll, 2);
         rootGrid.Children.Add(scroll);
 
-        // Preset selector handler
+        // Preset selector handler (reactive in-place update)
         presetCombo.SelectionChanged += (_, _) =>
         {
-            if (presetCombo.SelectedItem is string p)
+            if (presetCombo.SelectedItem is string p && p != plugin.PresetName)
             {
+                plugin.PresetName = p;
                 plugin.ApplyPreset(p);
-                UpdateSliderRow(inGainSlider, plugin.InputGainDb, "dB");
-                UpdateSliderRow(outGainSlider, plugin.OutputGainDb, "dB");
-                UpdateSliderRow(mixSlider, plugin.MixPercent, "%");
-                // Refresh all DSP sliders
-                editorWin.Close();
-                OpenEditor(parentWindow, plugin);
+                BuildParameterControls();
+                VstPluginService.SyncToHardware(plugin);
+                Instance.SaveRack();
             }
         };
 
@@ -1585,6 +1610,7 @@ public sealed partial class VstPluginService : ObservableObject
                 Children = { new FontIcon { Glyph = "\uE896", FontSize = 14 }, new TextBlock { Text = "Preset exportieren..." } }
             }
         };
+        CursorHelper.SetUseHandCursor(exportPresetBtn, true);
         exportPresetBtn.Click += async (_, _) =>
         {
             try
@@ -1618,6 +1644,7 @@ public sealed partial class VstPluginService : ObservableObject
                 Children = { new FontIcon { Glyph = "\uE898", FontSize = 14 }, new TextBlock { Text = "Preset laden..." } }
             }
         };
+        CursorHelper.SetUseHandCursor(importPresetBtn, true);
         importPresetBtn.Click += async (_, _) =>
         {
             try
@@ -1663,8 +1690,8 @@ public sealed partial class VstPluginService : ObservableObject
 
                         Instance.SaveRack();
                         SyncToHardware(plugin);
-                        editorWin.Close();
-                        OpenEditor(parentWindow, plugin);
+                        presetCombo.SelectedItem = plugin.PresetName;
+                        BuildParameterControls();
                     }
                 }
             }
@@ -1682,6 +1709,7 @@ public sealed partial class VstPluginService : ObservableObject
             Content = "Speichern & Anwenden",
             Style = Application.Current?.Resources["AccentButtonStyle"] as Style
         };
+        CursorHelper.SetUseHandCursor(saveBtn, true);
         saveBtn.Click += (_, _) =>
         {
             Instance.SaveRack();
@@ -1694,6 +1722,7 @@ public sealed partial class VstPluginService : ObservableObject
             Content = "Schließen",
             Style = Application.Current?.Resources["SmoothButton"] as Style
         };
+        CursorHelper.SetUseHandCursor(closeBtn, true);
         closeBtn.Click += (_, _) => editorWin.Close();
 
         rightBtns.Children.Add(saveBtn);
@@ -1720,11 +1749,11 @@ public sealed partial class VstPluginService : ObservableObject
     {
         var card = new Border
         {
-            Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x14, 0x16, 0x1C)),
+            Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0x11, 0x13, 0x18)),
             CornerRadius = new CornerRadius(8),
             Padding = new Thickness(14, 10, 14, 10),
             Margin = new Thickness(0, 0, 0, 8),
-            BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x24, 0x28, 0x33)),
+            BorderBrush = new SolidColorBrush(ColorHelper.FromArgb(255, 0x22, 0x26, 0x30)),
             BorderThickness = new Thickness(1)
         };
 
@@ -1739,7 +1768,7 @@ public sealed partial class VstPluginService : ObservableObject
             Text = $"{initialValue:+0.0;-0.0;0.0} {unit}",
             FontWeight = Microsoft.UI.Text.FontWeights.Bold,
             FontSize = 13,
-            Foreground = new SolidColorBrush(ColorHelper.FromArgb(255, 0x1F, 0xC7, 0x9A))
+            Foreground = new SolidColorBrush(ColorHelper.FromArgb(255, 0x3D, 0xDF, 0xD9))
         };
         Grid.SetColumn(titleBlock, 0);
         Grid.SetColumn(valueBlock, 1);
@@ -1769,6 +1798,7 @@ public sealed partial class VstPluginService : ObservableObject
             HorizontalAlignment = HorizontalAlignment.Stretch,
             Margin = new Thickness(0, 2, 0, 0)
         };
+        CursorHelper.SetUseHandCursor(slider, true);
         slider.ValueChanged += (_, e) =>
         {
             onValueChanged(e.NewValue);
