@@ -165,11 +165,11 @@
                         <!-- 1-Click Ducking Presets -->
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="0,0,20,0">
                             <Button Content="Podcast (-18 dB)" Style="{StaticResource SmoothButton}" Tag="podcast" Click="AutoDuckingPreset_Click"
-                                    services:CursorHelper.UseHandCursor="True" ToolTipService.ToolTip="Starke Absenkung, schneller Wiedereinstieg für Moderatoren" />
+                                    Padding="12,6" services:CursorHelper.UseHandCursor="True" ToolTipService.ToolTip="Starke Absenkung, schneller Wiedereinstieg für Moderatoren" />
                             <Button Content="Gaming (-12 dB)" Style="{StaticResource SmoothButton}" Tag="gaming" Click="AutoDuckingPreset_Click"
-                                    services:CursorHelper.UseHandCursor="True" ToolTipService.ToolTip="Optimale Absenkung mit stabiler Haltezeit zwischen Callouts" />
+                                    Padding="12,6" services:CursorHelper.UseHandCursor="True" ToolTipService.ToolTip="Optimale Absenkung mit stabiler Haltezeit zwischen Callouts" />
                             <Button Content="Subtil (-6 dB)" Style="{StaticResource SmoothButton}" Tag="subtle" Click="AutoDuckingPreset_Click"
-                                    services:CursorHelper.UseHandCursor="True" ToolTipService.ToolTip="Sanfte Hintergrund-Dämpfung" />
+                                    Padding="12,6" services:CursorHelper.UseHandCursor="True" ToolTipService.ToolTip="Sanfte Hintergrund-Dämpfung" />
                         </StackPanel>
 
                         <!-- Master Toggle -->

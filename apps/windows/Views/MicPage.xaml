@@ -24,17 +24,8 @@
             
             <!-- ================= STUDIO HEADER ================= -->
             <Grid Margin="0,0,0,4">
-                <StackPanel Spacing="4" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                        <TextBlock x:Uid="MicTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
-                        <Border Background="{ThemeResource SurfaceL2Brush}" BorderBrush="{StaticResource BrandBrush}"
-                                BorderThickness="1" CornerRadius="6" Padding="8,3" VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                <FontIcon Glyph="&#xE73E;" FontSize="11" Foreground="{StaticResource BrandBrush}" />
-                                <TextBlock Text="DSP LIVE 0 ms" FontSize="11" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
+                <StackPanel Spacing="3" VerticalAlignment="Center">
+                    <TextBlock x:Uid="MicTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
                     <TextBlock Text="Analoge Vorverstärkung, KI-Signalbereinigung, 10-Band Studio-EQ, Dynamikprozessoren und VST3-Rack."
                                Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
                 </StackPanel>

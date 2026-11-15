@@ -9,54 +9,60 @@
     Background="Transparent">
 
     <ScrollViewer Style="{StaticResource PageScroller}">
-        <StackPanel Spacing="24" MaxWidth="1320" HorizontalAlignment="Center">
-            <!-- Studio Header: Title & Subtitle -->
+        <StackPanel Spacing="20" MaxWidth="1340" HorizontalAlignment="Center" Margin="0,0,0,32">
+            
+            <!-- ================= STUDIO HEADER ================= -->
             <Grid Margin="0,0,0,4">
                 <StackPanel Spacing="3" VerticalAlignment="Center">
                     <TextBlock x:Uid="FxTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
-                    <TextBlock Text="Megaphon, Roboter, Hardtune, Pitch &amp; Formant für kreative Sprach- und Soundeffekte."
+                    <TextBlock Text="Megaphon, Roboter, Hardtune, Pitch-Shifter &amp; Reverb für kreative Sprach- und Soundeffekte."
                                Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
                 </StackPanel>
             </Grid>
 
-            <!-- FX master + presets: the top row of the GoXLR effects section -->
+            <!-- ================= SEKTION 1: FX MASTER & PRESETS COCKPIT ================= -->
             <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
-                    BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,18">
-                <Grid ColumnSpacing="28">
+                    BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="22,20">
+                <Grid ColumnSpacing="24">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="160" />
+                        <ColumnDefinition Width="170" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
+                    <!-- Master FX Power Switch -->
                     <StackPanel Spacing="10">
                         <TextBlock x:Uid="FxMasterHeader" Style="{StaticResource Overline}" />
                         <ToggleButton x:Uid="FxMasterToggle" Height="96" Style="{StaticResource TileToggle}"
-                                      IsChecked="{x:Bind Fx.FxEnabled, Mode=TwoWay}">
-                            <StackPanel Spacing="6">
-                                <FontIcon Glyph="&#xE945;" FontSize="22" />
-                                <TextBlock Text="FX" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" />
+                                      IsChecked="{x:Bind Fx.FxEnabled, Mode=TwoWay}"
+                                      services:CursorHelper.UseHandCursor="True">
+                            <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                <FontIcon Glyph="&#xE945;" FontSize="24" />
+                                <TextBlock Text="FX MASTER" FontSize="15" FontWeight="Bold" HorizontalAlignment="Center" />
                             </StackPanel>
                         </ToggleButton>
                     </StackPanel>
 
+                    <!-- 6 Hardware Effect Presets -->
                     <StackPanel Grid.Column="1" Spacing="10">
-                        <TextBlock x:Uid="FxPresetsHeader" Style="{StaticResource Overline}" />
+                        <Grid>
+                            <TextBlock x:Uid="FxPresetsHeader" Style="{StaticResource Overline}" />
+                            <TextBlock Text="Wählt die aktive GoXLR-Presetbank (1–6)" Style="{StaticResource Caption}" HorizontalAlignment="Right" Foreground="{ThemeResource TextMutedBrush}" />
+                        </Grid>
                         <ItemsRepeater ItemsSource="{x:Bind Fx.Presets}">
                             <ItemsRepeater.Layout>
-                                <!-- Six presets share the row; wrap to 3×2 when narrow -->
-                                <UniformGridLayout MinItemWidth="76" MinItemHeight="96" MinColumnSpacing="10"
+                                <UniformGridLayout MinItemWidth="80" MinItemHeight="96" MinColumnSpacing="10"
                                                    MinRowSpacing="10" MaximumRowsOrColumns="6" ItemsStretch="Fill" />
                             </ItemsRepeater.Layout>
                             <ItemsRepeater.ItemTemplate>
                                 <DataTemplate x:DataType="vm:PresetViewModel">
                                     <ToggleButton Style="{StaticResource TileToggle}"
                                                   IsChecked="{x:Bind IsActive, Mode=TwoWay}"
+                                                  services:CursorHelper.UseHandCursor="True"
                                                   AutomationProperties.Name="{x:Bind Label}">
-                                        <StackPanel Spacing="2">
-                                            <!-- Inherits the toggle's foreground so it stays readable when checked. -->
-                                            <TextBlock x:Uid="FxPresetLabel" FontSize="12" Opacity="0.7"
-                                                       HorizontalAlignment="Center" />
-                                            <TextBlock Text="{x:Bind Label}" FontSize="26" FontWeight="Bold"
+                                        <StackPanel Spacing="3" HorizontalAlignment="Center">
+                                            <TextBlock x:Uid="FxPresetLabel" FontSize="11" Opacity="0.75"
+                                                       FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                            <TextBlock Text="{x:Bind Label}" FontSize="28" FontWeight="Bold"
                                                        FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center" />
                                         </StackPanel>
                                     </ToggleButton>
@@ -67,82 +73,139 @@
                 </Grid>
             </Border>
 
-            <!-- Encoders as rotary knobs -->
+            <!-- ================= SEKTION 2: SOUND-FORMER & DREH-ENCODER (KNOBS) ================= -->
             <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
-                    BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,18">
+                    BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="24,20">
                 <StackPanel Spacing="18">
-                    <StackPanel Spacing="2">
-                        <TextBlock x:Uid="FxVoiceHeader" Style="{StaticResource SectionTitle}" />
-                    </StackPanel>
-                    <Grid ColumnSpacing="24">
+                    <Grid>
+                        <StackPanel Spacing="2" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE9CA;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                <TextBlock x:Uid="FxVoiceHeader" Style="{StaticResource SectionTitle}" />
+                            </StackPanel>
+                            <TextBlock Text="Hardware-Drehregler: Reverb (Hall), Echo (Delay), Pitch-Shifting und Gender-Formanten."
+                                       Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnSpacing="20">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <controls:Knob x:Uid="KnobReverb" Minimum="0" Maximum="100" Step="4.1666667" DefaultValue="25" Unit="%"
-                                       Value="{x:Bind Fx.Reverb, Mode=TwoWay}" Accent="{StaticResource BrandBrush}" />
-                        <controls:Knob x:Uid="KnobEcho" Grid.Column="1" Minimum="0" Maximum="100" Step="4.1666667" DefaultValue="12.5" Unit="%"
-                                       Value="{x:Bind Fx.Echo, Mode=TwoWay}" Accent="{StaticResource BrandBrush}" />
-                        <controls:Knob x:Uid="KnobPitch" Grid.Column="2" Minimum="-24" Maximum="24" DefaultValue="0" Bipolar="True"
-                                       Value="{x:Bind Fx.Pitch, Mode=TwoWay}" Accent="{StaticResource WarningBrush}" />
-                        <controls:Knob x:Uid="KnobGender" Grid.Column="3" Minimum="-24" Maximum="24" DefaultValue="0" Bipolar="True"
-                                       Value="{x:Bind Fx.Gender, Mode=TwoWay}" Accent="{StaticResource WarningBrush}" />
+
+                        <!-- Reverb Bay -->
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,14"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                            <controls:Knob x:Uid="KnobReverb" Minimum="0" Maximum="100" Step="4.1666667" DefaultValue="25" Unit="%"
+                                           Value="{x:Bind Fx.Reverb, Mode=TwoWay}" Accent="{StaticResource BrandBrush}"
+                                           services:CursorHelper.UseHandCursor="True" />
+                        </Border>
+
+                        <!-- Echo Bay -->
+                        <Border Grid.Column="1" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,14"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                            <controls:Knob x:Uid="KnobEcho" Minimum="0" Maximum="100" Step="4.1666667" DefaultValue="12.5" Unit="%"
+                                           Value="{x:Bind Fx.Echo, Mode=TwoWay}" Accent="{StaticResource BrandBrush}"
+                                           services:CursorHelper.UseHandCursor="True" />
+                        </Border>
+
+                        <!-- Pitch Bay -->
+                        <Border Grid.Column="2" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,14"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                            <controls:Knob x:Uid="KnobPitch" Minimum="-24" Maximum="24" DefaultValue="0" Bipolar="True"
+                                           Value="{x:Bind Fx.Pitch, Mode=TwoWay}" Accent="{StaticResource WarningBrush}"
+                                           services:CursorHelper.UseHandCursor="True" />
+                        </Border>
+
+                        <!-- Gender Bay -->
+                        <Border Grid.Column="3" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,14"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                            <controls:Knob x:Uid="KnobGender" Minimum="-24" Maximum="24" DefaultValue="0" Bipolar="True"
+                                           Value="{x:Bind Fx.Gender, Mode=TwoWay}" Accent="{StaticResource WarningBrush}"
+                                           services:CursorHelper.UseHandCursor="True" />
+                        </Border>
                     </Grid>
                 </StackPanel>
             </Border>
 
-            <!-- Hardware FX toggles, each with its detail settings (collapsed when off) -->
-            <StackPanel Spacing="12">
-                <Grid ColumnSpacing="16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+            <!-- ================= SEKTION 3: KREATIVE HARDWARE-EFFEKTE (3 SPALTEN) ================= -->
+            <Grid ColumnSpacing="18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-                    <!-- Megaphone -->
-                    <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
-                            BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="18,16" VerticalAlignment="Stretch">
-                        <StackPanel Spacing="14">
-                            <ToggleButton x:Uid="FxMegaphoneToggle" Height="88" Style="{StaticResource TileToggle}"
-                                          HorizontalAlignment="Stretch" IsChecked="{x:Bind Fx.Megaphone, Mode=TwoWay}">
-                                <StackPanel Spacing="8">
-                                    <FontIcon Glyph="&#xE789;" FontSize="24" />
-                                    <TextBlock x:Uid="FxMegaphoneLabel" HorizontalAlignment="Center" />
-                                </StackPanel>
-                            </ToggleButton>
-                            <StackPanel Spacing="14" Visibility="{x:Bind BoolToVisibility(Fx.Megaphone), Mode=OneWay}">
-                                <Slider x:Uid="FxMegAmount" Minimum="0" Maximum="100" StepFrequency="1"
-                                        Value="{x:Bind Fx.MegaphoneAmount, Mode=TwoWay}" />
-                                <Slider x:Uid="FxMegPostGain" Minimum="-20" Maximum="20" StepFrequency="1"
-                                        Value="{x:Bind Fx.MegaphonePostGain, Mode=TwoWay}" />
+                <!-- 1. Megaphone Modul -->
+                <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                        BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,18" VerticalAlignment="Stretch">
+                    <StackPanel Spacing="16">
+                        <ToggleButton x:Uid="FxMegaphoneToggle" Height="90" Style="{StaticResource TileToggle}"
+                                      HorizontalAlignment="Stretch" IsChecked="{x:Bind Fx.Megaphone, Mode=TwoWay}"
+                                      services:CursorHelper.UseHandCursor="True">
+                            <StackPanel Spacing="8">
+                                <FontIcon Glyph="&#xE789;" FontSize="26" />
+                                <TextBlock x:Uid="FxMegaphoneLabel" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </ToggleButton>
 
-                    <!-- Robot (vocoder + synth) -->
-                    <Border Grid.Column="1" Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
-                            BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="18,16" VerticalAlignment="Stretch">
-                        <StackPanel Spacing="14">
-                            <ToggleButton x:Uid="FxRobotToggle" Height="88" Style="{StaticResource TileToggle}"
-                                          HorizontalAlignment="Stretch" IsChecked="{x:Bind Fx.Robot, Mode=TwoWay}">
-                                <StackPanel Spacing="8">
-                                    <FontIcon Glyph="&#xE99A;" FontSize="24" />
-                                    <TextBlock x:Uid="FxRobotLabel" HorizontalAlignment="Center" />
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="16,14"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1"
+                                Visibility="{x:Bind BoolToVisibility(Fx.Megaphone), Mode=OneWay}">
+                            <StackPanel Spacing="14">
+                                <StackPanel Spacing="4">
+                                    <Slider x:Uid="FxMegAmount" Minimum="0" Maximum="100" StepFrequency="1"
+                                            Value="{x:Bind Fx.MegaphoneAmount, Mode=TwoWay}"
+                                            services:CursorHelper.UseHandCursor="True" />
                                 </StackPanel>
-                            </ToggleButton>
-                            <StackPanel Spacing="14" Visibility="{x:Bind BoolToVisibility(Fx.Robot), Mode=OneWay}">
-                                <ComboBox x:Uid="FxRobotWave" HorizontalAlignment="Stretch" ItemsSource="{x:Bind Fx.RobotWaveforms}"
-                                          SelectedIndex="{x:Bind Fx.RobotWaveform, Mode=TwoWay}" />
+                                <StackPanel Spacing="4">
+                                    <Slider x:Uid="FxMegPostGain" Minimum="-20" Maximum="20" StepFrequency="1"
+                                            Value="{x:Bind Fx.MegaphonePostGain, Mode=TwoWay}"
+                                            services:CursorHelper.UseHandCursor="True" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- 2. Robot (Vocoder & Synthesizer) Modul -->
+                <Border Grid.Column="1" Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                        BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,18" VerticalAlignment="Stretch">
+                    <StackPanel Spacing="16">
+                        <ToggleButton x:Uid="FxRobotToggle" Height="90" Style="{StaticResource TileToggle}"
+                                      HorizontalAlignment="Stretch" IsChecked="{x:Bind Fx.Robot, Mode=TwoWay}"
+                                      services:CursorHelper.UseHandCursor="True">
+                            <StackPanel Spacing="8">
+                                <FontIcon Glyph="&#xE99A;" FontSize="26" />
+                                <TextBlock x:Uid="FxRobotLabel" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </ToggleButton>
+
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="16,14"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1"
+                                Visibility="{x:Bind BoolToVisibility(Fx.Robot), Mode=OneWay}">
+                            <StackPanel Spacing="12">
+                                <StackPanel Spacing="4">
+                                    <ComboBox x:Uid="FxRobotWave" HorizontalAlignment="Stretch" ItemsSource="{x:Bind Fx.RobotWaveforms}"
+                                              SelectedIndex="{x:Bind Fx.RobotWaveform, Mode=TwoWay}"
+                                              services:CursorHelper.UseHandCursor="True" />
+                                </StackPanel>
                                 <Slider x:Uid="FxRobotPulse" Minimum="0" Maximum="100" StepFrequency="1"
-                                        Value="{x:Bind Fx.RobotPulseWidth, Mode=TwoWay}" />
+                                        Value="{x:Bind Fx.RobotPulseWidth, Mode=TwoWay}"
+                                        services:CursorHelper.UseHandCursor="True" />
                                 <Slider x:Uid="FxRobotThreshold" Minimum="-36" Maximum="0" StepFrequency="1"
-                                        Value="{x:Bind Fx.RobotThreshold, Mode=TwoWay}" />
+                                        Value="{x:Bind Fx.RobotThreshold, Mode=TwoWay}"
+                                        services:CursorHelper.UseHandCursor="True" />
                                 <Slider x:Uid="FxRobotDry" Minimum="-36" Maximum="0" StepFrequency="1"
-                                        Value="{x:Bind Fx.RobotDryMix, Mode=TwoWay}" />
-                                <TextBlock x:Uid="FxRobotBands" Style="{StaticResource Caption}" />
+                                        Value="{x:Bind Fx.RobotDryMix, Mode=TwoWay}"
+                                        services:CursorHelper.UseHandCursor="True" />
+
+                                <Border Height="1" Background="{ThemeResource SurfaceStrokeSubtleBrush}" Margin="0,4,0,4" />
+
+                                <TextBlock x:Uid="FxRobotBands" Style="{StaticResource Caption}" FontWeight="SemiBold" />
                                 <Grid ColumnSpacing="10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -150,39 +213,52 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <Slider x:Uid="FxRobotLow" Minimum="-12" Maximum="12" StepFrequency="1"
-                                            Value="{x:Bind Fx.RobotLowGain, Mode=TwoWay}" />
+                                            Value="{x:Bind Fx.RobotLowGain, Mode=TwoWay}"
+                                            services:CursorHelper.UseHandCursor="True" />
                                     <Slider x:Uid="FxRobotMid" Grid.Column="1" Minimum="-12" Maximum="12" StepFrequency="1"
-                                            Value="{x:Bind Fx.RobotMidGain, Mode=TwoWay}" />
+                                            Value="{x:Bind Fx.RobotMidGain, Mode=TwoWay}"
+                                            services:CursorHelper.UseHandCursor="True" />
                                     <Slider x:Uid="FxRobotHigh" Grid.Column="2" Minimum="-12" Maximum="12" StepFrequency="1"
-                                            Value="{x:Bind Fx.RobotHighGain, Mode=TwoWay}" />
+                                            Value="{x:Bind Fx.RobotHighGain, Mode=TwoWay}"
+                                            services:CursorHelper.UseHandCursor="True" />
                                 </Grid>
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </Border>
+                    </StackPanel>
+                </Border>
 
-                    <!-- Hardtune -->
-                    <Border Grid.Column="2" Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
-                            BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="18,16" VerticalAlignment="Stretch">
-                        <StackPanel Spacing="14">
-                            <ToggleButton x:Uid="FxHardtuneToggle" Height="88" Style="{StaticResource TileToggle}"
-                                          HorizontalAlignment="Stretch" IsChecked="{x:Bind Fx.Hardtune, Mode=TwoWay}">
-                                <StackPanel Spacing="8">
-                                    <FontIcon Glyph="&#xE8D6;" FontSize="24" />
-                                    <TextBlock x:Uid="FxHardtuneLabel" HorizontalAlignment="Center" />
-                                </StackPanel>
-                            </ToggleButton>
-                            <StackPanel Spacing="14" Visibility="{x:Bind BoolToVisibility(Fx.Hardtune), Mode=OneWay}">
-                                <Slider x:Uid="FxTuneAmount" Minimum="0" Maximum="100" StepFrequency="1"
-                                        Value="{x:Bind Fx.HardtuneAmount, Mode=TwoWay}" />
-                                <Slider x:Uid="FxTuneRate" Minimum="0" Maximum="100" StepFrequency="1"
-                                        Value="{x:Bind Fx.HardtuneRate, Mode=TwoWay}" />
-                                <Slider x:Uid="FxTuneWindow" Minimum="0" Maximum="600" StepFrequency="1"
-                                        Value="{x:Bind Fx.HardtuneWindow, Mode=TwoWay}" />
+                <!-- 3. Hardtune (Auto-Pitch & Voice Correction) Modul -->
+                <Border Grid.Column="2" Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                        BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,18" VerticalAlignment="Stretch">
+                    <StackPanel Spacing="16">
+                        <ToggleButton x:Uid="FxHardtuneToggle" Height="90" Style="{StaticResource TileToggle}"
+                                      HorizontalAlignment="Stretch" IsChecked="{x:Bind Fx.Hardtune, Mode=TwoWay}"
+                                      services:CursorHelper.UseHandCursor="True">
+                            <StackPanel Spacing="8">
+                                <FontIcon Glyph="&#xE8D6;" FontSize="26" />
+                                <TextBlock x:Uid="FxHardtuneLabel" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
-                </Grid>
-            </StackPanel>
+                        </ToggleButton>
+
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="16,14"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1"
+                                Visibility="{x:Bind BoolToVisibility(Fx.Hardtune), Mode=OneWay}">
+                            <StackPanel Spacing="14">
+                                <Slider x:Uid="FxTuneAmount" Minimum="0" Maximum="100" StepFrequency="1"
+                                        Value="{x:Bind Fx.HardtuneAmount, Mode=TwoWay}"
+                                        services:CursorHelper.UseHandCursor="True" />
+                                <Slider x:Uid="FxTuneRate" Minimum="0" Maximum="100" StepFrequency="1"
+                                        Value="{x:Bind Fx.HardtuneRate, Mode=TwoWay}"
+                                        services:CursorHelper.UseHandCursor="True" />
+                                <Slider x:Uid="FxTuneWindow" Minimum="0" Maximum="600" StepFrequency="1"
+                                        Value="{x:Bind Fx.HardtuneWindow, Mode=TwoWay}"
+                                        services:CursorHelper.UseHandCursor="True" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
         </StackPanel>
     </ScrollViewer>
 </Page>
