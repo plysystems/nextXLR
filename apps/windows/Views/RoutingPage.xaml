@@ -13,9 +13,10 @@
       The Sampler (recording input of the sampler) is a separate, highlighted column on the right.
     -->
     <ScrollViewer Style="{StaticResource PageScroller}">
-        <StackPanel Spacing="24" MaxWidth="1320" HorizontalAlignment="Center">
+        <StackPanel Spacing="20" MaxWidth="1320" HorizontalAlignment="Center">
+            
             <!-- Studio Header: Title & Subtitle -->
-            <Grid Margin="0,0,0,4">
+            <Grid Margin="0,0,0,2">
                 <StackPanel Spacing="3" VerticalAlignment="Center">
                     <TextBlock x:Uid="RoutingTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
                     <TextBlock Text="Weise Audioquellen (Mikrofon, Chat, Musik, Game, System) flexibel den physischen und virtuellen Ausgängen zu."
@@ -23,10 +24,11 @@
                 </StackPanel>
             </Grid>
 
+            <!-- Main Routing Matrix Glass Card -->
             <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
                     BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,18">
                 <StackPanel Spacing="4">
-                    <!-- Header -->
+                    <!-- Column Headers -->
                     <Grid ColumnSpacing="16" Padding="12,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="160" />
@@ -34,6 +36,7 @@
                             <ColumnDefinition Width="132" />
                         </Grid.ColumnDefinitions>
                         <StackPanel VerticalAlignment="Bottom" Padding="0,0,0,12" Spacing="2">
+                            <TextBlock Text="EINGANGS-KANAL" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource TextMutedBrush}" />
                         </StackPanel>
                         <ItemsRepeater Grid.Column="1" ItemsSource="{x:Bind ViewModel.Buses}">
                             <ItemsRepeater.Layout>
@@ -43,7 +46,7 @@
                             <ItemsRepeater.ItemTemplate>
                                 <DataTemplate x:DataType="vm:BusView">
                                     <StackPanel Spacing="6" Padding="0,0,0,12" HorizontalAlignment="Stretch">
-                                        <Border Width="36" Height="36" CornerRadius="12" Background="{ThemeResource SurfaceL3Brush}" HorizontalAlignment="Center">
+                                        <Border Width="38" Height="38" CornerRadius="12" Background="{ThemeResource SurfaceL3Brush}" HorizontalAlignment="Center">
                                             <FontIcon Glyph="{x:Bind Glyph}" FontSize="16" Foreground="{StaticResource BrandBrush}" />
                                         </Border>
                                         <TextBlock Text="{x:Bind Name}" FontSize="11" FontWeight="SemiBold"
@@ -56,16 +59,16 @@
                         <Border Grid.Column="2" CornerRadius="12,12,0,0" Background="{ThemeResource SurfaceL3Brush}" Padding="0,8,0,12"
                                 BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1,1,1,0">
                             <StackPanel Spacing="6">
-                                <Border Width="36" Height="36" CornerRadius="12" Background="{ThemeResource SurfaceL2Brush}">
+                                <Border Width="38" Height="38" CornerRadius="12" Background="{ThemeResource SurfaceL2Brush}">
                                     <FontIcon Glyph="&#xE7C8;" FontSize="16" Foreground="{StaticResource WarningBrush}" />
                                 </Border>
-                                <TextBlock Text="{x:Bind ViewModel.SamplerBusName, Mode=OneWay}" FontSize="12" FontWeight="SemiBold"
+                                <TextBlock Text="{x:Bind ViewModel.SamplerBusName, Mode=OneWay}" FontSize="11" FontWeight="SemiBold"
                                            TextAlignment="Center" />
                             </StackPanel>
                         </Border>
                     </Grid>
 
-                    <!-- Rows -->
+                    <!-- Routing Rows -->
                     <ItemsRepeater ItemsSource="{x:Bind ViewModel.RouteRows}">
                         <ItemsRepeater.Layout><StackLayout Spacing="0" /></ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
@@ -82,7 +85,7 @@
                                         <Border.BackgroundTransition><BrushTransition Duration="0:0:0.2" /></Border.BackgroundTransition>
                                     </Border>
                                     <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" IsHitTestVisible="False">
-                                        <Border Width="30" Height="30" CornerRadius="15" Background="{x:Bind Accent}">
+                                        <Border Width="32" Height="32" CornerRadius="16" Background="{x:Bind Accent}">
                                             <FontIcon Glyph="{x:Bind Glyph}" FontSize="14" Foreground="#0E1015" />
                                         </Border>
                                         <TextBlock Text="{x:Bind ChannelName}" VerticalAlignment="Center" FontSize="14"
@@ -135,159 +138,147 @@
                 </StackPanel>
             </Border>
 
-            <!-- ===== Feature 02: Auto-Ducking ===== -->
+            <!-- ===== Optimized Auto-Ducking Studio Card ===== -->
             <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
-                    BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20">
-                <StackPanel Spacing="16">
-                    <!-- Header with Title, Status Badge, and On/Off Toggle -->
+                    BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="22,20">
+                <StackPanel Spacing="18">
+                    <!-- Header with Title, Status Badge, Presets, and Master Toggle -->
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <StackPanel Spacing="3">
+                        <StackPanel Spacing="3" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                 <FontIcon Glyph="&#xE7F5;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
-                                <TextBlock Text="Auto-Ducking" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="Intelligentes Auto-Ducking (Sidechain-Spracherkennung)" Style="{StaticResource SectionTitle}" />
                                 <Border Background="{ThemeResource SurfaceL3Brush}" BorderBrush="{StaticResource BrandBrush}"
                                         BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
                                     <TextBlock Text="{x:Bind AutoDucking.StatusText, Mode=OneWay}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
                                 </Border>
                             </StackPanel>
-                            <TextBlock Text="Senkt Hintergrundmusik oder Spiele automatisch ab, sobald du sprichst (Sidechain-Ducking)."
+                            <TextBlock Text="Senkt Hintergrundmusik oder Spielsound automatisch ab, sobald du ins Mikrofon sprichst."
                                        Style="{StaticResource Caption}" />
                         </StackPanel>
 
+                        <!-- 1-Click Ducking Presets -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <Button Content="Podcast (-18 dB)" Style="{StaticResource SmoothButton}" Tag="podcast" Click="AutoDuckingPreset_Click"
+                                    services:CursorHelper.UseHandCursor="True" ToolTipService.ToolTip="Starke Absenkung, schneller Wiedereinstieg für Moderatoren" />
+                            <Button Content="Gaming (-12 dB)" Style="{StaticResource SmoothButton}" Tag="gaming" Click="AutoDuckingPreset_Click"
+                                    services:CursorHelper.UseHandCursor="True" ToolTipService.ToolTip="Optimale Absenkung mit stabiler Haltezeit zwischen Callouts" />
+                            <Button Content="Subtil (-6 dB)" Style="{StaticResource SmoothButton}" Tag="subtle" Click="AutoDuckingPreset_Click"
+                                    services:CursorHelper.UseHandCursor="True" ToolTipService.ToolTip="Sanfte Hintergrund-Dämpfung" />
+                        </StackPanel>
+
                         <!-- Master Toggle -->
-                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind AutoDucking.IsEnabled, Mode=TwoWay}"
-                                      OnContent="Aktiv" OffContent="Bypass" MinWidth="0" VerticalAlignment="Center" />
+                        <ToggleSwitch Grid.Column="2" IsOn="{x:Bind AutoDucking.IsEnabled, Mode=TwoWay}"
+                                      OnContent="Aktiv" OffContent="Bypass" MinWidth="0" VerticalAlignment="Center"
+                                      services:CursorHelper.UseHandCursor="True" />
                     </Grid>
 
-                    <!-- Control Grid: Channels Selection &amp; Ducking Parameters -->
-                    <Grid ColumnSpacing="20" RowSpacing="14">
+                    <!-- Control Grid: Channel Selection & Parameters with Ample Breathing Room -->
+                    <Grid ColumnSpacing="16" RowSpacing="16">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1.2*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="1.2*" MinWidth="260" />
+                            <ColumnDefinition Width="*" MinWidth="220" />
+                            <ColumnDefinition Width="*" MinWidth="220" />
+                            <ColumnDefinition Width="1.2*" MinWidth="260" />
                         </Grid.ColumnDefinitions>
 
-                        <!-- Column 1: Trigger &amp; Target Channel ComboBoxes -->
-                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
+                        <!-- Column 1: Signalweg (Trigger ➔ Target) -->
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="16,14"
                                 BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
                             <StackPanel Spacing="10">
-                                <TextBlock Text="Signal-Zuweisung" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource BrandBrush}" />
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE8AB;" FontSize="13" Foreground="{StaticResource BrandBrush}" />
+                                    <TextBlock Text="Signalweg-Routing" FontWeight="SemiBold" FontSize="12" />
+                                </StackPanel>
                                 <StackPanel Spacing="4">
                                     <TextBlock Text="Sprach-Quelle (Trigger):" Style="{StaticResource Caption}" />
                                     <ComboBox ItemsSource="{x:Bind AutoDucking.AvailableTriggerChannels}"
                                               SelectedItem="{x:Bind AutoDucking.TriggerChannel, Mode=TwoWay}"
-                                              HorizontalAlignment="Stretch" />
+                                              HorizontalAlignment="Stretch" services:CursorHelper.UseHandCursor="True" />
                                 </StackPanel>
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Zu dämpfender Kanal (Ziel):" Style="{StaticResource Caption}" />
+                                    <TextBlock Text="Ziel-Kanal (gedämpft):" Style="{StaticResource Caption}" />
                                     <ComboBox ItemsSource="{x:Bind AutoDucking.AvailableTargetChannels}"
                                               SelectedItem="{x:Bind AutoDucking.TargetChannel, Mode=TwoWay}"
-                                              HorizontalAlignment="Stretch" />
+                                              HorizontalAlignment="Stretch" services:CursorHelper.UseHandCursor="True" />
                                 </StackPanel>
                             </StackPanel>
                         </Border>
 
                         <!-- Column 2: Ducking Amount (Absenkung) -->
-                        <Border Grid.Column="1" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
+                        <Border Grid.Column="1" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="16,14"
                                 BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
                             <StackPanel Spacing="8">
                                 <Grid>
-                                    <TextBlock Text="Dämpfung (Tiefe)" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="Absenkung (Tiefe):" FontWeight="SemiBold" FontSize="12" />
                                     <TextBlock Text="{x:Bind AutoDucking.DuckAmountLabel, Mode=OneWay}" HorizontalAlignment="Right"
-                                               FontFamily="{StaticResource DisplayFont}" Foreground="{StaticResource BrandBrush}" FontWeight="Bold" />
+                                               Foreground="{StaticResource BrandBrush}" FontWeight="Bold" />
                                 </Grid>
                                 <Slider Minimum="-30" Maximum="-6" StepFrequency="1"
-                                        Value="{x:Bind AutoDucking.DuckAmountDb, Mode=TwoWay}" />
-                                <TextBlock Text="Wie stark das Ziel gedämpft wird" Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
+                                        Value="{x:Bind AutoDucking.DuckAmountDb, Mode=TwoWay}"
+                                        services:CursorHelper.UseHandCursor="True" />
+                                <TextBlock Text="Wie tief die Musik abgesenkt wird" Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
+                                
                                 <!-- Live Gain Reduction Indicator -->
-                                <StackPanel Spacing="2" Margin="0,4,0,0">
-                                    <TextBlock Text="Aktuelle Reduktion:" Style="{StaticResource Overline}" FontSize="9" />
+                                <StackPanel Spacing="3" Margin="0,6,0,0">
+                                    <Grid>
+                                        <TextBlock Text="Aktuelle Pegelabsenkung:" Style="{StaticResource Overline}" FontSize="9" />
+                                        <TextBlock Text="{x:Bind AutoDucking.CurrentAttenuationDbLabel, Mode=OneWay}"
+                                                   HorizontalAlignment="Right" FontSize="10" FontWeight="Bold" Foreground="{StaticResource WarningBrush}" />
+                                    </Grid>
                                     <ProgressBar Minimum="0" Maximum="100" Value="{x:Bind AutoDucking.DuckReductionPercent, Mode=OneWay}"
-                                                 Height="4" CornerRadius="2" Foreground="{StaticResource WarningBrush}" Background="{ThemeResource SurfaceL3Brush}" />
+                                                 Height="6" CornerRadius="3" Foreground="{StaticResource WarningBrush}" Background="{ThemeResource SurfaceL3Brush}" />
                                 </StackPanel>
                             </StackPanel>
                         </Border>
 
                         <!-- Column 3: Threshold (Ansprechschwelle) -->
-                        <Border Grid.Column="2" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
+                        <Border Grid.Column="2" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="16,14"
                                 BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
                             <StackPanel Spacing="8">
                                 <Grid>
-                                    <TextBlock Text="Schwelle (Trigger)" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="Schwelle (Trigger):" FontWeight="SemiBold" FontSize="12" />
                                     <TextBlock Text="{x:Bind AutoDucking.ThresholdLabel, Mode=OneWay}" HorizontalAlignment="Right"
-                                               FontFamily="{StaticResource DisplayFont}" Foreground="{StaticResource BrandBrush}" FontWeight="Bold" />
+                                               Foreground="{StaticResource BrandBrush}" FontWeight="Bold" />
                                 </Grid>
                                 <Slider Minimum="-50" Maximum="-15" StepFrequency="1"
-                                        Value="{x:Bind AutoDucking.ThresholdDb, Mode=TwoWay}" />
-                                <TextBlock Text="Ab welchem Sprachpegel Ducking startet" Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
+                                        Value="{x:Bind AutoDucking.ThresholdDb, Mode=TwoWay}"
+                                        services:CursorHelper.UseHandCursor="True" />
+                                <TextBlock Text="Ab welchem Sprachpegel Ducking anspringt" Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
                             </StackPanel>
                         </Border>
 
-                        <!-- Column 4: Hold &amp; Release Timers -->
-                        <Border Grid.Column="3" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,12"
+                        <!-- Column 4: Hold & Release Timers -->
+                        <Border Grid.Column="3" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="16,14"
                                 BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
-                            <StackPanel Spacing="8">
+                            <StackPanel Spacing="6">
                                 <Grid>
-                                    <TextBlock Text="Haltezeit (Hold)" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="Haltezeit (Hold):" FontWeight="SemiBold" FontSize="12" />
                                     <TextBlock Text="{x:Bind AutoDucking.HoldLabel, Mode=OneWay}" HorizontalAlignment="Right"
-                                               FontFamily="{StaticResource DisplayFont}" Foreground="{StaticResource BrandBrush}" FontWeight="Bold" />
+                                               Foreground="{StaticResource BrandBrush}" FontWeight="Bold" />
                                 </Grid>
                                 <Slider Minimum="100" Maximum="2000" StepFrequency="50"
-                                        Value="{x:Bind AutoDucking.HoldMs, Mode=TwoWay}" />
+                                        Value="{x:Bind AutoDucking.HoldMs, Mode=TwoWay}"
+                                        services:CursorHelper.UseHandCursor="True" />
                                 <Grid Margin="0,2,0,0">
-                                    <TextBlock Text="Abklingzeit (Release)" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="Abklingzeit (Release):" FontWeight="SemiBold" FontSize="12" />
                                     <TextBlock Text="{x:Bind AutoDucking.ReleaseLabel, Mode=OneWay}" HorizontalAlignment="Right"
-                                               FontFamily="{StaticResource DisplayFont}" Foreground="{StaticResource BrandBrush}" FontWeight="Bold" />
+                                               Foreground="{StaticResource BrandBrush}" FontWeight="Bold" />
                                 </Grid>
                                 <Slider Minimum="100" Maximum="1500" StepFrequency="50"
-                                        Value="{x:Bind AutoDucking.ReleaseMs, Mode=TwoWay}" />
+                                        Value="{x:Bind AutoDucking.ReleaseMs, Mode=TwoWay}"
+                                        services:CursorHelper.UseHandCursor="True" />
                             </StackPanel>
                         </Border>
                     </Grid>
                 </StackPanel>
             </Border>
 
-            <!-- ===== Windows App-Audio-Routing & Lautstärkemixer ===== -->
-            <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
-                    BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Spacing="3">
-                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                            <FontIcon Glyph="&#xE7F4;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
-                            <TextBlock Text="Windows App-Audio-Routing (Lautstärkemixer)" Style="{StaticResource SectionTitle}" />
-                        </StackPanel>
-                        <TextBlock Text="Weise deinen Anwendungen (Spotify, Discord, Spiele, Browser) direkt ihre GoXLR-Spur und das passende Mikrofon zu."
-                                   Style="{StaticResource Caption}" />
-                    </StackPanel>
-
-                    <!-- Actions -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                        <Button Style="{StaticResource AccentButtonStyle}" Padding="14,7" Click="NavigateToVirtualChannels_Click"
-                                ToolTipService.ToolTip="Öffnet die Seite 'Virtuelle Kanäle' für die detaillierte App- und Mikrofon-Zuweisung">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE7F4;" FontSize="14" />
-                                <TextBlock Text="Zu Virtuelle Kanäle" FontWeight="SemiBold" />
-                            </StackPanel>
-                        </Button>
-                        <Button Style="{StaticResource SmoothButton}" Padding="12,7" Click="OpenWindowsMixer_Click"
-                                ToolTipService.ToolTip="Windows Soundeinstellungen / Lautstärkemixer öffnen">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <FontIcon Glyph="&#xE8A7;" FontSize="14" />
-                                <TextBlock Text="Windows-Mixer" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </Grid>
-            </Border>
         </StackPanel>
     </ScrollViewer>
 </Page>

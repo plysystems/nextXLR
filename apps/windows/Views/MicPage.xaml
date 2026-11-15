@@ -20,221 +20,287 @@
     </Page.Resources>
 
     <ScrollViewer Style="{StaticResource PageScroller}">
-        <StackPanel Spacing="16" MaxWidth="1440" HorizontalAlignment="Center">
+        <StackPanel Spacing="20" MaxWidth="1340" HorizontalAlignment="Center" Margin="0,0,0,32">
             
-            <!-- Studio Header: Title & Subtitle -->
-            <Grid Margin="0,0,0,2">
-                <StackPanel Spacing="3" VerticalAlignment="Center">
-                    <TextBlock x:Uid="MicTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
-                    <TextBlock Text="Mikrofontyp, Gain-Kalibrierung, integrierte Studio-DSP-Effektkette und KI-Rauschunterdrückung."
+            <!-- ================= STUDIO HEADER ================= -->
+            <Grid Margin="0,0,0,4">
+                <StackPanel Spacing="4" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <TextBlock x:Uid="MicTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
+                        <Border Background="{ThemeResource SurfaceL2Brush}" BorderBrush="{StaticResource BrandBrush}"
+                                BorderThickness="1" CornerRadius="6" Padding="8,3" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <FontIcon Glyph="&#xE73E;" FontSize="11" Foreground="{StaticResource BrandBrush}" />
+                                <TextBlock Text="DSP LIVE 0 ms" FontSize="11" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Text="Analoge Vorverstärkung, KI-Signalbereinigung, 10-Band Studio-EQ, Dynamikprozessoren und VST3-Rack."
                                Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
                 </StackPanel>
             </Grid>
 
-            <!-- Compact Profile Toolbar (Einheitliche, platzsparende Glasleiste) -->
+            <!-- ================= COMPACT STUDIO PROFILE TOOLBAR ================= -->
             <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
                     BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="18,12">
-                <Grid ColumnSpacing="12">
+                <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" MinWidth="180" MaxWidth="320" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" MinWidth="160" />
-                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                        <FontIcon Glyph="&#xE720;" FontSize="15" Foreground="{StaticResource BrandBrush}" />
-                        <TextBlock Text="Profil:" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <!-- Left: Profile Selector & Load Button -->
+                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="0,0,4,0">
+                            <FontIcon Glyph="&#xE720;" FontSize="15" Foreground="{StaticResource BrandBrush}" />
+                            <TextBlock Text="Mikrofon-Profil:" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <ComboBox x:Name="MicProfileBox" Width="240" VerticalAlignment="Center"
+                                  services:CursorHelper.UseHandCursor="True" />
+
+                        <Button x:Uid="MicProfileLoad" Style="{StaticResource AccentButtonStyle}" Click="MicLoad_Click"
+                                VerticalAlignment="Center" services:CursorHelper.UseHandCursor="True">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE896;" FontSize="13" />
+                                <TextBlock Text="Laden" />
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
 
-                    <ComboBox x:Name="MicProfileBox" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                              services:CursorHelper.UseHandCursor="True" />
+                    <!-- Right: Save & Profile Options Flyout -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <TextBox x:Name="MicProfileName" Width="200" MaxLength="40" PlaceholderText="Neuer Profilname..."
+                                 VerticalAlignment="Center" />
 
-                    <Button x:Uid="MicProfileLoad" Grid.Column="2" Style="{StaticResource AccentButtonStyle}" Click="MicLoad_Click"
-                            VerticalAlignment="Center" services:CursorHelper.UseHandCursor="True">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <FontIcon Glyph="&#xE896;" FontSize="13" />
-                            <TextBlock Text="Laden" />
-                        </StackPanel>
-                    </Button>
+                        <Button x:Uid="MicProfileSave" Style="{StaticResource SmoothButton}" Click="MicSave_Click"
+                                VerticalAlignment="Center" services:CursorHelper.UseHandCursor="True">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE74E;" FontSize="13" Foreground="{StaticResource BrandBrush}" />
+                                <TextBlock Text="Speichern" />
+                            </StackPanel>
+                        </Button>
 
-                    <TextBox x:Name="MicProfileName" Grid.Column="3" MaxLength="40" PlaceholderText="Neuer Profilname..."
-                             VerticalAlignment="Center" />
-
-                    <Button x:Uid="MicProfileSave" Grid.Column="4" Style="{StaticResource SmoothButton}" Click="MicSave_Click"
-                            VerticalAlignment="Center" services:CursorHelper.UseHandCursor="True">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <FontIcon Glyph="&#xE74E;" FontSize="13" Foreground="{StaticResource BrandBrush}" />
-                            <TextBlock Text="Speichern" />
-                        </StackPanel>
-                    </Button>
-
-                    <!-- Profil-Optionen Flyout (Import, Export, Standard, Löschen) -->
-                    <Button Grid.Column="5" Style="{StaticResource SmoothButton}" VerticalAlignment="Center"
-                            ToolTipService.ToolTip="Profiloptionen (Standard, Export, Import, Löschen)"
-                            services:CursorHelper.UseHandCursor="True">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <FontIcon Glyph="&#xE712;" FontSize="14" />
-                            <TextBlock Text="Optionen" />
-                        </StackPanel>
-                        <Button.Flyout>
-                            <MenuFlyout Placement="Bottom">
-                                <MenuFlyoutItem Click="MicDefault_Click">
-                                    <MenuFlyoutItem.Icon>
-                                        <FontIcon x:Name="MicDefaultIcon" Glyph="&#xE734;" />
-                                    </MenuFlyoutItem.Icon>
-                                    <MenuFlyoutItem.Text>Als Standard-Profil festlegen</MenuFlyoutItem.Text>
-                                </MenuFlyoutItem>
-                                <MenuFlyoutSeparator />
-                                <MenuFlyoutItem Click="MicExport_Click">
-                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xEDE1;" /></MenuFlyoutItem.Icon>
-                                    <MenuFlyoutItem.Text>Profil exportieren (.json)...</MenuFlyoutItem.Text>
-                                </MenuFlyoutItem>
-                                <MenuFlyoutItem Click="MicImport_Click">
-                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B5;" /></MenuFlyoutItem.Icon>
-                                    <MenuFlyoutItem.Text>Profil importieren (.json / .goxlr)...</MenuFlyoutItem.Text>
-                                </MenuFlyoutItem>
-                                <MenuFlyoutSeparator />
-                                <MenuFlyoutItem Click="MicDelete_Click">
-                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" Foreground="#FF453A" /></MenuFlyoutItem.Icon>
-                                    <MenuFlyoutItem.Text>Ausgewähltes Profil löschen</MenuFlyoutItem.Text>
-                                </MenuFlyoutItem>
-                            </MenuFlyout>
-                        </Button.Flyout>
-                    </Button>
+                        <Button Style="{StaticResource SmoothButton}" VerticalAlignment="Center"
+                                ToolTipService.ToolTip="Profil-Optionen (Standard, Exportieren, Importieren, Löschen)"
+                                services:CursorHelper.UseHandCursor="True">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE712;" FontSize="14" />
+                                <TextBlock Text="Optionen" />
+                            </StackPanel>
+                            <Button.Flyout>
+                                <MenuFlyout Placement="Bottom">
+                                    <MenuFlyoutItem Click="MicDefault_Click">
+                                        <MenuFlyoutItem.Icon>
+                                            <FontIcon x:Name="MicDefaultIcon" Glyph="&#xE734;" />
+                                        </MenuFlyoutItem.Icon>
+                                        <MenuFlyoutItem.Text>Als Standard-Profil festlegen</MenuFlyoutItem.Text>
+                                    </MenuFlyoutItem>
+                                    <MenuFlyoutSeparator />
+                                    <MenuFlyoutItem Click="MicExport_Click">
+                                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xEDE1;" /></MenuFlyoutItem.Icon>
+                                        <MenuFlyoutItem.Text>Profil exportieren (.json)...</MenuFlyoutItem.Text>
+                                    </MenuFlyoutItem>
+                                    <MenuFlyoutItem Click="MicImport_Click">
+                                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B5;" /></MenuFlyoutItem.Icon>
+                                        <MenuFlyoutItem.Text>Profil importieren (.json / .goxlr)...</MenuFlyoutItem.Text>
+                                    </MenuFlyoutItem>
+                                    <MenuFlyoutSeparator />
+                                    <MenuFlyoutItem Click="MicDelete_Click">
+                                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" Foreground="#FF453A" /></MenuFlyoutItem.Icon>
+                                        <MenuFlyoutItem.Text>Ausgewähltes Profil löschen</MenuFlyoutItem.Text>
+                                    </MenuFlyoutItem>
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+                    </StackPanel>
                 </Grid>
             </Border>
 
-            <InfoBar x:Name="MicProfileResult" IsClosable="True" Margin="0,-6,0,0" />
+            <InfoBar x:Name="MicProfileResult" IsClosable="True" Margin="0,-8,0,0" />
 
-            <!-- ================= TOP SECTION: 2-COLUMN STUDIO COCKPIT ================= -->
-            <Grid ColumnSpacing="16" RowSpacing="16">
+            <!-- ================= SEKTION 1: MIKROFON-VORVERSTÄRKER & HARDWARE PRESETS (VOLLE BREITE) ================= -->
+            <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                    BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="24,20">
+                <StackPanel Spacing="20">
+                    <!-- Title Bar with Prominent Mute Button -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Spacing="3" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE720;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
+                                <TextBlock Text="Mikrofon-Vorverstärker &amp; Kalibrierung" Style="{StaticResource SectionTitle}" />
+                            </StackPanel>
+                            <TextBlock Text="Wähle deinen Mikrofontyp und kalibriere die analoge Vorverstärkung für einen sauberen Studiopegel."
+                                       Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
+                        </StackPanel>
+
+                        <!-- Mic Mute Button -->
+                        <ToggleButton Grid.Column="1" Height="38" Padding="14,0" VerticalAlignment="Center"
+                                      Style="{StaticResource SmoothDangerToggle}"
+                                      IsChecked="{x:Bind ViewModel.MicMuted, Mode=TwoWay}"
+                                      services:CursorHelper.UseHandCursor="True">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="{x:Bind MicMuteGlyph(ViewModel.MicMuted), Mode=OneWay}" FontSize="15" />
+                                <TextBlock Text="{x:Bind MicMuteStatus(ViewModel.MicMuted), Mode=OneWay}" FontWeight="SemiBold" FontSize="12" />
+                            </StackPanel>
+                        </ToggleButton>
+                    </Grid>
+
+                    <!-- Preamp Controls: Mikrofontyp links, Gain & Peak-Meter rechts -->
+                    <Grid ColumnSpacing="24" RowSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="380" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Mikrofontyp Karte -->
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="16,14"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Mikrofontyp:" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TextMutedBrush}" />
+                                <RadioButtons x:Uid="MicTypeRadio" SelectedIndex="{x:Bind Mic.MicType, Mode=TwoWay}"
+                                              services:CursorHelper.UseHandCursor="True">
+                                    <RadioButton x:Uid="MicTypeDynamic" Content="Dynamisch (XLR - z.B. SM7B, PodMic)"
+                                                 Margin="0,0,0,4" services:CursorHelper.UseHandCursor="True" />
+                                    <RadioButton x:Uid="MicTypeCondenser" Content="Kondensator (+48V XLR Phantomspeisung)"
+                                                 Margin="0,0,0,4" services:CursorHelper.UseHandCursor="True" />
+                                    <RadioButton x:Uid="MicTypeJack" Content="3.5mm Klinke (Headsets &amp; Kleinmembran)"
+                                                 services:CursorHelper.UseHandCursor="True" />
+                                </RadioButtons>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Gain Slider & High-Resolution Peak Meter -->
+                        <Border Grid.Column="1" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="20,16"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                            <StackPanel Spacing="12">
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <TextBlock Text="Vorverstärkung (Gain):" FontWeight="SemiBold" FontSize="14" />
+                                        <TextBlock Text="(Zielbereich beim Sprechen: -18 bis -12 dBFS)" Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <TextBlock HorizontalAlignment="Right" FontWeight="Bold" FontSize="18" Foreground="{StaticResource BrandBrush}"
+                                               Text="{x:Bind Mic.GainLabel, Mode=OneWay}" />
+                                </Grid>
+                                <Slider x:Uid="MicGain" Minimum="0" Maximum="72" Value="{x:Bind Mic.Gain, Mode=TwoWay}"
+                                        services:CursorHelper.UseHandCursor="True" />
+                                
+                                <Grid Margin="0,4,0,0">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <TextBlock Text="Echtzeit-Eingangspegel (dBFS):" Style="{StaticResource Caption}" />
+                                        <TextBlock Text="Live Peak" Style="{StaticResource Overline}" FontSize="9" Foreground="{StaticResource BrandBrush}" />
+                                    </StackPanel>
+                                    <TextBlock HorizontalAlignment="Right" Style="{StaticResource Caption}" FontWeight="Bold" Foreground="{StaticResource BrandBrush}"
+                                               Text="{x:Bind ViewModel.MicChannel.PeakLabel, Mode=OneWay}" />
+                                </Grid>
+                                <ProgressBar Height="10" CornerRadius="5" Maximum="1" Value="{x:Bind ViewModel.MicChannel.Meter, Mode=OneWay}"
+                                             Foreground="{StaticResource MeterBrush}" Background="{ThemeResource SurfaceL3Brush}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <Border Height="1" Background="{ThemeResource SurfaceStrokeSubtleBrush}" />
+
+                    <!-- 1-Klick Hardware-Presets: 5 großzügige Studio-Karten über die volle Breite -->
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE735;" FontSize="14" Foreground="{StaticResource BrandBrush}" />
+                            <TextBlock Text="1-Klick Hardware- &amp; Mikrofon-Presets:" FontWeight="SemiBold" FontSize="13" />
+                            <TextBlock Text="Optimierte Gain-, EQ- und Dynamikabstimmung für gängige Mikrofone"
+                                       Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Preset 1: Shure SM7B -->
+                            <Button HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="sm7b" Click="MicPreset_Click"
+                                    Padding="14,12" CornerRadius="10" services:CursorHelper.UseHandCursor="True">
+                                <StackPanel Spacing="3" HorizontalAlignment="Center">
+                                    <TextBlock Text="Shure SM7B" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" />
+                                    <TextBlock Text="+56 dB Gain" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Dynamisch · Nahbesprechung" Style="{StaticResource Caption}" FontSize="10" HorizontalAlignment="Center" Foreground="{ThemeResource TextMutedBrush}" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Preset 2: Røde PodMic -->
+                            <Button Grid.Column="1" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="podmic" Click="MicPreset_Click"
+                                    Padding="14,12" CornerRadius="10" services:CursorHelper.UseHandCursor="True">
+                                <StackPanel Spacing="3" HorizontalAlignment="Center">
+                                    <TextBlock Text="Røde PodMic" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" />
+                                    <TextBlock Text="+48 dB Gain" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Dynamisch · Präsent &amp; Durchsetzungsstark" Style="{StaticResource Caption}" FontSize="10" HorizontalAlignment="Center" Foreground="{ThemeResource TextMutedBrush}" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Preset 3: Kondensator +48V -->
+                            <Button Grid.Column="2" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="condenser" Click="MicPreset_Click"
+                                    Padding="14,12" CornerRadius="10" services:CursorHelper.UseHandCursor="True">
+                                <StackPanel Spacing="3" HorizontalAlignment="Center">
+                                    <TextBlock Text="Kondensator" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" />
+                                    <TextBlock Text="+36 dB (+48V)" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Phantomspeisung · Kristallklar" Style="{StaticResource Caption}" FontSize="10" HorizontalAlignment="Center" Foreground="{ThemeResource TextMutedBrush}" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Preset 4: Broadcast Warm -->
+                            <Button Grid.Column="3" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="broadcast" Click="MicPreset_Click"
+                                    Padding="14,12" CornerRadius="10" services:CursorHelper.UseHandCursor="True">
+                                <StackPanel Spacing="3" HorizontalAlignment="Center">
+                                    <TextBlock Text="Broadcast Voice" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Radio Warmth" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Fette Bässe &amp; sanfte Höhen" Style="{StaticResource Caption}" FontSize="10" HorizontalAlignment="Center" Foreground="{ThemeResource TextMutedBrush}" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Preset 5: Neutral Studio -->
+                            <Button Grid.Column="4" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="neutral" Click="MicPreset_Click"
+                                    Padding="14,12" CornerRadius="10" services:CursorHelper.UseHandCursor="True">
+                                <StackPanel Spacing="3" HorizontalAlignment="Center">
+                                    <TextBlock Text="Neutral Studio" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Linear 0 dB" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Unverfälschter Originalklang" Style="{StaticResource Caption}" FontSize="10" HorizontalAlignment="Center" Foreground="{ThemeResource TextMutedBrush}" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ================= SEKTION 2: KI-RAUSCHUNTERDRÜCKUNG & DE-ESSER (2 GERÄUMIGE SPALTEN) ================= -->
+            <Grid ColumnSpacing="20" RowSpacing="16">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" MinWidth="480" />
-                    <ColumnDefinition Width="*" MinWidth="480" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Linke Spalte: Mikrofon-Hardware, Gain & Schnell-Presets -->
+                <!-- Linke Spalte: Neuronale KI-Rauschunterdrückung -->
                 <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
-                        BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,18">
+                        BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="22,18">
                     <StackPanel Spacing="16">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                <FontIcon Glyph="&#xE720;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
-                                <TextBlock Text="Mikrofon-Eingang &amp; Kalibrierung" Style="{StaticResource SectionTitle}" />
-                            </StackPanel>
-                            <!-- Mic Mute Button -->
-                            <ToggleButton Grid.Column="1" Height="36" Padding="12,0" VerticalAlignment="Center"
-                                          Style="{StaticResource SmoothDangerToggle}"
-                                          IsChecked="{x:Bind ViewModel.MicMuted, Mode=TwoWay}"
-                                          services:CursorHelper.UseHandCursor="True">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="{x:Bind MicMuteGlyph(ViewModel.MicMuted), Mode=OneWay}" FontSize="14" />
-                                    <TextBlock Text="{x:Bind MicMuteStatus(ViewModel.MicMuted), Mode=OneWay}" FontWeight="SemiBold" FontSize="12" />
+                            <StackPanel Spacing="2">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <FontIcon Glyph="&#xE9F5;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                    <TextBlock Text="KI-Rauschunterdrückung" Style="{StaticResource SectionTitle}" />
                                 </StackPanel>
-                            </ToggleButton>
-                        </Grid>
-
-                        <!-- Mic Type (Kompakte Radio-Gruppe) -->
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Mikrofontyp:" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TextMutedBrush}" />
-                            <RadioButtons x:Uid="MicTypeRadio" SelectedIndex="{x:Bind Mic.MicType, Mode=TwoWay}"
-                                          MaxColumns="3" services:CursorHelper.UseHandCursor="True">
-                                <RadioButton x:Uid="MicTypeDynamic" Content="Dynamisch (XLR)" services:CursorHelper.UseHandCursor="True" />
-                                <RadioButton x:Uid="MicTypeCondenser" Content="Kondensator (+48V XLR)" services:CursorHelper.UseHandCursor="True" />
-                                <RadioButton x:Uid="MicTypeJack" Content="3.5mm Klinke (Headset)" services:CursorHelper.UseHandCursor="True" />
-                            </RadioButtons>
-                        </StackPanel>
-
-                        <!-- Gain Slider & Live-Meter -->
-                        <StackPanel Spacing="8">
-                            <Grid>
-                                <TextBlock Text="Vorverstärkung (Gain):" FontWeight="SemiBold" FontSize="13" />
-                                <TextBlock HorizontalAlignment="Right" FontWeight="Bold" FontSize="13" Foreground="{StaticResource BrandBrush}"
-                                           Text="{x:Bind Mic.GainLabel, Mode=OneWay}" />
-                            </Grid>
-                            <Slider x:Uid="MicGain" Minimum="0" Maximum="72" Value="{x:Bind Mic.Gain, Mode=TwoWay}"
-                                    services:CursorHelper.UseHandCursor="True" />
-                            
-                            <Grid Margin="0,4,0,0">
-                                <TextBlock Text="Echtzeit-Eingangspegel (dBFS):" Style="{StaticResource Caption}" />
-                                <TextBlock HorizontalAlignment="Right" Style="{StaticResource Caption}" FontWeight="Bold"
-                                           Text="{x:Bind ViewModel.MicChannel.PeakLabel, Mode=OneWay}" />
-                            </Grid>
-                            <ProgressBar Height="8" CornerRadius="4" Maximum="1" Value="{x:Bind ViewModel.MicChannel.Meter, Mode=OneWay}"
-                                         Foreground="{StaticResource MeterBrush}" />
-                        </StackPanel>
-
-                        <Border Height="1" Background="{ThemeResource SurfaceStrokeSubtleBrush}" Margin="0,4,0,4" />
-
-                        <!-- Ein-Klick Schnell-Presets -->
-                        <StackPanel Spacing="8">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <FontIcon Glyph="&#xE735;" FontSize="13" Foreground="{StaticResource BrandBrush}" />
-                                <TextBlock Text="1-Klick Hardware-Presets:" FontWeight="SemiBold" FontSize="12" />
+                                <TextBlock Text="Filtert Tastatur, Lüfter &amp; Klicks per neuronalem Netz" Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
                             </StackPanel>
-                            <Grid ColumnSpacing="6">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Button HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="sm7b" Click="MicPreset_Click" Padding="4,6" services:CursorHelper.UseHandCursor="True">
-                                    <StackPanel Spacing="1" HorizontalAlignment="Center">
-                                        <TextBlock Text="SM7B" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center" />
-                                        <TextBlock Text="56 dB" Style="{StaticResource Caption}" FontSize="9" HorizontalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Grid.Column="1" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="podmic" Click="MicPreset_Click" Padding="4,6" services:CursorHelper.UseHandCursor="True">
-                                    <StackPanel Spacing="1" HorizontalAlignment="Center">
-                                        <TextBlock Text="PodMic" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center" />
-                                        <TextBlock Text="48 dB" Style="{StaticResource Caption}" FontSize="9" HorizontalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Grid.Column="2" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="condenser" Click="MicPreset_Click" Padding="4,6" services:CursorHelper.UseHandCursor="True">
-                                    <StackPanel Spacing="1" HorizontalAlignment="Center">
-                                        <TextBlock Text="+48V" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center" />
-                                        <TextBlock Text="36 dB" Style="{StaticResource Caption}" FontSize="9" HorizontalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Grid.Column="3" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="broadcast" Click="MicPreset_Click" Padding="4,6" services:CursorHelper.UseHandCursor="True">
-                                    <StackPanel Spacing="1" HorizontalAlignment="Center">
-                                        <TextBlock Text="Broadcast" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center" />
-                                        <TextBlock Text="Warm" Style="{StaticResource Caption}" FontSize="9" HorizontalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Grid.Column="4" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="neutral" Click="MicPreset_Click" Padding="4,6" services:CursorHelper.UseHandCursor="True">
-                                    <StackPanel Spacing="1" HorizontalAlignment="Center">
-                                        <TextBlock Text="Neutral" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center" />
-                                        <TextBlock Text="Linear" Style="{StaticResource Caption}" FontSize="9" HorizontalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                            </Grid>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
 
-                <!-- Rechte Spalte: KI-Rauschunterdrückung & Stimmveredelung (Inkl. De-Esser) -->
-                <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
-                        BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,18">
-                    <StackPanel Spacing="16">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                <FontIcon Glyph="&#xE9F5;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
-                                <TextBlock Text="KI-Rauschunterdrückung &amp; Entrauschung" Style="{StaticResource SectionTitle}" />
-                            </StackPanel>
                             <ToggleSwitch Grid.Column="1" IsOn="{x:Bind Mic.RnnoiseEnabled, Mode=TwoWay}"
                                           OnContent="Aktiv" OffContent="Bypass" MinWidth="0" VerticalAlignment="Center"
                                           services:CursorHelper.UseHandCursor="True" />
@@ -244,114 +310,163 @@
                                  Title="{x:Bind Mic.RnnoiseStatusBadge, Mode=OneWay}"
                                  Message="{x:Bind Mic.RnnoiseStatusMessage, Mode=OneWay}" />
 
-                        <!-- KI Intensität & Modell-Auswahl -->
-                        <Grid ColumnSpacing="16">
+                        <!-- KI Intensität Slider -->
+                        <StackPanel Spacing="6">
+                            <Grid>
+                                <TextBlock Text="Entrauschungs-Intensität:" FontWeight="SemiBold" FontSize="13" />
+                                <TextBlock HorizontalAlignment="Right" FontWeight="Bold" FontSize="14" Foreground="{StaticResource BrandBrush}"
+                                           Text="{x:Bind Mic.RnnoiseIntensityLabel, Mode=OneWay}" />
+                            </Grid>
+                            <Slider Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind Mic.RnnoiseIntensity, Mode=TwoWay}"
+                                    services:CursorHelper.UseHandCursor="True" />
+                            <TextBlock Text="Empfehlung: 70–85 % für maximale Sprachnatürlichkeit ohne Hall-Artefakte." Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
+                        </StackPanel>
+
+                        <!-- Modell-Auswahl Buttons -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Neuronales Modell:" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TextMutedBrush}" />
+                            <Grid ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Button HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="DeepFilterNet3" Click="RnnoiseModel_Click"
+                                        Padding="10,8" services:CursorHelper.UseHandCursor="True">
+                                    <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="DeepFilterNet 3" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center" />
+                                        <TextBlock Text="Neueste Generation (Empfohlen)" Style="{StaticResource Caption}" FontSize="9" HorizontalAlignment="Center" Foreground="{ThemeResource TextMutedBrush}" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="1" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Tag="RNNoise" Click="RnnoiseModel_Click"
+                                        Padding="10,8" services:CursorHelper.UseHandCursor="True">
+                                    <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="RNNoise" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center" />
+                                        <TextBlock Text="Klassisch &amp; Extrem CPU-schonend" Style="{StaticResource Caption}" FontSize="9" HorizontalAlignment="Center" Foreground="{ThemeResource TextMutedBrush}" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Rechte Spalte: De-Esser (Zischlaut-Dämpfung) -->
+                <Border Grid.Column="1" Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                        BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="22,18">
+                    <StackPanel Spacing="16">
+                        <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <StackPanel Spacing="6">
-                                <Grid>
-                                    <TextBlock Text="Filter-Intensität:" FontWeight="SemiBold" FontSize="12" />
-                                    <TextBlock HorizontalAlignment="Right" FontWeight="Bold" FontSize="12" Foreground="{StaticResource BrandBrush}"
-                                               Text="{x:Bind Mic.RnnoiseIntensityLabel, Mode=OneWay}" />
-                                </Grid>
-                                <Slider Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind Mic.RnnoiseIntensity, Mode=TwoWay}"
-                                        services:CursorHelper.UseHandCursor="True" />
-                                <TextBlock Text="Entfernt mechanische Tastaturen, Lüfter und Mausklicks in Echtzeit." Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="1" Spacing="6">
-                                <TextBlock Text="Neuronales Modell:" FontWeight="SemiBold" FontSize="12" />
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Button Content="DeepFilterNet 3" Style="{StaticResource SmoothButton}" Tag="DeepFilterNet3" Click="RnnoiseModel_Click" services:CursorHelper.UseHandCursor="True" />
-                                    <Button Content="RNNoise" Style="{StaticResource SmoothButton}" Tag="RNNoise" Click="RnnoiseModel_Click" services:CursorHelper.UseHandCursor="True" />
+                            <StackPanel Spacing="2">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <FontIcon Glyph="&#xE8D6;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                    <TextBlock Text="De-Esser (Zischlaut-Zähmung)" Style="{StaticResource SectionTitle}" />
                                 </StackPanel>
+                                <TextBlock Text="Dämpft stechende S-, Z- und Sch-Laute für seidige Höhen" Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
                             </StackPanel>
+
+                            <Border Grid.Column="1" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="8" Padding="10,4" VerticalAlignment="Center">
+                                <TextBlock Text="{x:Bind Mic.DeEsserLabel, Mode=OneWay}" FontWeight="Bold" FontSize="14" Foreground="{StaticResource BrandBrush}" />
+                            </Border>
                         </Grid>
 
-                        <Border Height="1" Background="{ThemeResource SurfaceStrokeSubtleBrush}" Margin="0,4,0,4" />
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="10" Padding="14,12"
+                                BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                            <StackPanel Spacing="8">
+                                <Grid>
+                                    <TextBlock Text="De-Esser Dämpfungsstärke:" FontWeight="SemiBold" FontSize="13" />
+                                    <TextBlock Text="6.0 – 8.5 kHz Band" Style="{StaticResource Caption}" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Right" />
+                                </Grid>
+                                <Slider x:Uid="MicDeEsser" Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind Mic.DeEsser, Mode=TwoWay}"
+                                        services:CursorHelper.UseHandCursor="True" />
+                                <TextBlock Text="Der dynamische De-Esser erkennt Sibilanten selektiv und senkt nur bei scharfen Zischlauten gezielt die Frequenzen ab. Der Grundklang bleibt voll und offen."
+                                           Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
 
-                        <!-- Integrierter De-Esser (Zischlaut-Dämpfung) - Nicht mehr isolierter Expander! -->
-                        <StackPanel Spacing="6">
-                            <Grid>
-                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                    <FontIcon Glyph="&#xE8D6;" FontSize="13" Foreground="{StaticResource BrandBrush}" />
-                                    <TextBlock Text="De-Esser (Zischlaut-Dämpfung S/Z/Sch):" FontWeight="SemiBold" FontSize="12" />
-                                </StackPanel>
-                                <TextBlock HorizontalAlignment="Right" FontWeight="Bold" FontSize="12" Foreground="{StaticResource BrandBrush}"
-                                           Text="{x:Bind Mic.DeEsserLabel, Mode=OneWay}" />
+                        <!-- Erklärungs-Kärtchen -->
+                        <Border Background="{ThemeResource SurfaceL3Brush}" CornerRadius="10" Padding="14,10">
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="&#xE946;" FontSize="16" Foreground="{StaticResource BrandBrush}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="Tipp: 20–35 % reicht für Kondensatormikrofone. Bei Shure SM7B ohne Windschutz 30–45 % einstellen."
+                                           Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" TextWrapping="Wrap" VerticalAlignment="Center" />
                             </Grid>
-                            <Slider x:Uid="MicDeEsser" Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind Mic.DeEsser, Mode=TwoWay}"
-                                    services:CursorHelper.UseHandCursor="True" />
-                            <TextBlock Text="Zähmt schneidende Zischlaute für angenehme, weiche Höhenwiedergabe." Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
-                        </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Border>
             </Grid>
 
-            <!-- ================= MITTE SECTION: EQUALIZER & RTA SPEKTRUM-ANALYSATOR ================= -->
+            <!-- ================= SEKTION 3: 10-BAND STUDIO EQUALIZER & RTA SPEKTRUMANALYSATOR ================= -->
             <Expander IsExpanded="True">
                 <Expander.Header>
-                    <Grid Padding="0,10" ColumnSpacing="12">
+                    <Grid Padding="0,10" ColumnSpacing="14">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <FontIcon Glyph="&#xE9E9;" Foreground="{StaticResource BrandBrush}" />
+                        <FontIcon Glyph="&#xE9E9;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
                             <TextBlock Text="10-Band Studio-Equalizer &amp; Echtzeit-RTA" Style="{StaticResource CardTitle}" />
-                            <TextBlock Text="Präzise Frequenzabstimmung von Tiefbass bis Brillanz mit integrierter Live-Spektrumanalyse." Style="{StaticResource Caption}" />
+                            <TextBlock Text="Präzise Terzband-Frequenzabstimmung von Tiefbass bis Brillanz mit integrierter 60 FPS Spektrumanalyse." Style="{StaticResource Caption}" />
                         </StackPanel>
                     </Grid>
                 </Expander.Header>
-                <StackPanel Spacing="16" Padding="4">
+                <StackPanel Spacing="18" Padding="6">
                     <TextBlock x:Uid="MicEqMiniNote" Style="{StaticResource Caption}"
                                Visibility="{x:Bind Visible(ViewModel.Hardware.IsMini), Mode=OneWay}" />
 
-                    <!-- Live RTA FFT Spectrum Visualizer (Über volle Breite) -->
-                    <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,10"
+                    <!-- Live RTA FFT Spectrum Visualizer (Volle Breite) -->
+                    <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="16,12"
                             BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
-                        <StackPanel Spacing="6">
+                        <StackPanel Spacing="8">
                             <Grid>
-                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                    <FontIcon Glyph="&#xE9CA;" FontSize="13" Foreground="{StaticResource BrandBrush}" />
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <FontIcon Glyph="&#xE9CA;" FontSize="14" Foreground="{StaticResource BrandBrush}" />
                                     <TextBlock Text="Echtzeit-Spektrumanalysator (RTA Live-FFT)" Style="{StaticResource Overline}" />
                                 </StackPanel>
                                 <TextBlock Text="10 Terz-Bänder · Peak-Hold (60 FPS)" HorizontalAlignment="Right" Style="{StaticResource Caption}" Foreground="{StaticResource BrandBrush}" />
                             </Grid>
-                            <controls:RtaSpectrumVisualizer Height="90" Channel="{x:Bind ViewModel.MicChannel, Mode=OneWay}" />
+                            <controls:RtaSpectrumVisualizer Height="95" Channel="{x:Bind ViewModel.MicChannel, Mode=OneWay}" />
                         </StackPanel>
                     </Border>
 
-                    <!-- 10 Parametrische Schieberegler großzügig auf voller Breite -->
-                    <ItemsControl ItemsSource="{x:Bind Mic.EqBands}" HorizontalAlignment="Center" Margin="0,8,0,4">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" Spacing="24" HorizontalAlignment="Center" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:EqBandViewModel">
-                                <StackPanel Width="68" Spacing="8">
-                                    <TextBlock Text="{x:Bind GainLabel, Mode=OneWay}" Style="{StaticResource Caption}"
-                                               FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Center" />
-                                    <Slider Orientation="Vertical" Height="170" Minimum="-9" Maximum="9" StepFrequency="1"
-                                            HorizontalAlignment="Center" Value="{x:Bind Gain, Mode=TwoWay}"
-                                            services:CursorHelper.UseHandCursor="True" />
-                                    <TextBlock Text="{x:Bind Label}" FontWeight="SemiBold" FontSize="11" HorizontalAlignment="Center" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <!-- 10 Parametrische Schieberegler gleichmäßig verteilt -->
+                    <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="20,16"
+                            BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                        <ItemsControl ItemsSource="{x:Bind Mic.EqBands}" HorizontalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="32" HorizontalAlignment="Center" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:EqBandViewModel">
+                                    <StackPanel Width="68" Spacing="8">
+                                        <TextBlock Text="{x:Bind GainLabel, Mode=OneWay}" Style="{StaticResource Caption}"
+                                                   FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Center" />
+                                        <Slider Orientation="Vertical" Height="175" Minimum="-9" Maximum="9" StepFrequency="1"
+                                                HorizontalAlignment="Center" Value="{x:Bind Gain, Mode=TwoWay}"
+                                                services:CursorHelper.UseHandCursor="True" />
+                                        <TextBlock Text="{x:Bind Label}" FontWeight="SemiBold" FontSize="11" HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
                 </StackPanel>
             </Expander>
 
-            <!-- ================= DYNAMIK SECTION: NOISE GATE & KOMPRESSOR ================= -->
-            <Grid ColumnSpacing="16" RowSpacing="16">
+            <!-- ================= SEKTION 4: DYNAMIK (NOISE GATE & STUDIO-KOMPRESSOR) ================= -->
+            <Grid ColumnSpacing="20" RowSpacing="16">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" MinWidth="460" />
-                    <ColumnDefinition Width="*" MinWidth="460" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Noise Gate Card -->
@@ -363,49 +478,69 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE9D9;" Foreground="{StaticResource BrandBrush}" />
-                            <TextBlock Text="Noise Gate (Expander)" Grid.Column="1" Style="{StaticResource CardTitle}" />
+                            <FontIcon Glyph="&#xE9D9;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Noise Gate (Expander)" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Schneidet Atem- und Umgebungsgeräusche stumm" Style="{StaticResource Caption}" />
+                            </StackPanel>
                             <ToggleSwitch Grid.Column="2" IsOn="{x:Bind Mic.GateEnabled, Mode=TwoWay}"
                                           OnContent="Aktiv" OffContent="Bypass" MinWidth="0"
                                           services:CursorHelper.UseHandCursor="True" />
                         </Grid>
                     </Expander.Header>
-                    <Grid ColumnSpacing="20" RowSpacing="14" Padding="4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="Schwellenwert (Threshold):" Style="{StaticResource Caption}" />
-                            <Slider x:Uid="MicGateThreshold" Minimum="-59" Maximum="0" StepFrequency="1" Value="{x:Bind Mic.GateThreshold, Mode=TwoWay}"
-                                    services:CursorHelper.UseHandCursor="True" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="1" Spacing="4">
-                            <TextBlock Text="Dämpfung (Attenuation):" Style="{StaticResource Caption}" />
-                            <Slider x:Uid="MicGateAttenuation" Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind Mic.GateAttenuation, Mode=TwoWay}"
-                                    services:CursorHelper.UseHandCursor="True" />
-                        </StackPanel>
-                        <StackPanel Grid.Row="1" Spacing="4">
-                            <Grid>
-                                <TextBlock Text="Attack Zeit:" Style="{StaticResource Caption}" />
-                                <TextBlock Text="{x:Bind Mic.GateAttackLabel, Mode=OneWay}" Style="{StaticResource Caption}" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Right" />
-                            </Grid>
-                            <Slider x:Uid="MicGateAttack" Minimum="0" Maximum="45" StepFrequency="1" IsThumbToolTipEnabled="False"
-                                    Value="{x:Bind Mic.GateAttack, Mode=TwoWay}" services:CursorHelper.UseHandCursor="True" />
-                        </StackPanel>
-                        <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4">
-                            <Grid>
-                                <TextBlock Text="Release Zeit:" Style="{StaticResource Caption}" />
-                                <TextBlock Text="{x:Bind Mic.GateReleaseLabel, Mode=OneWay}" Style="{StaticResource Caption}" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Right" />
-                            </Grid>
-                            <Slider x:Uid="MicGateRelease" Minimum="0" Maximum="45" StepFrequency="1" IsThumbToolTipEnabled="False"
-                                    Value="{x:Bind Mic.GateRelease, Mode=TwoWay}" services:CursorHelper.UseHandCursor="True" />
-                        </StackPanel>
-                    </Grid>
+                    <StackPanel Spacing="16" Padding="6">
+                        <!-- 2x2 Clean Parameter Grid -->
+                        <Grid ColumnSpacing="16" RowSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <!-- Threshold -->
+                            <StackPanel Spacing="4">
+                                <Grid>
+                                    <TextBlock Text="Schwellenwert (Threshold):" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="{x:Bind Mic.GateThreshold, Mode=OneWay}" Style="{StaticResource Caption}" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Right" />
+                                </Grid>
+                                <Slider x:Uid="MicGateThreshold" Minimum="-59" Maximum="0" StepFrequency="1" Value="{x:Bind Mic.GateThreshold, Mode=TwoWay}"
+                                        services:CursorHelper.UseHandCursor="True" />
+                            </StackPanel>
+
+                            <!-- Attenuation -->
+                            <StackPanel Grid.Column="1" Spacing="4">
+                                <Grid>
+                                    <TextBlock Text="Dämpfung (Attenuation):" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="{x:Bind Mic.GateAttenuation, Mode=OneWay}" Style="{StaticResource Caption}" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Right" />
+                                </Grid>
+                                <Slider x:Uid="MicGateAttenuation" Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind Mic.GateAttenuation, Mode=TwoWay}"
+                                        services:CursorHelper.UseHandCursor="True" />
+                            </StackPanel>
+
+                            <!-- Attack -->
+                            <StackPanel Grid.Row="1" Spacing="4">
+                                <Grid>
+                                    <TextBlock Text="Attack-Zeit (Öffnen):" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="{x:Bind Mic.GateAttackLabel, Mode=OneWay}" Style="{StaticResource Caption}" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Right" />
+                                </Grid>
+                                <Slider x:Uid="MicGateAttack" Minimum="0" Maximum="45" StepFrequency="1" IsThumbToolTipEnabled="False"
+                                        Value="{x:Bind Mic.GateAttack, Mode=TwoWay}" services:CursorHelper.UseHandCursor="True" />
+                            </StackPanel>
+
+                            <!-- Release -->
+                            <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4">
+                                <Grid>
+                                    <TextBlock Text="Release-Zeit (Schließen):" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="{x:Bind Mic.GateReleaseLabel, Mode=OneWay}" Style="{StaticResource Caption}" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Right" />
+                                </Grid>
+                                <Slider x:Uid="MicGateRelease" Minimum="0" Maximum="45" StepFrequency="1" IsThumbToolTipEnabled="False"
+                                        Value="{x:Bind Mic.GateRelease, Mode=TwoWay}" services:CursorHelper.UseHandCursor="True" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
                 </Expander>
 
                 <!-- Studio Kompressor Card -->
@@ -416,17 +551,20 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE9CA;" Foreground="{StaticResource BrandBrush}" />
-                            <TextBlock Text="Studio-Kompressor &amp; Dynamik" Grid.Column="1" Style="{StaticResource CardTitle}" />
+                            <FontIcon Glyph="&#xE9CA;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Studio-Kompressor &amp; Dynamik" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Hält die Lautstärke ausgewogen &amp; druckvoll" Style="{StaticResource Caption}" />
+                            </StackPanel>
                         </Grid>
                     </Expander.Header>
-                    <StackPanel Spacing="14" Padding="4">
+                    <StackPanel Spacing="16" Padding="6">
                         <!-- Live Gain-Reduction Visualizer -->
-                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="10" Padding="12,8"
+                        <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="10" Padding="14,10"
                                 BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
                             <StackPanel Spacing="4">
                                 <Grid>
-                                    <TextBlock Text="Echtzeit Gain-Reduction (Eingang vs. Dämpfung)" Style="{StaticResource Overline}" />
+                                    <TextBlock Text="Echtzeit Gain-Reduction (Dämpfungsverlauf)" Style="{StaticResource Overline}" />
                                     <TextBlock Text="Live 30 FPS" HorizontalAlignment="Right" Style="{StaticResource Caption}" Foreground="{StaticResource BrandBrush}" />
                                 </Grid>
                                 <controls:CompressionHistoryGraph
@@ -438,7 +576,8 @@
                             </StackPanel>
                         </Border>
 
-                        <Grid ColumnSpacing="16" RowSpacing="12">
+                        <!-- Clean 3-Column Top / 2-Column Bottom Parameter Layout -->
+                        <Grid ColumnSpacing="14" RowSpacing="14">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="*" />
@@ -448,33 +587,49 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <StackPanel Spacing="3">
-                                <TextBlock Text="Threshold:" Style="{StaticResource Caption}" />
+
+                            <!-- Threshold -->
+                            <StackPanel Spacing="4">
+                                <Grid>
+                                    <TextBlock Text="Threshold:" FontWeight="SemiBold" FontSize="11" />
+                                    <TextBlock Text="{x:Bind Mic.CompThreshold, Mode=OneWay}" Style="{StaticResource Caption}" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Right" />
+                                </Grid>
                                 <Slider x:Uid="MicCompThreshold" Minimum="-40" Maximum="0" StepFrequency="1" Value="{x:Bind Mic.CompThreshold, Mode=TwoWay}"
                                         services:CursorHelper.UseHandCursor="True" />
                             </StackPanel>
-                            <StackPanel Grid.Column="1" Spacing="3">
-                                <TextBlock Text="Ratio:" Style="{StaticResource Caption}" />
+
+                            <!-- Ratio -->
+                            <StackPanel Grid.Column="1" Spacing="4">
+                                <TextBlock Text="Ratio (Kompression):" FontWeight="SemiBold" FontSize="11" />
                                 <ComboBox x:Uid="MicCompRatio" ItemsSource="{x:Bind Mic.Ratios}" HorizontalAlignment="Stretch"
                                           SelectedIndex="{x:Bind Mic.CompRatio, Mode=TwoWay}"
                                           services:CursorHelper.UseHandCursor="True" />
                             </StackPanel>
-                            <StackPanel Grid.Column="2" Spacing="3">
-                                <TextBlock Text="Make-Up Gain:" Style="{StaticResource Caption}" />
+
+                            <!-- Make-Up Gain -->
+                            <StackPanel Grid.Column="2" Spacing="4">
+                                <Grid>
+                                    <TextBlock Text="Make-Up Gain:" FontWeight="SemiBold" FontSize="11" />
+                                    <TextBlock Text="{x:Bind Mic.CompMakeup, Mode=OneWay}" Style="{StaticResource Caption}" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Right" />
+                                </Grid>
                                 <Slider x:Uid="MicCompMakeup" Minimum="-6" Maximum="24" StepFrequency="1" Value="{x:Bind Mic.CompMakeup, Mode=TwoWay}"
                                         services:CursorHelper.UseHandCursor="True" />
                             </StackPanel>
-                            <StackPanel Grid.Row="1" Spacing="3">
+
+                            <!-- Attack -->
+                            <StackPanel Grid.Row="1" Spacing="4">
                                 <Grid>
-                                    <TextBlock Text="Attack:" Style="{StaticResource Caption}" />
+                                    <TextBlock Text="Attack-Zeit:" FontWeight="SemiBold" FontSize="11" />
                                     <TextBlock Text="{x:Bind Mic.CompAttackLabel, Mode=OneWay}" Style="{StaticResource Caption}" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Right" />
                                 </Grid>
                                 <Slider x:Uid="MicCompAttack" Minimum="0" Maximum="19" StepFrequency="1" IsThumbToolTipEnabled="False"
                                         Value="{x:Bind Mic.CompAttack, Mode=TwoWay}" services:CursorHelper.UseHandCursor="True" />
                             </StackPanel>
-                            <StackPanel Grid.Row="1" Grid.Column="1" Spacing="3">
+
+                            <!-- Release -->
+                            <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4">
                                 <Grid>
-                                    <TextBlock Text="Release:" Style="{StaticResource Caption}" />
+                                    <TextBlock Text="Release-Zeit:" FontWeight="SemiBold" FontSize="11" />
                                     <TextBlock Text="{x:Bind Mic.CompReleaseLabel, Mode=OneWay}" Style="{StaticResource Caption}" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Right" />
                                 </Grid>
                                 <Slider x:Uid="MicCompRelease" Minimum="0" Maximum="19" StepFrequency="1" IsThumbToolTipEnabled="False"
@@ -485,19 +640,19 @@
                 </Expander>
             </Grid>
 
-            <!-- ================= UNTERE SECTION: VST3 & STUDIO EFFEKT-RACK ================= -->
+            <!-- ================= SEKTION 5: VST3 & STUDIO EFFEKT-RACK (VOLLE BREITE) ================= -->
             <Expander IsExpanded="True">
                 <Expander.Header>
-                    <Grid Padding="0,10" ColumnSpacing="12">
+                    <Grid Padding="0,10" ColumnSpacing="14">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <FontIcon Glyph="&#xE99A;" Foreground="{StaticResource BrandBrush}" />
+                        <FontIcon Glyph="&#xE99A;" FontSize="18" Foreground="{StaticResource BrandBrush}" />
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                             <TextBlock Text="VST3 &amp; CLAP Studio-Rack (Integrierte DSPs &amp; Fremd-Plugins)" Style="{StaticResource CardTitle}" />
-                            <TextBlock Text="6 integrierte High-End Studio-DSPs (EQ, Opto, De-Esser, Tube-Sat, Expander, Limiter) &amp; externe VST3/CLAP-Plugins" Style="{StaticResource Caption}" />
+                            <TextBlock Text="6 integrierte Studio-DSPs (EQ, Opto, De-Esser, Tube-Sat, Expander, Limiter) &amp; externe VST3/CLAP-Plugins" Style="{StaticResource Caption}" />
                         </StackPanel>
                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="0,0,16,0">
                             <TextBlock Text="Master-Rack:" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="13" Foreground="{ThemeResource TextMutedBrush}" />
@@ -509,7 +664,7 @@
                         </StackPanel>
                     </Grid>
                 </Expander.Header>
-                <StackPanel Spacing="14" Padding="4">
+                <StackPanel Spacing="16" Padding="6">
                     <!-- Master Bypass InfoBar -->
                     <InfoBar IsOpen="{x:Bind Vst.IsMasterBypassed, Mode=OneWay}"
                              IsClosable="False"

@@ -265,6 +265,14 @@ public partial class RoutingPage : Page
         base.OnNavigatedFrom(e);
     }
 
+    private void AutoDuckingPreset_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string preset })
+        {
+            AutoDucking.ApplyPreset(preset);
+        }
+    }
+
     private void NavigateToVirtualChannels_Click(object sender, RoutedEventArgs e)
     {
         MainWindow.CurrentInstance?.NavigateToPage("virtual");

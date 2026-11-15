@@ -43,6 +43,7 @@ public sealed partial class AutoDuckingService : ObservableObject
     public string DuckAmountLabel => $"{Math.Round(DuckAmountDb)} dB";
     public string HoldLabel => $"{Math.Round(HoldMs)} ms";
     public string ReleaseLabel => $"{Math.Round(ReleaseMs)} ms";
+    public string CurrentAttenuationDbLabel => $"{Math.Abs(CurrentAttenuationDb):0.0} dB";
 
     private AutoDuckingService() { }
 
@@ -95,12 +96,44 @@ public sealed partial class AutoDuckingService : ObservableObject
         SaveSettings();
     }
 
+    partial void OnCurrentAttenuationDbChanged(double value) => OnPropertyChanged(nameof(CurrentAttenuationDbLabel));
+
     partial void OnTriggerChannelChanged(string value) => SaveSettings();
     partial void OnTargetChannelChanged(string value) => SaveSettings();
     partial void OnThresholdDbChanged(double value) { OnPropertyChanged(nameof(ThresholdLabel)); SaveSettings(); }
     partial void OnDuckAmountDbChanged(double value) { OnPropertyChanged(nameof(DuckAmountLabel)); SaveSettings(); }
     partial void OnHoldMsChanged(double value) { OnPropertyChanged(nameof(HoldLabel)); SaveSettings(); }
     partial void OnReleaseMsChanged(double value) { OnPropertyChanged(nameof(ReleaseLabel)); SaveSettings(); }
+
+    /// <summary>Applies a curated Auto-Ducking preset.</summary>
+    public void ApplyPreset(string preset)
+    {
+        switch (preset.ToLowerInvariant())
+        {
+            case "podcast": // Starke Absenkung, schneller Wiedereinstieg
+                IsEnabled = true;
+                DuckAmountDb = -18.0;
+                ThresholdDb = -34.0;
+                HoldMs = 400.0;
+                ReleaseMs = 350.0;
+                break;
+            case "gaming": // Solide Absenkung mit längerer Haltezeit zwischen Spielansagen
+                IsEnabled = true;
+                DuckAmountDb = -12.0;
+                ThresholdDb = -30.0;
+                HoldMs = 800.0;
+                ReleaseMs = 600.0;
+                break;
+            case "subtle": // Sanfte Hintergrund-Dämpfung
+                IsEnabled = true;
+                DuckAmountDb = -6.0;
+                ThresholdDb = -36.0;
+                HoldMs = 600.0;
+                ReleaseMs = 500.0;
+                break;
+        }
+        SaveSettings();
+    }
 
     /// <summary>Called per frame from the UI/meter loop to update sidechain state.</summary>
     public void Tick(double dtMs, MainViewModel mainVm)
