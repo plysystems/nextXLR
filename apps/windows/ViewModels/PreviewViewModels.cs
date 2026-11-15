@@ -74,6 +74,8 @@ public partial class MicSettingsViewModel : ObservableObject
     public string GateReleaseLabel => $"{GateTimes[Step(GateRelease, 45)]} ms";
     public string CompAttackLabel => $"{CompAttackTimes[Step(CompAttack, 19)]} ms";
     public string CompReleaseLabel => $"{CompReleaseTimes[Step(CompRelease, 19)]} ms";
+    public string GainLabel => $"{Math.Round(Gain)} dB";
+    public string DeEsserLabel => $"{Math.Round(DeEsser)} %";
 
     private static int Step(double v, int max) => Math.Clamp((int)Math.Round(v), 0, max);
 
@@ -103,6 +105,8 @@ public partial class MicSettingsViewModel : ObservableObject
             case nameof(CompAttack): OnPropertyChanged(nameof(CompAttackLabel)); break;
             case nameof(CompRelease): OnPropertyChanged(nameof(CompReleaseLabel)); break;
             case nameof(CompRatio): OnPropertyChanged(nameof(CompRatioNumeric)); break;
+            case nameof(Gain): OnPropertyChanged(nameof(GainLabel)); break;
+            case nameof(DeEsser): OnPropertyChanged(nameof(DeEsserLabel)); break;
             case nameof(RnnoiseIntensity): OnPropertyChanged(nameof(RnnoiseIntensityLabel)); break;
             case nameof(RnnoiseEnabled):
                 OnPropertyChanged(nameof(RnnoiseStatusBadge));
