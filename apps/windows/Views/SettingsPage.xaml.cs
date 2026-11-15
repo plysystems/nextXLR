@@ -78,6 +78,19 @@ public sealed partial class SettingsPage : Page
         DispatcherQueue.TryEnqueue(UpdateBluetoothStatus);
     }
 
+    public void SelectSection(string sectionTag)
+    {
+        if (SectionList == null) return;
+        foreach (var item in SectionList.Items.OfType<ListViewItem>())
+        {
+            if (item.Tag as string == sectionTag)
+            {
+                SectionList.SelectedItem = item;
+                break;
+            }
+        }
+    }
+
     private void SectionList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (GeneralPanel is null) return;
@@ -89,7 +102,10 @@ public sealed partial class SettingsPage : Page
         if (tag == "streamdeck") _ = StreamDeckService.CheckStatusAsync();
         ProfilesPanel.Visibility = tag == "profiles" ? Visibility.Visible : Visibility.Collapsed;
         if (tag == "profiles") RefreshProfiles();
+        LoggingPanel.Visibility = tag == "logging" ? Visibility.Visible : Visibility.Collapsed;
+        if (tag == "logging") RefreshStorageLogs();
         UpdatesPanel.Visibility = tag == "updates" ? Visibility.Visible : Visibility.Collapsed;
+        HinweisPanel.Visibility = tag == "hinweis" ? Visibility.Visible : Visibility.Collapsed;
         HelpPanel.Visibility = tag == "help" ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -1134,6 +1150,105 @@ public sealed partial class SettingsPage : Page
     {
         _ = Windows.System.Launcher.LaunchUriAsync(new Uri("http://127.0.0.1:48500/api/status"));
     }
+
+    #region Storage Logging & Disclaimer
+
+    private void RefreshStorageLogs()
+    {
+        if (LogListView == null) return;
+        var entries = StorageLoggerService.GetEntries();
+        var filter = LogSearchBox?.Text?.Trim();
+        if (!string.IsNullOrEmpty(filter))
+        {
+            entries = entries.Where(e =>
+                e.Target.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                e.Value.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                e.Trigger.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                (e.FilePath != null && e.FilePath.Contains(filter, StringComparison.OrdinalIgnoreCase))).ToList();
+        }
+
+        LogListView.ItemsSource = entries;
+        if (LogEmptyText != null) LogEmptyText.Visibility = entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (LogTotalCountText != null) LogTotalCountText.Text = $"{entries.Count} Einträge";
+        if (LogAutosaveCountText != null) LogAutosaveCountText.Text = $"{entries.Count(e => e.IsAutosave)} Aktionen";
+    }
+
+    private void LogSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        RefreshStorageLogs();
+    }
+
+    private void ClearLogs_Click(object sender, RoutedEventArgs e)
+    {
+        StorageLoggerService.Clear();
+        RefreshStorageLogs();
+        if (LogActionResult != null)
+        {
+            LogActionResult.Severity = InfoBarSeverity.Informational;
+            LogActionResult.Message = "Das Speicher-Log wurde erfolgreich geleert.";
+            LogActionResult.IsOpen = true;
+        }
+    }
+
+    private async void ExportLogs_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var picker = new Windows.Storage.Pickers.FileSavePicker
+            {
+                SuggestedFileName = $"NextXLR-StorageLog-{DateTime.Now:yyyyMMdd-HHmmss}"
+            };
+            picker.FileTypeChoices.Add("JSON Datei", [".json"]);
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, MainWindow.Handle);
+            var file = await picker.PickSaveFileAsync();
+            if (file != null)
+            {
+                await StorageLoggerService.ExportAsync(file.Path);
+                if (LogActionResult != null)
+                {
+                    LogActionResult.Severity = InfoBarSeverity.Success;
+                    LogActionResult.Message = $"Speicher-Log erfolgreich exportiert nach: {file.Name}";
+                    LogActionResult.IsOpen = true;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            if (LogActionResult != null)
+            {
+                LogActionResult.Severity = InfoBarSeverity.Error;
+                LogActionResult.Message = $"Fehler beim Exportieren: {ex.Message}";
+                LogActionResult.IsOpen = true;
+            }
+        }
+    }
+
+    private void OpenLogFolder_Click(object sender, RoutedEventArgs e)
+    {
+        StorageLoggerService.OpenLogDirectory();
+    }
+
+    private void OpenThirdPartyLicenses_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var licensePath = System.IO.Path.Combine(AppContext.BaseDirectory, "THIRD_PARTY_NOTICES.md");
+            if (System.IO.File.Exists(licensePath))
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = licensePath, UseShellExecute = true });
+            }
+            else
+            {
+                _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/plysystems/nextXLR/blob/main/THIRD_PARTY_NOTICES.md"));
+            }
+        }
+        catch
+        {
+            _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/plysystems/nextXLR/blob/main/THIRD_PARTY_NOTICES.md"));
+        }
+    }
+
+    #endregion
 
     #endregion
 }

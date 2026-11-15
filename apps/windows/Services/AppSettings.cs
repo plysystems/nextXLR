@@ -149,6 +149,7 @@ public sealed class AppSettings
             {
                 Directory.CreateDirectory(Dir);
                 File.WriteAllText(FilePath, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+                StorageLoggerService.Log("App-Einstellungen", $"Theme: {AppTheme}, Autostart: {AutostartEnabled}, AutoSave: {AutoSaveProfiles}", "System", FilePath);
             }
             catch { /* preferences are best-effort */ }
         }

@@ -88,6 +88,7 @@ public static class CustomThemeService
         var filePath = Path.Combine(ThemesDir, safeName);
         var json = JsonSerializer.Serialize(theme, JsonOpts);
         File.WriteAllText(filePath, json);
+        StorageLoggerService.Log($"Beleuchtungs-Theme: {theme.Name}", "Benutzerdefiniertes RGB-Farbthema gespeichert", "Manuell", filePath);
     }
 
     public static bool Delete(string themeName)

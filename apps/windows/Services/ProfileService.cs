@@ -97,6 +97,7 @@ public sealed class ProfileLibrary(string folder, string defaultFile, string kin
         Write(path, name, profile);
         var isDefault = DefaultName == name;
         if (isDefault) Write(DefaultFile, name, profile);
+        StorageLoggerService.Log($"Profil ({kind}): {name}", $"Gespeichert in {SafeFileName(name)}.json", "Manuell", path);
         return new ProfileEntry(name, path, DateTime.Now, isDefault);
     }
 

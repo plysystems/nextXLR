@@ -384,6 +384,16 @@
 
                 <!-- InfoBars overlay on top when active, zero height/gap when closed -->
                 <StackPanel VerticalAlignment="Top" Spacing="8" Margin="0,44,0,0">
+                    <InfoBar x:Name="UpdateAvailableBar" IsOpen="False" Severity="Informational"
+                             Margin="40,8,40,0"
+                             Title="Neues NEXT : XLR Update verfügbar"
+                             IsClosable="True">
+                        <InfoBar.ActionButton>
+                            <Button x:Name="UpdateAvailableActionButton" Content="Zu den Updates" Click="UpdateAvailableAction_Click"
+                                    Style="{StaticResource AccentButtonStyle}"
+                                    services:CursorHelper.UseHandCursor="True" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
                     <InfoBar x:Uid="EngineOffline" IsOpen="{x:Bind Not(ViewModel.IsConnected), Mode=OneWay}"
                              Margin="40,8,40,0" Severity="Warning" IsClosable="False" />
                     <InfoBar x:Uid="EngineError" IsOpen="{x:Bind HasText(ViewModel.LastError), Mode=OneWay}"

@@ -110,8 +110,9 @@ public sealed class AutoSaveService
             var targetName = ProfileService.ActiveSetupProfileName;
             if (!string.IsNullOrWhiteSpace(targetName) && profile != null)
             {
-                ProfileService.Setups.Save(targetName, profile);
+                var entry = ProfileService.Setups.Save(targetName, profile);
                 MainViewModel.HasPendingChanges = false;
+                StorageLoggerService.LogAutosave($"Profil: {targetName}", "Mixer, Routing, Beleuchtung & Effekte automatisch gesichert", entry.Path);
                 Debug.WriteLine($"[AutoSave] Active setup profile '{targetName}' saved successfully.");
             }
         }
@@ -144,9 +145,10 @@ public sealed class AutoSaveService
             var targetName = ProfileService.ActiveMicProfileName;
             if (micNode != null && !string.IsNullOrWhiteSpace(targetName))
             {
-                ProfileService.Mic.Save(targetName, micNode);
+                var entry = ProfileService.Mic.Save(targetName, micNode);
                 VstPluginService.Instance?.SaveRackForProfile(targetName);
                 MainViewModel.HasPendingChanges = false;
+                StorageLoggerService.LogAutosave($"Mikrofon-Profil: {targetName}", "Mikrofon-DSP, EQ, Gate & VST-Rack automatisch gesichert", entry.Path);
                 Debug.WriteLine($"[AutoSave] Active mic profile '{targetName}' saved successfully.");
             }
         }

@@ -145,8 +145,16 @@ public sealed partial class MainWindow : Window
             onExit: ExitApplication
         );
 
-        // Startup update check with Windows notification
-        UpdateService.StartStartupUpdateCheck(_trayService);
+        // Startup update check with Windows notification + in-app banner
+        UpdateService.StartStartupUpdateCheck(_trayService, result =>
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                UpdateAvailableBar.Title = $"Neues Update verfügbar: {result.LatestTag}";
+                UpdateAvailableBar.Message = $"Version {result.LatestTag} steht bereit. Klicke auf 'Zu den Updates', um die Installation zu starten.";
+                UpdateAvailableBar.IsOpen = true;
+            });
+        });
 
         // Minimize / Close to Tray
         AppWindow.Closing += async (sender, args) =>
@@ -843,6 +851,16 @@ public sealed partial class MainWindow : Window
             DriverMissingBar.Title = "Installation fehlgeschlagen";
             DriverMissingBar.Message = msg;
         }
+    }
+
+    private void UpdateAvailableAction_Click(object sender, RoutedEventArgs e)
+    {
+        NavigateToPage("settings");
+        if (ContentFrame.Content is SettingsPage sp)
+        {
+            sp.SelectSection("updates");
+        }
+        UpdateAvailableBar.IsOpen = false;
     }
 
     public void StartMinimizedMode()

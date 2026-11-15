@@ -55,8 +55,14 @@
                 <ListViewItem Tag="profiles">
                     <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE77B;" FontSize="16" /><TextBlock x:Uid="SettingsNavProfilesText" /></StackPanel>
                 </ListViewItem>
+                <ListViewItem Tag="logging">
+                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE9D9;" FontSize="16" /><TextBlock Text="Speicher-Log" /></StackPanel>
+                </ListViewItem>
                 <ListViewItem Tag="updates" Visibility="Visible">
                     <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE895;" FontSize="16" /><TextBlock x:Uid="SettingsNavUpdatesText" /></StackPanel>
+                </ListViewItem>
+                <ListViewItem Tag="hinweis">
+                    <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE7BA;" FontSize="16" /><TextBlock Text="Hinweis &amp; Rechtliches" /></StackPanel>
                 </ListViewItem>
                 <ListViewItem Tag="help">
                     <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE897;" FontSize="16" /><TextBlock x:Uid="SettingsNavHelpText" /></StackPanel>
@@ -732,6 +738,119 @@
                         </ItemsRepeater>
                     </StackPanel>
 
+                    <!-- ===== Storage Logging ===== -->
+                    <StackPanel x:Name="LoggingPanel" Spacing="14" Visibility="Collapsed">
+                        <TextBlock Text="Speicher-Log &amp; Audit-Protokoll" Style="{StaticResource SectionTitle}" Margin="0,0,0,2" />
+                        <TextBlock Text="Lückenlose Dokumentation aller Speichervorgänge (inkl. Autosave und manueller Profilspeicherung) mit exakter Zeit, betroffener Komponente und gespeicherten Werten."
+                                   Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
+
+                        <!-- Overview & Action Bar Card -->
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="18,14">
+                            <Grid ColumnSpacing="16" RowSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="LogSearchBox" PlaceholderText="Logeinträge durchsuchen (z. B. Profil, Autosave, Gate, Volume)..."
+                                         TextChanged="LogSearchBox_TextChanged" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                    <Button Style="{StaticResource SmoothButton}" Click="OpenLogFolder_Click"
+                                            services:CursorHelper.UseHandCursor="True" ToolTipService.ToolTip="Ordner mit Logdateien im Windows Explorer öffnen">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xED25;" FontSize="13" />
+                                            <TextBlock Text="Explorer" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Style="{StaticResource SmoothButton}" Click="ExportLogs_Click"
+                                            services:CursorHelper.UseHandCursor="True" ToolTipService.ToolTip="Log als JSON exportieren">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xEDE1;" FontSize="13" />
+                                            <TextBlock Text="Exportieren" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Style="{StaticResource SmoothButton}" Click="ClearLogs_Click"
+                                            services:CursorHelper.UseHandCursor="True" ToolTipService.ToolTip="Speicherlog leeren">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE74D;" FontSize="13" Foreground="{StaticResource WarningBrush}" />
+                                            <TextBlock Text="Leeren" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Log Stats Counter -->
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,10"
+                                    BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="Gesamte Einträge" Style="{StaticResource Caption}" />
+                                    <TextBlock x:Name="LogTotalCountText" Text="0 Einträge" FontWeight="Bold" FontSize="16" Foreground="{ThemeResource TextPrimaryBrush}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,10"
+                                    BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="Autosave-Aktivitäten" Style="{StaticResource Caption}" />
+                                    <TextBlock x:Name="LogAutosaveCountText" Text="0 Aktionen" FontWeight="Bold" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="2" Background="{ThemeResource SurfaceL2Brush}" CornerRadius="12" Padding="14,10"
+                                    BorderBrush="{ThemeResource SurfaceStrokeSubtleBrush}" BorderThickness="1">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="Speicherort der Logdatei" Style="{StaticResource Caption}" />
+                                    <TextBlock Text="%LOCALAPPDATA%\nextxlr\logs" FontFamily="Consolas" FontSize="12" Foreground="{ThemeResource TextMutedBrush}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <InfoBar x:Name="LogActionResult" IsClosable="True" />
+
+                        <!-- Log List Repeater -->
+                        <TextBlock x:Name="LogEmptyText" Text="Noch keine Speichervorgänge protokolliert." Style="{StaticResource Caption}" Visibility="Collapsed" />
+                        <ListView x:Name="LogListView" SelectionMode="None" MaxHeight="520">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="services:StorageLogEntry">
+                                    <Grid Style="{StaticResource SettingRow}" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Width="80" VerticalAlignment="Center">
+                                            <TextBlock Text="{x:Bind TimeOnlyText}" FontWeight="SemiBold" FontSize="13" />
+                                            <TextBlock Text="{x:Bind DateOnlyText}" Style="{StaticResource Caption}" FontSize="10" Foreground="{ThemeResource TextMutedBrush}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3" Margin="12,0">
+                                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind Target}" FontWeight="SemiBold" FontSize="14" />
+                                                <Border CornerRadius="6" Padding="6,2" Background="{ThemeResource SurfaceHighlightBrush}"
+                                                        BorderBrush="{StaticResource BrandBrush}" BorderThickness="1"
+                                                        Visibility="{x:Bind AutosaveBadge}">
+                                                    <TextBlock Text="Autosave" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandBrush}" />
+                                                </Border>
+                                                <Border CornerRadius="6" Padding="6,2" Background="{ThemeResource SurfaceL3Brush}"
+                                                        BorderBrush="{ThemeResource SurfaceStrokeBrush}" BorderThickness="1"
+                                                        Visibility="{x:Bind ManualBadge}">
+                                                    <TextBlock Text="{x:Bind Trigger}" FontSize="10" FontWeight="SemiBold" Foreground="{ThemeResource TextMutedBrush}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="{x:Bind Value}" Style="{StaticResource Caption}" Foreground="{ThemeResource TextPrimaryBrush}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Text="{x:Bind DisplayFile}" FontFamily="Consolas" FontSize="11"
+                                                   Foreground="{ThemeResource TextMutedBrush}" VerticalAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+
                     <!-- ===== Updates ===== -->
                     <StackPanel x:Name="UpdatesPanel" Spacing="12" Visibility="Collapsed">
                         <TextBlock x:Uid="SettingsUpdatesHeader" Style="{StaticResource SectionTitle}" Margin="0,0,0,6" />
@@ -807,6 +926,92 @@
                             <StackPanel Grid.Column="1"><TextBlock x:Uid="SetAutoUpdateTitle" FontWeight="SemiBold" /></StackPanel>
                             <ToggleSwitch x:Name="AutoUpdateToggle" Grid.Column="2" OnContent="" OffContent="" MinWidth="0" Toggled="AutoUpdate_Toggled" />
                         </Grid>
+                    </StackPanel>
+
+                    <!-- ===== Hinweis & Rechtliches (Disclaimer) ===== -->
+                    <StackPanel x:Name="HinweisPanel" Spacing="16" Visibility="Collapsed">
+                        <TextBlock Text="Hinweis &amp; Rechtliches" Style="{StaticResource SectionTitle}" Margin="0,0,0,2" />
+                        <TextBlock Text="Rechtliche Klarstellung, Unabhängigkeit des Projekts und Haftungsausschluss gemäß MIT-Lizenz."
+                                   Style="{StaticResource Caption}" Foreground="{ThemeResource TextMutedBrush}" />
+
+                        <!-- Hero Disclaimer Card -->
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{StaticResource BrandBrush}" BorderThickness="1.5" Padding="24,20">
+                            <StackPanel Spacing="14">
+                                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                    <Border Width="40" Height="40" CornerRadius="10" Background="{ThemeResource SurfaceL3Brush}">
+                                        <FontIcon Glyph="&#xE7BA;" FontSize="20" Foreground="{StaticResource BrandBrush}" />
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Wichtiger Hinweis zur Eigenständigkeit" FontWeight="Bold" FontSize="16" Foreground="{ThemeResource TextPrimaryBrush}" />
+                                        <TextBlock Text="NEXT : XLR ist ein unabhängiges Open-Source-Projekt von plysystems" Style="{StaticResource Caption}" Foreground="{StaticResource BrandBrush}" />
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <Border Height="1" Background="{ThemeResource SurfaceStrokeSubtleBrush}" />
+
+                                <TextBlock Text="NEXT : XLR ist ausdrücklich KEINE offizielle Software von TC-Helicon oder Music Tribe Global Brands Ltd. Es besteht keinerlei geschäftliche Verbindung, Sponsoring, Autorisierung oder Partnerschaft mit TC-Helicon, Music Tribe oder verbundenen Unternehmen."
+                                           FontSize="13" TextWrapping="Wrap" LineHeight="20" />
+
+                                <TextBlock Text="Dieses Projekt wurde von der plysystems Community entwickelt, um bestehende GoXLR- und GoXLR Mini-Geräte unter modernen Windows-Versionen mit zukunftssicheren Technologien, extrem niedriger Latenz und einem zeitgemäßen Designsystem weiter zu unterstützen."
+                                           FontSize="13" Foreground="{ThemeResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="20" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Markenrechte Card -->
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,16">
+                            <StackPanel Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <FontIcon Glyph="&#xE8D7;" FontSize="16" Foreground="{StaticResource BrandBrush}" />
+                                    <TextBlock Text="Markenrechte &amp; Warenzeichen" FontWeight="SemiBold" FontSize="15" />
+                                </StackPanel>
+                                <TextBlock Text="Alle in dieser Software, der Dokumentation und den Benutzeroberflächen genannten Marken, Produktbezeichnungen und Logos (insbesondere GoXLR, GoXLR Mini, TC-Helicon, Music Tribe, Windows, Elgato, Stream Deck) sind eingetragene Warenzeichen ihrer jeweiligen Inhaber."
+                                           FontSize="12" Foreground="{ThemeResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="18" />
+                                <TextBlock Text="Ihre Nennung und Darstellung erfolgt ausschließlich zu Zwecken der sachlichen Identifikation sowie zur Kennzeichnung der technischen Hardware- und Software-Kompatibilität."
+                                           FontSize="12" Foreground="{ThemeResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="18" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Haftungsausschluss Card -->
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="20,16">
+                            <StackPanel Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <FontIcon Glyph="&#xE7BA;" FontSize="16" Foreground="{StaticResource WarningBrush}" />
+                                    <TextBlock Text="Haftungsausschluss (Gewährleistungsausschluss)" FontWeight="SemiBold" FontSize="15" />
+                                </StackPanel>
+                                <TextBlock Text="Die Software wird unentgeltlich und unter den Bedingungen der MIT-Lizenz „wie besehen“ (as is) bereitgestellt. Die Autoren und Entwickler von plysystems übernehmen keinerlei Garantie oder Gewährleistung für die Mängelfreiheit, Funktionsfähigkeit oder Eignung für einen bestimmten Einsatzzweck."
+                                           FontSize="12" Foreground="{ThemeResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="18" />
+                                <TextBlock Text="In keinem Fall haften die Autoren für direkte, indirekte, zufällige oder Folgeschäden (einschließlich Hardwaredefekten, Audioaussetzern, Datenverlust, Betriebsunterbrechungen oder finanziellen Verlusten), die aus der Installation, Nutzung oder Unfähigkeit zur Nutzung von NEXT : XLR resultieren. Die Nutzung erfolgt vollständig auf eigene Verantwortung."
+                                           FontSize="12" Foreground="{ThemeResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="18" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Links & GitHub Repository -->
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="16"
+                                BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1" Padding="16">
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Button HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Click="OpenGitHubRepo_Click"
+                                        services:CursorHelper.UseHandCursor="True">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="&#xE774;" FontSize="14" Foreground="{StaticResource BrandBrush}" />
+                                        <TextBlock Text="GitHub Repository &amp; Quellcode" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="1" HorizontalAlignment="Stretch" Style="{StaticResource SmoothButton}" Click="OpenThirdPartyLicenses_Click"
+                                        services:CursorHelper.UseHandCursor="True">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="&#xE8A7;" FontSize="14" />
+                                        <TextBlock Text="Drittanbieter-Lizenzen anzeigen" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
                     </StackPanel>
 
                     <!-- ===== Help ===== -->

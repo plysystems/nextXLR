@@ -120,6 +120,7 @@ public sealed class SamplerStore
         {
             Directory.CreateDirectory(Dir);
             System.IO.File.WriteAllText(FilePath, JsonSerializer.Serialize(this, Options));
+            StorageLoggerService.Log("Sampler-Konfiguration", $"{Library.Count} Samples in Bibliothek, Pads aktualisiert", "System", FilePath);
         }
         catch { /* best effort */ }
     }
