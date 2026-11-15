@@ -258,6 +258,7 @@ public partial class RoutingPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         ViewModel = (MainViewModel)e.Parameter;
+        Bindings.Update();
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -320,6 +321,11 @@ public partial class MicPage : Page
         try
         {
             ViewModel = (MainViewModel)e.Parameter;
+            Bindings.Update();
+            if (SpectrumVisualizer != null && ViewModel?.MicChannel != null)
+            {
+                SpectrumVisualizer.Channel = ViewModel.MicChannel;
+            }
             VstPluginService.ActiveMicViewModel = Mic;
             MicProfileBox.SelectionChanged -= MicProfileBox_SelectionChanged;
             MicProfileBox.SelectionChanged += MicProfileBox_SelectionChanged;
