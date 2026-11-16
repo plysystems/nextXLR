@@ -63,6 +63,32 @@ public sealed class SilentInstallRunner
             // 3. Ensure target directory exists
             Directory.CreateDirectory(_targetDir);
 
+            // 3b. Cleanup legacy root culture directories and stale files
+            try
+            {
+                foreach (var dir in Directory.GetDirectories(_targetDir, "*", SearchOption.TopDirectoryOnly))
+                {
+                    var dirName = Path.GetFileName(dir);
+                    if (System.Text.RegularExpressions.Regex.IsMatch(dirName, @"^[a-z]{2,3}(-[A-Za-z0-9]+)*$", System.Text.RegularExpressions.RegexOptions.IgnoreCase) &&
+                        !dirName.Equals("Assets", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("Controls", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("Styles", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("Views", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("languages", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("runtimes", StringComparison.OrdinalIgnoreCase))
+                    {
+                        try { Directory.Delete(dir, recursive: true); } catch { }
+                    }
+                }
+                foreach (var winmd in Directory.GetFiles(_targetDir, "*.winmd", SearchOption.TopDirectoryOnly))
+                {
+                    try { File.Delete(winmd); } catch { }
+                }
+                var oldPng = Path.Combine(_targetDir, "WindowsAppRuntime.png");
+                if (File.Exists(oldPng)) { try { File.Delete(oldPng); } catch { } }
+            }
+            catch { }
+
             // 4. Extract embedded payload
             var asm = typeof(SilentInstallRunner).Assembly;
             var resourceName = asm.GetManifestResourceNames().FirstOrDefault(n => n.EndsWith("payload.zip", StringComparison.OrdinalIgnoreCase));

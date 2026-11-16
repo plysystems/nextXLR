@@ -675,6 +675,30 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
                         try { File.Delete(file); } catch { }
                     }
                 }
+
+                // Bereinige veraltete Sprachordner auf Root-Ebene (werden nun in /languages/ geführt)
+                foreach (var dir in Directory.GetDirectories(targetDir, "*", SearchOption.TopDirectoryOnly))
+                {
+                    var dirName = Path.GetFileName(dir);
+                    if (System.Text.RegularExpressions.Regex.IsMatch(dirName, @"^[a-z]{2,3}(-[A-Za-z0-9]+)*$", System.Text.RegularExpressions.RegexOptions.IgnoreCase) &&
+                        !dirName.Equals("Assets", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("Controls", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("Styles", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("Views", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("languages", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("runtimes", StringComparison.OrdinalIgnoreCase))
+                    {
+                        try { Directory.Delete(dir, recursive: true); } catch { }
+                    }
+                }
+
+                // Bereinige nicht mehr benötigte WinMD-Metadaten und Bild-Artefakte
+                foreach (var winmd in Directory.GetFiles(targetDir, "*.winmd", SearchOption.TopDirectoryOnly))
+                {
+                    try { File.Delete(winmd); } catch { }
+                }
+                var oldPng = Path.Combine(targetDir, "WindowsAppRuntime.png");
+                if (File.Exists(oldPng)) { try { File.Delete(oldPng); } catch { } }
             }
         }
         catch (Exception ex)

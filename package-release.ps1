@@ -66,6 +66,30 @@ if (-not (Test-Path $binExe)) {
 Write-Host "Copying Windows App binaries from $binDir..."
 Copy-Item "$binDir\*" -Destination $appDir -Recurse -Exclude "*.pdb","*.old" -Force
 
+# 1b. Organize and streamline application folder structure
+Write-Host "Organizing application directories and moving languages to languages/..."
+$languagesDir = Join-Path $appDir "languages"
+New-Item -ItemType Directory -Path $languagesDir -Force | Out-Null
+
+Get-ChildItem $appDir -Directory | Where-Object {
+    $_.Name -match '^[a-z]{2,3}(-[A-Za-z0-9]+)*$' -and
+    $_.Name -ne 'Assets' -and
+    $_.Name -ne 'Controls' -and
+    $_.Name -ne 'Styles' -and
+    $_.Name -ne 'Views' -and
+    $_.Name -ne 'languages' -and
+    $_.Name -ne 'runtimes'
+} | ForEach-Object {
+    Move-Item $_.FullName $languagesDir -Force
+}
+$langCount = (Get-ChildItem $languagesDir -Directory).Count
+Write-Host "Moved $langCount language directories to languages/."
+
+# Clean up compile-time metadata and unused files
+Remove-Item (Join-Path $appDir "*.winmd") -Force -ErrorAction SilentlyContinue
+Remove-Item (Join-Path $appDir "WindowsAppRuntime.png") -Force -ErrorAction SilentlyContinue
+Remove-Item (Join-Path $appDir "*.xml") -Force -ErrorAction SilentlyContinue
+
 # 2. Copy Daemon (mixforged & mixforge alias)
 $daemonRelease = Join-Path $root "target\release\mixforged.exe"
 if (-not (Test-Path $daemonRelease)) {

@@ -29,6 +29,17 @@ public static class Program
             Services.CrashHandler.Initialize();
             Services.CrashHandler.LogStartup("Program.Main started");
 
+            // Configure DLL/MUI search directory for organized folder structure
+            try
+            {
+                var languagesDir = System.IO.Path.Combine(AppContext.BaseDirectory, "languages");
+                if (System.IO.Directory.Exists(languagesDir))
+                {
+                    SetDllDirectory(languagesDir);
+                }
+            }
+            catch { }
+
             // 1. First line of defense: Check existing processes
             var currentProc = Process.GetCurrentProcess();
             var existingProcesses = Process.GetProcessesByName("NextXLR")
@@ -178,4 +189,7 @@ public static class Program
 
     [DllImport("user32.dll")]
     private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool SetDllDirectory(string lpPathName);
 }
