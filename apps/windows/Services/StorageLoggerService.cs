@@ -120,6 +120,19 @@ public static class StorageLoggerService
         Log(target, value, "Autosave", filePath);
     }
 
+    /// <summary>
+    /// Synchronously flushes any pending log changes to storage_log.json on disk.
+    /// Call during app shutdown or before exit to prevent data loss.
+    /// </summary>
+    public static void Flush()
+    {
+        lock (_syncLock)
+        {
+            _saveDebounceTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+        }
+        SaveToDisk();
+    }
+
     public static void Clear()
     {
         lock (_syncLock)

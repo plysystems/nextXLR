@@ -167,18 +167,21 @@ public sealed class AutoSaveService
     /// </summary>
     public async Task FlushAsync()
     {
-        if (!AppSettings.Current.AutoSaveProfiles) return;
-
         _setupTimer.Change(Timeout.Infinite, Timeout.Infinite);
         _micTimer.Change(Timeout.Infinite, Timeout.Infinite);
 
-        if (_setupPending)
+        if (AppSettings.Current.AutoSaveProfiles)
         {
-            await SaveSetupAsync();
+            if (_setupPending)
+            {
+                await SaveSetupAsync();
+            }
+            if (_micPending)
+            {
+                await SaveMicAsync();
+            }
         }
-        if (_micPending)
-        {
-            await SaveMicAsync();
-        }
+
+        StorageLoggerService.Flush();
     }
 }

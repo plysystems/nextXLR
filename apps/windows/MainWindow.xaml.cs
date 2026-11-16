@@ -436,6 +436,7 @@ public sealed partial class MainWindow : Window
 
         if (!MainViewModel.HasPendingChanges)
         {
+            StorageLoggerService.Flush();
             return true;
         }
 

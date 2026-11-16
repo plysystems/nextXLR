@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NextXLR.ViewModels;
 
@@ -27,6 +28,7 @@ public sealed class MicSnapshot
     public double DeEsser { get; set; }
     public bool RnnoiseEnabled { get; set; }
     public double RnnoiseIntensity { get; set; }
+    public double[] EqGains { get; set; } = [];
 }
 
 public sealed class RouteSnapshot
@@ -59,13 +61,15 @@ public sealed class ChangeDeltaTracker
 
     /// <summary>
     /// Initializes or resets the baseline snapshots from current ViewModel state.
+    /// Thread-safe via snapshot copies of observable collections.
     /// </summary>
     public void InitializeBaseline(MainViewModel vm)
     {
         lock (_lock)
         {
             _channels.Clear();
-            foreach (var c in vm.Channels)
+            var channels = vm.Channels.ToArray();
+            foreach (var c in channels)
             {
                 _channels[c.Id] = new ChannelSnapshot
                 {
@@ -79,9 +83,11 @@ public sealed class ChangeDeltaTracker
             }
 
             _routes.Clear();
-            foreach (var row in vm.RouteRows)
+            var routeRows = vm.RouteRows.ToArray();
+            foreach (var row in routeRows)
             {
-                foreach (var cell in row.Cells)
+                var cells = row.Cells.ToArray();
+                foreach (var cell in cells)
                 {
                     string key = $"{cell.ChannelId}_{cell.BusId}";
                     _routes[key] = new RouteSnapshot
@@ -108,7 +114,8 @@ public sealed class ChangeDeltaTracker
                     CompMakeup = vm.Mic.CompMakeup,
                     DeEsser = vm.Mic.DeEsser,
                     RnnoiseEnabled = vm.Mic.RnnoiseEnabled,
-                    RnnoiseIntensity = vm.Mic.RnnoiseIntensity
+                    RnnoiseIntensity = vm.Mic.RnnoiseIntensity,
+                    EqGains = vm.Mic.EqBands.Select(b => b.Gain).ToArray()
                 };
             }
 
@@ -128,10 +135,13 @@ public sealed class ChangeDeltaTracker
             string tag = isAutosave ? "AUTOSAVE" : "MANUELL";
             int changes = 0;
 
+            string targetName = !string.IsNullOrWhiteSpace(filePath)
+                ? Path.GetFileNameWithoutExtension(filePath)
+                : ProfileService.ActiveSetupProfileName;
+
             if (!_hasBaseline)
             {
                 InitializeBaseline(vm);
-                string targetName = ProfileService.ActiveSetupProfileName;
                 StorageLoggerService.Log(
                     $"Profil: {targetName}",
                     $"Profil '{targetName}' initial gesichert. [{tag}]",
@@ -140,8 +150,9 @@ public sealed class ChangeDeltaTracker
                 return 1;
             }
 
-            // 1. Channel Faders, Submix & Mutes
-            foreach (var ch in vm.Channels)
+            // 1. Channel Faders, Submix & Mutes (snapshotted to array for thread-safe iteration)
+            var channels = vm.Channels.ToArray();
+            foreach (var ch in channels)
             {
                 if (!_channels.TryGetValue(ch.Id, out var snap))
                 {
@@ -216,10 +227,12 @@ public sealed class ChangeDeltaTracker
                 }
             }
 
-            // 2. Routing Matrix
-            foreach (var row in vm.RouteRows)
+            // 2. Routing Matrix (snapshotted to array for thread-safe iteration)
+            var routeRows = vm.RouteRows.ToArray();
+            foreach (var row in routeRows)
             {
-                foreach (var cell in row.Cells)
+                var cells = row.Cells.ToArray();
+                foreach (var cell in cells)
                 {
                     string key = $"{cell.ChannelId}_{cell.BusId}";
                     if (!_routes.TryGetValue(key, out var snap))
@@ -254,7 +267,6 @@ public sealed class ChangeDeltaTracker
             // Fallback if no specific delta detected (e.g. initial or manual save)
             if (changes == 0)
             {
-                string targetName = ProfileService.ActiveSetupProfileName;
                 StorageLoggerService.Log(
                     $"Profil: {targetName}",
                     $"Profil '{targetName}' gespeichert. [{tag}]",
@@ -267,7 +279,7 @@ public sealed class ChangeDeltaTracker
     }
 
     /// <summary>
-    /// Detects changes to microphone DSP settings (Gain, Gate, Compressor, De-Esser, AI Denoise),
+    /// Detects changes to microphone DSP settings (Gain, Gate, Compressor, De-Esser, AI Denoise, 10-Band EQ),
     /// logs each delta to StorageLoggerService, and advances the baseline snapshot.
     /// </summary>
     public int DetectAndCommitMicChanges(MainViewModel vm, bool isAutosave, string? filePath = null)
@@ -280,6 +292,10 @@ public sealed class ChangeDeltaTracker
 
             if (vm.Mic == null) return 0;
             var m = vm.Mic;
+
+            string targetName = !string.IsNullOrWhiteSpace(filePath)
+                ? Path.GetFileNameWithoutExtension(filePath)
+                : ProfileService.ActiveMicProfileName;
 
             if (_mic == null)
             {
@@ -294,10 +310,10 @@ public sealed class ChangeDeltaTracker
                     CompMakeup = m.CompMakeup,
                     DeEsser = m.DeEsser,
                     RnnoiseEnabled = m.RnnoiseEnabled,
-                    RnnoiseIntensity = m.RnnoiseIntensity
+                    RnnoiseIntensity = m.RnnoiseIntensity,
+                    EqGains = m.EqBands.Select(b => b.Gain).ToArray()
                 };
 
-                string targetName = ProfileService.ActiveMicProfileName;
                 StorageLoggerService.Log(
                     $"Mikrofon-Profil: {targetName}",
                     $"Mikrofon-DSP Profil '{targetName}' gespeichert. [{tag}]",
@@ -332,6 +348,20 @@ public sealed class ChangeDeltaTracker
                     filePath);
                 changes++;
                 _mic.GateThreshold = m.GateThreshold;
+            }
+
+            // Gate Attenuation
+            if (Math.Abs(m.GateAttenuation - _mic.GateAttenuation) >= 2.0)
+            {
+                int oldVal = (int)Math.Round(_mic.GateAttenuation);
+                int newVal = (int)Math.Round(m.GateAttenuation);
+                StorageLoggerService.Log(
+                    "Mikrofon-Gate",
+                    $"Mikrofon-Gate Dämpfung von {oldVal}% auf {newVal}% gestellt und gespeichert. [{tag}]",
+                    trigger,
+                    filePath);
+                changes++;
+                _mic.GateAttenuation = m.GateAttenuation;
             }
 
             // Gate Enabled
@@ -432,9 +462,29 @@ public sealed class ChangeDeltaTracker
                 _mic.RnnoiseIntensity = m.RnnoiseIntensity;
             }
 
+            // 10-Band Studio Equalizer (snapshotted to array)
+            var currentEq = m.EqBands.ToArray();
+            for (int i = 0; i < currentEq.Length; i++)
+            {
+                var band = currentEq[i];
+                double oldGain = (_mic.EqGains != null && i < _mic.EqGains.Length) ? _mic.EqGains[i] : 0.0;
+                if (Math.Abs(band.Gain - oldGain) >= 1.0)
+                {
+                    int oldVal = (int)Math.Round(oldGain);
+                    int newVal = (int)Math.Round(band.Gain);
+                    string freqLabel = band.Label;
+                    StorageLoggerService.Log(
+                        $"Mikrofon-EQ {freqLabel}",
+                        $"Mikrofon-EQ {freqLabel} von {oldVal} dB auf {newVal} dB gestellt und gespeichert. [{tag}]",
+                        trigger,
+                        filePath);
+                    changes++;
+                }
+            }
+            _mic.EqGains = currentEq.Select(b => b.Gain).ToArray();
+
             if (changes == 0)
             {
-                string targetName = ProfileService.ActiveMicProfileName;
                 StorageLoggerService.Log(
                     $"Mikrofon-Profil: {targetName}",
                     $"Mikrofon-Profil '{targetName}' gespeichert. [{tag}]",

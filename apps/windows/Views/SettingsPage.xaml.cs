@@ -34,7 +34,8 @@ public sealed partial class SettingsPage : Page
     public SettingsPage()
     {
         InitializeComponent();
-        StorageLoggerService.EntriesChanged += OnStorageEntriesChanged;
+        Loaded += (_, _) => StorageLoggerService.EntriesChanged += OnStorageEntriesChanged;
+        Unloaded += (_, _) => StorageLoggerService.EntriesChanged -= OnStorageEntriesChanged;
     }
 
     private void OnStorageEntriesChanged(object? sender, EventArgs e)
