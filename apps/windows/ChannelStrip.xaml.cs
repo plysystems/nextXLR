@@ -195,25 +195,13 @@ public sealed partial class ChannelStrip : UserControl
     private void CommitLevelInput()
     {
         if (LevelInputBox.Visibility != Visibility.Visible) return;
-        var text = LevelInputBox.Text.Trim();
-        bool isDb = text.EndsWith("db", StringComparison.OrdinalIgnoreCase);
-        text = text.Replace("dB", "", StringComparison.OrdinalIgnoreCase).Replace("db", "", StringComparison.OrdinalIgnoreCase).Trim().TrimEnd('%');
+        var text = LevelInputBox.Text.Trim().TrimEnd('%');
         if (double.TryParse(text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out var val) ||
             double.TryParse(text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out val))
         {
-            double targetPercent;
-            if (isDb || val < 0)
-            {
-                // Convert dB to volume percent: gain = 10^(dB/20) = p^3 -> p = 10^(dB/60)
-                targetPercent = Math.Clamp(Math.Pow(10.0, val / 60.0) * 100.0, 0.0, 100.0);
-            }
-            else
-            {
-                targetPercent = val;
-            }
             var min = ViewModel?.MinVolumePercent ?? 0.0;
             var max = ViewModel?.MaxVolumePercent ?? 100.0;
-            var clamped = Math.Clamp(targetPercent, min, max);
+            var clamped = Math.Clamp(val, min, max);
             if (ViewModel is not null)
             {
                 ViewModel.VolumePercent = clamped;
@@ -227,6 +215,106 @@ public sealed partial class ChannelStrip : UserControl
     {
         LevelInputBox.Visibility = Visibility.Collapsed;
         LevelDisplayPanel.Visibility = Visibility.Visible;
+    }
+
+    private void PhonesLevelDisplay_Tapped(object sender, TappedRoutedEventArgs e)
+    {
+        if (ViewModel is null || ViewModel.IsFixed) return;
+        PhonesLevelInputBox.Text = Math.Round(ViewModel.SubmixVolume * 100).ToString();
+        PhonesLevelDisplayPanel.Visibility = Visibility.Collapsed;
+        PhonesLevelInputBox.Visibility = Visibility.Visible;
+        PhonesLevelInputBox.SelectAll();
+        PhonesLevelInputBox.Focus(FocusState.Programmatic);
+    }
+
+    private void PhonesLevelInputBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == VirtualKey.Enter)
+        {
+            CommitPhonesLevelInput();
+            e.Handled = true;
+        }
+        else if (e.Key == VirtualKey.Escape)
+        {
+            PhonesLevelInputBox.Visibility = Visibility.Collapsed;
+            PhonesLevelDisplayPanel.Visibility = Visibility.Visible;
+            e.Handled = true;
+        }
+    }
+
+    private void PhonesLevelInputBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (PhonesLevelInputBox.Visibility == Visibility.Visible)
+        {
+            CommitPhonesLevelInput();
+        }
+    }
+
+    private void CommitPhonesLevelInput()
+    {
+        if (PhonesLevelInputBox.Visibility != Visibility.Visible) return;
+        var text = PhonesLevelInputBox.Text.Trim().TrimEnd('%');
+        if (double.TryParse(text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out var val) ||
+            double.TryParse(text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out val))
+        {
+            var clamped = Math.Clamp(val, 0.0, 100.0);
+            if (ViewModel is not null)
+            {
+                ViewModel.SubmixVolumePercent = clamped;
+            }
+        }
+        PhonesLevelInputBox.Visibility = Visibility.Collapsed;
+        PhonesLevelDisplayPanel.Visibility = Visibility.Visible;
+    }
+
+    private void StreamLevelDisplay_Tapped(object sender, TappedRoutedEventArgs e)
+    {
+        if (ViewModel is null || ViewModel.IsFixed) return;
+        StreamLevelInputBox.Text = Math.Round(ViewModel.Volume * 100).ToString();
+        StreamLevelDisplayPanel.Visibility = Visibility.Collapsed;
+        StreamLevelInputBox.Visibility = Visibility.Visible;
+        StreamLevelInputBox.SelectAll();
+        StreamLevelInputBox.Focus(FocusState.Programmatic);
+    }
+
+    private void StreamLevelInputBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == VirtualKey.Enter)
+        {
+            CommitStreamLevelInput();
+            e.Handled = true;
+        }
+        else if (e.Key == VirtualKey.Escape)
+        {
+            StreamLevelInputBox.Visibility = Visibility.Collapsed;
+            StreamLevelDisplayPanel.Visibility = Visibility.Visible;
+            e.Handled = true;
+        }
+    }
+
+    private void StreamLevelInputBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (StreamLevelInputBox.Visibility == Visibility.Visible)
+        {
+            CommitStreamLevelInput();
+        }
+    }
+
+    private void CommitStreamLevelInput()
+    {
+        if (StreamLevelInputBox.Visibility != Visibility.Visible) return;
+        var text = StreamLevelInputBox.Text.Trim().TrimEnd('%');
+        if (double.TryParse(text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out var val) ||
+            double.TryParse(text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out val))
+        {
+            var clamped = Math.Clamp(val, 0.0, 100.0);
+            if (ViewModel is not null)
+            {
+                ViewModel.StreamVolumePercent = clamped;
+            }
+        }
+        StreamLevelInputBox.Visibility = Visibility.Collapsed;
+        StreamLevelDisplayPanel.Visibility = Visibility.Visible;
     }
 
     // ---- x:Bind helpers ------------------------------------------------------------------
@@ -281,7 +369,14 @@ public sealed partial class ChannelStrip : UserControl
         hasFader ? Visibility.Visible : Visibility.Collapsed;
 
     public Visibility ShowSoloButton(bool isOutput) => isOutput ? Visibility.Collapsed : Visibility.Visible;
+    public Visibility DualMixItemVisibility(bool showDual) => showDual ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility CanEditVisibility(bool canEdit) => canEdit ? Visibility.Visible : Visibility.Collapsed;
+
     public string MuteMenuText(bool muted) => muted ? "Stummschaltung aufheben" : "Stummschalten";
+    public string HideMenuText(bool isHidden) => isHidden ? "Kanal wieder einblenden" : "Kanal ausblenden";
+    public string HideMenuGlyph(bool isHidden) => isHidden ? "\uE7B3" : "\uE890";
+    public double HiddenChannelOpacity(bool isHidden) => isHidden ? 0.6 : 1.0;
+    public Visibility HiddenBadgeVisibility(bool isHidden) => isHidden ? Visibility.Visible : Visibility.Collapsed;
 
     private void ResetToUnity_Click(object sender, RoutedEventArgs e)
     {
@@ -303,9 +398,12 @@ public sealed partial class ChannelStrip : UserControl
         if (ViewModel != null) ViewModel.ActiveMuted = !ViewModel.ActiveMuted;
     }
 
-    private void HideChannel_Click(object sender, RoutedEventArgs e)
+    private void ToggleHideChannel_Click(object sender, RoutedEventArgs e)
     {
-        if (ViewModel != null) ViewModel.IsUserHidden = true;
+        if (ViewModel != null)
+        {
+            ViewModel.IsUserHidden = !ViewModel.IsUserHidden;
+        }
     }
 
     public string ChannelTooltip(bool canEdit, string name) => canEdit ? Loc.Get("MixerCustomizeTitle.Text") : name;
@@ -316,10 +414,10 @@ public sealed partial class ChannelStrip : UserControl
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> PeakStringCache = new();
     private static string FormatPeak(string peak) => PeakStringCache.GetOrAdd(peak, p => Loc.Format("MixerPeak", p));
 
-    public string SubLabel(bool muted, string restore, bool metered, string peak, bool isFixed, string percent) =>
+    public string SubLabel(bool muted, string restore, bool metered, string peak, bool isFixed, string volumeDb) =>
         isFixed ? Loc.Get("MixerMeterOnly")
-        : muted ? restore : metered ? $"{percent} • {FormatPeak(peak)}" : percent;
-    public string LevelText(bool isFixed, string volumeDb, string peak) => isFixed ? $"{peak} dB" : volumeDb;
+        : muted ? restore : metered ? $"{volumeDb} • {FormatPeak(peak)}" : volumeDb;
+    public string LevelText(bool isFixed, string volumeLabel, string peak) => isFixed ? peak : volumeLabel;
     public Visibility HideIf(bool value) => value ? Visibility.Collapsed : Visibility.Visible;
     public Visibility VisibleIf(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
     public Visibility ShowIfDual(bool showDual, bool isFixed, bool isOutput) => (showDual && !isFixed && !isOutput) ? Visibility.Visible : Visibility.Collapsed;

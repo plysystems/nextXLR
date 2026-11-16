@@ -100,7 +100,14 @@ public partial class ChannelViewModel : ObservableObject
     partial void OnIsUserHiddenChanged(bool value)
     {
         OnPropertyChanged(nameof(IsCardVisible));
+        OnPropertyChanged(nameof(HiddenStatusOpacity));
+        OnPropertyChanged(nameof(HiddenBadgeVisibility));
+        MainViewModel.Instance?.RefreshStrips();
     }
+
+    public double HiddenStatusOpacity => IsUserHidden ? 0.6 : 1.0;
+    public Visibility HiddenBadgeVisibility => IsUserHidden ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility CanEditVisibility => CanEdit ? Visibility.Visible : Visibility.Collapsed;
 
     public void NotifyVisibilityChanged()
     {

@@ -193,6 +193,15 @@ public partial class MixerPage : Page
     public Microsoft.UI.Xaml.Media.Brush FilterActiveBackground(bool onlyActive) => onlyActive ? BrandAccentBg : TransparentBg;
     public Microsoft.UI.Xaml.Media.Brush FilterActiveForeground(bool onlyActive) => onlyActive ? ActiveTextBrush : MutedTextFg;
 
+    public Visibility UnhideButtonVisibility(bool hasHidden) => hasHidden ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility HudModeVisibility(bool isHud) => isHud ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility HudModeInvertedVisibility(bool isHud) => isHud ? Visibility.Collapsed : Visibility.Visible;
+
+    private void UnhideAll_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.UnhideAllChannels();
+    }
+
     private static double RowWidth(int n, double strip) => n * strip + Math.Max(0, n - 1) * Gap;
 
     /// <summary>

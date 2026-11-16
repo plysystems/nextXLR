@@ -232,15 +232,25 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _onlyActiveChannels;
     [ObservableProperty] private bool _isHudMode;
 
+    public bool HasHiddenChannels => Channels.Any(c => c.IsUserHidden);
+    public int HiddenChannelsCount => Channels.Count(c => c.IsUserHidden);
+
     partial void OnOnlyActiveChannelsChanged(bool value)
     {
-        foreach (var ch in Channels) ch.NotifyVisibilityChanged();
+        RefreshStrips();
     }
 
     public void UnhideAllChannels()
     {
         foreach (var ch in Channels) ch.IsUserHidden = false;
-        OnlyActiveChannels = false;
+        RefreshStrips();
+    }
+
+    public void RefreshStrips()
+    {
+        ArrangeStrips(Array.Empty<FaderAssignment>());
+        OnPropertyChanged(nameof(HasHiddenChannels));
+        OnPropertyChanged(nameof(HiddenChannelsCount));
     }
 
     public void HandleSoloChanged(ChannelViewModel changedChannel)
@@ -545,11 +555,30 @@ public partial class MainViewModel : ObservableObject
             return;
         }
         static int Rank(uint[] order, uint id) { var i = Array.IndexOf(order, id); return i < 0 ? 100 + (int)id : i; }
-        var inputs = Channels.Where(c => !c.IsOutput)
-            .OrderBy(c => Rank(RoutingOrder, c.Id)).ToList();
-        var outputs = Channels.Where(c => c.IsOutput).OrderBy(c => Rank(OutputOrder, c.Id)).ToList();
+
+        IEnumerable<ChannelViewModel> inputQuery = Channels.Where(c => !c.IsOutput);
+        IEnumerable<ChannelViewModel> outputQuery = Channels.Where(c => c.IsOutput);
+
+        if (OnlyActiveChannels)
+        {
+            inputQuery = inputQuery.Where(c => !c.IsUserHidden && IsChannelActive(c));
+            outputQuery = outputQuery.Where(c => !c.IsUserHidden && IsChannelActive(c));
+        }
+
+        var inputs = inputQuery.OrderBy(c => Rank(RoutingOrder, c.Id)).ToList();
+        var outputs = outputQuery.OrderBy(c => Rank(OutputOrder, c.Id)).ToList();
         SyncOrder(InputStrips, inputs);
         SyncOrder(OutputStrips, outputs);
+        OnPropertyChanged(nameof(HasHiddenChannels));
+        OnPropertyChanged(nameof(HiddenChannelsCount));
+    }
+
+    private static bool IsChannelActive(ChannelViewModel c)
+    {
+        if (c.HasFader) return true;
+        if (c.Meter > 0.001 || c.Volume > 0.001 || (c.ShowDualMix && c.SubmixVolume > 0.001)) return true;
+        if (c.Id is 0 or 1 or 2 or 3 or 8 or 11) return true;
+        return false;
     }
 
     /// <summary>Reorders in place (Move), so existing strips — and a drag in progress — survive.</summary>

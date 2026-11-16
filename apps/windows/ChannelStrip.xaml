@@ -14,36 +14,52 @@
             VerticalAlignment="Stretch"
             BorderBrush="{ThemeResource GlassCardBorderBrush}"
             BorderThickness="1"
-            Visibility="{x:Bind VisibleIf(ViewModel.IsCardVisible), Mode=OneWay}">
+            Opacity="{x:Bind ViewModel.HiddenStatusOpacity, Mode=OneWay}">
         <Border.ContextFlyout>
             <MenuFlyout>
-                <MenuFlyoutItem Text="Auf 0,0 dB zurücksetzen" Click="ResetToUnity_Click">
+                <!-- Unity Reset (0-100 / 0 dB) -->
+                <MenuFlyoutItem Text="Auf 100 zurücksetzen (Unity)" Click="ResetToUnity_Click">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE73E;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem Text="Kopfhörer auf Stream spiegeln" Click="CopyPhonesToStream_Click">
+
+                <!-- Dual-Mix actions (ONLY visible in Dual-Mix mode!) -->
+                <MenuFlyoutSeparator Visibility="{x:Bind DualMixItemVisibility(ViewModel.ShowDualMix), Mode=OneWay}" />
+                <MenuFlyoutItem Text="Kopfhörer auf Stream spiegeln" Click="CopyPhonesToStream_Click"
+                                Visibility="{x:Bind DualMixItemVisibility(ViewModel.ShowDualMix), Mode=OneWay}">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8D4;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem Text="Stream auf Kopfhörer spiegeln" Click="CopyStreamToPhones_Click">
+                <MenuFlyoutItem Text="Stream auf Kopfhörer spiegeln" Click="CopyStreamToPhones_Click"
+                                Visibility="{x:Bind DualMixItemVisibility(ViewModel.ShowDualMix), Mode=OneWay}">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8D4;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <ToggleMenuFlyoutItem Text="Koppeln (Link)" IsChecked="{x:Bind ViewModel.IsLinked, Mode=TwoWay}">
+                <ToggleMenuFlyoutItem Text="Koppeln (Link)" IsChecked="{x:Bind ViewModel.IsLinked, Mode=TwoWay}"
+                                      Visibility="{x:Bind DualMixItemVisibility(ViewModel.ShowDualMix), Mode=OneWay}">
                     <ToggleMenuFlyoutItem.Icon><FontIcon Glyph="&#xE71B;" /></ToggleMenuFlyoutItem.Icon>
                 </ToggleMenuFlyoutItem>
+
                 <MenuFlyoutSeparator />
+                <!-- Solo (PFL Vorhören) - Only visible on Inputs -->
                 <ToggleMenuFlyoutItem Text="Solo (PFL Vorhören)" IsChecked="{x:Bind ViewModel.IsSolo, Mode=TwoWay}"
                                       Visibility="{x:Bind ShowSoloButton(ViewModel.IsOutput), Mode=OneWay}">
                     <ToggleMenuFlyoutItem.Icon><FontIcon Glyph="&#xE767;" /></ToggleMenuFlyoutItem.Icon>
                 </ToggleMenuFlyoutItem>
+
+                <!-- Mute -->
                 <MenuFlyoutItem Text="{x:Bind MuteMenuText(ViewModel.ActiveMuted), Mode=OneWay}" Click="ToggleMute_Click">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="{x:Bind MuteGlyph(ViewModel.ActiveMuted), Mode=OneWay}" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutSeparator />
+
+                <!-- Rename / Edit - Only if editable -->
+                <MenuFlyoutSeparator Visibility="{x:Bind ViewModel.CanEditVisibility, Mode=OneWay}" />
                 <MenuFlyoutItem Text="Kanal anpassen (Name &amp; Icon)..." Click="Edit_Click"
-                                Visibility="{x:Bind ViewModel.CanEdit, Mode=OneWay}">
+                                Visibility="{x:Bind ViewModel.CanEditVisibility, Mode=OneWay}">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE70F;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem Text="Kanal im Mixer ausblenden" Click="HideChannel_Click">
-                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE890;" /></MenuFlyoutItem.Icon>
+
+                <!-- Hide / Unhide Channel -->
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="{x:Bind HideMenuText(ViewModel.IsUserHidden), Mode=OneWay}" Click="ToggleHideChannel_Click">
+                    <MenuFlyoutItem.Icon><FontIcon Glyph="{x:Bind HideMenuGlyph(ViewModel.IsUserHidden), Mode=OneWay}" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
             </MenuFlyout>
         </Border.ContextFlyout>
@@ -87,6 +103,17 @@
                         Background="{x:Bind ChannelIconBackground(ViewModel.Accent), Mode=OneWay}">
                     <FontIcon Glyph="{x:Bind ViewModel.Glyph, Mode=OneWay}" FontSize="18"
                               Foreground="{x:Bind ChannelIconForeground(ViewModel.Accent), Mode=OneWay}" />
+                </Border>
+
+                <!-- Hidden Indicator Badge (Only shown in 'Alle' tab if marked hidden) -->
+                <Border Visibility="{x:Bind ViewModel.HiddenBadgeVisibility, Mode=OneWay}"
+                        Background="{ThemeResource SurfaceL3Brush}" CornerRadius="4" Padding="4,1"
+                        BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1"
+                        HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,-8">
+                    <StackPanel Orientation="Horizontal" Spacing="3">
+                        <FontIcon Glyph="&#xE890;" FontSize="8.5" Foreground="{ThemeResource TextMutedBrush}" />
+                        <TextBlock Text="Ausgeblendet" FontSize="8" FontWeight="SemiBold" Foreground="{ThemeResource TextMutedBrush}" />
+                    </StackPanel>
                 </Border>
 
                 <!-- Top Right: Modern 3-Vertical-Dots Button for Edit / Rename / Icon Picker -->
@@ -179,14 +206,23 @@
                                         PeakHold="{x:Bind ViewModel.PeakHold, Mode=OneWay}"
                                         IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}" />
 
-                        <!-- Volume dB readout -->
-                        <Border Grid.Row="1" Background="{ThemeResource SurfaceL3Brush}" CornerRadius="6" Padding="6,2"
-                                HorizontalAlignment="Center" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1">
-                            <TextBlock Text="{x:Bind ViewModel.SubmixVolumeDbLabel, Mode=OneWay}"
-                                       FontSize="12" FontWeight="Bold" FontFamily="{StaticResource MonoFont}"
-                                       Foreground="{StaticResource HeadphoneBrush}" HorizontalAlignment="Center"
-                                       ToolTipService.ToolTip="{x:Bind ViewModel.SubmixVolumePercentLabel, Mode=OneWay}" />
-                        </Border>
+                        <!-- Volume 0-100 readout (Click to edit) -->
+                        <Grid Grid.Row="1" HorizontalAlignment="Center">
+                            <Border Background="{ThemeResource SurfaceL3Brush}" CornerRadius="6" Padding="6,2"
+                                    HorizontalAlignment="Center" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1">
+                                <StackPanel x:Name="PhonesLevelDisplayPanel" Orientation="Horizontal" HorizontalAlignment="Center"
+                                            Background="Transparent" Tapped="PhonesLevelDisplay_Tapped"
+                                            services:CursorHelper.UseHandCursor="True">
+                                    <TextBlock Text="{x:Bind ViewModel.SubmixVolumeLabel, Mode=OneWay}"
+                                               FontSize="12" FontWeight="Bold" FontFamily="{StaticResource MonoFont}"
+                                               Foreground="{StaticResource HeadphoneBrush}" HorizontalAlignment="Center"
+                                               ToolTipService.ToolTip="{x:Bind ViewModel.SubmixVolumeDbLabel, Mode=OneWay}" />
+                                </StackPanel>
+                            </Border>
+                            <TextBox x:Name="PhonesLevelInputBox" Width="46" TextAlignment="Center" FontSize="12" Height="26" Padding="1"
+                                     FontFamily="{StaticResource MonoFont}" Visibility="Collapsed"
+                                     KeyDown="PhonesLevelInputBox_KeyDown" LostFocus="PhonesLevelInputBox_LostFocus" />
+                        </Grid>
 
                         <!-- Kopfhörer Pill + Hardware Fader Badge -->
                         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
@@ -256,14 +292,23 @@
                                         PeakHold="{x:Bind ViewModel.PeakHold, Mode=OneWay}"
                                         IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}" />
 
-                        <!-- Volume dB readout -->
-                        <Border Grid.Row="1" Background="{ThemeResource SurfaceL3Brush}" CornerRadius="6" Padding="6,2"
-                                HorizontalAlignment="Center" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1">
-                            <TextBlock Text="{x:Bind ViewModel.StreamVolumeDbLabel, Mode=OneWay}"
-                                       FontSize="12" FontWeight="Bold" FontFamily="{StaticResource MonoFont}"
-                                       Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Center"
-                                       ToolTipService.ToolTip="{x:Bind ViewModel.StreamVolumePercentLabel, Mode=OneWay}" />
-                        </Border>
+                        <!-- Volume 0-100 readout (Click to edit) -->
+                        <Grid Grid.Row="1" HorizontalAlignment="Center">
+                            <Border Background="{ThemeResource SurfaceL3Brush}" CornerRadius="6" Padding="6,2"
+                                    HorizontalAlignment="Center" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1">
+                                <StackPanel x:Name="StreamLevelDisplayPanel" Orientation="Horizontal" HorizontalAlignment="Center"
+                                            Background="Transparent" Tapped="StreamLevelDisplay_Tapped"
+                                            services:CursorHelper.UseHandCursor="True">
+                                    <TextBlock Text="{x:Bind ViewModel.StreamVolumeLabel, Mode=OneWay}"
+                                               FontSize="12" FontWeight="Bold" FontFamily="{StaticResource MonoFont}"
+                                               Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Center"
+                                               ToolTipService.ToolTip="{x:Bind ViewModel.StreamVolumeDbLabel, Mode=OneWay}" />
+                                </StackPanel>
+                            </Border>
+                            <TextBox x:Name="StreamLevelInputBox" Width="46" TextAlignment="Center" FontSize="12" Height="26" Padding="1"
+                                     FontFamily="{StaticResource MonoFont}" Visibility="Collapsed"
+                                     KeyDown="StreamLevelInputBox_KeyDown" LostFocus="StreamLevelInputBox_LostFocus" />
+                        </Grid>
 
                         <!-- Stream Pill + Hardware Fader Badge -->
                         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
@@ -323,30 +368,31 @@
                                     IsMetered="{x:Bind ViewModel.Metered, Mode=OneWay}"
                                     Accent="{x:Bind SingleFaderAccent(ViewModel.IsSubmixActive, ViewModel.Accent), Mode=OneWay}" />
 
-                    <!-- Row 1: Volume dB readout (Click to edit) -->
+                    <!-- Row 1: Volume 0-100 readout (Click to edit) -->
                     <Grid Grid.Row="1" HorizontalAlignment="Center">
-                        <Border Background="{ThemeResource SurfaceL3Brush}" CornerRadius="6" Padding="6,2"
+                        <Border Background="{ThemeResource SurfaceL3Brush}" CornerRadius="6" Padding="8,2"
                                 BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1">
                             <StackPanel x:Name="LevelDisplayPanel" Orientation="Horizontal" HorizontalAlignment="Center"
                                         Background="Transparent"
                                         ToolTipService.ToolTip="{x:Bind EditTooltip(ViewModel.IsFixed), Mode=OneWay}"
-                                        Tapped="LevelDisplay_Tapped" PointerPressed="LevelDisplay_PointerPressed">
-                                <TextBlock Text="{x:Bind LevelText(ViewModel.IsFixed, ViewModel.VolumeDbLabel, ViewModel.PeakLabel), Mode=OneWay}"
+                                        Tapped="LevelDisplay_Tapped" PointerPressed="LevelDisplay_PointerPressed"
+                                        services:CursorHelper.UseHandCursor="True">
+                                <TextBlock Text="{x:Bind LevelText(ViewModel.IsFixed, ViewModel.VolumeLabel, ViewModel.PeakLabel), Mode=OneWay}"
                                            FontSize="13" FontWeight="Bold"
                                            Foreground="{StaticResource BrandBrush}"
                                            FontFamily="{StaticResource MonoFont}" HorizontalAlignment="Center"
                                            IsHitTestVisible="False" />
                             </StackPanel>
                         </Border>
-                        <TextBox x:Name="LevelInputBox" Width="68" TextAlignment="Center" FontSize="13" Height="28" Padding="2"
+                        <TextBox x:Name="LevelInputBox" Width="52" TextAlignment="Center" FontSize="13" Height="28" Padding="2"
                                  FontFamily="{StaticResource MonoFont}"
                                  Visibility="Collapsed" KeyDown="LevelInputBox_KeyDown" LostFocus="LevelInputBox_LostFocus" />
                     </Grid>
 
-                    <!-- Row 2: Sub-label (% and Peak or Mute restore or Meter-Only) -->
+                    <!-- Row 2: Sub-label (dB and Peak or Mute restore or Meter-Only) -->
                     <TextBlock Grid.Row="2" HorizontalAlignment="Center" Style="{StaticResource Caption}" FontSize="10"
                                Foreground="{ThemeResource TextMutedBrush}"
-                               Text="{x:Bind SubLabel(ViewModel.ActiveMuted, ViewModel.RestoreLabel, ViewModel.Metered, ViewModel.PeakLabel, ViewModel.IsFixed, ViewModel.VolumePercentLabel), Mode=OneWay}" />
+                               Text="{x:Bind SubLabel(ViewModel.ActiveMuted, ViewModel.RestoreLabel, ViewModel.Metered, ViewModel.PeakLabel, ViewModel.IsFixed, ViewModel.VolumeDbLabel), Mode=OneWay}" />
 
                     <!-- Row 3: Active Mix & Hardware Fader Badge Bar -->
                     <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
