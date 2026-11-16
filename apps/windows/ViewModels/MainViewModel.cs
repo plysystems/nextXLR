@@ -525,6 +525,7 @@ public partial class MainViewModel : ObservableObject
             slot.SyncOptions(Channels.Where(c => !c.IsFixed), _transport);
             slot.ApplyFromServer(faders.FirstOrDefault(f => f.Fader == slot.Letter)?.Channel);
         }
+        RefreshStrips();
     }
 
     /// <summary>Canonical studio console order: Mic (0), Chat (1), Music (2), System (4), Game (3), Console (7), Line In (6), Samples (5).</summary>
@@ -565,12 +566,30 @@ public partial class MainViewModel : ObservableObject
             outputQuery = outputQuery.Where(c => !c.IsUserHidden && IsChannelActive(c));
         }
 
-        var inputs = inputQuery.OrderBy(c => Rank(RoutingOrder, c.Id)).ToList();
+        var inputs = inputQuery.OrderBy(GetInputChannelRank).ToList();
         var outputs = outputQuery.OrderBy(c => Rank(OutputOrder, c.Id)).ToList();
         SyncOrder(InputStrips, inputs);
         SyncOrder(OutputStrips, outputs);
         OnPropertyChanged(nameof(HasHiddenChannels));
         OnPropertyChanged(nameof(HiddenChannelsCount));
+    }
+
+    private static int GetInputChannelRank(ChannelViewModel c)
+    {
+        // Hardware faders A, B, C, D strictly occupy the first 4 slots in physical desk order
+        if (!string.IsNullOrEmpty(c.FaderLetter))
+        {
+            return c.FaderLetter.ToUpperInvariant() switch
+            {
+                "A" => 0,
+                "B" => 1,
+                "C" => 2,
+                "D" => 3,
+                _ => 4
+            };
+        }
+        var i = Array.IndexOf(RoutingOrder, c.Id);
+        return 100 + (i < 0 ? (int)c.Id : i);
     }
 
     private static bool IsChannelActive(ChannelViewModel c)
@@ -869,6 +888,20 @@ public partial class MainViewModel : ObservableObject
         settings.EnsureDistinctMixerPages();
         settings.Save();
         HasPendingChanges = true;
+
+        // Reassign FaderLetter in memory and immediately re-sort strips so UI matches hardware
+        foreach (var ch in Channels)
+        {
+            if (string.Equals(ch.FaderLetter, letter, StringComparison.OrdinalIgnoreCase) && ch.Id != channelId)
+            {
+                ch.FaderLetter = null;
+            }
+            else if (ch.Id == channelId)
+            {
+                ch.FaderLetter = letter.ToUpperInvariant();
+            }
+        }
+        RefreshStrips();
     }
 }
 

@@ -305,7 +305,7 @@ public sealed partial class MainWindow : Window
                 UpdatePaneLayout();
                 if (SidebarIsland != null) SidebarIsland.Visibility = Visibility.Collapsed;
                 NavigateToPage("mixer");
-                AppWindow.Resize(new Windows.Graphics.SizeInt32(1100, 480));
+                AppWindow.Resize(new Windows.Graphics.SizeInt32(1260, 540));
                 if (AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
                 {
                     presenter.IsAlwaysOnTop = true;

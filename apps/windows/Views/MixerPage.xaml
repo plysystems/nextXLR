@@ -252,121 +252,32 @@
         </Grid>
 
         <!-- Hardware faders A–D: sleek unboxed console ribbon (Normal Mode) -->
-        <Border Grid.Row="1" Background="Transparent" Padding="4,2,4,12"
+        <Border Grid.Row="1" Background="Transparent" Padding="4,0,4,8"
                 BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="0,0,0,1"
                 Visibility="{x:Bind HudModeInvertedVisibility(ViewModel.IsHudMode), Mode=OneWay}">
-            <StackPanel Spacing="10">
-                <!-- Utility Row: Mixer Pages (Left) & Master Live Controls (Right) -->
-                <Grid ColumnSpacing="12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-                    <!-- Mixer Pages Switcher Bar (Only visible on full GoXLR) -->
-                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
-                                Visibility="{x:Bind ViewModel.MixerPagesVisibility, Mode=OneWay}">
-                        <FontIcon Glyph="&#xE8B7;" FontSize="13" Foreground="{StaticResource BrandBrush}" VerticalAlignment="Center" />
-                        <TextBlock Text="Mixer-Pages:" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" />
-                        <!-- Page 1 & Page 2 Pill Toggle -->
-                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="10"
-                                Padding="3" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1">
-                            <StackPanel Orientation="Horizontal" Spacing="3">
-                                <Button x:Name="BtnMixerPage1" Click="MixerPage1_Click"
-                                        Padding="12,5" CornerRadius="7" BorderThickness="0"
-                                        services:CursorHelper.UseHandCursor="True"
-                                        Background="{x:Bind Page1Background(ViewModel.ActiveMixerPage), Mode=OneWay}">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <FontIcon Glyph="&#xE7F6;" FontSize="11" Foreground="{x:Bind Page1Foreground(ViewModel.ActiveMixerPage), Mode=OneWay}" />
-                                        <TextBlock Text="Seite 1" FontWeight="SemiBold" FontSize="11"
-                                                   Foreground="{x:Bind Page1Foreground(ViewModel.ActiveMixerPage), Mode=OneWay}" />
-                                    </StackPanel>
-                                </Button>
-                                <Button x:Name="BtnMixerPage2" Click="MixerPage2_Click"
-                                        Padding="12,5" CornerRadius="7" BorderThickness="0"
-                                        services:CursorHelper.UseHandCursor="True"
-                                        Background="{x:Bind Page2Background(ViewModel.ActiveMixerPage), Mode=OneWay}">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <FontIcon Glyph="&#xE7FC;" FontSize="11" Foreground="{x:Bind Page2Foreground(ViewModel.ActiveMixerPage), Mode=OneWay}" />
-                                        <TextBlock Text="Seite 2" FontWeight="SemiBold" FontSize="11"
-                                                   Foreground="{x:Bind Page2Foreground(ViewModel.ActiveMixerPage), Mode=OneWay}" />
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-
-                    <!-- Master Live Controls: Segmented Buttongroup [ Mic_ICON | !@#$?* ] + Unabhängige Zensur (GRÖSSER) -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                        <!-- Buttongroup [ Mic_ICON | !@#$?* ] -->
-                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="12"
-                                Padding="3" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1">
-                            <StackPanel Orientation="Horizontal" Spacing="0">
-                                <!-- Mic Mute (Husten) Button - Only Mic Icon -->
-                                <ToggleButton x:Uid="MicMuteButton" Width="48" Height="38" Padding="0" CornerRadius="9,0,0,9"
-                                              BorderThickness="0" Style="{StaticResource SmoothDangerToggle}"
-                                              services:CursorHelper.UseHandCursor="True"
-                                              IsChecked="{x:Bind ViewModel.MicMuted, Mode=TwoWay}"
-                                              ToolTipService.ToolTip="Mikrofon stummschalten (Husten-Taste)">
-                                    <FontIcon Glyph="{x:Bind MicGlyph(ViewModel.MicMuted), Mode=OneWay}" FontSize="16" />
-                                </ToggleButton>
-
-                                <!-- Subtle 1px Divider -->
-                                <Border Width="1" Height="24" Background="{ThemeResource GlassCardBorderBrush}" VerticalAlignment="Center" />
-
-                                <!-- Bleep Button - Only !@#$?* -->
-                                <ToggleButton x:Name="BleepButton" x:Uid="BleepButton" Width="62" Height="38" Padding="0" CornerRadius="0,9,9,0"
-                                              BorderThickness="0" Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
-                                              services:CursorHelper.UseHandCursor="True"
-                                              IsChecked="{x:Bind ViewModel.BleepActive, Mode=OneWay}"
-                                              ToolTipService.ToolTip="Zensurton (Halten)">
-                                    <TextBlock Text="!@#$?*" FontSize="13" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </ToggleButton>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Unabhängige Zensur-Karte (Pegel) (GRÖSSER) -->
-                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="12"
-                                Height="46" Padding="14,0" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1"
-                                VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                <TextBlock Text="Zensur:" FontSize="13" FontWeight="SemiBold"
-                                           Foreground="{ThemeResource TextMutedBrush}" VerticalAlignment="Center" />
-                                <Slider x:Name="BleepSlider" Minimum="0" Maximum="100" StepFrequency="1"
-                                        Width="120" Height="36" VerticalAlignment="Center"
-                                        Value="{x:Bind ViewModel.BleepVolume, Mode=TwoWay}"
-                                        AutomationProperties.Name="Zensur Lautstärke" />
-                                <TextBlock Text="{x:Bind ViewModel.BleepVolumeText, Mode=OneWay}"
-                                           FontSize="13" FontWeight="Bold" Width="50" VerticalAlignment="Center"
-                                           Foreground="{StaticResource BrandBrush}" FontFamily="{StaticResource MonoFont}"
-                                           ToolTipService.ToolTip="{x:Bind ViewModel.BleepVolumePercentText, Mode=OneWay}" />
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Grid>
-
-                <!-- Hardware Fader Assignment Ribbon (A - D) -->
-                <Grid ColumnSpacing="12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+                <!-- Left: Hardware Fader Assignment Ribbon (A - D) -->
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                     <TextBlock x:Uid="FaderAssignTitle" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" />
-                    <ItemsRepeater Grid.Column="1" HorizontalAlignment="Left" ItemsSource="{x:Bind ViewModel.FaderSlots}">
+                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.FaderSlots}">
                         <ItemsRepeater.Layout>
-                            <UniformGridLayout MinItemWidth="145" MinItemHeight="36" MinColumnSpacing="8"
-                                               MinRowSpacing="6" MaximumRowsOrColumns="4" ItemsStretch="None" ItemsJustification="Start" />
+                            <StackLayout Orientation="Horizontal" Spacing="8" />
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="vm:FaderSlotViewModel">
-                                <Grid ColumnSpacing="6" Width="145">
+                                <Grid ColumnSpacing="6" Width="160">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border Width="28" Height="28" CornerRadius="6" Background="{StaticResource BrandBrush}">
-                                        <TextBlock Text="{x:Bind Letter}" FontWeight="Bold" FontSize="12" Foreground="#0E1015"
+                                    <Border Width="26" Height="26" CornerRadius="6" Background="{ThemeResource SurfaceL3Brush}"
+                                            BorderBrush="{StaticResource BrandBrush}" BorderThickness="1">
+                                        <TextBlock Text="{x:Bind Letter}" FontWeight="Bold" FontSize="11" Foreground="{StaticResource BrandBrush}"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
                                     <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{x:Bind Options}"
@@ -375,7 +286,7 @@
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate x:DataType="vm:ChannelViewModel">
                                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                                    <FontIcon Glyph="{x:Bind Glyph, Mode=OneWay}" FontSize="13" Foreground="{x:Bind Accent}" />
+                                                    <FontIcon Glyph="{x:Bind Glyph, Mode=OneWay}" FontSize="12" Foreground="{x:Bind Accent}" />
                                                     <TextBlock Text="{x:Bind Name, Mode=OneWay}" FontSize="12" />
                                                 </StackPanel>
                                             </DataTemplate>
@@ -385,9 +296,92 @@
                             </DataTemplate>
                         </ItemsRepeater.ItemTemplate>
                     </ItemsRepeater>
-                </Grid>
-            </StackPanel>
+                </StackPanel>
+
+                <!-- Right: Studio Utilities (Mixer Pages + Mic Mute / Bleep + Zensur Slider) -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <!-- Mixer Pages Switcher Bar (Only visible on full GoXLR) -->
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center"
+                                Visibility="{x:Bind ViewModel.MixerPagesVisibility, Mode=OneWay}">
+                        <FontIcon Glyph="&#xE8B7;" FontSize="12" Foreground="{StaticResource BrandBrush}" VerticalAlignment="Center" />
+                        <TextBlock Text="Mixer-Pages:" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center" />
+                        <!-- Page 1 &amp; Page 2 Pill Toggle -->
+                        <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="8"
+                                Padding="2" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1">
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <Button x:Name="BtnMixerPage1" Click="MixerPage1_Click"
+                                        Padding="10,4" CornerRadius="6" BorderThickness="0"
+                                        services:CursorHelper.UseHandCursor="True"
+                                        Background="{x:Bind Page1Background(ViewModel.ActiveMixerPage), Mode=OneWay}">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <FontIcon Glyph="&#xE7F6;" FontSize="10" Foreground="{x:Bind Page1Foreground(ViewModel.ActiveMixerPage), Mode=OneWay}" />
+                                        <TextBlock Text="Seite 1" FontWeight="SemiBold" FontSize="11"
+                                                   Foreground="{x:Bind Page1Foreground(ViewModel.ActiveMixerPage), Mode=OneWay}" />
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnMixerPage2" Click="MixerPage2_Click"
+                                        Padding="10,4" CornerRadius="6" BorderThickness="0"
+                                        services:CursorHelper.UseHandCursor="True"
+                                        Background="{x:Bind Page2Background(ViewModel.ActiveMixerPage), Mode=OneWay}">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <FontIcon Glyph="&#xE7FC;" FontSize="10" Foreground="{x:Bind Page2Foreground(ViewModel.ActiveMixerPage), Mode=OneWay}" />
+                                        <TextBlock Text="Seite 2" FontWeight="SemiBold" FontSize="11"
+                                                   Foreground="{x:Bind Page2Foreground(ViewModel.ActiveMixerPage), Mode=OneWay}" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Master Live Controls: Segmented Buttongroup [ Mic_ICON | !@#$?* ] -->
+                    <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="10"
+                            Padding="2" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal" Spacing="0">
+                            <!-- Mic Mute (Husten) Button -->
+                            <ToggleButton x:Uid="MicMuteButton" Width="42" Height="32" Padding="0" CornerRadius="8,0,0,8"
+                                          BorderThickness="0" Style="{StaticResource SmoothDangerToggle}"
+                                          services:CursorHelper.UseHandCursor="True"
+                                          IsChecked="{x:Bind ViewModel.MicMuted, Mode=TwoWay}"
+                                          ToolTipService.ToolTip="Mikrofon stummschalten (Husten-Taste)">
+                                <FontIcon Glyph="{x:Bind MicGlyph(ViewModel.MicMuted), Mode=OneWay}" FontSize="14" />
+                            </ToggleButton>
+
+                            <!-- Subtle 1px Divider -->
+                            <Border Width="1" Height="20" Background="{ThemeResource GlassCardBorderBrush}" VerticalAlignment="Center" />
+
+                            <!-- Bleep Button -->
+                            <ToggleButton x:Name="BleepButton" x:Uid="BleepButton" Width="54" Height="32" Padding="0" CornerRadius="0,8,8,0"
+                                          BorderThickness="0" Style="{StaticResource SmoothDangerToggle}" IsThreeState="False"
+                                          services:CursorHelper.UseHandCursor="True"
+                                          IsChecked="{x:Bind ViewModel.BleepActive, Mode=OneWay}"
+                                          ToolTipService.ToolTip="Zensurton (Halten)">
+                                <TextBlock Text="!@#$?*" FontSize="11" FontWeight="Bold" FontFamily="{StaticResource DisplayFont}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </ToggleButton>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Zensur-Karte (Pegel) -->
+                    <Border Background="{ThemeResource GlassCardBackgroundBrush}" CornerRadius="10"
+                            Height="36" Padding="10,0" BorderBrush="{ThemeResource GlassCardBorderBrush}" BorderThickness="1"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <TextBlock Text="Zensur:" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{ThemeResource TextMutedBrush}" VerticalAlignment="Center" />
+                            <Slider x:Name="BleepSlider" Minimum="0" Maximum="100" StepFrequency="1"
+                                    Width="90" Height="32" VerticalAlignment="Center"
+                                    Value="{x:Bind ViewModel.BleepVolume, Mode=TwoWay}"
+                                    AutomationProperties.Name="Zensur Lautstärke" />
+                            <TextBlock Text="{x:Bind ViewModel.BleepVolumeText, Mode=OneWay}"
+                                       FontSize="11" FontWeight="Bold" Width="44" VerticalAlignment="Center"
+                                       Foreground="{StaticResource BrandBrush}" FontFamily="{StaticResource MonoFont}"
+                                       ToolTipService.ToolTip="{x:Bind ViewModel.BleepVolumePercentText, Mode=OneWay}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
         </Border>
+
 
         <!--
           Three sections: Inputs (fader A–D channels first) | Master Controls (Cough + Bleep) | Outputs.

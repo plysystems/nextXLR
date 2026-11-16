@@ -333,19 +333,13 @@ public sealed partial class ChannelStrip : UserControl
     }
 
     public Brush TrackBorderPhones(bool hasHardwareFader) =>
-        hasHardwareFader ? (Brush)Application.Current.Resources["HeadphoneBrush"] : (Brush)Application.Current.Resources["SurfaceStrokeSubtleBrush"];
+        (Brush)Application.Current.Resources["GlassCardBorderBrush"];
 
     public Brush TrackBorderStream(bool hasHardwareFader) =>
-        hasHardwareFader ? (Brush)Application.Current.Resources["BrandBrush"] : (Brush)Application.Current.Resources["SurfaceStrokeSubtleBrush"];
+        (Brush)Application.Current.Resources["GlassCardBorderBrush"];
 
-    public Brush SingleTrackBorder(bool hasHardwareFader, bool isSubmixActive, Brush? accent)
-    {
-        if (!hasHardwareFader)
-            return (Brush)Application.Current.Resources["SurfaceStrokeSubtleBrush"];
-        return isSubmixActive
-            ? (Brush)Application.Current.Resources["HeadphoneBrush"]
-            : (Brush)Application.Current.Resources["BrandBrush"];
-    }
+    public Brush SingleTrackBorder(bool hasHardwareFader, bool isSubmixActive, Brush? accent) =>
+        (Brush)Application.Current.Resources["GlassCardBorderBrush"];
 
     public Brush SingleFaderAccent(bool isSubmixActive, Brush? accent)
     {
@@ -416,7 +410,7 @@ public sealed partial class ChannelStrip : UserControl
 
     public string SubLabel(bool muted, string restore, bool metered, string peak, bool isFixed, string volumeDb) =>
         isFixed ? Loc.Get("MixerMeterOnly")
-        : muted ? restore : metered ? $"{volumeDb} • {FormatPeak(peak)}" : volumeDb;
+        : muted ? restore : volumeDb;
     public string LevelText(bool isFixed, string volumeLabel, string peak) => isFixed ? peak : volumeLabel;
     public Visibility HideIf(bool value) => value ? Visibility.Collapsed : Visibility.Visible;
     public Visibility VisibleIf(bool value) => value ? Visibility.Visible : Visibility.Collapsed;

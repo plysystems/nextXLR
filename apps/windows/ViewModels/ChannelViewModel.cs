@@ -139,15 +139,15 @@ public partial class ChannelViewModel : ObservableObject
 
     public Brush StreamTrackBorder => Muted
         ? new SolidColorBrush(Windows.UI.Color.FromArgb(220, 239, 68, 68))
-        : (ShowFaderOnStream ? (Brush)Application.Current.Resources["BrandBrush"] : (Brush)Application.Current.Resources["GlassCardBorderBrush"]);
+        : (Brush)Application.Current.Resources["GlassCardBorderBrush"];
 
     public Brush PhonesTrackBorder => SubmixMuted
         ? new SolidColorBrush(Windows.UI.Color.FromArgb(220, 239, 68, 68))
-        : (ShowFaderOnPhones ? (Brush)Application.Current.Resources["HeadphoneBrush"] : (Brush)Application.Current.Resources["GlassCardBorderBrush"]);
+        : (Brush)Application.Current.Resources["GlassCardBorderBrush"];
 
     public Brush SingleTrackBorder => ActiveMuted
         ? new SolidColorBrush(Windows.UI.Color.FromArgb(220, 239, 68, 68))
-        : (HasFader ? (Brush)Application.Current.Resources["BrandBrush"] : (Brush)Application.Current.Resources["GlassCardBorderBrush"]);
+        : (Brush)Application.Current.Resources["GlassCardBorderBrush"];
 
     public Brush LinkForeground => IsLinked
         ? (Brush)Application.Current.Resources["BrandBrush"]
