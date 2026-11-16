@@ -482,6 +482,11 @@ public static class WindowsAppAudioRouter
 
                                 if (!_procCache.TryGetValue(pid, out var cachedInfo))
                                 {
+                                    if (_procCache.Count > 256)
+                                    {
+                                        _procCache.Clear();
+                                    }
+
                                     try
                                     {
                                         using var p = Process.GetProcessById((int)pid);

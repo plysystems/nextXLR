@@ -1207,19 +1207,39 @@ async fn cors_middleware(
     req: axum::extract::Request,
     next: axum::middleware::Next,
 ) -> axum::response::Response {
+    let origin_header = req.headers().get(axum::http::header::ORIGIN).cloned();
     let mut response = next.run(req).await;
     let headers = response.headers_mut();
-    headers.insert(
-        axum::http::header::ACCESS_CONTROL_ALLOW_ORIGIN,
-        axum::http::HeaderValue::from_static("*"),
-    );
+
+    if let Some(origin) = origin_header {
+        if let Ok(origin_str) = origin.to_str() {
+            let is_local = origin_str.starts_with("http://localhost")
+                || origin_str.starts_with("http://127.0.0.1")
+                || origin_str.starts_with("https://localhost")
+                || origin_str.starts_with("https://127.0.0.1")
+                || origin_str.starts_with("app://")
+                || origin_str == "null";
+            if is_local {
+                headers.insert(
+                    axum::http::header::ACCESS_CONTROL_ALLOW_ORIGIN,
+                    origin,
+                );
+            }
+        }
+    } else {
+        headers.insert(
+            axum::http::header::ACCESS_CONTROL_ALLOW_ORIGIN,
+            axum::http::HeaderValue::from_static("http://127.0.0.1"),
+        );
+    }
+
     headers.insert(
         axum::http::header::ACCESS_CONTROL_ALLOW_METHODS,
         axum::http::HeaderValue::from_static("GET, POST, OPTIONS"),
     );
     headers.insert(
         axum::http::header::ACCESS_CONTROL_ALLOW_HEADERS,
-        axum::http::HeaderValue::from_static("*"),
+        axum::http::HeaderValue::from_static("content-type, authorization"),
     );
     response
 }

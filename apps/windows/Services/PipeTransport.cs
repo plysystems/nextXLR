@@ -19,6 +19,7 @@ public sealed class PipeTransport : IAsyncDisposable
     private readonly CancellationTokenSource _cts = new();
     private readonly SemaphoreSlim _writeLock = new(1, 1);
     private readonly Dictionary<string, ClientMessage> _pending = new();
+    private readonly List<ClientMessage> _flushBatch = new();
     private readonly object _pendingLock = new();
     private StreamWriter? _writer;
     private Task? _loop;
@@ -56,11 +57,11 @@ public sealed class PipeTransport : IAsyncDisposable
         using var timer = new PeriodicTimer(CoalesceInterval);
         while (await timer.WaitForNextTickAsync(ct).ConfigureAwait(false))
         {
-            ClientMessage[] batch;
             lock (_pendingLock)
             {
                 if (_pending.Count == 0) continue;
-                batch = _pending.Values.ToArray();
+                _flushBatch.Clear();
+                _flushBatch.AddRange(_pending.Values);
                 _pending.Clear();
             }
 
@@ -70,7 +71,7 @@ public sealed class PipeTransport : IAsyncDisposable
             await _writeLock.WaitAsync(ct).ConfigureAwait(false);
             try
             {
-                foreach (var m in batch)
+                foreach (var m in _flushBatch)
                 {
                     var line = JsonSerializer.Serialize(m, Json.Options);
                     await writer.WriteLineAsync(line.AsMemory(), ct).ConfigureAwait(false);
@@ -122,7 +123,11 @@ public sealed class PipeTransport : IAsyncDisposable
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { break; }
             catch (Exception) { /* daemon not running / pipe broken → retry */ }
-            finally { _writer = null; }
+            finally
+            {
+                try { _writer?.Dispose(); } catch { }
+                _writer = null;
+            }
 
             StateChanged?.Invoke(ConnectionState.Offline);
             try { await Task.Delay(backoff, ct).ConfigureAwait(false); } catch (OperationCanceledException) { break; }

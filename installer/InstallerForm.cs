@@ -711,7 +711,13 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
                 }
 
                 var destPath = Path.Combine(targetDir, entry.FullName);
-                Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+                var fullDest = Path.GetFullPath(destPath);
+                var fullTarget = Path.GetFullPath(targetDir);
+                if (!fullDest.StartsWith(fullTarget, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue; // Zip-Slip security guard
+                }
+                Directory.CreateDirectory(Path.GetDirectoryName(fullDest)!);
 
                 bool written = false;
                 for (int attempt = 1; attempt <= 12 && !written; attempt++)

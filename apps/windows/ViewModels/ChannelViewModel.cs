@@ -129,7 +129,7 @@ public partial class ChannelViewModel : ObservableObject
         // GoXLR cubic taper: gain = v^3, dB = 60 * log10(v)
         double db = Math.Round(60.0 * Math.Log10(volume), 1);
         if (db >= 0.0) return "0.0 dB";
-        return $"{db:0.0} dB";
+        return db.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + " dB";
     }
 
     public string VolumeLabel => $"{Math.Round((IsSubmixActive ? SubmixVolume : Volume) * 100)}";

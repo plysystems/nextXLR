@@ -81,7 +81,13 @@ public sealed class SilentInstallRunner
                         }
 
                         var destPath = Path.Combine(_targetDir, entry.FullName);
-                        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+                        var fullDest = Path.GetFullPath(destPath);
+                        var fullTarget = Path.GetFullPath(_targetDir);
+                        if (!fullDest.StartsWith(fullTarget, StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue; // Zip-Slip security guard
+                        }
+                        Directory.CreateDirectory(Path.GetDirectoryName(fullDest)!);
 
                         bool written = false;
                         for (int attempt = 1; attempt <= 12 && !written; attempt++)

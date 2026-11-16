@@ -228,8 +228,8 @@ public static class UpdateService
 
     public static bool IsNewerVersion(string remoteTag, string currentVer)
     {
-        var r = remoteTag.TrimStart('v', 'V');
-        var c = currentVer.TrimStart('v', 'V');
+        var r = remoteTag.TrimStart('v', 'V').Trim();
+        var c = currentVer.TrimStart('v', 'V').Trim();
         if (r.Equals(c, StringComparison.OrdinalIgnoreCase)) return false;
 
         var rParts = r.Split(new[] { '-', '+' }, 2);
@@ -239,12 +239,33 @@ public static class UpdateService
         {
             if (rVer > cVer) return true;
             if (rVer < cVer) return false;
+
             // Base versions equal (e.g. 0.2.0 vs 0.2.0)
-            if (rParts.Length == 1 && cParts.Length > 1) return true; // remote is final release, local is prerelease
-            if (rParts.Length > 1 && cParts.Length == 1) return false;
-            return !r.Equals(c, StringComparison.OrdinalIgnoreCase);
+            bool rIsFinal = rParts.Length == 1;
+            bool cIsFinal = cParts.Length == 1;
+            if (rIsFinal && !cIsFinal) return true;  // Remote is final release, local is prerelease
+            if (!rIsFinal && cIsFinal) return false; // Remote is prerelease, local is final release
+            if (rIsFinal && cIsFinal) return false;  // Identical final versions
+
+            // Both are prereleases (e.g. 0.2.0-rc vs 0.2.0-beta)
+            int rRank = RankPrerelease(rParts[1]);
+            int cRank = RankPrerelease(cParts[1]);
+            if (rRank != cRank) return rRank > cRank;
+
+            // Same prerelease tier: compare suffix alphanumerically (e.g. beta.2 vs beta.1)
+            return string.Compare(rParts[1], cParts[1], StringComparison.OrdinalIgnoreCase) > 0;
         }
 
-        return !r.Equals(c, StringComparison.OrdinalIgnoreCase);
+        return false;
+    }
+
+    private static int RankPrerelease(string pre)
+    {
+        var p = pre.ToLowerInvariant();
+        if (p.StartsWith("alpha")) return 10;
+        if (p.StartsWith("preview")) return 15;
+        if (p.StartsWith("beta")) return 20;
+        if (p.StartsWith("rc")) return 30;
+        return 5;
     }
 }

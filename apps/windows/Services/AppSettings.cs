@@ -148,7 +148,9 @@ public sealed class AppSettings
             try
             {
                 Directory.CreateDirectory(Dir);
-                File.WriteAllText(FilePath, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+                var tempPath = FilePath + ".tmp." + Guid.NewGuid().ToString("N")[..8];
+                File.WriteAllText(tempPath, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+                File.Move(tempPath, FilePath, overwrite: true);
                 StorageLoggerService.Log("App-Einstellungen", $"Theme: {AppTheme}, Autostart: {AutostartEnabled}, AutoSave: {AutoSaveProfiles}", "System", FilePath);
             }
             catch { /* preferences are best-effort */ }
