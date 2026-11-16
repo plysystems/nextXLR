@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -29,7 +31,10 @@ public static class Program
             Services.CrashHandler.Initialize();
             Services.CrashHandler.LogStartup("Program.Main started");
 
-            // Configure DLL/MUI search directory for organized folder structure
+            // Guarantee WinUI 3 Win32 MUI satellite resources are available at app root to prevent 0x80073B01
+            EnsureMuiResourcesAvailable();
+
+            // Configure DLL search directory for organized folder structure
             try
             {
                 var languagesDir = System.IO.Path.Combine(AppContext.BaseDirectory, "languages");
@@ -192,4 +197,77 @@ public static class Program
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern bool SetDllDirectory(string lpPathName);
+
+    /// <summary>
+    /// Ensures that WinUI 3's native C++ runtime (Microsoft.ui.xaml.dll) can locate its
+    /// Win32 Multilingual User Interface (MUI) satellite resources.
+    /// Win32 MUI hardcodes relative lookup: AppDir\{Culture}\{DllName}.mui.
+    /// If the active culture directory is missing from the application root, WinUI throws
+    /// COMException 0x80073B01 (ERROR_MUI_FILE_NOT_LOADED).
+    /// This method ensures the active OS UI culture and default fallbacks (de-DE, en-us)
+    /// exist at the application root by copying them from /languages/ if needed.
+    /// </summary>
+    private static void EnsureMuiResourcesAvailable()
+    {
+        try
+        {
+            var baseDir = AppContext.BaseDirectory;
+            var languagesDir = Path.Combine(baseDir, "languages");
+            if (!Directory.Exists(languagesDir))
+            {
+                return;
+            }
+
+            var culturesToEnsure = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "de-DE",
+                "en-us",
+                "en-US"
+            };
+
+            try
+            {
+                var uiCulture = System.Globalization.CultureInfo.CurrentUICulture.Name;
+                if (!string.IsNullOrWhiteSpace(uiCulture)) culturesToEnsure.Add(uiCulture);
+                var installedCulture = System.Globalization.CultureInfo.InstalledUICulture.Name;
+                if (!string.IsNullOrWhiteSpace(installedCulture)) culturesToEnsure.Add(installedCulture);
+            }
+            catch { }
+
+            foreach (var culture in culturesToEnsure)
+            {
+                var rootTargetDir = Path.Combine(baseDir, culture);
+                if (Directory.Exists(rootTargetDir) && Directory.GetFiles(rootTargetDir, "*.mui").Length > 0)
+                {
+                    continue;
+                }
+
+                // Look for source directory in /languages/
+                var sourceDir = Path.Combine(languagesDir, culture);
+                if (!Directory.Exists(sourceDir))
+                {
+                    sourceDir = Directory.GetDirectories(languagesDir)
+                        .FirstOrDefault(d => string.Equals(Path.GetFileName(d), culture, StringComparison.OrdinalIgnoreCase));
+                }
+
+                if (sourceDir != null && Directory.Exists(sourceDir))
+                {
+                    Directory.CreateDirectory(rootTargetDir);
+                    foreach (var file in Directory.GetFiles(sourceDir, "*.mui"))
+                    {
+                        var destFile = Path.Combine(rootTargetDir, Path.GetFileName(file));
+                        if (!File.Exists(destFile))
+                        {
+                            File.Copy(file, destFile, true);
+                        }
+                    }
+                    Services.CrashHandler.LogStartup($"Ensured MUI resources for culture '{culture}' at root.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Services.CrashHandler.LogStartup($"EnsureMuiResourcesAvailable warning: {ex.Message}");
+        }
+    }
 }

@@ -676,7 +676,7 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
                     }
                 }
 
-                // Bereinige veraltete Sprachordner auf Root-Ebene (werden nun in /languages/ geführt)
+                // Bereinige veraltete Sprachordner auf Root-Ebene (werden nun in /languages/ geführt, außer de-DE / en-us für WinUI 3 Win32 MUI)
                 foreach (var dir in Directory.GetDirectories(targetDir, "*", SearchOption.TopDirectoryOnly))
                 {
                     var dirName = Path.GetFileName(dir);
@@ -686,7 +686,10 @@ Dieses Softwarepaket enthält Open-Source-Komponenten (u. a. WinUI 3, CommunityT
                         !dirName.Equals("Styles", StringComparison.OrdinalIgnoreCase) &&
                         !dirName.Equals("Views", StringComparison.OrdinalIgnoreCase) &&
                         !dirName.Equals("languages", StringComparison.OrdinalIgnoreCase) &&
-                        !dirName.Equals("runtimes", StringComparison.OrdinalIgnoreCase))
+                        !dirName.Equals("runtimes", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("de-DE", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("en-US", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("en-us", StringComparison.OrdinalIgnoreCase))
                     {
                         try { Directory.Delete(dir, recursive: true); } catch { }
                     }

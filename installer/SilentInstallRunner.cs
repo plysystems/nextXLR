@@ -66,6 +66,7 @@ public sealed class SilentInstallRunner
             // 3b. Cleanup legacy root culture directories and stale files
             try
             {
+                // Bereinige veraltete Sprachordner auf Root-Ebene (werden nun in /languages/ geführt, außer de-DE / en-us für WinUI 3 Win32 MUI)
                 foreach (var dir in Directory.GetDirectories(_targetDir, "*", SearchOption.TopDirectoryOnly))
                 {
                     var dirName = Path.GetFileName(dir);
@@ -75,7 +76,10 @@ public sealed class SilentInstallRunner
                         !dirName.Equals("Styles", StringComparison.OrdinalIgnoreCase) &&
                         !dirName.Equals("Views", StringComparison.OrdinalIgnoreCase) &&
                         !dirName.Equals("languages", StringComparison.OrdinalIgnoreCase) &&
-                        !dirName.Equals("runtimes", StringComparison.OrdinalIgnoreCase))
+                        !dirName.Equals("runtimes", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("de-DE", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("en-US", StringComparison.OrdinalIgnoreCase) &&
+                        !dirName.Equals("en-us", StringComparison.OrdinalIgnoreCase))
                     {
                         try { Directory.Delete(dir, recursive: true); } catch { }
                     }

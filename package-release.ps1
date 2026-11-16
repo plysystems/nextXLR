@@ -85,6 +85,17 @@ Get-ChildItem $appDir -Directory | Where-Object {
 $langCount = (Get-ChildItem $languagesDir -Directory).Count
 Write-Host "Moved $langCount language directories to languages/."
 
+# WinUI 3 native C++ runtime (Microsoft.ui.xaml.dll) relies on Win32 MUI lookup which hardcodes
+# AppDir\{Culture}\{Dll}.mui relative to the DLL directory. It does NOT search subdirectories.
+# To prevent COMException 0x80073B01 (ERROR_MUI_FILE_NOT_LOADED), de-DE and en-us must remain at app root.
+Write-Host "Ensuring core MUI fallback languages (de-DE, en-us) are present at app root for WinUI 3..."
+if (Test-Path (Join-Path $languagesDir "de-DE")) {
+    Copy-Item (Join-Path $languagesDir "de-DE") (Join-Path $appDir "de-DE") -Recurse -Force
+}
+if (Test-Path (Join-Path $languagesDir "en-us")) {
+    Copy-Item (Join-Path $languagesDir "en-us") (Join-Path $appDir "en-us") -Recurse -Force
+}
+
 # Clean up compile-time metadata and unused files
 Remove-Item (Join-Path $appDir "*.winmd") -Force -ErrorAction SilentlyContinue
 Remove-Item (Join-Path $appDir "WindowsAppRuntime.png") -Force -ErrorAction SilentlyContinue
