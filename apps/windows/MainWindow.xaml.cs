@@ -290,6 +290,40 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private Windows.Graphics.SizeInt32 _normalWindowSize = new(1720, 960);
+    private bool _inHudMode = false;
+
+    public void SetHudMode(bool isHud)
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _inHudMode = isHud;
+            if (isHud)
+            {
+                _normalWindowSize = AppWindow.Size;
+                _isPaneOpen = false;
+                UpdatePaneLayout();
+                if (SidebarIsland != null) SidebarIsland.Visibility = Visibility.Collapsed;
+                AppWindow.Resize(new Windows.Graphics.SizeInt32(1040, 560));
+                if (AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
+                {
+                    presenter.IsAlwaysOnTop = true;
+                }
+            }
+            else
+            {
+                if (SidebarIsland != null) SidebarIsland.Visibility = Visibility.Visible;
+                _isPaneOpen = true;
+                UpdatePaneLayout();
+                AppWindow.Resize(_normalWindowSize);
+                if (AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
+                {
+                    presenter.IsAlwaysOnTop = false;
+                }
+            }
+        });
+    }
+
     public void RestoreWindow()
     {
         DispatcherQueue.TryEnqueue(() =>

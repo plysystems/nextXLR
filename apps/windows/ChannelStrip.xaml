@@ -13,7 +13,40 @@
             CornerRadius="16" Padding="8,10" MinWidth="86"
             VerticalAlignment="Stretch"
             BorderBrush="{ThemeResource GlassCardBorderBrush}"
-            BorderThickness="1">
+            BorderThickness="1"
+            Visibility="{x:Bind VisibleIf(ViewModel.IsCardVisible), Mode=OneWay}">
+        <Border.ContextFlyout>
+            <MenuFlyout>
+                <MenuFlyoutItem Text="Auf 0,0 dB zurücksetzen" Click="ResetToUnity_Click">
+                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE73E;" /></MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Kopfhörer auf Stream spiegeln" Click="CopyPhonesToStream_Click">
+                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8D4;" /></MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Stream auf Kopfhörer spiegeln" Click="CopyStreamToPhones_Click">
+                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8D4;" /></MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <ToggleMenuFlyoutItem Text="Koppeln (Link)" IsChecked="{x:Bind ViewModel.IsLinked, Mode=TwoWay}">
+                    <ToggleMenuFlyoutItem.Icon><FontIcon Glyph="&#xE71B;" /></ToggleMenuFlyoutItem.Icon>
+                </ToggleMenuFlyoutItem>
+                <MenuFlyoutSeparator />
+                <ToggleMenuFlyoutItem Text="Solo (PFL Vorhören)" IsChecked="{x:Bind ViewModel.IsSolo, Mode=TwoWay}"
+                                      Visibility="{x:Bind ShowSoloButton(ViewModel.IsOutput), Mode=OneWay}">
+                    <ToggleMenuFlyoutItem.Icon><FontIcon Glyph="&#xE767;" /></ToggleMenuFlyoutItem.Icon>
+                </ToggleMenuFlyoutItem>
+                <MenuFlyoutItem Text="{x:Bind MuteMenuText(ViewModel.ActiveMuted), Mode=OneWay}" Click="ToggleMute_Click">
+                    <MenuFlyoutItem.Icon><FontIcon Glyph="{x:Bind MuteGlyph(ViewModel.ActiveMuted), Mode=OneWay}" /></MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Kanal anpassen (Name &amp; Icon)..." Click="Edit_Click"
+                                Visibility="{x:Bind ViewModel.CanEdit, Mode=OneWay}">
+                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE70F;" /></MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Kanal im Mixer ausblenden" Click="HideChannel_Click">
+                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE890;" /></MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+            </MenuFlyout>
+        </Border.ContextFlyout>
         <Grid RowSpacing="10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -23,17 +56,30 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Row 0: Top Header: Hardware Fader Badge (Left) + Channel Icon (Center) + Vertical-Dots Edit Button (Right) -->
+            <!-- Row 0: Top Header: Hardware Fader Badge + Solo (Left) + Channel Icon (Center) + Vertical-Dots Edit Button (Right) -->
             <Grid Height="44">
-                <!-- Hardware fader letter badge (Single-Mix mode only; in Dual-Mix mode it's placed on the active mix column) -->
-                <Border HorizontalAlignment="Left" VerticalAlignment="Top" CornerRadius="6" Padding="6,2"
-                        Margin="2,2,0,0"
-                        Background="{ThemeResource SurfaceL3Brush}" BorderBrush="{x:Bind ViewModel.Accent, Mode=OneWay}"
-                        BorderThickness="1"
-                        Visibility="{x:Bind ShowSingleBadge(ViewModel.HasFader, ViewModel.ShowDualMix), Mode=OneWay}">
-                    <TextBlock Text="{x:Bind ViewModel.FaderLetter, Mode=OneWay}" FontSize="10" FontWeight="Bold"
-                               Foreground="{x:Bind ViewModel.Accent, Mode=OneWay}" />
-                </Border>
+                <!-- Hardware fader letter badge & Solo button -->
+                <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Spacing="2">
+                    <Border CornerRadius="6" Padding="6,2" Margin="2,2,0,0"
+                            Background="{ThemeResource SurfaceL3Brush}" BorderBrush="{x:Bind ViewModel.Accent, Mode=OneWay}"
+                            BorderThickness="1"
+                            Visibility="{x:Bind ShowSingleBadge(ViewModel.HasFader, ViewModel.ShowDualMix), Mode=OneWay}">
+                        <TextBlock Text="{x:Bind ViewModel.FaderLetter, Mode=OneWay}" FontSize="10" FontWeight="Bold"
+                                   Foreground="{x:Bind ViewModel.Accent, Mode=OneWay}" />
+                    </Border>
+                    <!-- Solo (PFL) Button -->
+                    <ToggleButton IsChecked="{x:Bind ViewModel.IsSolo, Mode=TwoWay}"
+                                  Width="22" Height="19" Padding="0" CornerRadius="4"
+                                  Margin="2,1,0,0" BorderThickness="1"
+                                  Background="{ThemeResource SurfaceL3Brush}"
+                                  BorderBrush="{x:Bind ViewModel.SoloBorderBrush, Mode=OneWay}"
+                                  services:CursorHelper.UseHandCursor="True"
+                                  Visibility="{x:Bind ShowSoloButton(ViewModel.IsOutput), Mode=OneWay}"
+                                  ToolTipService.ToolTip="Solo (PFL) auf Kopfhörern abhören">
+                        <TextBlock Text="S" FontSize="9" FontWeight="Bold" Foreground="{x:Bind ViewModel.SoloForeground, Mode=OneWay}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </ToggleButton>
+                </StackPanel>
 
                 <!-- Center Channel Icon Circle with Glass Edge -->
                 <Border Width="40" Height="40" CornerRadius="20" HorizontalAlignment="Center"
@@ -111,7 +157,8 @@
                 <Border CornerRadius="10" Padding="3,6"
                         VerticalAlignment="Stretch"
                         Background="{ThemeResource GlassInnerBayBackground}"
-                        BorderBrush="{x:Bind TrackBorderPhones(ViewModel.ShowFaderOnPhones), Mode=OneWay}"
+                        BorderBrush="{x:Bind ViewModel.PhonesTrackBorder, Mode=OneWay}"
+                        Opacity="{x:Bind ViewModel.PhonesTrackOpacity, Mode=OneWay}"
                         BorderThickness="1">
                     <Grid RowSpacing="6" VerticalAlignment="Stretch">
                         <Grid.RowDefinitions>
@@ -168,15 +215,27 @@
                     </Grid>
                 </Border>
 
-                <!-- Subtle vertical divider between Kopfhörer and Stream tracks -->
-                <Border Grid.Column="1" Width="1" Background="{ThemeResource GlassCardBorderBrush}"
-                        VerticalAlignment="Stretch" Margin="0,4" />
+                <!-- Center Column: Vertical divider line & Link (🔗) Toggle Button -->
+                <Grid Grid.Column="1" Width="26" VerticalAlignment="Stretch" HorizontalAlignment="Center">
+                    <Border Width="1" Background="{ThemeResource GlassCardBorderBrush}"
+                            VerticalAlignment="Stretch" HorizontalAlignment="Center" Margin="0,4" />
+                    <ToggleButton IsChecked="{x:Bind ViewModel.IsLinked, Mode=TwoWay}"
+                                  Width="24" Height="24" Padding="0" CornerRadius="12"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                  Background="{ThemeResource SurfaceL3Brush}"
+                                  BorderBrush="{x:Bind ViewModel.LinkBorderBrush, Mode=OneWay}"
+                                  BorderThickness="1" services:CursorHelper.UseHandCursor="True"
+                                  ToolTipService.ToolTip="Kopfhörer &amp; Stream-Lautstärke koppeln">
+                        <FontIcon Glyph="&#xE71B;" FontSize="10" Foreground="{x:Bind ViewModel.LinkForeground, Mode=OneWay}" />
+                    </ToggleButton>
+                </Grid>
 
                 <!-- Right Column: Stream-Mix -->
                 <Border Grid.Column="2" CornerRadius="10" Padding="3,6"
                         VerticalAlignment="Stretch"
                         Background="{ThemeResource GlassInnerBayBackground}"
-                        BorderBrush="{x:Bind TrackBorderStream(ViewModel.ShowFaderOnStream), Mode=OneWay}"
+                        BorderBrush="{x:Bind ViewModel.StreamTrackBorder, Mode=OneWay}"
+                        Opacity="{x:Bind ViewModel.StreamTrackOpacity, Mode=OneWay}"
                         BorderThickness="1">
                     <Grid RowSpacing="6" VerticalAlignment="Stretch">
                         <Grid.RowDefinitions>
@@ -241,7 +300,9 @@
                     CornerRadius="12" Padding="4,6" MaxWidth="124"
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                     Background="{ThemeResource GlassInnerBayBackground}"
-                    BorderThickness="0">
+                    BorderBrush="{x:Bind ViewModel.SingleTrackBorder, Mode=OneWay}"
+                    Opacity="{x:Bind ViewModel.SingleTrackOpacity, Mode=OneWay}"
+                    BorderThickness="1">
                 <Grid RowSpacing="6" VerticalAlignment="Stretch">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" MinHeight="140" />

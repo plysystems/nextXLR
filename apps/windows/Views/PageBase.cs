@@ -173,6 +173,26 @@ public partial class MixerPage : Page
     public Microsoft.UI.Xaml.Media.Brush DualStreamBackground(int target) => target == 1 ? BrandAccentBg : TransparentBg;
     public Microsoft.UI.Xaml.Media.Brush DualStreamForeground(int target) => target == 1 ? ActiveTextBrush : MutedTextFg;
 
+    private void FilterAll_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel != null) ViewModel.OnlyActiveChannels = false;
+    }
+
+    private void FilterActive_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel != null) ViewModel.OnlyActiveChannels = true;
+    }
+
+    private void ToggleHud_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.ToggleHudMode();
+    }
+
+    public Microsoft.UI.Xaml.Media.Brush FilterAllBackground(bool onlyActive) => !onlyActive ? BrandAccentBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush FilterAllForeground(bool onlyActive) => !onlyActive ? ActiveTextBrush : MutedTextFg;
+    public Microsoft.UI.Xaml.Media.Brush FilterActiveBackground(bool onlyActive) => onlyActive ? BrandAccentBg : TransparentBg;
+    public Microsoft.UI.Xaml.Media.Brush FilterActiveForeground(bool onlyActive) => onlyActive ? ActiveTextBrush : MutedTextFg;
+
     private static double RowWidth(int n, double strip) => n * strip + Math.Max(0, n - 1) * Gap;
 
     /// <summary>

@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using NextXLR.Protocol;
 using NextXLR.Services;
@@ -76,6 +77,102 @@ public partial class ChannelViewModel : ObservableObject
     [ObservableProperty] private double _meter;       // 0..1 bar height
     [ObservableProperty] private double _peakHold;    // 0..1 hold marker
     [ObservableProperty] private string _peakLabel = "-∞";
+
+    [ObservableProperty] private bool _isLinked;
+    [ObservableProperty] private bool _isSolo;
+    [ObservableProperty] private bool _isUserHidden;
+    public bool? PreSoloSubmixMuted { get; set; }
+    private bool _inLinkSync;
+
+    partial void OnIsSoloChanged(bool value)
+    {
+        OnPropertyChanged(nameof(SoloForeground));
+        OnPropertyChanged(nameof(SoloBorderBrush));
+        MainViewModel.Instance?.HandleSoloChanged(this);
+    }
+
+    partial void OnIsLinkedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(LinkForeground));
+        OnPropertyChanged(nameof(LinkBorderBrush));
+    }
+
+    partial void OnIsUserHiddenChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsCardVisible));
+    }
+
+    public void NotifyVisibilityChanged()
+    {
+        OnPropertyChanged(nameof(IsCardVisible));
+    }
+
+    public bool IsCardVisible
+    {
+        get
+        {
+            if (IsUserHidden) return false;
+            if (MainViewModel.Instance != null && MainViewModel.Instance.OnlyActiveChannels)
+            {
+                bool isCore = Id is 0 or 1 or 2 or 3 or 4 or 8 or 11;
+                bool hasSignal = Meter > 0.001 || Volume > 0.001;
+                bool hasFader = HasFader;
+                if (!isCore && !hasSignal && !hasFader)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    public double StreamTrackOpacity => Muted ? 0.38 : 1.0;
+    public double PhonesTrackOpacity => SubmixMuted ? 0.38 : 1.0;
+    public double SingleTrackOpacity => ActiveMuted ? 0.38 : 1.0;
+
+    public Brush StreamTrackBorder => Muted
+        ? new SolidColorBrush(Windows.UI.Color.FromArgb(220, 239, 68, 68))
+        : (ShowFaderOnStream ? (Brush)Application.Current.Resources["BrandBrush"] : (Brush)Application.Current.Resources["GlassCardBorderBrush"]);
+
+    public Brush PhonesTrackBorder => SubmixMuted
+        ? new SolidColorBrush(Windows.UI.Color.FromArgb(220, 239, 68, 68))
+        : (ShowFaderOnPhones ? (Brush)Application.Current.Resources["HeadphoneBrush"] : (Brush)Application.Current.Resources["GlassCardBorderBrush"]);
+
+    public Brush SingleTrackBorder => ActiveMuted
+        ? new SolidColorBrush(Windows.UI.Color.FromArgb(220, 239, 68, 68))
+        : (HasFader ? (Brush)Application.Current.Resources["BrandBrush"] : (Brush)Application.Current.Resources["GlassCardBorderBrush"]);
+
+    public Brush LinkForeground => IsLinked
+        ? (Brush)Application.Current.Resources["BrandBrush"]
+        : (Brush)Application.Current.Resources["TextMutedBrush"];
+
+    public Brush LinkBorderBrush => IsLinked
+        ? (Brush)Application.Current.Resources["BrandBrush"]
+        : (Brush)Application.Current.Resources["GlassCardBorderBrush"];
+
+    public Brush SoloForeground => IsSolo
+        ? new SolidColorBrush(Windows.UI.Color.FromArgb(255, 234, 179, 8))
+        : (Brush)Application.Current.Resources["TextMutedBrush"];
+
+    public Brush SoloBorderBrush => IsSolo
+        ? new SolidColorBrush(Windows.UI.Color.FromArgb(255, 234, 179, 8))
+        : (Brush)Application.Current.Resources["GlassCardBorderBrush"];
+
+    public void ResetToUnity()
+    {
+        Volume = 1.0;
+        SubmixVolume = 1.0;
+    }
+
+    public void CopyPhonesToStream()
+    {
+        Volume = SubmixVolume;
+    }
+
+    public void CopyStreamToPhones()
+    {
+        SubmixVolume = Volume;
+    }
 
     private string _kind = "";
 
@@ -284,6 +381,11 @@ public partial class ChannelViewModel : ObservableObject
         {
             Muted = false;
         }
+        if (IsLinked && !_inLinkSync && !_applyingServer)
+        {
+            _inLinkSync = true;
+            try { SubmixVolume = value; } finally { _inLinkSync = false; }
+        }
         if (!_applyingServer)
         {
             MainViewModel.HasPendingChanges = true;
@@ -309,6 +411,11 @@ public partial class ChannelViewModel : ObservableObject
         {
             SubmixMuted = false;
         }
+        if (IsLinked && !_inLinkSync && !_applyingServer)
+        {
+            _inLinkSync = true;
+            try { Volume = value; } finally { _inLinkSync = false; }
+        }
         if (!_applyingServer)
         {
             MainViewModel.HasPendingChanges = true;
@@ -319,6 +426,10 @@ public partial class ChannelViewModel : ObservableObject
     partial void OnMutedChanged(bool value)
     {
         UpdateRouterLevels();
+        OnPropertyChanged(nameof(StreamTrackOpacity));
+        OnPropertyChanged(nameof(StreamTrackBorder));
+        OnPropertyChanged(nameof(SingleTrackOpacity));
+        OnPropertyChanged(nameof(SingleTrackBorder));
         if (!IsSubmixActive)
         {
             OnPropertyChanged(nameof(ActiveMuted));
@@ -350,6 +461,10 @@ public partial class ChannelViewModel : ObservableObject
     partial void OnSubmixMutedChanged(bool value)
     {
         UpdateRouterLevels();
+        OnPropertyChanged(nameof(PhonesTrackOpacity));
+        OnPropertyChanged(nameof(PhonesTrackBorder));
+        OnPropertyChanged(nameof(SingleTrackOpacity));
+        OnPropertyChanged(nameof(SingleTrackBorder));
         if (IsSubmixActive)
         {
             OnPropertyChanged(nameof(ActiveMuted));

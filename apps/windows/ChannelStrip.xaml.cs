@@ -280,6 +280,34 @@ public sealed partial class ChannelStrip : UserControl
     public Visibility SingleFaderBadgeVisibility(bool hasFader) =>
         hasFader ? Visibility.Visible : Visibility.Collapsed;
 
+    public Visibility ShowSoloButton(bool isOutput) => isOutput ? Visibility.Collapsed : Visibility.Visible;
+    public string MuteMenuText(bool muted) => muted ? "Stummschaltung aufheben" : "Stummschalten";
+
+    private void ResetToUnity_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.ResetToUnity();
+    }
+
+    private void CopyPhonesToStream_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.CopyPhonesToStream();
+    }
+
+    private void CopyStreamToPhones_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.CopyStreamToPhones();
+    }
+
+    private void ToggleMute_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel != null) ViewModel.ActiveMuted = !ViewModel.ActiveMuted;
+    }
+
+    private void HideChannel_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel != null) ViewModel.IsUserHidden = true;
+    }
+
     public string ChannelTooltip(bool canEdit, string name) => canEdit ? Loc.Get("MixerCustomizeTitle.Text") : name;
     public string MuteGlyph(bool muted) => muted ? "\uE74F" : "\uE767";
     public string MuteText(bool muted) => Loc.Get(muted ? "MixerMuted" : "MixerMute");
@@ -293,6 +321,7 @@ public sealed partial class ChannelStrip : UserControl
         : muted ? restore : metered ? $"{percent} • {FormatPeak(peak)}" : percent;
     public string LevelText(bool isFixed, string volumeDb, string peak) => isFixed ? $"{peak} dB" : volumeDb;
     public Visibility HideIf(bool value) => value ? Visibility.Collapsed : Visibility.Visible;
+    public Visibility VisibleIf(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
     public Visibility ShowIfDual(bool showDual, bool isFixed, bool isOutput) => (showDual && !isFixed && !isOutput) ? Visibility.Visible : Visibility.Collapsed;
     public Visibility ShowIfSingle(bool showDual, bool isFixed, bool isOutput) => (!showDual || isFixed || isOutput) ? Visibility.Visible : Visibility.Collapsed;
     public Visibility ShowSingleBadge(bool hasFader, bool showDual) => (hasFader && !showDual) ? Visibility.Visible : Visibility.Collapsed;

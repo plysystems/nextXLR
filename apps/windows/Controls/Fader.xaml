@@ -34,6 +34,19 @@
                 Margin="0,14,0,14" VerticalAlignment="Stretch"
                 Background="{ThemeResource GlassTrackBackground}" BorderBrush="{ThemeResource GlassTrackBorder}" BorderThickness="1" />
 
+        <!-- Floating live dB indicator badge (visible on drag or hover above the cap) -->
+        <Border x:Name="FloatingBubble" HorizontalAlignment="Center" VerticalAlignment="Top"
+                CornerRadius="6" Padding="6,2" Margin="0,-24,0,0"
+                Background="{ThemeResource SurfaceL3Brush}" BorderBrush="{ThemeResource GlassCardBorderBrush}"
+                BorderThickness="1" Opacity="0.0" IsHitTestVisible="False">
+            <Border.RenderTransform>
+                <TranslateTransform x:Name="FloatingBubbleOffset" />
+            </Border.RenderTransform>
+            <TextBlock x:Name="FloatingText" Text="0.0 dB"
+                       FontSize="10" FontWeight="Bold" FontFamily="{StaticResource MonoFont}"
+                       Foreground="{StaticResource BrandBrush}" HorizontalAlignment="Center" />
+        </Border>
+
         <!-- Tactile modern studio fader cap -->
         <Grid x:Name="Cap" Width="30" Height="28" VerticalAlignment="Top" HorizontalAlignment="Center">
             <Grid.RenderTransform>

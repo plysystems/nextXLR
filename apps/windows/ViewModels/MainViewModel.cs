@@ -229,6 +229,57 @@ public partial class MainViewModel : ObservableObject
     /// <summary>Global loading / busy state indicator.</summary>
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _busyText = "Laden...";
+    [ObservableProperty] private bool _onlyActiveChannels;
+    [ObservableProperty] private bool _isHudMode;
+
+    partial void OnOnlyActiveChannelsChanged(bool value)
+    {
+        foreach (var ch in Channels) ch.NotifyVisibilityChanged();
+    }
+
+    public void UnhideAllChannels()
+    {
+        foreach (var ch in Channels) ch.IsUserHidden = false;
+        OnlyActiveChannels = false;
+    }
+
+    public void HandleSoloChanged(ChannelViewModel changedChannel)
+    {
+        bool anySolo = Channels.Any(c => c.IsSolo);
+        foreach (var ch in Channels)
+        {
+            if (ch.IsOutput) continue;
+            if (anySolo)
+            {
+                if (!ch.IsSolo)
+                {
+                    if (ch.PreSoloSubmixMuted is null)
+                    {
+                        ch.PreSoloSubmixMuted = ch.SubmixMuted;
+                        ch.SubmixMuted = true;
+                    }
+                }
+                else
+                {
+                    ch.SubmixMuted = false;
+                }
+            }
+            else
+            {
+                if (ch.PreSoloSubmixMuted is bool prevMuted)
+                {
+                    ch.SubmixMuted = prevMuted;
+                }
+                ch.PreSoloSubmixMuted = null;
+            }
+        }
+    }
+
+    public void ToggleHudMode()
+    {
+        IsHudMode = !IsHudMode;
+        MainWindow.CurrentInstance?.SetHudMode(IsHudMode);
+    }
 
     public void SetBusy(bool busy, string text = "Laden...")
     {

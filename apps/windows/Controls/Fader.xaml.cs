@@ -40,6 +40,7 @@ public sealed partial class Fader : UserControl
     private double _lastY;
     private bool _animating;
     private readonly Stopwatch _clock = new();
+    private readonly DispatcherTimer _bubbleTimer = new() { Interval = TimeSpan.FromMilliseconds(800) };
 
     public event EventHandler? DragStarted;
     public event EventHandler? DragCompleted;
@@ -60,6 +61,16 @@ public sealed partial class Fader : UserControl
         Root.PointerReleased += OnReleased;
         Root.PointerCaptureLost += (_, _) => EndDrag();
         Root.PointerWheelChanged += OnWheel;
+        Root.DoubleTapped += OnDoubleTapped;
+        Root.PointerEntered += (_, _) => ShowBubble();
+        Root.PointerExited += (_, _) => { if (!_dragging) _bubbleTimer.Start(); };
+        _bubbleTimer.Tick += (_, _) => {
+            if (!_dragging)
+            {
+                if (FloatingBubble != null) FloatingBubble.Opacity = 0.0;
+                _bubbleTimer.Stop();
+            }
+        };
         Root.SizeChanged += (_, _) => { DrawTicks(); Layout(); };
         MeterHost.SizeChanged += (_, _) => UpdateMeterLevels();
         KeyDown += OnKey;
@@ -162,6 +173,14 @@ public sealed partial class Fader : UserControl
         {
             IndicatorGlow.Background = CapIndicatorBrush;
         }
+        if (FloatingText is not null && Accent is not null)
+        {
+            FloatingText.Foreground = Accent;
+        }
+        if (FloatingBubble is not null && Accent is not null)
+        {
+            FloatingBubble.BorderBrush = Accent;
+        }
     }
 
     private static void OnRangeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -191,10 +210,12 @@ public sealed partial class Fader : UserControl
         if (Root.ActualHeight <= 0) return;
         var top = ValueToTop(_shown);
         CapOffset.Y = top;
+        if (FloatingBubbleOffset != null) FloatingBubbleOffset.Y = top;
 
         var v = Math.Clamp(_shown / 100.0, 0.0, 1.0);
         string dbStr = v >= 0.999 ? "0.0 dB" : v <= 0.001 ? "-∞ dB" : $"{Math.Round(60.0 * Math.Log10(v), 1):0.0} dB";
         ToolTipService.SetToolTip(Cap, $"{dbStr} ({Math.Round(_shown)}%)");
+        if (FloatingText != null) FloatingText.Text = dbStr;
 
         UpdateMeterLevels();
     }
@@ -378,6 +399,7 @@ public sealed partial class Fader : UserControl
         _lastY = y;
         _dragging = true;
         StopAnimation();
+        ShowBubble();
         Root.CapturePointer(e.Pointer);
         Focus(FocusState.Pointer);
         DragStarted?.Invoke(this, EventArgs.Empty);
@@ -385,6 +407,7 @@ public sealed partial class Fader : UserControl
         {
             Value = TopToValue(y - _grabOffset);
             ValueChangedByUser?.Invoke(Value);
+            Layout();
         }
         e.Handled = true;
     }
@@ -408,6 +431,8 @@ public sealed partial class Fader : UserControl
         _fine = fine;
         _lastY = y;
         ValueChangedByUser?.Invoke(Value);
+        Layout();
+        ShowBubble();
         e.Handled = true;
     }
 
@@ -422,22 +447,37 @@ public sealed partial class Fader : UserControl
         if (!_dragging) return;
         _dragging = false;
         DragCompleted?.Invoke(this, EventArgs.Empty);
+        _bubbleTimer.Start();
+    }
+
+    private void ShowBubble()
+    {
+        _bubbleTimer.Stop();
+        if (FloatingBubble != null) FloatingBubble.Opacity = 1.0;
+    }
+
+    private void OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        Value = 100.0; // Reset to 0.0 dB (Unity Gain)
+        ValueChangedByUser?.Invoke(Value);
+        Layout();
+        ShowBubble();
+        _bubbleTimer.Start();
+        e.Handled = true;
     }
 
     private void OnWheel(object sender, PointerRoutedEventArgs e)
     {
-        var hasModifier = (e.KeyModifiers & (VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift)) != 0;
-        var isFocused = FocusState != FocusState.Unfocused;
-        if (!hasModifier && !isFocused)
-        {
-            // Scrolling on page: do not change slider and let parent ScrollViewer handle wheel
-            return;
-        }
-
         var delta = e.GetCurrentPoint(this).Properties.MouseWheelDelta;
-        var step = (e.KeyModifiers & VirtualKeyModifiers.Control) != 0 ? 0.1 : 1;
-        Value += Math.Sign(delta) * step;
+        if (delta == 0) return;
+        var fine = (e.KeyModifiers & (VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift)) != 0;
+        var step = fine ? 0.2 : 1.0;
+        Value = Math.Clamp(Value + Math.Sign(delta) * step, Minimum, Maximum);
         ValueChangedByUser?.Invoke(Value);
+        Layout();
+        ShowBubble();
+        _bubbleTimer.Stop();
+        _bubbleTimer.Start();
         e.Handled = true;
     }
 
