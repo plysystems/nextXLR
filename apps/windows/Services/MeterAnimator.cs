@@ -55,15 +55,18 @@ public sealed class MeterAnimator : IDisposable
             }
         }
 
-        // Feature 02: Real-time sidechain auto-ducking tick
-        try
+        // Real-time sidechain auto-ducking tick (only if enabled)
+        if (AutoDuckingService.Instance.IsEnabled)
         {
-            if (MainViewModel.Instance is { } vm)
+            try
             {
-                AutoDuckingService.Instance.Tick(dt * 1000.0, vm);
+                if (MainViewModel.Instance is { } vm)
+                {
+                    AutoDuckingService.Instance.Tick(dt * 1000.0, vm);
+                }
             }
+            catch { }
         }
-        catch { }
     }
 
     public void Pause() => IsActive = false;

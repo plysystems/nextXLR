@@ -6,6 +6,8 @@ namespace NextXLR.Tests;
 public class UpdateServiceTests
 {
     [Theory]
+    [InlineData("v0.2.2", "0.2.1-beta", true)]
+    [InlineData("v0.2.2-beta", "0.2.1-beta", true)]
     [InlineData("v0.2.1", "0.2.0-beta", true)]
     [InlineData("v0.2.0", "0.2.0-beta", true)]       // final release newer than prerelease
     [InlineData("v0.2.0-rc", "0.2.0-beta", true)]    // RC newer than Beta

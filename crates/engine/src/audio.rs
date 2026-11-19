@@ -104,10 +104,11 @@ fn open_streams(params: Arc<ParamBank>, meters: Arc<MeterBank>) -> Result<(cpal:
         tracing::warn!("input/output sample rates differ — resampling is not implemented yet");
     }
 
-    // Pro audio ultra-low latency ring buffer: ~10-12 ms of audio at device sample rate
-    // (e.g. 480–576 samples at 48 kHz instead of 4800 samples / 100 ms).
-    let latency_samples = ((in_cfg.sample_rate.0 as usize) / 80).clamp(256, 1024);
-    let (mut producer, mut consumer) = rtrb::RingBuffer::<f32>::new(latency_samples * 2);
+    // Broadcast studio ultra-low latency ring buffer: ~5.3–8.0 ms of audio at device sample rate
+    // (e.g. 384 samples at 48 kHz instead of 600+ samples / 12.5+ ms).
+    // Buffer capacity is 3x the target depth to guarantee jitter headroom and prevent dropouts under DPC spikes.
+    let latency_samples = ((in_cfg.sample_rate.0 as usize) / 125).clamp(256, 512);
+    let (mut producer, mut consumer) = rtrb::RingBuffer::<f32>::new(latency_samples * 3);
 
     let in_channels = in_cfg.channels as usize;
     let in_params = params.clone();
@@ -135,8 +136,9 @@ fn open_streams(params: Arc<ParamBank>, meters: Arc<MeterBank>) -> Result<(cpal:
         move |out: &mut [f32], _: &cpal::OutputCallbackInfo| {
             let route = params.route_gain(MIC_SLOT, HEADPHONES_BUS);
             // Clock drift & delay protection: keep buffer at target latency
+            // Hysteresis window (+48 samples / ~1ms) prevents micro-clicks from transient scheduler jitter
             let available = consumer.slots();
-            if available > latency_samples {
+            if available > latency_samples + 48 {
                 let excess = available - latency_samples;
                 for _ in 0..excess {
                     let _ = consumer.pop();

@@ -35,15 +35,26 @@ async function detectApiPort() {
 }
 
 async function callEngineApi(endpoint, params = {}) {
-    await detectApiPort();
+    if (!isEngineOnline) {
+        await detectApiPort();
+    }
     const query = new URLSearchParams(params).toString();
     const url = `http://127.0.0.1:${activeApiPort}${endpoint}${query ? "?" + query : ""}`;
     try {
         const res = await fetch(url, { method: "GET", signal: AbortSignal.timeout(1200) });
         return await res.json();
     } catch (e) {
-        console.warn(`Engine API request failed (${url}):`, e);
-        return { ok: false, error: e.toString() };
+        // Retry once after re-detecting port if engine restarted or port shifted
+        isEngineOnline = false;
+        await detectApiPort();
+        const retryUrl = `http://127.0.0.1:${activeApiPort}${endpoint}${query ? "?" + query : ""}`;
+        try {
+            const res2 = await fetch(retryUrl, { method: "GET", signal: AbortSignal.timeout(1200) });
+            return await res2.json();
+        } catch (e2) {
+            console.warn(`Engine API request failed (${retryUrl}):`, e2);
+            return { ok: false, error: e2.toString() };
+        }
     }
 }
 

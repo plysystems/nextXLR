@@ -76,8 +76,8 @@ where
                     Err(mpsc::TryRecvError::Disconnected) => return,
                 }
             }
-            // 2. Incoming: wait (short timeout so commands stay responsive) for input changes.
-            match device.wait_events(Duration::from_millis(10)) {
+            // 2. Incoming: wait (ultra-fast 5 ms timeout for crisp 200 Hz input responsiveness).
+            match device.wait_events(Duration::from_millis(5)) {
                 Ok(events) => {
                     consecutive_errors = 0;
                     events.into_iter().for_each(&on_event);

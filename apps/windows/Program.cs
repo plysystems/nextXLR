@@ -250,18 +250,25 @@ public static class Program
                         .FirstOrDefault(d => string.Equals(Path.GetFileName(d), culture, StringComparison.OrdinalIgnoreCase));
                 }
 
-                if (sourceDir != null && Directory.Exists(sourceDir))
+                try
                 {
-                    Directory.CreateDirectory(rootTargetDir);
-                    foreach (var file in Directory.GetFiles(sourceDir, "*.mui"))
+                    if (sourceDir != null && Directory.Exists(sourceDir))
                     {
-                        var destFile = Path.Combine(rootTargetDir, Path.GetFileName(file));
-                        if (!File.Exists(destFile))
+                        Directory.CreateDirectory(rootTargetDir);
+                        foreach (var file in Directory.GetFiles(sourceDir, "*.mui"))
                         {
-                            File.Copy(file, destFile, true);
+                            var destFile = Path.Combine(rootTargetDir, Path.GetFileName(file));
+                            if (!File.Exists(destFile))
+                            {
+                                File.Copy(file, destFile, true);
+                            }
                         }
+                        Services.CrashHandler.LogStartup($"Ensured MUI resources for culture '{culture}' at root.");
                     }
-                    Services.CrashHandler.LogStartup($"Ensured MUI resources for culture '{culture}' at root.");
+                }
+                catch (Exception ex)
+                {
+                    Services.CrashHandler.LogStartup($"Could not copy MUI resources for '{culture}': {ex.Message}");
                 }
             }
         }
