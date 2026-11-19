@@ -359,7 +359,7 @@
                             <StackPanel x:Name="LevelDisplayPanel" Orientation="Horizontal" HorizontalAlignment="Center"
                                         Background="Transparent"
                                         ToolTipService.ToolTip="{x:Bind EditTooltip(ViewModel.IsFixed), Mode=OneWay}"
-                                        Tapped="LevelDisplay_Tapped" PointerPressed="LevelDisplay_PointerPressed"
+                                        Tapped="LevelDisplay_Tapped"
                                         services:CursorHelper.UseHandCursor="True">
                                 <TextBlock Text="{x:Bind LevelText(ViewModel.IsFixed, ViewModel.VolumeLabel, ViewModel.PeakLabel), Mode=OneWay}"
                                            FontSize="13" FontWeight="Bold"

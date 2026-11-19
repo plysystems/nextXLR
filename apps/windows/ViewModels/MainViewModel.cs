@@ -889,16 +889,22 @@ public partial class MainViewModel : ObservableObject
         settings.Save();
         HasPendingChanges = true;
 
-        // Reassign FaderLetter in memory and immediately re-sort strips so UI matches hardware
+        // Reassign FaderLetter in memory based on currentChannels (A, B, C, D) and immediately re-sort strips
+        for (int i = 0; i < currentChannels.Length; i++)
+        {
+            var cid = currentChannels[i];
+            var faderChar = ((char)('A' + i)).ToString();
+            var target = Channels.FirstOrDefault(c => c.Id == cid);
+            if (target != null)
+            {
+                target.FaderLetter = faderChar;
+            }
+        }
         foreach (var ch in Channels)
         {
-            if (string.Equals(ch.FaderLetter, letter, StringComparison.OrdinalIgnoreCase) && ch.Id != channelId)
+            if (!currentChannels.Contains(ch.Id))
             {
                 ch.FaderLetter = null;
-            }
-            else if (ch.Id == channelId)
-            {
-                ch.FaderLetter = letter.ToUpperInvariant();
             }
         }
         RefreshStrips();

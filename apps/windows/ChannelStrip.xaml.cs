@@ -155,11 +155,6 @@ public sealed partial class ChannelStrip : UserControl
         StartLevelInput();
     }
 
-    private void LevelDisplay_PointerPressed(object sender, PointerRoutedEventArgs e)
-    {
-        StartLevelInput();
-    }
-
     private void StartLevelInput()
     {
         if (ViewModel is null || ViewModel.IsFixed) return;
